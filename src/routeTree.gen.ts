@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,47 @@ const RestaurantsSlugRoute = RestaurantsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants': typeof RestaurantsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/restaurants/$slug' | '/restaurants/'
+  fullPaths: '/' | '/auth' | '/restaurants/$slug' | '/restaurants/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/restaurants/$slug' | '/restaurants'
-  id: '__root__' | '/' | '/restaurants/$slug' | '/restaurants/'
+  to: '/' | '/auth' | '/restaurants/$slug' | '/restaurants'
+  id: '__root__' | '/' | '/auth' | '/restaurants/$slug' | '/restaurants/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
 }
