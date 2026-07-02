@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, User as UserIcon, LogOut } from "lucide-react";
+import nkLogo from "@/assets/nk-logo.png.asset.json";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +26,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(43,26,14,0.06)]">
       <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-5 py-2.5">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white font-display font-extrabold text-lg">
-            NK
-          </div>
+          <img
+            src={nkLogo.url}
+            alt="NK Delivery"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-full object-contain"
+          />
           <div>
             <div className="font-display text-xl font-extrabold tracking-tight leading-none">
               NK <span className="text-brand">Delivery</span>
