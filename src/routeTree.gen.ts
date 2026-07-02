@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
 
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/orders': typeof OrdersRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/orders': typeof OrdersRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants': typeof RestaurantsIndexRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
+  '/orders': typeof OrdersRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
 }
@@ -69,15 +78,23 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/checkout'
+    | '/orders'
     | '/restaurants/$slug'
     | '/restaurants/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/checkout' | '/restaurants/$slug' | '/restaurants'
+  to:
+    | '/'
+    | '/auth'
+    | '/checkout'
+    | '/orders'
+    | '/restaurants/$slug'
+    | '/restaurants'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/checkout'
+    | '/orders'
     | '/restaurants/$slug'
     | '/restaurants/'
   fileRoutesById: FileRoutesById
@@ -86,12 +103,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRoute
+  OrdersRoute: typeof OrdersRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -134,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRoute,
+  OrdersRoute: OrdersRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
 }
