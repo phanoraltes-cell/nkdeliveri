@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bike, Clock, MapPin, DollarSign, ClipboardList, Power } from "lucide-react";
+import { Bike, Clock, MapPin, DollarSign, ClipboardList, Power, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver")({
@@ -92,13 +92,14 @@ function DriverDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { icon: Bike, title: "Pwofil livrè", desc: "Modifye enfo w yo" },
-          { icon: MapPin, title: "Livrezon disponib", desc: "Pran nouvo livrezon" },
-          { icon: ClipboardList, title: "Livrezon m yo", desc: "Aktyèl ak istwa" },
-          { icon: DollarSign, title: "Revni m yo", desc: "Peman ak komisyon" },
+          { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo + frekans peman", to: "/dashboard/driver/payouts" as const },
+          { icon: Bike, title: "Pwofil livrè", desc: "Modifye enfo w yo", to: null },
+          { icon: MapPin, title: "Livrezon disponib", desc: "Pran nouvo livrezon", to: null },
+          { icon: ClipboardList, title: "Livrezon m yo", desc: "Aktyèl ak istwa", to: null },
+          { icon: DollarSign, title: "Revni m yo", desc: "Peman ak komisyon", to: null },
         ].map((c) => {
           const Icon = c.icon;
-          return (
+          const body = (
             <div key={c.title} className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
                 <Icon className="h-5 w-5" />
@@ -106,10 +107,13 @@ function DriverDashboard() {
               <div className="font-display text-base font-bold text-ink">{c.title}</div>
               <div className="mt-1 text-sm text-ink-soft">{c.desc}</div>
               <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">
-                Byento
+                {c.to ? "Ouvri →" : "Byento"}
               </div>
             </div>
           );
+          return c.to ? (
+            <Link key={c.title} to={c.to} className="block">{body}</Link>
+          ) : body;
         })}
       </div>
     </div>
