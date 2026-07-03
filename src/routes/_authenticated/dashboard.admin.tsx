@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { LiveMap, type MapMarker } from "@/components/live-map";
+import { useActiveDeliveries } from "@/hooks/use-active-deliveries";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
@@ -16,6 +18,38 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
 
 function AdminDashboard() {
   const qc = useQueryClient();
+  const active = useActiveDeliveries({ admin: true });
+  const markers: MapMarker[] = active.flatMap((d) => {
+    const arr: MapMarker[] = [];
+    if (d.driver_lat != null && d.driver_lng != null) {
+      arr.push({
+        id: `drv-${d.id}`,
+        lat: Number(d.driver_lat),
+        lng: Number(d.driver_lng),
+        color: "blue",
+        label: `${d.driver?.first_name ?? "Livrè"} · ${d.order?.order_number ?? ""}`,
+      });
+    }
+    if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+      arr.push({
+        id: `dst-${d.id}`,
+        lat: Number(d.order.delivery_lat),
+        lng: Number(d.order.delivery_lng),
+        color: "green",
+        label: `Adrès ${d.order.order_number}`,
+      });
+    }
+    if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
+      arr.push({
+        id: `rst-${d.id}`,
+        lat: Number(d.order.restaurants.lat),
+        lng: Number(d.order.restaurants.lng),
+        color: "orange",
+        label: d.order.restaurants.name ?? "Restoran",
+      });
+    }
+    return arr;
+  });
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
