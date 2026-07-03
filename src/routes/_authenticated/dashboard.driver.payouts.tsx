@@ -36,7 +36,6 @@ function DriverPayouts() {
     moncash_number: "",
     natcash_number: "",
     payout_frequency: "daily",
-    commission_rate: 100,
   });
 
   useEffect(() => {
@@ -45,7 +44,6 @@ function DriverPayouts() {
       moncash_number: d.moncash_number ?? "",
       natcash_number: d.natcash_number ?? "",
       payout_frequency: d.payout_frequency ?? "daily",
-      commission_rate: Number(d.commission_rate ?? 100),
     });
   }, [d?.id]);
 
@@ -56,7 +54,6 @@ function DriverPayouts() {
         moncash_number: f.moncash_number || null,
         natcash_number: f.natcash_number || null,
         payout_frequency: f.payout_frequency,
-        commission_rate: f.commission_rate,
       }).eq("id", d.id);
       if (error) throw error;
     },
@@ -104,14 +101,9 @@ function DriverPayouts() {
             </button>
           ))}
         </div>
-        <div className="mt-4 max-w-xs">
-          <FieldD
-            label="Komisyon pa livrezon (HTG)"
-            type="number"
-            value={String(f.commission_rate)}
-            onChange={(v) => setF((s) => ({ ...s, commission_rate: Number(v) }))}
-          />
-          <div className="mt-1 text-xs text-ink-soft">Aktyèl: {formatHTG(f.commission_rate)} pa livrezon</div>
+        <div className="mt-4 rounded-xl bg-brand-soft/40 p-3 text-xs text-ink-soft">
+          Komisyon pa livrezon an: <b>{formatHTG(Number(d?.commission_rate ?? 100))}</b>.
+          Sèl yon administratè NK ka chanje montan sa a.
         </div>
       </section>
 

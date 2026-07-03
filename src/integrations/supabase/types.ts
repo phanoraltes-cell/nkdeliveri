@@ -883,6 +883,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_order_secure: {
+        Args: {
+          _contact_phone: string
+          _delivery_address: string
+          _delivery_notes: string
+          _items: Json
+          _method: Database["public"]["Enums"]["payment_method"]
+          _restaurant_id: string
+        }
+        Returns: string
+      }
       get_primary_role: { Args: { _user_id: string }; Returns: string }
       get_restaurant_payout_public: {
         Args: { _restaurant_id: string }
