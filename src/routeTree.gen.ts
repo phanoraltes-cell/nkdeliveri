@@ -19,6 +19,10 @@ import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
+import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
+import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
+import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -70,6 +74,30 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardRestaurantRoute =
+  AuthenticatedDashboardRestaurantRouteImport.update({
+    id: '/restaurant',
+    path: '/restaurant',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDriverRoute =
+  AuthenticatedDashboardDriverRouteImport.update({
+    id: '/driver',
+    path: '/driver',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardCustomerRoute =
+  AuthenticatedDashboardCustomerRouteImport.update({
+    id: '/customer',
+    path: '/customer',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAdminRoute =
+  AuthenticatedDashboardAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +108,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,6 +122,10 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants': typeof RestaurantsIndexRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -103,6 +139,10 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -116,6 +156,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/restaurants/$slug'
     | '/restaurants/'
+    | '/dashboard/admin'
+    | '/dashboard/customer'
+    | '/dashboard/driver'
+    | '/dashboard/restaurant'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -126,6 +170,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/restaurants/$slug'
     | '/restaurants'
+    | '/dashboard/admin'
+    | '/dashboard/customer'
+    | '/dashboard/driver'
+    | '/dashboard/restaurant'
     | '/dashboard'
   id:
     | '__root__'
@@ -138,6 +186,10 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/restaurants/$slug'
     | '/restaurants/'
+    | '/_authenticated/dashboard/admin'
+    | '/_authenticated/dashboard/customer'
+    | '/_authenticated/dashboard/driver'
+    | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -224,15 +276,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/restaurant': {
+      id: '/_authenticated/dashboard/restaurant'
+      path: '/restaurant'
+      fullPath: '/dashboard/restaurant'
+      preLoaderRoute: typeof AuthenticatedDashboardRestaurantRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/driver': {
+      id: '/_authenticated/dashboard/driver'
+      path: '/driver'
+      fullPath: '/dashboard/driver'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/customer': {
+      id: '/_authenticated/dashboard/customer'
+      path: '/customer'
+      fullPath: '/dashboard/customer'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomerRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/admin': {
+      id: '/_authenticated/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
   }
 }
 
 interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRoute
+  AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRoute
+  AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
+    AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+    AuthenticatedDashboardCustomerRoute: AuthenticatedDashboardCustomerRoute,
+    AuthenticatedDashboardDriverRoute: AuthenticatedDashboardDriverRoute,
+    AuthenticatedDashboardRestaurantRoute:
+      AuthenticatedDashboardRestaurantRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
