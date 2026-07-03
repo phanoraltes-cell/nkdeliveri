@@ -25,10 +25,10 @@ import {
   Headphones,
   ArrowRight,
 } from "lucide-react";
-import heroLivreur from "@/assets/hero-livreur.jpg.asset.json";
-import chefImg from "@/assets/chef.jpg.asset.json";
-import scooterImg from "@/assets/scooter.jpg.asset.json";
-import phoneMockup from "@/assets/phone-mockup.jpg.asset.json";
+const heroLivreur = "/hero-livreur.jpg";
+const chefImg = "/chef.jpg";
+const scooterImg = "/scooter.jpg";
+const phoneMockup = "/phone-mockup.jpg";
 
 const homeDataQuery = queryOptions({
   queryKey: ["home-data"],
@@ -58,16 +58,16 @@ export const Route = createFileRoute("/")({
 
 const CUISINES = ["Tout", "Manje Kreyòl", "Soup Joumou", "Ragou", "Lalo", "Fritay"];
 
-const DISH_TYPES: { key: string; label: string; emoji: string }[] = [
-  { key: "all", label: "Tout", emoji: "\n" },
-  { key: "diri_sos", label: "Diri ak Sòs", emoji: "\n\n" },
-  { key: "griyo", label: "Griyo", emoji: "\n" },
-  { key: "fritay", label: "Fritay", emoji: "\n\n" },
-  { key: "soup", label: "Soup", emoji: "\n\n" },
-  { key: "pwason", label: "Pwason", emoji: "\n" },
-  { key: "sandwich", label: "Sandwich", emoji: "\n" },
-  { key: "pizza", label: "Pizza", emoji: "\n" },
-  { key: "bwason", label: "Bwason", emoji: "🥤" },
+const DISH_TYPES: { key: string; label: string }[] = [
+  { key: "all", label: "Tout" },
+  { key: "diri_sos", label: "Diri ak Sòs" },
+  { key: "griyo", label: "Griyo" },
+  { key: "fritay", label: "Fritay" },
+  { key: "soup", label: "Soup" },
+  { key: "pwason", label: "Pwason" },
+  { key: "sandwich", label: "Sandwich" },
+  { key: "pizza", label: "Pizza" },
+  { key: "bwason", label: "Bwason" },
 ];
 
 const HOW_STEPS = [
@@ -178,7 +178,7 @@ function Index() {
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <img
-              src={heroLivreur.url}
+              src={heroLivreur}
               alt="Livrè NK Delivery"
               width={1024}
               height={1024}
@@ -251,7 +251,7 @@ function Index() {
           </div>
           <div className="relative">
             <img
-              src={chefImg.url}
+              src={chefImg}
               alt="Chef NK Delivery"
               loading="lazy"
               width={1024}
@@ -368,7 +368,7 @@ function Index() {
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           >
             <img
-              src={phoneMockup.url}
+              src={phoneMockup}
               alt="Aplikasyon NK Delivery"
               loading="lazy"
               width={768}
@@ -401,9 +401,6 @@ function Index() {
                     : "border-brand-soft bg-white text-ink-soft hover:border-brand hover:text-brand"
                 }`}
               >
-                <span aria-hidden className="inline-flex items-center leading-none">
-                  {d.emoji}
-                </span>
                 <span className="leading-none">{d.label}</span>
                 <span
                   className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[0.7rem] leading-none ${
@@ -497,7 +494,7 @@ function Index() {
           </div>
           <div className="relative">
             <img
-              src={scooterImg.url}
+              src={scooterImg}
               alt="Scooter NK Delivery"
               loading="lazy"
               width={1024}

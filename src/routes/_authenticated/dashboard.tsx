@@ -2,7 +2,6 @@ import { createFileRoute, Outlet, Link, redirect, useRouter } from "@tanstack/re
 import { supabase } from "@/integrations/supabase/client";
 import { LogOut, LayoutDashboard, User, Store, Bike, ShieldCheck, Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import nkLogo from "@/assets/nk-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
@@ -45,7 +44,7 @@ function DashboardLayout() {
     <div className="min-h-screen bg-cream">
       <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-brand-soft/50 bg-white px-5 shadow-sm">
         <Link to="/" className="flex items-center gap-2">
-          <img src={nkLogo.url} alt="NK" className="h-9 w-9 rounded-full" />
+          <img src="/nk-logo.png" alt="NK" className="h-9 w-9 rounded-full" />
           <span className="font-display text-lg font-extrabold text-ink">
             NK <span className="text-brand">Delivery</span>
           </span>

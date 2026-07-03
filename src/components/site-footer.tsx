@@ -1,9 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import moncashLogo from "@/assets/moncash-logo.png.asset.json";
-import natcashLogo from "@/assets/natcash-logo.png.asset.json";
-import visaLogo from "@/assets/visa-logo.svg.asset.json";
-import mastercardLogo from "@/assets/mastercard-logo.svg.asset.json";
-import kachLogo from "@/assets/kach-logo.png.asset.json";
+import { Banknote } from "lucide-react";
 
 export function SiteFooter() {
   const navLinks = [
@@ -15,12 +11,12 @@ export function SiteFooter() {
   ] as const;
 
   const payments = [
-    { name: "MonCash", src: moncashLogo.url },
-    { name: "NatCash", src: natcashLogo.url },
-    { name: "Visa", src: visaLogo.url },
-    { name: "Mastercard", src: mastercardLogo.url },
-    { name: "Kach", src: kachLogo.url },
-  ];
+    { name: "MonCash", kind: "text", className: "bg-[#ED1C24] text-white" },
+    { name: "NatCash", kind: "text", className: "bg-[#003DA5] text-white" },
+    { name: "Visa", kind: "image", src: "/visa-logo.svg" },
+    { name: "Mastercard", kind: "image", src: "/mastercard-logo.svg" },
+    { name: "Kach", kind: "icon" },
+  ] as const;
 
   return (
     <footer className="mt-16 bg-brand text-white">
@@ -55,15 +51,28 @@ export function SiteFooter() {
           {payments.map((p) => (
             <span
               key={p.name}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-white px-3 shadow-sm"
+              className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-md px-3 shadow-sm ${
+                p.kind === "text" ? p.className : "bg-white"
+              }`}
               title={p.name}
             >
-              <img
-                src={p.src}
-                alt={`${p.name} logo`}
-                loading="lazy"
-                className="h-6 w-auto object-contain"
-              />
+              {p.kind === "image" && (
+                <img
+                  src={p.src}
+                  alt={`${p.name} logo`}
+                  loading="lazy"
+                  className="h-6 w-auto object-contain"
+                />
+              )}
+              {p.kind === "text" && (
+                <span className="text-sm font-extrabold italic tracking-tight">{p.name}</span>
+              )}
+              {p.kind === "icon" && (
+                <>
+                  <Banknote className="h-5 w-5 text-brand-deep" />
+                  <span className="text-sm font-bold text-ink">{p.name}</span>
+                </>
+              )}
             </span>
           ))}
           </div>

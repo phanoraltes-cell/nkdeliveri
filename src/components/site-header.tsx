@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
-import nkLogo from "@/assets/nk-logo.png.asset.json";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +26,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-20 max-w-[1200px] items-center gap-3 rounded-full border border-brand-soft/60 bg-white/95 px-5 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur">
         <Link to="/" className="flex items-center gap-2.5">
           <img
-            src={nkLogo.url}
+            src="/nk-logo.png"
             alt="NK Delivery"
             width={44}
             height={44}
