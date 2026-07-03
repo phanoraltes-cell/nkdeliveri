@@ -90,59 +90,18 @@ function Checkout() {
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
-      const orderNumber = "NK-" + Date.now().toString(36).toUpperCase();
-
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({
-          order_number: orderNumber,
-          customer_id: user.id,
-          restaurant_id: rId,
-          delivery_address: address,
-          delivery_notes: notes || null,
-          contact_phone: phone,
-          subtotal,
-          delivery_fee: deliveryFee,
-          service_fee: serviceFee,
-          total,
-          currency: "HTG",
-          status: "pending",
-        })
-        .select("id")
-        .single();
-      if (orderErr) throw orderErr;
-
-      const itemsPayload = items.map((it) => ({
-        order_id: order.id,
-        product_id: it.productId,
-        product_name: it.name,
-        unit_price: it.price,
-        quantity: it.qty,
-        line_total: it.price * it.qty,
-      }));
-      const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
-      if (itemsErr) throw itemsErr;
-
-      const paymentStatus =
-        method === "stripe" ? "pending" : method === "kach" ? "pending" : "awaiting_proof";
-      const receiverType =
-        (method === "moncash" || method === "natcash") && merchantDirect ? "merchant" : "admin";
-      const { error: payErr } = await supabase.from("payments").insert({
-        order_id: order.id,
-        method,
-        status: paymentStatus,
-        amount: total,
-        currency: "HTG",
-        receiver_type: receiverType,
-        receiver_restaurant_id: receiverType === "merchant" ? rId : null,
-        receiver_number: payNumber,
-        receiver_account_name: payName,
+      const { data: orderId, error: rpcErr } = await supabase.rpc("create_order_secure", {
+        _restaurant_id: rId,
+        _items: items.map((it) => ({ product_id: it.productId, quantity: it.qty })),
+        _delivery_address: address,
+        _contact_phone: phone,
+        _delivery_notes: notes || null,
+        _method: method,
       });
-      if (payErr) throw payErr;
-
+      if (rpcErr) throw rpcErr;
       clear();
       toast.success("Kòmand kreye ak siksè");
-      nav({ to: "/orders/$id", params: { id: order.id } });
+      nav({ to: "/orders/$id", params: { id: orderId as string } });
     } catch (e: any) {
       toast.error(e.message || "Erè pandan kreyasyon kòmand la");
     } finally {
