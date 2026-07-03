@@ -78,10 +78,10 @@ function Checkout() {
       const itemsPayload = items.map((it) => ({
         order_id: order.id,
         product_id: it.productId,
-        name: it.name,
+        product_name: it.name,
         unit_price: it.price,
         quantity: it.qty,
-        subtotal: it.price * it.qty,
+        line_total: it.price * it.qty,
       }));
       const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
       if (itemsErr) throw itemsErr;
