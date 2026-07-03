@@ -56,7 +56,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const CUISINES = ["Tout", "Kreyòl", "Griyo", "Pizza", "Sandwich", "Fruits de mer"];
+const CUISINES = ["Tout", "Manje Kreyòl", "Soup Joumou", "Ragou", "Lalo", "Fritay"];
 
 const DISH_TYPES: { key: string; label: string; emoji: string }[] = [
   { key: "all", label: "Tout", emoji: "\n" },
@@ -152,8 +152,8 @@ function Index() {
             </form>
             <div className="mt-8 flex flex-wrap gap-8">
               {[
-                { n: "40+", l: "Restoran", Icon: Store },
-                { n: "500+", l: "Plat disponib", Icon: UtensilsCrossed },
+                { n: "10+", l: "Restoran", Icon: Store },
+                { n: "50+", l: "Plat disponib", Icon: UtensilsCrossed },
                 { n: "30 min", l: "Livrezon mwayèn", Icon: Clock },
               ].map((s) => (
                 <div key={s.l} className="flex items-center gap-3">
@@ -240,7 +240,7 @@ function Index() {
               Ou restoran ?
             </h2>
             <p className="mb-6 max-w-[38ch] text-white/90">
-              Fè biznis ou grandi ak NK Delivery+ epi rive jwenn plis kliyan chak jou.
+              Fè biznis ou grandi ak NK Delivery epi rive jwenn plis kliyan chak jou.
             </p>
             <Link
               to="/auth"

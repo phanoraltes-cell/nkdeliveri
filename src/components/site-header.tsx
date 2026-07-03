@@ -35,7 +35,7 @@ export function SiteHeader() {
           />
           <div>
             <div className="font-display text-xl font-extrabold tracking-tight leading-none text-ink">
-              NK <span className="text-brand">Delivery+</span>
+              NK <span className="text-brand">Delivery</span>
             </div>
             <div className="text-[0.7rem] uppercase tracking-widest text-ink-soft">
               Gonaïves
