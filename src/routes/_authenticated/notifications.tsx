@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Check, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { PushToggle } from "@/components/push-toggle";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -52,6 +53,9 @@ function NotificationsPage() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Notifikasyon</h1>
           <p className="mt-1 text-ink-soft">{unread.length} nouvo</p>
         </div>
+        <PushToggle />
+      </div>
+      <div className="flex items-center justify-end">
         {unread.length > 0 && (
           <button
             onClick={() => markRead.mutate(unread.map((n) => n.id))}

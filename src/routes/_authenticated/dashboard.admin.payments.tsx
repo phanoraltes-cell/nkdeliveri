@@ -1,6 +1,8 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { sendPaymentReviewPush } from "@/lib/send-push.functions";
 import { formatHTG } from "@/lib/format";
 import { CheckCircle2, XCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/payments")
 function AdminPayments() {
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const sendPush = useServerFn(sendPaymentReviewPush);
 
   const list = useQuery({
     queryKey: ["admin-manual-payments"],
@@ -58,6 +61,12 @@ function AdminPayments() {
         })
         .eq("id", id);
       if (error) throw error;
+      // Fire-and-log web push to customer + merchant
+      try {
+        await sendPush({ data: { paymentId: id } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: (_d, v) => {
       toast.success(v.decision === "paid" ? "Peman apwouve, kòmand konfime" : "Peman rejte");
