@@ -71,6 +71,7 @@
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-light: var(--brand-light);
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -78,13 +79,14 @@
 
 :root {
   --radius: 1.125rem;
-  /* NK Delivery brand palette */
-  --brand: oklch(0.68 0.17 55);         /* #E8720C */
-  --brand-deep: oklch(0.56 0.16 50);    /* #C25A05 */
-  --brand-soft: oklch(0.93 0.055 65);   /* #FDE8D4 */
-  --cream: oklch(0.985 0.015 75);       /* #FFF8F1 */
-  --ink: oklch(0.24 0.045 55);          /* #2B1A0E */
-  --ink-soft: oklch(0.52 0.05 55);      /* #7A6350 */
+  /* NK Delivery brand palette (spec) */
+  --brand: oklch(0.706 0.185 45);         /* #F97316 */
+  --brand-light: oklch(0.755 0.16 50);    /* #FB923C */
+  --brand-deep: oklch(0.62 0.19 40);      /* #EA580C */
+  --brand-soft: oklch(0.9 0.075 65);      /* #FED7AA */
+  --cream: oklch(0.985 0.008 70);         /* #FFF9F5 */
+  --ink: oklch(0.23 0.005 0);             /* #1F1F1F */
+  --ink-soft: oklch(0.56 0.01 260);       /* #6B7280 */
 
   --background: var(--cream);
   --foreground: var(--ink);
