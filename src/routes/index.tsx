@@ -23,10 +23,10 @@ const homeDataQuery = queryOptions({
         .limit(8),
       supabase
         .from("products")
-        .select("id,name,description,price,image_url,restaurant_id,restaurants(name,slug)")
+        .select("id,name,description,price,image_url,dish_type,restaurant_id,restaurants(name,slug)")
         .eq("popular", true)
         .eq("available", true)
-        .limit(8),
+        .limit(16),
     ]);
     return { restaurants: rests.data ?? [], products: (prods.data ?? []) as any[] };
   },
@@ -39,9 +39,22 @@ export const Route = createFileRoute("/")({
 
 const CUISINES = ["Tout", "Kreyòl", "Griyo", "Pizza", "Sandwich", "Fruits de mer"];
 
+const DISH_TYPES: { key: string; label: string; emoji: string }[] = [
+  { key: "all", label: "Tout", emoji: "🍽️" },
+  { key: "diri_sos", label: "Diri ak Sòs", emoji: "🍚" },
+  { key: "griyo", label: "Griyo", emoji: "🍖" },
+  { key: "fritay", label: "Fritay", emoji: "🍤" },
+  { key: "soup", label: "Soup", emoji: "🥣" },
+  { key: "pwason", label: "Pwason", emoji: "🐟" },
+  { key: "sandwich", label: "Sandwich", emoji: "🥪" },
+  { key: "pizza", label: "Pizza", emoji: "🍕" },
+  { key: "bwason", label: "Bwason", emoji: "🥤" },
+];
+
 function Index() {
   const { data } = useSuspenseQuery(homeDataQuery);
   const [cuisine, setCuisine] = useState("Tout");
+  const [dishType, setDishType] = useState("all");
   const [q, setQ] = useState("");
   const { add } = useCart();
 
@@ -50,6 +63,17 @@ function Index() {
       (cuisine === "Tout" || r.cuisine === cuisine) &&
       r.name.toLowerCase().includes(q.toLowerCase()),
   );
+
+  const filteredProducts = data.products.filter(
+    (p: any) => dishType === "all" || p.dish_type === dishType,
+  );
+  const dishCounts = DISH_TYPES.reduce<Record<string, number>>((acc, d) => {
+    acc[d.key] =
+      d.key === "all"
+        ? data.products.length
+        : data.products.filter((p: any) => p.dish_type === d.key).length;
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-cream">
@@ -181,8 +205,41 @@ function Index() {
             Plat popilè
           </h2>
         </div>
+        <div className="mb-5 flex flex-wrap gap-2.5">
+          {DISH_TYPES.map((d) => {
+            const active = dishType === d.key;
+            const count = dishCounts[d.key] ?? 0;
+            if (d.key !== "all" && count === 0) return null;
+            return (
+              <button
+                key={d.key}
+                onClick={() => setDishType(d.key)}
+                className={`flex items-center gap-1.5 rounded-full border-[1.5px] px-4 py-2 text-sm font-semibold transition ${
+                  active
+                    ? "border-brand bg-brand text-white"
+                    : "border-brand-soft bg-white text-ink-soft hover:bg-brand-soft hover:text-brand-deep"
+                }`}
+              >
+                <span aria-hidden>{d.emoji}</span>
+                {d.label}
+                <span
+                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] ${
+                    active ? "bg-white/25 text-white" : "bg-brand-soft text-brand-deep"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
-          {data.products.map((p: any) => (
+          {filteredProducts.length === 0 && (
+            <p className="col-span-full py-8 text-center text-sm text-ink-soft">
+              Pa gen plat nan kategori sa a pou kounye a.
+            </p>
+          )}
+          {filteredProducts.map((p: any) => (
             <div
               key={p.id}
               className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)] transition hover:-translate-y-1"
