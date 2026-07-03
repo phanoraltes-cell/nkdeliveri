@@ -25,6 +25,7 @@ import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
+import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -110,6 +111,12 @@ const AuthenticatedDashboardAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAdminPaymentsRoute =
+  AuthenticatedDashboardAdminPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,11 +129,12 @@ export interface FileRoutesByFullPath {
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -138,11 +146,12 @@ export interface FileRoutesByTo {
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth': typeof AuthIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -157,11 +166,12 @@ export interface FileRoutesById {
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
-  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver'
     | '/dashboard/restaurant'
     | '/dashboard/'
+    | '/dashboard/admin/payments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver'
     | '/dashboard/restaurant'
     | '/dashboard'
+    | '/dashboard/admin/payments'
   id:
     | '__root__'
     | '/'
@@ -215,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
+    | '/_authenticated/dashboard/admin/payments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -343,11 +356,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/admin/payments': {
+      id: '/_authenticated/dashboard/admin/payments'
+      path: '/payments'
+      fullPath: '/dashboard/admin/payments'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
   }
 }
 
+interface AuthenticatedDashboardAdminRouteChildren {
+  AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
+}
+
+const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
+  {
+    AuthenticatedDashboardAdminPaymentsRoute:
+      AuthenticatedDashboardAdminPaymentsRoute,
+  }
+
+const AuthenticatedDashboardAdminRouteWithChildren =
+  AuthenticatedDashboardAdminRoute._addFileChildren(
+    AuthenticatedDashboardAdminRouteChildren,
+  )
+
 interface AuthenticatedDashboardRouteChildren {
-  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRoute
   AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRoute
   AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRoute
@@ -356,7 +391,8 @@ interface AuthenticatedDashboardRouteChildren {
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
-    AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+    AuthenticatedDashboardAdminRoute:
+      AuthenticatedDashboardAdminRouteWithChildren,
     AuthenticatedDashboardCustomerRoute: AuthenticatedDashboardCustomerRoute,
     AuthenticatedDashboardDriverRoute: AuthenticatedDashboardDriverRoute,
     AuthenticatedDashboardRestaurantRoute:

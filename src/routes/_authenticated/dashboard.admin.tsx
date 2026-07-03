@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle } from "lucide-react";
@@ -189,21 +189,26 @@ function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { icon: CreditCard, title: "Peman many\u00e8l", desc: "Valide prèv MonCash/NatCash" },
-          { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz" },
-          { icon: Users, title: "Jere itilizatè", desc: "Sispann/aktive kont" },
+          { icon: CreditCard, title: "Peman manyèl", desc: "Valide prèv MonCash/NatCash", to: "/dashboard/admin/payments" as const },
+          { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
+          { icon: Users, title: "Jere itilizatè", desc: "Sispann/aktive kont", to: null },
         ].map((c) => {
           const Icon = c.icon;
-          return (
+          const body = (
             <div key={c.title} className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
                 <Icon className="h-5 w-5" />
               </div>
               <div className="font-display text-base font-bold text-ink">{c.title}</div>
               <div className="mt-1 text-sm text-ink-soft">{c.desc}</div>
-              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">Byento</div>
+              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">
+                {c.to ? "Ouvri →" : "Byento"}
+              </div>
             </div>
           );
+          return c.to ? (
+            <Link key={c.title} to={c.to} className="block">{body}</Link>
+          ) : body;
         })}
       </div>
     </div>
