@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,27 +12,25 @@ const searchSchema = z.object({ next: z.string().optional() });
 export const Route = createFileRoute("/auth/")({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Konekte — NK Delivery" }] }),
-  component: AuthPage,
+  component: LoginPage,
 });
 
-function AuthPage() {
+function LoginPage() {
   const nav = useNavigate();
-  const search = useSearch({ from: "/auth" });
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const search = useSearch({ from: "/auth/" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: (search.next as any) || "/" });
+      if (data.session) nav({ to: (search.next as any) || "/dashboard" });
     });
   }, [nav, search.next]);
 
   async function signInGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + "/auth",
     });
     if ((result as any).error) toast.error("Erè Google: " + (result as any).error.message);
   }
@@ -41,23 +39,10 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Byenveni!");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { first_name: firstName },
-          },
-        });
-        if (error) throw error;
-        toast.success("Kont ou kreye! Verifye email w.");
-      }
-      nav({ to: (search.next as any) || "/" });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Byenveni!");
+      nav({ to: (search.next as any) || "/dashboard" });
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -70,12 +55,8 @@ function AuthPage() {
       <SiteHeader />
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="rounded-[18px] bg-white p-8 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
-          <h1 className="mb-2 font-display text-2xl font-extrabold">
-            {mode === "login" ? "Konekte" : "Kreye yon kont"}
-          </h1>
-          <p className="mb-6 text-sm text-ink-soft">
-            {mode === "login" ? "Antre nan kont ou pou kòmande." : "Kreye yon kont pou kòmanse kòmande."}
-          </p>
+          <h1 className="mb-2 font-display text-2xl font-extrabold">Konekte</h1>
+          <p className="mb-6 text-sm text-ink-soft">Antre nan kont ou pou kòmande oswa aksede dashboard w.</p>
 
           <button
             onClick={signInGoogle}
@@ -90,46 +71,22 @@ function AuthPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-3">
-            {mode === "signup" && (
-              <input
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Non ou"
-                className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
-              />
-            )}
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
-            />
-            <input
-              required
-              type="password"
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Modpas (6+ karaktè)"
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
-            />
-            <button
-              disabled={loading}
-              className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
-            >
-              {loading ? "..." : mode === "login" ? "Konekte" : "Kreye kont mwen"}
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email"
+              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand" />
+            <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Modpas"
+              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand" />
+            <button disabled={loading}
+              className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50">
+              {loading ? "..." : "Konekte"}
             </button>
           </form>
 
-          <button
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="mt-4 w-full text-center text-sm text-brand-deep hover:underline"
-          >
-            {mode === "login" ? "Pa gen yon kont? Enskri" : "Deja gen yon kont? Konekte"}
-          </button>
+          <div className="mt-6 rounded-xl bg-brand-soft/40 p-4 text-center text-sm">
+            Pa gen yon kont?{" "}
+            <Link to="/auth/register" className="font-bold text-brand-deep hover:underline">
+              Kreye yon kont
+            </Link>
+          </div>
         </div>
       </div>
       <SiteFooter />
