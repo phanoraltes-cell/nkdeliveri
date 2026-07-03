@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          address_line: string
+          city: string
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string | null
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line: string
+          city?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line?: string
+          city?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      deliveries: {
+        Row: {
+          assigned_at: string
+          created_at: string
+          delivered_at: string | null
+          driver_id: string | null
+          driver_notes: string | null
+          fee: number
+          id: string
+          order_id: string
+          picked_up_at: string | null
+          status: Database["public"]["Enums"]["delivery_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          created_at?: string
+          delivered_at?: string | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          fee?: number
+          id?: string
+          order_id: string
+          picked_up_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          created_at?: string
+          delivered_at?: string | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          fee?: number
+          id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           address: string | null
@@ -99,6 +198,271 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          line_total: number
+          notes: string | null
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_total: number
+          notes?: string | null
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_total?: number
+          notes?: string | null
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address_id: string | null
+          contact_phone: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          delivery_address: string
+          delivery_fee: number
+          delivery_notes: string | null
+          id: string
+          order_number: string
+          restaurant_id: string
+          service_fee: number
+          status: Database["public"]["Enums"]["order_status"]
+          status_history: Json
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address_id?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          customer_id: string
+          delivery_address: string
+          delivery_fee?: number
+          delivery_notes?: string | null
+          id?: string
+          order_number?: string
+          restaurant_id: string
+          service_fee?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          status_history?: Json
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address_id?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          delivery_address?: string
+          delivery_fee?: number
+          delivery_notes?: string | null
+          id?: string
+          order_number?: string
+          restaurant_id?: string
+          service_fee?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          status_history?: Json
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_proofs: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          notes: string | null
+          payment_id: string
+          sender_phone: string | null
+          transaction_ref: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          payment_id: string
+          sender_phone?: string | null
+          transaction_ref?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          payment_id?: string
+          sender_phone?: string | null
+          transaction_ref?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          order_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_name: string | null
+          sender_phone: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          transaction_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          order_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          transaction_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          order_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          transaction_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -300,6 +664,64 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          driver_id: string | null
+          driver_rating: number | null
+          id: string
+          order_id: string
+          restaurant_id: string | null
+          restaurant_rating: number | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          driver_id?: string | null
+          driver_rating?: number | null
+          id?: string
+          order_id: string
+          restaurant_id?: string | null
+          restaurant_rating?: number | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          driver_id?: string | null
+          driver_rating?: number | null
+          id?: string
+          order_id?: string
+          restaurant_id?: string | null
+          restaurant_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -343,6 +765,13 @@ export type Database = {
         | "driver"
         | "admin"
         | "super_admin"
+      delivery_status:
+        | "assigned"
+        | "en_route_pickup"
+        | "picked_up"
+        | "en_route_dropoff"
+        | "delivered"
+        | "cancelled"
       driver_status:
         | "pending"
         | "approved"
@@ -350,6 +779,24 @@ export type Database = {
         | "rejected"
         | "offline"
         | "online"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "preparing"
+        | "ready"
+        | "assigned"
+        | "picked_up"
+        | "delivered"
+        | "cancelled"
+        | "refunded"
+      payment_method: "stripe" | "moncash" | "natcash" | "kach"
+      payment_status:
+        | "pending"
+        | "awaiting_proof"
+        | "under_review"
+        | "paid"
+        | "failed"
+        | "refunded"
       restaurant_status: "pending" | "approved" | "suspended" | "rejected"
     }
     CompositeTypes: {
@@ -486,6 +933,14 @@ export const Constants = {
         "admin",
         "super_admin",
       ],
+      delivery_status: [
+        "assigned",
+        "en_route_pickup",
+        "picked_up",
+        "en_route_dropoff",
+        "delivered",
+        "cancelled",
+      ],
       driver_status: [
         "pending",
         "approved",
@@ -493,6 +948,26 @@ export const Constants = {
         "rejected",
         "offline",
         "online",
+      ],
+      order_status: [
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "assigned",
+        "picked_up",
+        "delivered",
+        "cancelled",
+        "refunded",
+      ],
+      payment_method: ["stripe", "moncash", "natcash", "kach"],
+      payment_status: [
+        "pending",
+        "awaiting_proof",
+        "under_review",
+        "paid",
+        "failed",
+        "refunded",
       ],
       restaurant_status: ["pending", "approved", "suspended", "rejected"],
     },
