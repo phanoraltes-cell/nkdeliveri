@@ -158,6 +158,21 @@ function OrderDetail() {
 
   const o = order.data;
   const payment = o.payments?.[0];
+  const delivery = useDeliveryForOrder(o.id);
+  const trackingMarkers: MapMarker[] = (() => {
+    if (!delivery) return [];
+    const arr: MapMarker[] = [];
+    if (delivery.driver_lat != null && delivery.driver_lng != null) {
+      arr.push({ id: "drv", lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng), color: "blue", label: "Livrè" });
+    }
+    if (delivery.order?.restaurants?.lat != null && delivery.order?.restaurants?.lng != null) {
+      arr.push({ id: "rst", lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng), color: "orange", label: delivery.order.restaurants.name ?? "Restoran" });
+    }
+    if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
+      arr.push({ id: "dst", lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng), color: "green", label: "Adrès ou" });
+    }
+    return arr;
+  })();
   const isManual = payment?.method === "moncash" || payment?.method === "natcash";
   const needsProof =
     isManual && (payment?.status === "awaiting_proof" || payment?.status === "pending");
