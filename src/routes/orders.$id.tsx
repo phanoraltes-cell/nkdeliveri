@@ -55,7 +55,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at)"
+          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name)"
         )
         .eq("id", id)
         .maybeSingle();
@@ -160,10 +160,13 @@ function OrderDetail() {
   const needsProof =
     isManual && (payment?.status === "awaiting_proof" || payment?.status === "pending");
 
-  const payNumbers: Record<string, string> = {
-    moncash: "MonCash · 3XXX-XXXX (NK Delivery)",
-    natcash: "NatCash · 3XXX-XXXX (NK Delivery)",
-  };
+  const payLabel = payment
+    ? `${payment.method === "moncash" ? "MonCash" : "NatCash"} · ${payment.receiver_number ?? "(pa konfigire)"}${payment.receiver_account_name ? " (" + payment.receiver_account_name + ")" : ""}`
+    : "";
+  const payRoutingNote =
+    payment?.receiver_type === "merchant"
+      ? "Peman an ale dirèkteman sou kont restoran an."
+      : "NK Delivery ap resevwa peman an epi remèt restoran an apre komisyon.";
 
   return (
     <div className="min-h-screen bg-cream">
@@ -224,8 +227,8 @@ function OrderDetail() {
           <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
             <div className="font-display text-base font-bold">Enstriksyon peman</div>
             <div className="mt-2 rounded-xl bg-brand-soft/60 p-3 text-sm">
-              Voye <b>{formatHTG(o.total)}</b> sou <b>{payNumbers[payment!.method]}</b>, epi
-              telechaje kaptè/foto prèv la anba a.
+              Voye <b>{formatHTG(o.total)}</b> sou <b>{payLabel}</b>, epi telechaje kaptè/foto prèv
+              la anba a. <span className="block text-xs text-ink-soft mt-1">{payRoutingNote}</span>
             </div>
 
             {needsProof ? (

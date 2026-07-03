@@ -27,6 +27,7 @@ import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
 import { Route as AuthenticatedDashboardRestaurantPayoutsRouteImport } from './routes/_authenticated/dashboard.restaurant.payouts'
+import { Route as AuthenticatedDashboardDriverPayoutsRouteImport } from './routes/_authenticated/dashboard.driver.payouts'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 
 const ProfileRoute = ProfileRouteImport.update({
@@ -125,6 +126,12 @@ const AuthenticatedDashboardRestaurantPayoutsRoute =
     path: '/payouts',
     getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
   } as any)
+const AuthenticatedDashboardDriverPayoutsRoute =
+  AuthenticatedDashboardDriverPayoutsRouteImport.update({
+    id: '/payouts',
+    path: '/payouts',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
 const AuthenticatedDashboardAdminPaymentsRoute =
   AuthenticatedDashboardAdminPaymentsRouteImport.update({
     id: '/payments',
@@ -146,10 +153,11 @@ export interface FileRoutesByFullPath {
   '/restaurants/': typeof RestaurantsIndexRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
-  '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
 }
 export interface FileRoutesByTo {
@@ -165,10 +173,11 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsIndexRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
-  '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
 }
 export interface FileRoutesById {
@@ -187,10 +196,11 @@ export interface FileRoutesById {
   '/restaurants/': typeof RestaurantsIndexRoute
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
-  '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
+  '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/_authenticated/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/_authenticated/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
 }
 export interface FileRouteTypes {
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant'
     | '/dashboard/'
     | '/dashboard/admin/payments'
+    | '/dashboard/driver/payouts'
     | '/dashboard/restaurant/payouts'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant'
     | '/dashboard'
     | '/dashboard/admin/payments'
+    | '/dashboard/driver/payouts'
     | '/dashboard/restaurant/payouts'
   id:
     | '__root__'
@@ -253,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/payments'
+    | '/_authenticated/dashboard/driver/payouts'
     | '/_authenticated/dashboard/restaurant/payouts'
   fileRoutesById: FileRoutesById
 }
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantPayoutsRouteImport
       parentRoute: typeof AuthenticatedDashboardRestaurantRoute
     }
+    '/_authenticated/dashboard/driver/payouts': {
+      id: '/_authenticated/dashboard/driver/payouts'
+      path: '/payouts'
+      fullPath: '/dashboard/driver/payouts'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverPayoutsRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
     '/_authenticated/dashboard/admin/payments': {
       id: '/_authenticated/dashboard/admin/payments'
       path: '/payments'
@@ -421,6 +441,21 @@ const AuthenticatedDashboardAdminRouteWithChildren =
     AuthenticatedDashboardAdminRouteChildren,
   )
 
+interface AuthenticatedDashboardDriverRouteChildren {
+  AuthenticatedDashboardDriverPayoutsRoute: typeof AuthenticatedDashboardDriverPayoutsRoute
+}
+
+const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRouteChildren =
+  {
+    AuthenticatedDashboardDriverPayoutsRoute:
+      AuthenticatedDashboardDriverPayoutsRoute,
+  }
+
+const AuthenticatedDashboardDriverRouteWithChildren =
+  AuthenticatedDashboardDriverRoute._addFileChildren(
+    AuthenticatedDashboardDriverRouteChildren,
+  )
+
 interface AuthenticatedDashboardRestaurantRouteChildren {
   AuthenticatedDashboardRestaurantPayoutsRoute: typeof AuthenticatedDashboardRestaurantPayoutsRoute
 }
@@ -439,7 +474,7 @@ const AuthenticatedDashboardRestaurantRouteWithChildren =
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRoute
-  AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRoute
+  AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRouteWithChildren
   AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRouteWithChildren
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -449,7 +484,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAdminRoute:
       AuthenticatedDashboardAdminRouteWithChildren,
     AuthenticatedDashboardCustomerRoute: AuthenticatedDashboardCustomerRoute,
-    AuthenticatedDashboardDriverRoute: AuthenticatedDashboardDriverRoute,
+    AuthenticatedDashboardDriverRoute:
+      AuthenticatedDashboardDriverRouteWithChildren,
     AuthenticatedDashboardRestaurantRoute:
       AuthenticatedDashboardRestaurantRouteWithChildren,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
