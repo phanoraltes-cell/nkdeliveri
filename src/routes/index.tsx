@@ -9,6 +9,7 @@ import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 import { Search, Clock, CreditCard, Plus } from "lucide-react";
+import heroLivreur from "@/assets/hero-livreur.jpg.asset.json";
 
 const homeDataQuery = queryOptions({
   queryKey: ["home-data"],
@@ -100,9 +101,11 @@ function Index() {
 
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800"
-              alt="Plat kreyòl"
-              className="aspect-[4/3] w-full rounded-[28px] object-cover shadow-[0_24px_60px_rgba(194,90,5,0.28)]"
+              src={heroLivreur.url}
+              alt="Livrè NK Delivery ki soutni yon sache manje"
+              width={1024}
+              height={1024}
+              className="aspect-square w-full rounded-[28px] object-cover shadow-[0_24px_60px_rgba(194,90,5,0.28)]"
             />
             <div className="absolute -left-4 bottom-5 flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold shadow-lg">
               <Clock className="h-4 w-4 text-brand" /> 25-30 min
