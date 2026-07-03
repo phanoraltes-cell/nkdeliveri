@@ -64,7 +64,6 @@ export async function registerPWA() {
   };
 
   wb.addEventListener("waiting", promptUpdate);
-  wb.addEventListener("externalwaiting", promptUpdate);
 
   try {
     await wb.register();
