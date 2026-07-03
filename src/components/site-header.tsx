@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, User as UserIcon, LogOut } from "lucide-react";
+import { ShoppingBag, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
 import nkLogo from "@/assets/nk-logo.png.asset.json";
 import {
   DropdownMenu,
@@ -88,6 +88,9 @@ export function SiteHeader() {
                 <UserIcon className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
+                  </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/profile">Pwofil mwen</Link>
                 </DropdownMenuItem>
@@ -101,12 +104,20 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link
-              to="/auth"
-              className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)]"
-            >
-              Konekte
-            </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/auth"
+                  className="hidden rounded-full border-2 border-brand-soft bg-white px-4 py-2 text-sm font-bold text-brand-deep transition hover:bg-brand-soft/50 sm:inline-block"
+                >
+                  Konekte
+                </Link>
+                <Link
+                  to="/auth/register"
+                  className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)]"
+                >
+                  Enskri
+                </Link>
+              </div>
           )}
         </div>
       </div>
