@@ -218,6 +218,25 @@ function OrderDetail() {
           </div>
         </div>
 
+        {delivery && trackingMarkers.length > 0 && (
+          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <div className="font-display text-base font-bold">Swiv livrezon w</div>
+                {delivery.location_updated_at && (
+                  <div className="text-xs text-ink-soft">
+                    Dènye mizajou: {new Date(delivery.location_updated_at).toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+              <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+                {delivery.status}
+              </span>
+            </div>
+            <LiveMap markers={trackingMarkers} className="h-[320px] w-full rounded-xl" />
+          </div>
+        )}
+
         <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
           <div className="mb-3 font-display text-base font-bold">Detay</div>
           {o.order_items?.map((it: any, i: number) => (
