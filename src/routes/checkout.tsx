@@ -41,12 +41,18 @@ function Checkout() {
   const restaurantId = items[0]?.restaurantId;
   useEffect(() => {
     if (!restaurantId) { setRestaurant(null); return; }
-    supabase
-      .from("restaurants")
-      .select("id, name, payout_mode, moncash_number, moncash_account_name, natcash_number, natcash_account_name")
-      .eq("id", restaurantId)
-      .maybeSingle()
-      .then(({ data }) => setRestaurant(data));
+    (async () => {
+      const { data: r } = await supabase
+        .from("restaurants")
+        .select("id, name")
+        .eq("id", restaurantId)
+        .maybeSingle();
+      const { data: p } = await supabase.rpc("get_restaurant_payout_public", {
+        _restaurant_id: restaurantId,
+      });
+      const pd = Array.isArray(p) ? p[0] : p;
+      setRestaurant(r ? { ...r, ...(pd ?? {}) } : null);
+    })();
   }, [restaurantId]);
 
   const merchantDirect = restaurant?.payout_mode === "direct";
