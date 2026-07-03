@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/use-cart";
 import { formatHTG } from "@/lib/format";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -30,11 +30,37 @@ function Checkout() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [restaurant, setRestaurant] = useState<any>(null);
   const nav = useNavigate();
 
   const deliveryFee = items.length > 0 ? 150 : 0;
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
+
+  const restaurantId = items[0]?.restaurantId;
+  useEffect(() => {
+    if (!restaurantId) { setRestaurant(null); return; }
+    supabase
+      .from("restaurants")
+      .select("id, name, payout_mode, moncash_number, moncash_account_name, natcash_number, natcash_account_name")
+      .eq("id", restaurantId)
+      .maybeSingle()
+      .then(({ data }) => setRestaurant(data));
+  }, [restaurantId]);
+
+  const merchantDirect = restaurant?.payout_mode === "direct";
+  const payNumber =
+    method === "moncash"
+      ? merchantDirect ? restaurant?.moncash_number : "3XXX-XXXX (NK Delivery)"
+      : method === "natcash"
+      ? merchantDirect ? restaurant?.natcash_number : "3XXX-XXXX (NK Delivery)"
+      : null;
+  const payName =
+    method === "moncash"
+      ? merchantDirect ? restaurant?.moncash_account_name : "NK Delivery"
+      : method === "natcash"
+      ? merchantDirect ? restaurant?.natcash_account_name : "NK Delivery"
+      : null;
 
   async function submit() {
     if (!user) {
@@ -50,9 +76,13 @@ function Checkout() {
       return;
     }
     if (items.length === 0) return;
+    if ((method === "moncash" || method === "natcash") && merchantDirect && !payNumber) {
+      toast.error("Restoran an poko konfigire nimewo peman li. Chwazi yon lòt metòd.");
+      return;
+    }
     setSubmitting(true);
     try {
-      const restaurantId = items[0].restaurantId;
+      const rId = items[0].restaurantId;
       const orderNumber = "NK-" + Date.now().toString(36).toUpperCase();
 
       const { data: order, error: orderErr } = await supabase
@@ -60,7 +90,7 @@ function Checkout() {
         .insert({
           order_number: orderNumber,
           customer_id: user.id,
-          restaurant_id: restaurantId,
+          restaurant_id: rId,
           delivery_address: address,
           delivery_notes: notes || null,
           contact_phone: phone,
@@ -88,12 +118,18 @@ function Checkout() {
 
       const paymentStatus =
         method === "stripe" ? "pending" : method === "kach" ? "pending" : "awaiting_proof";
+      const receiverType =
+        (method === "moncash" || method === "natcash") && merchantDirect ? "merchant" : "admin";
       const { error: payErr } = await supabase.from("payments").insert({
         order_id: order.id,
         method,
         status: paymentStatus,
         amount: total,
         currency: "HTG",
+        receiver_type: receiverType,
+        receiver_restaurant_id: receiverType === "merchant" ? rId : null,
+        receiver_number: payNumber,
+        receiver_account_name: payName,
       });
       if (payErr) throw payErr;
 
@@ -194,9 +230,12 @@ function Checkout() {
                 {(method === "moncash" || method === "natcash") && (
                   <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
                     Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
-                    <b>{method === "moncash" ? "MonCash 3XXX-XXXX" : "NatCash 3XXX-XXXX"}</b> epi
-                    telechaje prèv peman an (foto/kaptè) sou paj kòmand la. Yon administratè ap
-                    verifye epi konfime kòmand la.
+                    <b>
+                      {method === "moncash" ? "MonCash " : "NatCash "}
+                      {payNumber ?? "(pa konfigire)"}
+                    </b>
+                    {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj
+                    kòmand la. {merchantDirect ? "Peman an ale dirèkteman sou kont restoran an." : "Yon administratè ap verifye epi konfime kòmand la."}
                   </div>
                 )}
               </div>
