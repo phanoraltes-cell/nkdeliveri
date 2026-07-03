@@ -18,33 +18,13 @@ export default defineConfig({
       VitePWA({
         registerType: "autoUpdate",
         injectRegister: null,
-        strategies: "generateSW",
+        strategies: "injectManifest",
+        srcDir: "src",
         filename: "sw.js",
         devOptions: { enabled: false },
         manifest: false,
-        workbox: {
-          navigateFallback: null,
-          navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+        injectManifest: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
-          runtimeCaching: [
-            {
-              urlPattern: ({ request }) => request.mode === "navigate",
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "html-nav",
-                networkTimeoutSeconds: 5,
-              },
-            },
-            {
-              urlPattern: ({ url, sameOrigin }) =>
-                sameOrigin && /\.(?:js|css|woff2|png|svg|jpg|jpeg|webp)$/.test(url.pathname),
-              handler: "CacheFirst",
-              options: {
-                cacheName: "static-assets",
-                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              },
-            },
-          ],
         },
       }),
     ],
