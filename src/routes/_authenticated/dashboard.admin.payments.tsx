@@ -8,6 +8,9 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { ProofThumb } from "@/components/proof-thumb";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Download, FileText } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payments")({
   beforeLoad: ({ context }) => {
@@ -25,6 +28,10 @@ function AdminPayments() {
   const [tab, setTab] = useState<"pending" | "history">("pending");
   const [filter, setFilter] = useState<"all" | "moncash" | "natcash">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "failed">("all");
+  const today = new Date().toISOString().slice(0, 10);
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const [fromDate, setFromDate] = useState<string>(monthAgo);
+  const [toDate, setToDate] = useState<string>(today);
   const sendPush = useServerFn(sendPaymentReviewPush);
 
   const list = useQuery({
@@ -211,6 +218,10 @@ function AdminPayments() {
           setFilter={setFilter}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          fromDate={fromDate}
+          toDate={toDate}
+          setFromDate={setFromDate}
+          setToDate={setToDate}
         />
       )}
     </div>
@@ -224,6 +235,10 @@ function PayoutHistory({
   setFilter,
   statusFilter,
   setStatusFilter,
+  fromDate,
+  toDate,
+  setFromDate,
+  setToDate,
 }: {
   data: any[] | undefined;
   loading: boolean;
@@ -231,18 +246,92 @@ function PayoutHistory({
   setFilter: (v: "all" | "moncash" | "natcash") => void;
   statusFilter: "all" | "paid" | "failed";
   setStatusFilter: (v: "all" | "paid" | "failed") => void;
+  fromDate: string;
+  toDate: string;
+  setFromDate: (v: string) => void;
+  setToDate: (v: string) => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
   const filtered = (data || []).filter((p) => {
     if (filter !== "all" && p.method !== filter) return false;
     if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    const d = new Date(p.reviewed_at || p.created_at);
+    if (fromDate && d < new Date(fromDate + "T00:00:00")) return false;
+    if (toDate && d > new Date(toDate + "T23:59:59")) return false;
     return true;
   });
 
   const totalPaid = filtered
     .filter((p) => p.status === "paid")
     .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+  const rows = filtered.map((p) => ({
+    date: new Date(p.reviewed_at || p.created_at).toLocaleString("fr-HT"),
+    order: p.orders?.order_number || "",
+    restaurant: p.orders?.restaurants?.name || "",
+    method: (p.method || "").toUpperCase(),
+    tx: p.transaction_ref || "",
+    sender: p.sender_phone || "",
+    receiver: [p.receiver_type, p.receiver_name, p.receiver_phone].filter(Boolean).join(" · "),
+    amount: Number(p.amount || 0),
+    status: p.status,
+    notes: p.review_notes || "",
+  }));
+
+  function exportCSV() {
+    const headers = ["Dat", "Kòmand", "Restoran", "Metòd", "Tx", "Soti nan", "Voye bay", "Mòn (HTG)", "Estati", "Nòt"];
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        [r.date, r.order, r.restaurant, r.method, r.tx, r.sender, r.receiver, r.amount, r.status, r.notes]
+          .map((v) => {
+            const s = String(v ?? "").replace(/"/g, '""');
+            return /[",\n]/.test(s) ? `"${s}"` : s;
+          })
+          .join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payout-history_${fromDate}_${toDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV telechaje");
+  }
+
+  function exportPDF() {
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    doc.setFontSize(14);
+    doc.text("NK Delivery - Payout history", 40, 40);
+    doc.setFontSize(10);
+    doc.text(`Peryòd: ${fromDate} → ${toDate}`, 40, 58);
+    doc.text(
+      `Metòd: ${filter} · Estati: ${statusFilter} · Total apwouve: ${formatHTG(totalPaid)} · ${rows.length} peman`,
+      40,
+      74
+    );
+    autoTable(doc, {
+      startY: 90,
+      head: [["Dat", "Kòmand", "Restoran", "Metòd", "Tx", "Voye bay", "Mòn", "Estati"]],
+      body: rows.map((r) => [
+        r.date,
+        r.order,
+        r.restaurant,
+        r.method,
+        r.tx,
+        r.receiver,
+        formatHTG(r.amount),
+        r.status,
+      ]),
+      styles: { fontSize: 8, cellPadding: 4 },
+      headStyles: { fillColor: [234, 88, 12] },
+    });
+    doc.save(`payout-history_${fromDate}_${toDate}.pdf`);
+    toast.success("PDF telechaje");
+  }
 
   return (
     <div className="space-y-4">
@@ -266,6 +355,39 @@ function PayoutHistory({
             {s === "all" ? "Tout" : s === "paid" ? "Apwouve" : "Rejte"}
           </button>
         ))}
+        <span className="mx-2 h-4 w-px bg-brand-soft" />
+        <label className="flex items-center gap-1 text-xs text-ink-soft">
+          Depi
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
+          />
+        </label>
+        <label className="flex items-center gap-1 text-xs text-ink-soft">
+          Jiska
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
+          />
+        </label>
+        <button
+          onClick={exportCSV}
+          disabled={rows.length === 0}
+          className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          <Download className="h-3.5 w-3.5" /> CSV
+        </button>
+        <button
+          onClick={exportPDF}
+          disabled={rows.length === 0}
+          className="inline-flex items-center gap-1 rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50"
+        >
+          <FileText className="h-3.5 w-3.5" /> PDF
+        </button>
         <div className="ml-auto text-sm text-ink-soft">
           Total apwouve: <b className="text-brand-deep">{formatHTG(totalPaid)}</b> · {filtered.length} peman
         </div>
