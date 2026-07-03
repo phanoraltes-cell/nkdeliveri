@@ -45,9 +45,6 @@ function MerchantPayouts() {
     natcash_number: "",
     natcash_account_name: "",
     payout_mode: "via_admin",
-    commission_type: "per_order",
-    commission_rate: 10,
-    monthly_commission_amount: 0,
   });
 
   useEffect(() => {
@@ -58,9 +55,6 @@ function MerchantPayouts() {
       natcash_number: r.natcash_number ?? "",
       natcash_account_name: r.natcash_account_name ?? "",
       payout_mode: r.payout_mode ?? "via_admin",
-      commission_type: r.commission_type ?? "per_order",
-      commission_rate: Number(r.commission_rate ?? 10),
-      monthly_commission_amount: Number(r.monthly_commission_amount ?? 0),
     });
   }, [r?.id]);
 
@@ -77,9 +71,6 @@ function MerchantPayouts() {
         natcash_number: f.natcash_number || null,
         natcash_account_name: f.natcash_account_name || null,
         payout_mode: f.payout_mode,
-        commission_type: f.commission_type,
-        commission_rate: f.commission_rate,
-        monthly_commission_amount: f.monthly_commission_amount,
       }, { onConflict: "restaurant_id" });
       if (error) throw error;
     },
@@ -130,44 +121,14 @@ function MerchantPayouts() {
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Komisyon platfòm</h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {[
-            { id: "per_order", label: "Chak kòmand (%)", desc: "Yon pousantaj sou chak kòmand." },
-            { id: "monthly", label: "Chak mwa (fiks)", desc: "Yon montan fiks HTG pa mwa." },
-          ].map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => setF((s) => ({ ...s, commission_type: o.id }))}
-              className={`rounded-2xl border-2 p-3 text-left ${
-                f.commission_type === o.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white"
-              }`}
-            >
-              <div className="font-bold">{o.label}</div>
-              <div className="text-xs text-ink-soft">{o.desc}</div>
-            </button>
-          ))}
+        <div className="mt-3 rounded-xl bg-brand-soft/40 p-3 text-sm text-ink-soft">
+          {r?.commission_type === "monthly" ? (
+            <>Komisyon chak mwa: <b>{formatHTG(Number(r?.monthly_commission_amount ?? 0))}</b></>
+          ) : (
+            <>Komisyon pa kòmand: <b>{Number(r?.commission_rate ?? 10)}%</b></>
+          )}
+          <div className="mt-1 text-xs">Sèl yon administratè NK ka chanje komisyon platfòm nan.</div>
         </div>
-        {f.commission_type === "per_order" ? (
-          <div className="mt-3 max-w-xs">
-            <Field
-              label="Pousantaj (%)"
-              type="number"
-              value={String(f.commission_rate)}
-              onChange={(v) => setF((s) => ({ ...s, commission_rate: Number(v) }))}
-            />
-          </div>
-        ) : (
-          <div className="mt-3 max-w-xs">
-            <Field
-              label="Montan chak mwa (HTG)"
-              type="number"
-              value={String(f.monthly_commission_amount)}
-              onChange={(v) => setF((s) => ({ ...s, monthly_commission_amount: Number(v) }))}
-            />
-            <div className="mt-1 text-xs text-ink-soft">Aktyèl: {formatHTG(f.monthly_commission_amount)}</div>
-          </div>
-        )}
       </section>
 
       <button
