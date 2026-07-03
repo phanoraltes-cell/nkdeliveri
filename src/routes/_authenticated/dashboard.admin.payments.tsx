@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { sendPaymentReviewPush } from "@/lib/send-push.functions";
 import { formatHTG } from "@/lib/format";
-import { CheckCircle2, XCircle, Eye } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { ProofThumb } from "@/components/proof-thumb";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -38,17 +39,6 @@ function AdminPayments() {
       return data;
     },
   });
-
-  async function signedUrl(path: string) {
-    const { data, error } = await supabase.storage
-      .from("payment-proofs")
-      .createSignedUrl(path, 300);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    window.open(data.signedUrl, "_blank", "noopener");
-  }
 
   const decide = useMutation({
     mutationFn: async ({ id, decision, note }: { id: string; decision: "paid" | "failed"; note?: string }) => {
@@ -125,19 +115,21 @@ function AdminPayments() {
             )}
 
             {p.payment_proofs?.length > 0 ? (
-              <div className="mt-3 space-y-1">
-                <div className="text-xs font-bold uppercase text-ink-soft">Prèv</div>
-                {p.payment_proofs.map((pr: any) => (
-                  <div key={pr.id} className="flex items-center gap-2 rounded-lg bg-cream px-3 py-2 text-sm">
-                    <span className="font-mono text-xs text-ink-soft">{pr.file_url}</span>
-                    <button
-                      onClick={() => signedUrl(pr.file_url)}
-                      className="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand hover:text-white"
-                    >
-                      <Eye className="h-3 w-3" /> Wè
-                    </button>
-                  </div>
-                ))}
+              <div className="mt-3">
+                <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv peman</div>
+                <div className="flex flex-wrap gap-3">
+                  {p.payment_proofs.map((pr: any) => (
+                    <div key={pr.id} className="space-y-1">
+                      <ProofThumb path={pr.file_url} />
+                      {(pr.transaction_ref || pr.sender_phone) && (
+                        <div className="max-w-[96px] text-[10px] leading-tight text-ink-soft">
+                          {pr.transaction_ref && <div>Tx: <b>{pr.transaction_ref}</b></div>}
+                          {pr.sender_phone && <div>{pr.sender_phone}</div>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
