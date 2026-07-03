@@ -56,9 +56,9 @@ function RegisterPage() {
 
 function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
   const options: { type: AccountType; icon: any; title: string; desc: string }[] = [
-    { type: "customer", icon: User, title: "👤 Kliyan", desc: "Kòmande manje nan restoran favori w yo." },
-    { type: "restaurant", icon: Store, title: "🍽️ Restoran", desc: "Vann plat ou yo sou NK Delivery." },
-    { type: "driver", icon: Bike, title: "🛵 Livrè", desc: "Ranpòte lajan nan livre manje." },
+    { type: "customer", icon: User, title: "\u00a0Kliyan", desc: "Kòmande manje nan restoran favori w yo." },
+    { type: "restaurant", icon: Store, title: "Restoran", desc: "Vann plat ou yo sou NK Delivery." },
+    { type: "driver", icon: Bike, title: "\u00a0Livrè", desc: "Ranpòte lajan nan livre manje." },
   ];
   return (
     <div className="grid gap-4 sm:grid-cols-3">
