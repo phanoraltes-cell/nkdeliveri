@@ -132,6 +132,21 @@ function AdminDashboard() {
         <p className="mt-1 text-ink-soft">Jere platfòm nan: itilizatè, restoran, livrè, peman.</p>
       </div>
 
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-ink">Livrezon aktif · tan reyèl</h2>
+          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+            {active.length} an kou
+          </span>
+        </div>
+        <LiveMap markers={markers} className="h-[420px] w-full rounded-xl" />
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Livrè</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Adrès kliyan</span>
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           { icon: Users, label: "Itilizatè", value: s?.users, tone: "bg-blue-50 text-blue-700" },
