@@ -22,13 +22,20 @@ function MerchantPayouts() {
   const { data: r, isLoading } = useQuery({
     queryKey: ["me-restaurant-payouts", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: rest, error: e1 } = await supabase
         .from("restaurants")
-        .select("id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_mode, commission_type, commission_rate, monthly_commission_amount")
+        .select("id")
         .eq("owner_id", user!.id)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (e1) throw e1;
+      if (!rest?.id) return null;
+      const { data: pd, error: e2 } = await supabase
+        .from("restaurant_payout_details")
+        .select("restaurant_id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_mode, commission_type, commission_rate, monthly_commission_amount")
+        .eq("restaurant_id", rest.id)
+        .maybeSingle();
+      if (e2) throw e2;
+      return { id: rest.id, ...(pd ?? {}) } as any;
     },
   });
 
@@ -63,7 +70,8 @@ function MerchantPayouts() {
       if (f.payout_mode === "direct" && !f.moncash_number && !f.natcash_number) {
         throw new Error("Antre omwen yon nimewo MonCash oswa NatCash.");
       }
-      const { error } = await supabase.from("restaurants").update({
+      const { error } = await supabase.from("restaurant_payout_details").upsert({
+        restaurant_id: r.id,
         moncash_number: f.moncash_number || null,
         moncash_account_name: f.moncash_account_name || null,
         natcash_number: f.natcash_number || null,
@@ -72,7 +80,7 @@ function MerchantPayouts() {
         commission_type: f.commission_type,
         commission_rate: f.commission_rate,
         monthly_commission_amount: f.monthly_commission_amount,
-      }).eq("id", r.id);
+      }, { onConflict: "restaurant_id" });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] }); },
