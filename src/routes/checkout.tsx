@@ -95,7 +95,7 @@ function Checkout() {
         _items: items.map((it) => ({ product_id: it.productId, quantity: it.qty })),
         _delivery_address: address,
         _contact_phone: phone,
-        _delivery_notes: notes || null,
+        _delivery_notes: notes || "",
         _method: method,
       });
       if (rpcErr) throw rpcErr;
