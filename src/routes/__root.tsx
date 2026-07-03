@@ -100,6 +100,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "NK Delivery" },
       { name: "mobile-web-app-capable", content: "yes" },
+      { name: "twitter:title", content: "NK Delivery — Manje lakay, livre lakay ou" },
+      { name: "description", content: "Your Digital Hub is a web application that replicates a website prototype based on provided specifications." },
+      { property: "og:description", content: "Your Digital Hub is a web application that replicates a website prototype based on provided specifications." },
+      { name: "twitter:description", content: "Your Digital Hub is a web application that replicates a website prototype based on provided specifications." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53291c33-159a-48af-8403-f6f86e0de948/id-preview-3520e5af--65436214-2a82-4fba-bb49-b02dac48f788.lovable.app-1783065983825.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/53291c33-159a-48af-8403-f6f86e0de948/id-preview-3520e5af--65436214-2a82-4fba-bb49-b02dac48f788.lovable.app-1783065983825.png" },
     ],
     links: [
       {
