@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      drivers: {
+        Row: {
+          address: string | null
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          first_name: string | null
+          id: string
+          id_doc_url: string | null
+          last_name: string | null
+          license_doc_url: string | null
+          license_plate: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          first_name?: string | null
+          id?: string
+          id_doc_url?: string | null
+          last_name?: string | null
+          license_doc_url?: string | null
+          license_plate?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          updated_at?: string
+          user_id: string
+          vehicle_photo_url?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          first_name?: string | null
+          id?: string
+          id_doc_url?: string | null
+          last_name?: string | null
+          license_doc_url?: string | null
+          license_plate?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          updated_at?: string
+          user_id?: string
+          vehicle_photo_url?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -139,6 +196,38 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_employees: {
+        Row: {
+          created_at: string
+          id: string
+          restaurant_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_employees_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string | null
@@ -237,6 +326,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_primary_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -253,6 +343,13 @@ export type Database = {
         | "driver"
         | "admin"
         | "super_admin"
+      driver_status:
+        | "pending"
+        | "approved"
+        | "suspended"
+        | "rejected"
+        | "offline"
+        | "online"
       restaurant_status: "pending" | "approved" | "suspended" | "rejected"
     }
     CompositeTypes: {
@@ -388,6 +485,14 @@ export const Constants = {
         "driver",
         "admin",
         "super_admin",
+      ],
+      driver_status: [
+        "pending",
+        "approved",
+        "suspended",
+        "rejected",
+        "offline",
+        "online",
       ],
       restaurant_status: ["pending", "approved", "suspended", "rejected"],
     },
