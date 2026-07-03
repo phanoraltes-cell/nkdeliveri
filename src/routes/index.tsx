@@ -1,15 +1,34 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { NkSmile } from "@/components/nk-smile";
 import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
-import { Search, Clock, CreditCard, Plus } from "lucide-react";
+import {
+  Search,
+  Clock,
+  CreditCard,
+  Plus,
+  Store,
+  UtensilsCrossed,
+  Wallet,
+  Bike,
+  Heart,
+  Star,
+  Layers,
+  Timer,
+  ShieldCheck,
+  Headphones,
+  ArrowRight,
+} from "lucide-react";
 import heroLivreur from "@/assets/hero-livreur.jpg.asset.json";
+import chefImg from "@/assets/chef.jpg.asset.json";
+import scooterImg from "@/assets/scooter.jpg.asset.json";
+import phoneMockup from "@/assets/phone-mockup.jpg.asset.json";
 
 const homeDataQuery = queryOptions({
   queryKey: ["home-data"],
