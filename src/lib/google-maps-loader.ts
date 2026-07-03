@@ -1,4 +1,4 @@
-let loadPromise: Promise<typeof google.maps> | null = null;
+let loadPromise: Promise<any> | null = null;
 
 declare global {
   interface Window {
@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-export function loadGoogleMaps(): Promise<typeof google.maps> {
+export function loadGoogleMaps(): Promise<any> {
   if (typeof window === "undefined") return Promise.reject(new Error("SSR"));
   if (window.google?.maps) return Promise.resolve(window.google.maps);
   if (loadPromise) return loadPromise;
