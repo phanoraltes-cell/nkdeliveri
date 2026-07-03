@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Panye — NK Delivery" }] }),
@@ -17,18 +18,23 @@ const METHODS = [
   { id: "stripe", label: "Kat kredi / debi", sub: "Visa · Mastercard (otomatik)" },
   { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv" },
   { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv" },
-  { id: "cash", label: "Kach nan livrezon", sub: "Peye lè manje a rive" },
+  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive" },
 ] as const;
 
 function Checkout() {
   const { items, setQty, remove, subtotal, count } = useCart();
+  const { clear } = useCart();
   const { user } = useAuth();
-  const [method, setMethod] = useState<string>("stripe");
+  const [method, setMethod] = useState<"stripe" | "moncash" | "natcash" | "kach">("stripe");
   const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
 
   const deliveryFee = items.length > 0 ? 150 : 0;
-  const total = subtotal + deliveryFee;
+  const serviceFee = 0;
+  const total = subtotal + deliveryFee + serviceFee;
 
   async function submit() {
     if (!user) {
@@ -39,7 +45,66 @@ function Checkout() {
       toast.error("Antre adrès livrezon w");
       return;
     }
-    toast.info("Kreyasyon kòmand ak peman ap disponib nan pwochen etap la");
+    if (!phone.trim()) {
+      toast.error("Antre yon nimewo telefòn pou kontak");
+      return;
+    }
+    if (items.length === 0) return;
+    setSubmitting(true);
+    try {
+      const restaurantId = items[0].restaurantId;
+      const orderNumber = "NK-" + Date.now().toString(36).toUpperCase();
+
+      const { data: order, error: orderErr } = await supabase
+        .from("orders")
+        .insert({
+          order_number: orderNumber,
+          customer_id: user.id,
+          restaurant_id: restaurantId,
+          delivery_address: address,
+          delivery_notes: notes || null,
+          contact_phone: phone,
+          subtotal,
+          delivery_fee: deliveryFee,
+          service_fee: serviceFee,
+          total,
+          currency: "HTG",
+          status: "pending",
+        })
+        .select("id")
+        .single();
+      if (orderErr) throw orderErr;
+
+      const itemsPayload = items.map((it) => ({
+        order_id: order.id,
+        product_id: it.productId,
+        product_name: it.name,
+        unit_price: it.price,
+        quantity: it.qty,
+        line_total: it.price * it.qty,
+      }));
+      const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
+      if (itemsErr) throw itemsErr;
+
+      const paymentStatus =
+        method === "stripe" ? "pending" : method === "kach" ? "pending" : "awaiting_proof";
+      const { error: payErr } = await supabase.from("payments").insert({
+        order_id: order.id,
+        method,
+        status: paymentStatus,
+        amount: total,
+        currency: "HTG",
+      });
+      if (payErr) throw payErr;
+
+      clear();
+      toast.success("Kòmand kreye ak siksè");
+      nav({ to: "/orders/$id", params: { id: order.id } });
+    } catch (e: any) {
+      toast.error(e.message || "Erè pandan kreyasyon kòmand la");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -94,6 +159,20 @@ function Checkout() {
                   placeholder="Kote pou nou livre a…"
                   className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
                 />
+                <label className="mt-3 mb-2 block text-sm font-bold">Telefòn kontak</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+509 …"
+                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                />
+                <label className="mt-3 mb-2 block text-sm font-bold">Nòt pou livrezon (opsyonèl)</label>
+                <input
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Enstriksyon espesyal…"
+                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                />
               </div>
 
               <div className="mt-5">
@@ -102,7 +181,7 @@ function Checkout() {
                   {METHODS.map((m) => (
                     <button
                       key={m.id}
-                      onClick={() => setMethod(m.id)}
+                      onClick={() => setMethod(m.id as any)}
                       className={`rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
                         method === m.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white hover:border-brand"
                       }`}
@@ -112,13 +191,22 @@ function Checkout() {
                     </button>
                   ))}
                 </div>
+                {(method === "moncash" || method === "natcash") && (
+                  <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+                    Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
+                    <b>{method === "moncash" ? "MonCash 3XXX-XXXX" : "NatCash 3XXX-XXXX"}</b> epi
+                    telechaje prèv peman an (foto/kaptè) sou paj kòmand la. Yon administratè ap
+                    verifye epi konfime kòmand la.
+                  </div>
+                )}
               </div>
 
               <button
                 onClick={submit}
+                disabled={submitting}
                 className="mt-6 w-full rounded-full bg-brand py-4 font-display font-extrabold text-white transition hover:bg-brand-deep"
               >
-                Konfime kòmand la · {formatHTG(total)}
+                {submitting ? "Ap kreye…" : `Konfime kòmand la · ${formatHTG(total)}`}
               </button>
             </>
           )}

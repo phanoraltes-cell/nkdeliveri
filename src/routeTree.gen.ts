@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
+import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -24,6 +25,7 @@ import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
+import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -63,6 +65,11 @@ const RestaurantsSlugRoute = RestaurantsSlugRouteImport.update({
   id: '/restaurants/$slug',
   path: '/restaurants/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersIdRoute = OrdersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OrdersRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
@@ -104,55 +111,67 @@ const AuthenticatedDashboardAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAdminPaymentsRoute =
+  AuthenticatedDashboardAdminPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth': typeof AuthIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
-  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRoute
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -163,6 +182,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/dashboard'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
     | '/restaurants/'
@@ -171,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver'
     | '/dashboard/restaurant'
     | '/dashboard/'
+    | '/dashboard/admin/payments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -178,6 +199,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth'
     | '/restaurants'
@@ -186,6 +208,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver'
     | '/dashboard/restaurant'
     | '/dashboard'
+    | '/dashboard/admin/payments'
   id:
     | '__root__'
     | '/'
@@ -195,6 +218,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/_authenticated/dashboard'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
     | '/restaurants/'
@@ -203,13 +227,14 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
+    | '/_authenticated/dashboard/admin/payments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
-  OrdersRoute: typeof OrdersRoute
+  OrdersRoute: typeof OrdersRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
@@ -275,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RestaurantsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders/$id': {
+      id: '/orders/$id'
+      path: '/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof OrdersIdRouteImport
+      parentRoute: typeof OrdersRoute
+    }
     '/auth/register': {
       id: '/auth/register'
       path: '/auth/register'
@@ -324,11 +356,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/admin/payments': {
+      id: '/_authenticated/dashboard/admin/payments'
+      path: '/payments'
+      fullPath: '/dashboard/admin/payments'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
   }
 }
 
+interface AuthenticatedDashboardAdminRouteChildren {
+  AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
+}
+
+const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
+  {
+    AuthenticatedDashboardAdminPaymentsRoute:
+      AuthenticatedDashboardAdminPaymentsRoute,
+  }
+
+const AuthenticatedDashboardAdminRouteWithChildren =
+  AuthenticatedDashboardAdminRoute._addFileChildren(
+    AuthenticatedDashboardAdminRouteChildren,
+  )
+
 interface AuthenticatedDashboardRouteChildren {
-  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRoute
   AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRoute
   AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRoute
@@ -337,7 +391,8 @@ interface AuthenticatedDashboardRouteChildren {
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
-    AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+    AuthenticatedDashboardAdminRoute:
+      AuthenticatedDashboardAdminRouteWithChildren,
     AuthenticatedDashboardCustomerRoute: AuthenticatedDashboardCustomerRoute,
     AuthenticatedDashboardDriverRoute: AuthenticatedDashboardDriverRoute,
     AuthenticatedDashboardRestaurantRoute:
@@ -361,11 +416,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface OrdersRouteChildren {
+  OrdersIdRoute: typeof OrdersIdRoute
+}
+
+const OrdersRouteChildren: OrdersRouteChildren = {
+  OrdersIdRoute: OrdersIdRoute,
+}
+
+const OrdersRouteWithChildren =
+  OrdersRoute._addFileChildren(OrdersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
-  OrdersRoute: OrdersRoute,
+  OrdersRoute: OrdersRouteWithChildren,
   ProfileRoute: ProfileRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
