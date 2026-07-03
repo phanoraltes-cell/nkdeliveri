@@ -201,7 +201,7 @@ function RestaurantForm() {
       });
       // Upload logo/cover if provided
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      const updates: Record<string, string> = {};
+      const updates: { logo_url?: string; cover_url?: string } = {};
       if (userId && logo) {
         updates.logo_url = await uploadTo("restaurant-assets", `${userId}/logo-${Date.now()}-${logo.name}`, logo);
       }
@@ -278,7 +278,7 @@ function DriverForm() {
       });
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) return;
-      const updates: Record<string, string> = {};
+      const updates: { id_doc_url?: string; license_doc_url?: string; vehicle_photo_url?: string } = {};
       if (idDoc) updates.id_doc_url = await uploadTo("driver-documents", `${userId}/id-${Date.now()}-${idDoc.name}`, idDoc);
       if (license) updates.license_doc_url = await uploadTo("driver-documents", `${userId}/license-${Date.now()}-${license.name}`, license);
       if (vehiclePhoto) updates.vehicle_photo_url = await uploadTo("driver-documents", `${userId}/vehicle-${Date.now()}-${vehiclePhoto.name}`, vehiclePhoto);
