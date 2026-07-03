@@ -674,12 +674,60 @@ export type Database = {
           },
         ]
       }
+      restaurant_payout_details: {
+        Row: {
+          commission_rate: number | null
+          commission_type: string | null
+          created_at: string
+          moncash_account_name: string | null
+          moncash_number: string | null
+          monthly_commission_amount: number | null
+          natcash_account_name: string | null
+          natcash_number: string | null
+          payout_mode: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          commission_rate?: number | null
+          commission_type?: string | null
+          created_at?: string
+          moncash_account_name?: string | null
+          moncash_number?: string | null
+          monthly_commission_amount?: number | null
+          natcash_account_name?: string | null
+          natcash_number?: string | null
+          payout_mode?: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          commission_rate?: number | null
+          commission_type?: string | null
+          created_at?: string
+          moncash_account_name?: string | null
+          moncash_number?: string | null
+          monthly_commission_amount?: number | null
+          natcash_account_name?: string | null
+          natcash_number?: string | null
+          payout_mode?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_payout_details_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string | null
           avg_prep_time: number
-          commission_rate: number
-          commission_type: string
           cover_url: string | null
           created_at: string
           cuisine: string | null
@@ -692,15 +740,9 @@ export type Database = {
           logo_url: string | null
           longitude: number | null
           min_order: number
-          moncash_account_name: string | null
-          moncash_number: string | null
-          monthly_commission_amount: number
           name: string
-          natcash_account_name: string | null
-          natcash_number: string | null
           opening_hours: Json | null
           owner_id: string | null
-          payout_mode: string
           phone: string | null
           rating: number | null
           slug: string
@@ -710,8 +752,6 @@ export type Database = {
         Insert: {
           address?: string | null
           avg_prep_time?: number
-          commission_rate?: number
-          commission_type?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
@@ -724,15 +764,9 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
-          moncash_account_name?: string | null
-          moncash_number?: string | null
-          monthly_commission_amount?: number
           name: string
-          natcash_account_name?: string | null
-          natcash_number?: string | null
           opening_hours?: Json | null
           owner_id?: string | null
-          payout_mode?: string
           phone?: string | null
           rating?: number | null
           slug: string
@@ -742,8 +776,6 @@ export type Database = {
         Update: {
           address?: string | null
           avg_prep_time?: number
-          commission_rate?: number
-          commission_type?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
@@ -756,15 +788,9 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
-          moncash_account_name?: string | null
-          moncash_number?: string | null
-          monthly_commission_amount?: number
           name?: string
-          natcash_account_name?: string | null
-          natcash_number?: string | null
           opening_hours?: Json | null
           owner_id?: string | null
-          payout_mode?: string
           phone?: string | null
           rating?: number | null
           slug?: string
@@ -858,6 +884,17 @@ export type Database = {
     }
     Functions: {
       get_primary_role: { Args: { _user_id: string }; Returns: string }
+      get_restaurant_payout_public: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          moncash_account_name: string
+          moncash_number: string
+          natcash_account_name: string
+          natcash_number: string
+          payout_mode: string
+          restaurant_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
