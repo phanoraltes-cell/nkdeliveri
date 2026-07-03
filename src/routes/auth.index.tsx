@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/auth/")({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Konekte — NK Delivery" }] }),
   component: AuthPage,
