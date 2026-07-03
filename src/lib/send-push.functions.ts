@@ -88,7 +88,7 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
             keys: { p256dh: s.p256dh, auth: s.auth },
           };
           const payload = await buildPushPayload(message as any, subscription as any, vapid as any);
-          const res = await fetch(s.endpoint, payload);
+          const res = await fetch(s.endpoint, payload as unknown as RequestInit);
           if (res.status === 404 || res.status === 410) {
             deadEndpoints.push(s.endpoint);
           } else if (res.ok || res.status === 201) {
