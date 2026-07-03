@@ -23,8 +23,8 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(43,26,14,0.06)]">
-      <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-5 py-2.5">
+    <header className="sticky top-4 z-50 px-4">
+      <div className="mx-auto flex h-20 max-w-[1200px] items-center gap-3 rounded-full border border-brand-soft/60 bg-white/95 px-5 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur">
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src={nkLogo.url}
@@ -34,8 +34,8 @@ export function SiteHeader() {
             className="h-11 w-11 rounded-full object-contain"
           />
           <div>
-            <div className="font-display text-xl font-extrabold tracking-tight leading-none">
-              NK <span className="text-brand">Delivery</span>
+            <div className="font-display text-xl font-extrabold tracking-tight leading-none text-ink">
+              NK <span className="text-brand">Delivery+</span>
             </div>
             <div className="text-[0.7rem] uppercase tracking-widest text-ink-soft">
               Gonaïves
@@ -43,36 +43,38 @@ export function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="ml-auto flex items-center gap-1">
+        <nav className="mx-auto hidden items-center gap-1 md:flex">
           <Link
             to="/"
             activeOptions={{ exact: true }}
-            activeProps={{ className: "!bg-brand !text-white" }}
-            className="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition hover:bg-brand-soft hover:text-brand-deep"
+            activeProps={{ className: "!text-brand after:!scale-x-100" }}
+            className="relative px-4 py-2 text-sm font-semibold text-ink transition hover:text-brand after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-[3px] after:origin-center after:scale-x-0 after:rounded-full after:bg-brand after:transition-transform"
           >
             Akèy
           </Link>
           <Link
             to="/restaurants"
-            activeProps={{ className: "!bg-brand !text-white" }}
-            className="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition hover:bg-brand-soft hover:text-brand-deep"
+            activeProps={{ className: "!text-brand after:!scale-x-100" }}
+            className="relative px-4 py-2 text-sm font-semibold text-ink transition hover:text-brand after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-[3px] after:origin-center after:scale-x-0 after:rounded-full after:bg-brand after:transition-transform"
           >
             Restoran
           </Link>
           <Link
             to="/orders"
-            activeProps={{ className: "!bg-brand !text-white" }}
-            className="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition hover:bg-brand-soft hover:text-brand-deep"
+            activeProps={{ className: "!text-brand after:!scale-x-100" }}
+            className="relative px-4 py-2 text-sm font-semibold text-ink transition hover:text-brand after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-[3px] after:origin-center after:scale-x-0 after:rounded-full after:bg-brand after:transition-transform"
           >
             Kòmand mwen
           </Link>
+        </nav>
 
+        <div className="ml-auto flex items-center gap-2">
           <Link
             to="/checkout"
-            className="relative inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand-deep transition hover:bg-brand hover:text-white"
+            className="relative inline-flex items-center gap-2 rounded-full bg-brand-soft/70 px-4 py-2.5 text-sm font-bold text-brand-deep transition hover:bg-brand-soft"
           >
             <ShoppingBag className="h-4 w-4" />
-            Panye
+            <span className="hidden sm:inline">Panye</span>
             {count > 0 && (
               <span className="absolute -top-1.5 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[0.68rem] font-bold text-white">
                 {count}
@@ -82,7 +84,7 @@ export function SiteHeader() {
 
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white">
+              <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-deep">
                 <UserIcon className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -101,12 +103,12 @@ export function SiteHeader() {
           ) : (
             <Link
               to="/auth"
-              className="ml-1 rounded-full bg-ink px-4 py-2 text-sm font-bold text-white transition hover:bg-ink/90"
+              className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)]"
             >
               Konekte
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
