@@ -60,13 +60,13 @@ const CUISINES = ["Tout", "Manje Kreyòl", "Soup Joumou", "Ragou", "Lalo", "Frit
 
 const DISH_TYPES: { key: string; label: string; emoji: string }[] = [
   { key: "all", label: "Tout", emoji: "\n" },
-  { key: "diri_sos", label: "Diri ak Sòs", emoji: "🍚" },
-  { key: "griyo", label: "Griyo", emoji: "🍖" },
-  { key: "fritay", label: "Fritay", emoji: "🍤" },
-  { key: "soup", label: "Soup", emoji: "🥣" },
-  { key: "pwason", label: "Pwason", emoji: "🐟" },
-  { key: "sandwich", label: "Sandwich", emoji: "🥪" },
-  { key: "pizza", label: "Pizza", emoji: "🍕" },
+  { key: "diri_sos", label: "Diri ak Sòs", emoji: "\n\n" },
+  { key: "griyo", label: "Griyo", emoji: "\n" },
+  { key: "fritay", label: "Fritay", emoji: "\n\n" },
+  { key: "soup", label: "Soup", emoji: "\n\n" },
+  { key: "pwason", label: "Pwason", emoji: "\n" },
+  { key: "sandwich", label: "Sandwich", emoji: "\n" },
+  { key: "pizza", label: "Pizza", emoji: "\n" },
   { key: "bwason", label: "Bwason", emoji: "🥤" },
 ];
 
@@ -404,7 +404,7 @@ function Index() {
                 <span aria-hidden>{d.emoji}</span>
                 {d.label}
                 <span
-                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] ${
+                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] block ${
                     active ? "bg-white/25 text-white" : "bg-brand-soft/60 text-brand-deep"
                   }`}
                 >
