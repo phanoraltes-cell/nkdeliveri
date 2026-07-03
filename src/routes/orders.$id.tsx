@@ -8,6 +8,8 @@ import { formatHTG } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { LiveMap, type MapMarker } from "@/components/live-map";
+import { useDeliveryForOrder } from "@/hooks/use-active-deliveries";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({ meta: [{ title: "Kòmand — NK Delivery" }] }),
@@ -156,6 +158,21 @@ function OrderDetail() {
 
   const o = order.data;
   const payment = o.payments?.[0];
+  const delivery = useDeliveryForOrder(o.id);
+  const trackingMarkers: MapMarker[] = (() => {
+    if (!delivery) return [];
+    const arr: MapMarker[] = [];
+    if (delivery.driver_lat != null && delivery.driver_lng != null) {
+      arr.push({ id: "drv", lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng), color: "blue", label: "Livrè" });
+    }
+    if (delivery.order?.restaurants?.lat != null && delivery.order?.restaurants?.lng != null) {
+      arr.push({ id: "rst", lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng), color: "orange", label: delivery.order.restaurants.name ?? "Restoran" });
+    }
+    if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
+      arr.push({ id: "dst", lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng), color: "green", label: "Adrès ou" });
+    }
+    return arr;
+  })();
   const isManual = payment?.method === "moncash" || payment?.method === "natcash";
   const needsProof =
     isManual && (payment?.status === "awaiting_proof" || payment?.status === "pending");
@@ -200,6 +217,25 @@ function OrderDetail() {
             <div className="mt-0.5 text-xs text-ink-soft capitalize">{payment?.method}</div>
           </div>
         </div>
+
+        {delivery && trackingMarkers.length > 0 && (
+          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <div className="font-display text-base font-bold">Swiv livrezon w</div>
+                {delivery.location_updated_at && (
+                  <div className="text-xs text-ink-soft">
+                    Dènye mizajou: {new Date(delivery.location_updated_at).toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+              <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+                {delivery.status}
+              </span>
+            </div>
+            <LiveMap markers={trackingMarkers} className="h-[320px] w-full rounded-xl" />
+          </div>
+        )}
 
         <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
           <div className="mb-3 font-display text-base font-bold">Detay</div>

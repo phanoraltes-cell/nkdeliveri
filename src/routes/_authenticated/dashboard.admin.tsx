@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { LiveMap, type MapMarker } from "@/components/live-map";
+import { useActiveDeliveries } from "@/hooks/use-active-deliveries";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
@@ -16,6 +18,38 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
 
 function AdminDashboard() {
   const qc = useQueryClient();
+  const active = useActiveDeliveries({ admin: true });
+  const markers: MapMarker[] = active.flatMap((d) => {
+    const arr: MapMarker[] = [];
+    if (d.driver_lat != null && d.driver_lng != null) {
+      arr.push({
+        id: `drv-${d.id}`,
+        lat: Number(d.driver_lat),
+        lng: Number(d.driver_lng),
+        color: "blue",
+        label: `${d.driver?.first_name ?? "Livrè"} · ${d.order?.order_number ?? ""}`,
+      });
+    }
+    if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+      arr.push({
+        id: `dst-${d.id}`,
+        lat: Number(d.order.delivery_lat),
+        lng: Number(d.order.delivery_lng),
+        color: "green",
+        label: `Adrès ${d.order.order_number}`,
+      });
+    }
+    if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
+      arr.push({
+        id: `rst-${d.id}`,
+        lat: Number(d.order.restaurants.lat),
+        lng: Number(d.order.restaurants.lng),
+        color: "orange",
+        label: d.order.restaurants.name ?? "Restoran",
+      });
+    }
+    return arr;
+  });
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
@@ -97,6 +131,21 @@ function AdminDashboard() {
         <h1 className="font-display text-3xl font-extrabold text-ink">Dashboard Administratè</h1>
         <p className="mt-1 text-ink-soft">Jere platfòm nan: itilizatè, restoran, livrè, peman.</p>
       </div>
+
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-ink">Livrezon aktif · tan reyèl</h2>
+          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+            {active.length} an kou
+          </span>
+        </div>
+        <LiveMap markers={markers} className="h-[420px] w-full rounded-xl" />
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Livrè</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Adrès kliyan</span>
+        </div>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[

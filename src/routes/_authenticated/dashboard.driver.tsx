@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Bike, Clock, MapPin, DollarSign, ClipboardList, Power, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { LiveMap, type MapMarker } from "@/components/live-map";
+import { useActiveDeliveries } from "@/hooks/use-active-deliveries";
+import { DriverLocationReporter } from "@/components/driver-location-reporter";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver")({
   component: DriverDashboard,
@@ -42,6 +45,21 @@ function DriverDashboard() {
 
   const pending = driver?.status === "pending";
   const online = driver?.status === "online";
+
+  const active = useActiveDeliveries({ driverId: driver?.id });
+  const markers: MapMarker[] = active.flatMap((d) => {
+    const arr: MapMarker[] = [];
+    if (d.driver_lat != null && d.driver_lng != null) {
+      arr.push({ id: `drv-${d.id}`, lat: Number(d.driver_lat), lng: Number(d.driver_lng), color: "blue", label: "Ou" });
+    }
+    if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
+      arr.push({ id: `rst-${d.id}`, lat: Number(d.order.restaurants.lat), lng: Number(d.order.restaurants.lng), color: "orange", label: d.order.restaurants.name ?? "Restoran" });
+    }
+    if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+      arr.push({ id: `dst-${d.id}`, lat: Number(d.order.delivery_lat), lng: Number(d.order.delivery_lng), color: "green", label: d.order.order_number });
+    }
+    return arr;
+  });
 
   return (
     <div className="space-y-6">
@@ -88,6 +106,30 @@ function DriverDashboard() {
           <Power className="h-4 w-4" />
           {online ? "Mwen an liy" : "Antre an liy"}
         </button>
+      )}
+
+      {!pending && driver && (
+        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+          <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-ink">Livrezon aktif</h2>
+              <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+                {active.length}
+              </span>
+            </div>
+            <LiveMap markers={markers} className="h-[380px] w-full rounded-xl" />
+          </section>
+          <div className="space-y-4">
+            <DriverLocationReporter driverId={driver.id} />
+            {active.map((d) => (
+              <div key={d.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+                <div className="text-xs uppercase tracking-wider text-ink-soft">{d.status}</div>
+                <div className="font-bold text-ink">{d.order?.order_number}</div>
+                <div className="text-xs text-ink-soft">{d.order?.delivery_address}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

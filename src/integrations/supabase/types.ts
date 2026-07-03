@@ -61,10 +61,14 @@ export type Database = {
           assigned_at: string
           created_at: string
           delivered_at: string | null
+          driver_heading: number | null
           driver_id: string | null
+          driver_lat: number | null
+          driver_lng: number | null
           driver_notes: string | null
           fee: number
           id: string
+          location_updated_at: string | null
           order_id: string
           picked_up_at: string | null
           status: Database["public"]["Enums"]["delivery_status"]
@@ -74,10 +78,14 @@ export type Database = {
           assigned_at?: string
           created_at?: string
           delivered_at?: string | null
+          driver_heading?: number | null
           driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
           driver_notes?: string | null
           fee?: number
           id?: string
+          location_updated_at?: string | null
           order_id: string
           picked_up_at?: string | null
           status?: Database["public"]["Enums"]["delivery_status"]
@@ -87,10 +95,14 @@ export type Database = {
           assigned_at?: string
           created_at?: string
           delivered_at?: string | null
+          driver_heading?: number | null
           driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
           driver_notes?: string | null
           fee?: number
           id?: string
+          location_updated_at?: string | null
           order_id?: string
           picked_up_at?: string | null
           status?: Database["public"]["Enums"]["delivery_status"]
@@ -307,6 +319,8 @@ export type Database = {
           customer_id: string
           delivery_address: string
           delivery_fee: number
+          delivery_lat: number | null
+          delivery_lng: number | null
           delivery_notes: string | null
           id: string
           order_number: string
@@ -326,6 +340,8 @@ export type Database = {
           customer_id: string
           delivery_address: string
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_notes?: string | null
           id?: string
           order_number?: string
@@ -345,6 +361,8 @@ export type Database = {
           customer_id?: string
           delivery_address?: string
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_notes?: string | null
           id?: string
           order_number?: string
@@ -668,7 +686,9 @@ export type Database = {
           delivery_fee: number
           description: string | null
           id: string
+          lat: number | null
           latitude: number | null
+          lng: number | null
           logo_url: string | null
           longitude: number | null
           min_order: number
@@ -698,7 +718,9 @@ export type Database = {
           delivery_fee?: number
           description?: string | null
           id?: string
+          lat?: number | null
           latitude?: number | null
+          lng?: number | null
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
@@ -728,7 +750,9 @@ export type Database = {
           delivery_fee?: number
           description?: string | null
           id?: string
+          lat?: number | null
           latitude?: number | null
+          lng?: number | null
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
