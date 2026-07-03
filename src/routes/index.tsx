@@ -404,7 +404,7 @@ function Index() {
                 <span aria-hidden>{d.emoji}</span>
                 {d.label}
                 <span
-                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] ${
+                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] block ${
                     active ? "bg-white/25 text-white" : "bg-brand-soft/60 text-brand-deep"
                   }`}
                 >
