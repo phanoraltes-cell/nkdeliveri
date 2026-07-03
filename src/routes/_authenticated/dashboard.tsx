@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, redirect, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, User, Store, Bike, ShieldCheck } from "lucide-react";
+import { LogOut, LayoutDashboard, User, Store, Bike, ShieldCheck, Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import nkLogo from "@/assets/nk-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -21,6 +22,19 @@ function DashboardLayout() {
   const router = useRouter();
   const items = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.customer;
 
+  const { data: unread = 0 } = useQuery({
+    queryKey: ["notif-unread", user?.id],
+    enabled: !!user,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null);
+      return count ?? 0;
+    },
+  });
+
   async function signOut() {
     await supabase.auth.signOut();
     router.invalidate();
@@ -40,6 +54,18 @@ function DashboardLayout() {
           {role.replace("_", " ")}
         </span>
         <div className="ml-auto flex items-center gap-3">
+          <Link
+            to="/notifications"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep hover:bg-brand-soft/40"
+            aria-label="Notifikasyon"
+          >
+            <Bell className="h-4 w-4" />
+            {unread > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Link>
           <span className="hidden text-sm text-ink-soft sm:inline">{user?.email}</span>
           <button
             onClick={signOut}

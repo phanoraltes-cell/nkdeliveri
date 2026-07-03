@@ -116,6 +116,7 @@ export type Database = {
       drivers: {
         Row: {
           address: string | null
+          commission_rate: number
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -125,6 +126,9 @@ export type Database = {
           last_name: string | null
           license_doc_url: string | null
           license_plate: string | null
+          moncash_number: string | null
+          natcash_number: string | null
+          payout_frequency: string
           phone: string | null
           status: Database["public"]["Enums"]["driver_status"]
           updated_at: string
@@ -134,6 +138,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          commission_rate?: number
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -143,6 +148,9 @@ export type Database = {
           last_name?: string | null
           license_doc_url?: string | null
           license_plate?: string | null
+          moncash_number?: string | null
+          natcash_number?: string | null
+          payout_frequency?: string
           phone?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           updated_at?: string
@@ -152,6 +160,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          commission_rate?: number
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -161,6 +170,9 @@ export type Database = {
           last_name?: string | null
           license_doc_url?: string | null
           license_plate?: string | null
+          moncash_number?: string | null
+          natcash_number?: string | null
+          payout_frequency?: string
           phone?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           updated_at?: string
@@ -410,6 +422,10 @@ export type Database = {
           id: string
           method: Database["public"]["Enums"]["payment_method"]
           order_id: string
+          receiver_account_name: string | null
+          receiver_number: string | null
+          receiver_restaurant_id: string | null
+          receiver_type: string
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -428,6 +444,10 @@ export type Database = {
           id?: string
           method: Database["public"]["Enums"]["payment_method"]
           order_id: string
+          receiver_account_name?: string | null
+          receiver_number?: string | null
+          receiver_restaurant_id?: string | null
+          receiver_type?: string
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -446,6 +466,10 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"]
           order_id?: string
+          receiver_account_name?: string | null
+          receiver_number?: string | null
+          receiver_restaurant_id?: string | null
+          receiver_type?: string
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -463,6 +487,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_receiver_restaurant_id_fkey"
+            columns: ["receiver_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -597,6 +628,7 @@ export type Database = {
           address: string | null
           avg_prep_time: number
           commission_rate: number
+          commission_type: string
           cover_url: string | null
           created_at: string
           cuisine: string | null
@@ -607,9 +639,15 @@ export type Database = {
           logo_url: string | null
           longitude: number | null
           min_order: number
+          moncash_account_name: string | null
+          moncash_number: string | null
+          monthly_commission_amount: number
           name: string
+          natcash_account_name: string | null
+          natcash_number: string | null
           opening_hours: Json | null
           owner_id: string | null
+          payout_mode: string
           phone: string | null
           rating: number | null
           slug: string
@@ -620,6 +658,7 @@ export type Database = {
           address?: string | null
           avg_prep_time?: number
           commission_rate?: number
+          commission_type?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
@@ -630,9 +669,15 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
+          moncash_account_name?: string | null
+          moncash_number?: string | null
+          monthly_commission_amount?: number
           name: string
+          natcash_account_name?: string | null
+          natcash_number?: string | null
           opening_hours?: Json | null
           owner_id?: string | null
+          payout_mode?: string
           phone?: string | null
           rating?: number | null
           slug: string
@@ -643,6 +688,7 @@ export type Database = {
           address?: string | null
           avg_prep_time?: number
           commission_rate?: number
+          commission_type?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
@@ -653,9 +699,15 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           min_order?: number
+          moncash_account_name?: string | null
+          moncash_number?: string | null
+          monthly_commission_amount?: number
           name?: string
+          natcash_account_name?: string | null
+          natcash_number?: string | null
           opening_hours?: Json | null
           owner_id?: string | null
+          payout_mode?: string
           phone?: string | null
           rating?: number | null
           slug?: string

@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, ClipboardList, Package, BarChart3, Users, Tags, Percent, Clock } from "lucide-react";
+import { Store, ClipboardList, Package, BarChart3, Users, Tags, Percent, Clock, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant")({
   component: RestaurantDashboard,
@@ -64,16 +64,17 @@ function RestaurantDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { icon: Store, title: "Pwofil restoran", desc: "Enfo, logo, kouvèti" },
-          { icon: Tags, title: "Kategori", desc: "Òganize menu w" },
-          { icon: Package, title: "Pwodwi", desc: "Ajoute/modifye plat" },
-          { icon: ClipboardList, title: "Kòmand", desc: "An tan reyèl" },
-          { icon: Users, title: "Anplwaye", desc: "Ajoute manm ekip la" },
-          { icon: BarChart3, title: "Estatistik", desc: "Vant ak revni" },
-          { icon: Percent, title: "Pwomosyon", desc: "Ofri espesyal" },
+          { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo MonCash/NatCash, mòd + komisyon", to: "/dashboard/restaurant/payouts" as const },
+          { icon: Store, title: "Pwofil restoran", desc: "Enfo, logo, kouvèti", to: null },
+          { icon: Tags, title: "Kategori", desc: "Òganize menu w", to: null },
+          { icon: Package, title: "Pwodwi", desc: "Ajoute/modifye plat", to: null },
+          { icon: ClipboardList, title: "Kòmand", desc: "An tan reyèl", to: null },
+          { icon: Users, title: "Anplwaye", desc: "Ajoute manm ekip la", to: null },
+          { icon: BarChart3, title: "Estatistik", desc: "Vant ak revni", to: null },
+          { icon: Percent, title: "Pwomosyon", desc: "Ofri espesyal", to: null },
         ].map((c) => {
           const Icon = c.icon;
-          return (
+          const body = (
             <div
               key={c.title}
               className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm"
@@ -84,10 +85,13 @@ function RestaurantDashboard() {
               <div className="font-display text-base font-bold text-ink">{c.title}</div>
               <div className="mt-1 text-sm text-ink-soft">{c.desc}</div>
               <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">
-                Byento
+                {c.to ? "Ouvri →" : "Byento"}
               </div>
             </div>
           );
+          return c.to ? (
+            <Link key={c.title} to={c.to} className="block">{body}</Link>
+          ) : body;
         })}
       </div>
     </div>
