@@ -395,16 +395,18 @@ function Index() {
               <button
                 key={d.key}
                 onClick={() => setDishType(d.key)}
-                className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold leading-none transition ${
                   active
                     ? "border-brand bg-brand text-white shadow-[0_6px_16px_rgba(249,115,22,0.3)]"
                     : "border-brand-soft bg-white text-ink-soft hover:border-brand hover:text-brand"
                 }`}
               >
-                <span aria-hidden>{d.emoji}</span>
-                {d.label}
+                <span aria-hidden className="inline-flex items-center leading-none">
+                  {d.emoji}
+                </span>
+                <span className="leading-none">{d.label}</span>
                 <span
-                  className={`ml-0.5 rounded-full px-1.5 text-[0.7rem] block ${
+                  className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[0.7rem] leading-none ${
                     active ? "bg-white/25 text-white" : "bg-brand-soft/60 text-brand-deep"
                   }`}
                 >
