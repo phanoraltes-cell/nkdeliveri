@@ -21,7 +21,7 @@ export function SiteFooter() {
           ))}
         </div>
       </div>
-      <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-white/80">
+      <div className="border-t border-white/20 bg-white px-5 py-4 text-center text-xs text-brand">
         © {new Date().getFullYear()} NK Delivery — Tout dwa rezève
       </div>
     </footer>
