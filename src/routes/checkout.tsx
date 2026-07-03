@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ADMIN_PAYOUT } from "@/lib/admin-payout";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Panye — NK Delivery" }] }),
@@ -51,15 +52,15 @@ function Checkout() {
   const merchantDirect = restaurant?.payout_mode === "direct";
   const payNumber =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_number : "3XXX-XXXX (NK Delivery)"
+      ? merchantDirect ? restaurant?.moncash_number : ADMIN_PAYOUT.moncash.number
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_number : "3XXX-XXXX (NK Delivery)"
+      ? merchantDirect ? restaurant?.natcash_number : ADMIN_PAYOUT.natcash.number
       : null;
   const payName =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_account_name : "NK Delivery"
+      ? merchantDirect ? restaurant?.moncash_account_name : ADMIN_PAYOUT.moncash.account_name
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_account_name : "NK Delivery"
+      ? merchantDirect ? restaurant?.natcash_account_name : ADMIN_PAYOUT.natcash.account_name
       : null;
 
   async function submit() {
