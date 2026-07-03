@@ -1,4 +1,9 @@
 import { Link } from "@tanstack/react-router";
+import moncashLogo from "@/assets/moncash-logo.png.asset.json";
+import natcashLogo from "@/assets/natcash-logo.png.asset.json";
+import visaLogo from "@/assets/visa-logo.svg.asset.json";
+import mastercardLogo from "@/assets/mastercard-logo.svg.asset.json";
+import kachLogo from "@/assets/kach-logo.png.asset.json";
 
 export function SiteFooter() {
   const navLinks = [
@@ -8,6 +13,14 @@ export function SiteFooter() {
     { to: "/profile", label: "Pwofil" },
     { to: "/auth", label: "Konekte" },
   ] as const;
+
+  const payments = [
+    { name: "MonCash", src: moncashLogo.url },
+    { name: "NatCash", src: natcashLogo.url },
+    { name: "Visa", src: visaLogo.url },
+    { name: "Mastercard", src: mastercardLogo.url },
+    { name: "Kach", src: kachLogo.url },
+  ];
 
   return (
     <footer className="mt-16 bg-brand text-white">
@@ -39,12 +52,18 @@ export function SiteFooter() {
             Peman
           </span>
           <div className="flex flex-wrap gap-2">
-          {["MonCash", "NatCash", "Visa", "Mastercard", "Kach"].map((t) => (
+          {payments.map((p) => (
             <span
-              key={t}
-              className="rounded-full border border-white/40 bg-white/10 px-3 py-1 text-xs text-white"
+              key={p.name}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-white px-3 shadow-sm"
+              title={p.name}
             >
-              {t}
+              <img
+                src={p.src}
+                alt={`${p.name} logo`}
+                loading="lazy"
+                className="h-6 w-auto object-contain"
+              />
             </span>
           ))}
           </div>
