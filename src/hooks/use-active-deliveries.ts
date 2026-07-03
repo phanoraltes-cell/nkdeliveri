@@ -19,7 +19,7 @@ export type ActiveDelivery = {
   driver?: { first_name: string | null; last_name: string | null } | null;
 };
 
-const ACTIVE_STATUSES = ["assigned", "picked_up", "in_transit"];
+const ACTIVE_STATUSES = ["assigned", "picked_up", "en_route_pickup", "en_route_dropoff"] as const;
 
 export function useActiveDeliveries(scope: {
   driverId?: string;
