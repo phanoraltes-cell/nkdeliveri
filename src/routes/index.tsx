@@ -40,7 +40,7 @@ export const Route = createFileRoute("/")({
 const CUISINES = ["Tout", "Kreyòl", "Griyo", "Pizza", "Sandwich", "Fruits de mer"];
 
 const DISH_TYPES: { key: string; label: string; emoji: string }[] = [
-  { key: "all", label: "Tout", emoji: "🍽️" },
+  { key: "all", label: "Tout", emoji: "\n" },
   { key: "diri_sos", label: "Diri ak Sòs", emoji: "🍚" },
   { key: "griyo", label: "Griyo", emoji: "🍖" },
   { key: "fritay", label: "Fritay", emoji: "🍤" },
@@ -109,8 +109,8 @@ function Index() {
             </form>
             <div className="mt-7 flex gap-8">
               {[
-                { n: "40+", l: "Restoran" },
-                { n: "500+", l: "Plat disponib" },
+                { n: "10+", l: "Restoran" },
+                { n: "50+", l: "Plat disponib" },
                 { n: "30 min", l: "Livrezon mwayèn" },
               ].map((s) => (
                 <div key={s.l}>
