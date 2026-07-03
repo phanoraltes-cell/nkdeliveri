@@ -19,6 +19,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
@@ -76,6 +77,12 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   path: '/auth/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
@@ -161,6 +170,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/dashboard'
+    | '/notifications'
     | '/auth/register'
     | '/orders/$id'
     | '/restaurants/$slug'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/orders'
     | '/profile'
+    | '/notifications'
     | '/auth/register'
     | '/orders/$id'
     | '/restaurants/$slug'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/_authenticated/dashboard'
+    | '/_authenticated/notifications'
     | '/auth/register'
     | '/orders/$id'
     | '/restaurants/$slug'
@@ -314,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -407,10 +427,12 @@ const AuthenticatedDashboardRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
