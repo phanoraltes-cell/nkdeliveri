@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
+import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -64,6 +65,11 @@ const RestaurantsSlugRoute = RestaurantsSlugRouteImport.update({
   path: '/restaurants/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersIdRoute = OrdersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OrdersRoute,
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
   path: '/auth/register',
@@ -108,10 +114,11 @@ const AuthenticatedDashboardAdminRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
@@ -124,9 +131,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth': typeof AuthIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
@@ -141,10 +149,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/checkout': typeof CheckoutRoute
-  '/orders': typeof OrdersRoute
+  '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/auth/register': typeof AuthRegisterRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/dashboard'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
     | '/restaurants/'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/profile'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth'
     | '/restaurants'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/_authenticated/dashboard'
     | '/auth/register'
+    | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
     | '/restaurants/'
@@ -209,7 +221,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
-  OrdersRoute: typeof OrdersRoute
+  OrdersRoute: typeof OrdersRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/restaurants/$slug'
       preLoaderRoute: typeof RestaurantsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/orders/$id': {
+      id: '/orders/$id'
+      path: '/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof OrdersIdRouteImport
+      parentRoute: typeof OrdersRoute
     }
     '/auth/register': {
       id: '/auth/register'
@@ -361,11 +380,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface OrdersRouteChildren {
+  OrdersIdRoute: typeof OrdersIdRoute
+}
+
+const OrdersRouteChildren: OrdersRouteChildren = {
+  OrdersIdRoute: OrdersIdRoute,
+}
+
+const OrdersRouteWithChildren =
+  OrdersRoute._addFileChildren(OrdersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
-  OrdersRoute: OrdersRoute,
+  OrdersRoute: OrdersRouteWithChildren,
   ProfileRoute: ProfileRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
