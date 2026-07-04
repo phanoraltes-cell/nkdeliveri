@@ -13,8 +13,6 @@ export function SiteFooter() {
   const payments = [
     { name: "MonCash", kind: "text", className: "bg-[#ED1C24] text-white" },
     { name: "NatCash", kind: "text", className: "bg-[#003DA5] text-white" },
-    { name: "Visa", kind: "image", src: "/visa-logo.svg" },
-    { name: "Mastercard", kind: "image", src: "/mastercard-logo.svg" },
     { name: "Kach", kind: "icon" },
   ] as const;
 
@@ -56,14 +54,6 @@ export function SiteFooter() {
               }`}
               title={p.name}
             >
-              {p.kind === "image" && (
-                <img
-                  src={p.src}
-                  alt={`${p.name} logo`}
-                  loading="lazy"
-                  className="h-6 w-auto object-contain"
-                />
-              )}
               {p.kind === "text" && (
                 <span className="text-sm font-extrabold italic tracking-tight">{p.name}</span>
               )}
