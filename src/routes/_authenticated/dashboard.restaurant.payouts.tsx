@@ -64,14 +64,14 @@ function MerchantPayouts() {
       if (f.payout_mode === "direct" && !f.moncash_number && !f.natcash_number) {
         throw new Error("Antre omwen yon nimewo MonCash oswa NatCash.");
       }
-      const { error } = await supabase.from("restaurant_payout_details").upsert({
-        restaurant_id: r.id,
-        moncash_number: f.moncash_number || null,
-        moncash_account_name: f.moncash_account_name || null,
-        natcash_number: f.natcash_number || null,
-        natcash_account_name: f.natcash_account_name || null,
-        payout_mode: f.payout_mode,
-      }, { onConflict: "restaurant_id" });
+      const { error } = await supabase.rpc("update_restaurant_payout_secure", {
+        _restaurant_id: r.id,
+        _payout_mode: f.payout_mode,
+        _moncash_number: f.moncash_number || null,
+        _moncash_account_name: f.moncash_account_name || null,
+        _natcash_number: f.natcash_number || null,
+        _natcash_account_name: f.natcash_account_name || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] }); },

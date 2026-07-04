@@ -57,7 +57,7 @@ function AdminPayments() {
       const { data, error } = await supabase
         .from("payments")
         .select(
-          "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_name, receiver_phone, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
+          "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_account_name, receiver_number, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, product_name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
         )
         .in("method", ["moncash", "natcash"])
         .in("status", ["paid", "failed"])
@@ -273,7 +273,7 @@ function PayoutHistory({
     method: (p.method || "").toUpperCase(),
     tx: p.transaction_ref || "",
     sender: p.sender_phone || "",
-    receiver: [p.receiver_type, p.receiver_name, p.receiver_phone].filter(Boolean).join(" · "),
+    receiver: [p.receiver_type, p.receiver_account_name, p.receiver_number].filter(Boolean).join(" · "),
     amount: Number(p.amount || 0),
     status: p.status,
     notes: p.review_notes || "",
@@ -479,8 +479,8 @@ function PayoutHistory({
                           <div className="space-y-1 text-sm">
                             <div className="font-display text-base font-extrabold text-ink">Peman</div>
                             <div>Metòd: <b className="uppercase">{p.method}</b></div>
-                            <div>Voye bay: <b>{p.receiver_type || "—"}</b> {p.receiver_name ? `· ${p.receiver_name}` : ""}</div>
-                            {p.receiver_phone && <div>Nimewo resevè: <b>{p.receiver_phone}</b></div>}
+                            <div>Voye bay: <b>{p.receiver_type || "—"}</b> {p.receiver_account_name ? `· ${p.receiver_account_name}` : ""}</div>
+                            {p.receiver_number && <div>Nimewo resevè: <b>{p.receiver_number}</b></div>}
                             {p.sender_phone && <div>Soti nan: <b>{p.sender_phone}</b></div>}
                             {p.transaction_ref && <div>Tx: <b>{p.transaction_ref}</b></div>}
                             {p.reviewed_at && (
@@ -500,7 +500,7 @@ function PayoutHistory({
                               <ul className="divide-y divide-brand-soft/40 rounded-lg border border-brand-soft/40 bg-white text-xs">
                                 {p.orders.order_items.map((it: any) => (
                                   <li key={it.id} className="flex justify-between px-3 py-1.5">
-                                    <span>{it.quantity}× {it.name}</span>
+                                    <span>{it.quantity}× {it.product_name}</span>
                                     <span className="font-bold">{formatHTG(Number(it.unit_price) * Number(it.quantity))}</span>
                                   </li>
                                 ))}

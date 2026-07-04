@@ -42,14 +42,10 @@ function Checkout() {
   useEffect(() => {
     if (!restaurantId) { setRestaurant(null); return; }
     (async () => {
-      const { data: r } = await supabase
-        .from("restaurants")
-        .select("id, name")
-        .eq("id", restaurantId)
-        .maybeSingle();
-      const { data: p } = await supabase.rpc("get_restaurant_payout_public", {
-        _restaurant_id: restaurantId,
-      });
+      const [{ data: r }, { data: p }] = await Promise.all([
+        supabase.from("restaurants").select("id, name").eq("id", restaurantId).maybeSingle(),
+        supabase.rpc("get_restaurant_payout_public", { _restaurant_id: restaurantId }),
+      ]);
       const pd = Array.isArray(p) ? p[0] : p;
       setRestaurant(r ? { ...r, ...(pd ?? {}) } : null);
     })();

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, ClipboardList, Package, BarChart3, Users, Tags, Percent, Clock, Wallet } from "lucide-react";
+import { Store, ClipboardList, Package, BarChart3, Users, Percent, Clock, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant")({
   component: RestaurantDashboard,
@@ -64,14 +64,13 @@ function RestaurantDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
+          { icon: ClipboardList, title: "Kòmand", desc: "Konfime, refize, swiv estati an tan reyèl", to: "/dashboard/restaurant/orders" as const },
+          { icon: Package, title: "Meni", desc: "Kategori, plat ak foto", to: "/dashboard/restaurant/menu" as const },
+          { icon: BarChart3, title: "Revni", desc: "Vant, komisyon ak istwa peman", to: "/dashboard/restaurant/revenue" as const },
           { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo MonCash/NatCash, mòd + komisyon", to: "/dashboard/restaurant/payouts" as const },
-          { icon: Store, title: "Pwofil restoran", desc: "Enfo, logo, kouvèti", to: null },
-          { icon: Tags, title: "Kategori", desc: "Òganize menu w", to: null },
-          { icon: Package, title: "Pwodwi", desc: "Ajoute/modifye plat", to: null },
-          { icon: ClipboardList, title: "Kòmand", desc: "An tan reyèl", to: null },
+          { icon: Percent, title: "Pwomosyon", desc: "Ofri espesyal", to: "/dashboard/restaurant/promotions" as const },
+          { icon: Store, title: "Pwofil restoran", desc: "Enfo, logo, kouvèti, orè ouvèti", to: "/dashboard/restaurant/profile" as const },
           { icon: Users, title: "Anplwaye", desc: "Ajoute manm ekip la", to: null },
-          { icon: BarChart3, title: "Estatistik", desc: "Vant ak revni", to: null },
-          { icon: Percent, title: "Pwomosyon", desc: "Ofri espesyal", to: null },
         ].map((c) => {
           const Icon = c.icon;
           const body = (

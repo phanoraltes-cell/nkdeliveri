@@ -6,7 +6,7 @@ const InputSchema = z.object({ paymentId: z.string().uuid() });
 
 export const sendPaymentReviewPush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => InputSchema.parse(data))
+  .validator((data: unknown) => InputSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

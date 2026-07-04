@@ -99,7 +99,10 @@ function AdminDashboard() {
 
   const updateResto = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" | "suspended" }) => {
-      const { error } = await supabase.from("restaurants").update({ status }).eq("id", id);
+      const { error } = await supabase.rpc("update_restaurant_status_secure", {
+        _restaurant_id: id,
+        _status: status,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

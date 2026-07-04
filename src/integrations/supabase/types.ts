@@ -518,6 +518,7 @@ export type Database = {
       }
       products: {
         Row: {
+          archived_at: string | null
           available: boolean
           category_id: string | null
           created_at: string
@@ -529,9 +530,11 @@ export type Database = {
           popular: boolean
           price: number
           restaurant_id: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           available?: boolean
           category_id?: string | null
           created_at?: string
@@ -543,9 +546,11 @@ export type Database = {
           popular?: boolean
           price: number
           restaurant_id: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           available?: boolean
           category_id?: string | null
           created_at?: string
@@ -557,6 +562,7 @@ export type Database = {
           popular?: boolean
           price?: number
           restaurant_id?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -608,6 +614,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          code: string | null
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          restaurant_id: string
+          starts_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          restaurant_id: string
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          restaurant_id?: string
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -883,6 +942,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_menu_category_secure: {
+        Args: { _name: string; _restaurant_id: string; _sort_order?: number }
+        Returns: Database["public"]["Tables"]["menu_categories"]["Row"]
+      }
       create_order_secure: {
         Args: {
           _contact_phone: string
@@ -894,6 +957,34 @@ export type Database = {
         }
         Returns: string
       }
+      create_product_secure: {
+        Args: {
+          _category_id: string | null
+          _description: string | null
+          _dish_type: string | null
+          _image_url: string | null
+          _name: string
+          _price: number
+          _restaurant_id: string
+        }
+        Returns: Database["public"]["Tables"]["products"]["Row"]
+      }
+      create_promotion_secure: {
+        Args: {
+          _code: string | null
+          _description: string | null
+          _discount_type: string
+          _discount_value: number
+          _ends_at: string | null
+          _restaurant_id: string
+          _starts_at: string | null
+          _title: string
+        }
+        Returns: Database["public"]["Tables"]["promotions"]["Row"]
+      }
+      delete_menu_category_secure: { Args: { _category_id: string }; Returns: undefined }
+      delete_product_secure: { Args: { _product_id: string }; Returns: undefined }
+      delete_promotion_secure: { Args: { _promotion_id: string }; Returns: undefined }
       get_primary_role: { Args: { _user_id: string }; Returns: string }
       get_restaurant_payout_public: {
         Args: { _restaurant_id: string }
@@ -906,12 +997,96 @@ export type Database = {
           restaurant_id: string
         }[]
       }
+      get_restaurant_revenue_summary: {
+        Args: { _from: string; _restaurant_id: string; _to: string }
+        Returns: {
+          cancelled_orders: number
+          commission_amount: number
+          commission_rate: number
+          delivered_orders: number
+          gross_revenue: number
+          net_payout: number
+          paid_amount: number
+          pending_amount: number
+          total_orders: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      update_menu_category_secure: {
+        Args: { _category_id: string; _name: string; _sort_order: number }
+        Returns: Database["public"]["Tables"]["menu_categories"]["Row"]
+      }
+      update_order_status_secure: {
+        Args: { _new_status: Database["public"]["Enums"]["order_status"]; _order_id: string }
+        Returns: Database["public"]["Tables"]["orders"]["Row"]
+      }
+      update_product_secure: {
+        Args: {
+          _available: boolean
+          _category_id: string | null
+          _description: string | null
+          _dish_type: string | null
+          _image_url: string | null
+          _name: string
+          _price: number
+          _product_id: string
+        }
+        Returns: Database["public"]["Tables"]["products"]["Row"]
+      }
+      update_promotion_secure: {
+        Args: {
+          _active: boolean
+          _code: string | null
+          _description: string | null
+          _discount_type: string
+          _discount_value: number
+          _ends_at: string | null
+          _promotion_id: string
+          _starts_at: string | null
+          _title: string
+        }
+        Returns: Database["public"]["Tables"]["promotions"]["Row"]
+      }
+      update_restaurant_hours_secure: {
+        Args: { _opening_hours: Json; _restaurant_id: string }
+        Returns: Database["public"]["Tables"]["restaurants"]["Row"]
+      }
+      update_restaurant_payout_secure: {
+        Args: {
+          _moncash_account_name: string | null
+          _moncash_number: string | null
+          _natcash_account_name: string | null
+          _natcash_number: string | null
+          _payout_mode: string
+          _restaurant_id: string
+        }
+        Returns: Database["public"]["Tables"]["restaurant_payout_details"]["Row"]
+      }
+      update_restaurant_profile_secure: {
+        Args: {
+          _address: string | null
+          _cover_url: string | null
+          _cuisine: string | null
+          _description: string | null
+          _logo_url: string | null
+          _name: string
+          _phone: string | null
+          _restaurant_id: string
+        }
+        Returns: Database["public"]["Tables"]["restaurants"]["Row"]
+      }
+      update_restaurant_status_secure: {
+        Args: {
+          _restaurant_id: string
+          _status: Database["public"]["Enums"]["restaurant_status"]
+        }
+        Returns: Database["public"]["Tables"]["restaurants"]["Row"]
       }
     }
     Enums: {

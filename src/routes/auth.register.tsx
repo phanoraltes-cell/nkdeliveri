@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
@@ -87,7 +89,7 @@ function inputCls() {
 }
 
 async function baseSignUp(email: string, password: string, data: Record<string, any>) {
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -96,18 +98,37 @@ async function baseSignUp(email: string, password: string, data: Record<string, 
     },
   });
   if (error) throw error;
+  // signUpData.user is populated immediately even when email confirmation is
+  // required and no session exists yet — never derive the id from a
+  // follow-up getUser() call, which returns null without an active session.
+  if (!signUpData.user) throw new Error("Kreyasyon kont lan echwe");
+  return { userId: signUpData.user.id, hasSession: !!signUpData.session };
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
 
 function useSubmit(onDone: () => void) {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
-  async function wrap(fn: () => Promise<void>, successMsg: string) {
+  async function wrap(fn: () => Promise<{ hasSession: boolean }>, successMsg: string) {
     setLoading(true);
     try {
-      await fn();
-      toast.success(successMsg);
+      const { hasSession } = await fn();
       onDone();
-      nav({ to: "/dashboard" });
+      if (hasSession) {
+        toast.success(successMsg);
+        nav({ to: "/dashboard" });
+      } else {
+        toast.success(successMsg + " Tcheke imèl ou pou konfime kont ou anvan w konekte.");
+        nav({ to: "/auth" });
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Erè");
     } finally {
@@ -168,11 +189,8 @@ function CustomerForm() {
 }
 
 // ---------------- RESTAURANT ----------------
-async function uploadTo(bucket: string, path: string, file: File) {
-  const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
-  if (error) throw error;
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
+async function toFileInput(file: File) {
+  return { name: file.name, type: file.type, base64: await fileToBase64(file) };
 }
 
 function RestaurantForm() {
@@ -183,14 +201,14 @@ function RestaurantForm() {
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const { loading, wrap } = useSubmit(() => {});
+  const finalizeDocs = useServerFn(finalizeRegistrationDocuments);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (f.password !== f.confirm) return toast.error("Modpas yo pa menm");
     if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
     wrap(async () => {
-      // Sign up first — user needs to exist before uploading (storage RLS requires auth)
-      await baseSignUp(f.email, f.password, {
+      const { userId, hasSession } = await baseSignUp(f.email, f.password, {
         account_type: "restaurant",
         first_name: f.ownerName,
         phone: f.phone,
@@ -199,18 +217,23 @@ function RestaurantForm() {
         restaurant_cuisine: f.cuisine,
         restaurant_address: f.address,
       });
-      // Upload logo/cover if provided
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      const updates: { logo_url?: string; cover_url?: string } = {};
-      if (userId && logo) {
-        updates.logo_url = await uploadTo("restaurant-assets", `${userId}/logo-${Date.now()}-${logo.name}`, logo);
+      // Runs server-side with the service role — works even without a
+      // client session, so logo/cover are never silently lost when email
+      // confirmation is pending.
+      if (logo || cover) {
+        await finalizeDocs({
+          data: {
+            userId,
+            email: f.email,
+            accountType: "restaurant",
+            files: {
+              logo: logo ? await toFileInput(logo) : undefined,
+              cover: cover ? await toFileInput(cover) : undefined,
+            },
+          },
+        });
       }
-      if (userId && cover) {
-        updates.cover_url = await uploadTo("restaurant-assets", `${userId}/cover-${Date.now()}-${cover.name}`, cover);
-      }
-      if (userId && Object.keys(updates).length) {
-        await supabase.from("restaurants").update(updates).eq("owner_id", userId);
-      }
+      return { hasSession };
     }, "Restoran w kreye! Kont ou an atant valdasyon.");
   }
 
@@ -260,6 +283,7 @@ function DriverForm() {
   const [license, setLicense] = useState<File | null>(null);
   const [vehiclePhoto, setVehiclePhoto] = useState<File | null>(null);
   const { loading, wrap } = useSubmit(() => {});
+  const finalizeDocs = useServerFn(finalizeRegistrationDocuments);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -267,7 +291,7 @@ function DriverForm() {
     if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
     if (!idDoc) return toast.error("Foto pyès idantite w obligatwa");
     wrap(async () => {
-      await baseSignUp(f.email, f.password, {
+      const { userId, hasSession } = await baseSignUp(f.email, f.password, {
         account_type: "driver",
         first_name: f.firstName,
         last_name: f.lastName,
@@ -276,15 +300,22 @@ function DriverForm() {
         vehicle_type: f.vehicleType,
         license_plate: f.licensePlate,
       });
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return;
-      const updates: { id_doc_url?: string; license_doc_url?: string; vehicle_photo_url?: string } = {};
-      if (idDoc) updates.id_doc_url = await uploadTo("driver-documents", `${userId}/id-${Date.now()}-${idDoc.name}`, idDoc);
-      if (license) updates.license_doc_url = await uploadTo("driver-documents", `${userId}/license-${Date.now()}-${license.name}`, license);
-      if (vehiclePhoto) updates.vehicle_photo_url = await uploadTo("driver-documents", `${userId}/vehicle-${Date.now()}-${vehiclePhoto.name}`, vehiclePhoto);
-      if (Object.keys(updates).length) {
-        await supabase.from("drivers").update(updates).eq("user_id", userId);
-      }
+      // Runs server-side with the service role — the ID document (required
+      // for admin approval) is never silently dropped if email confirmation
+      // is pending or the browser closes right after signup.
+      await finalizeDocs({
+        data: {
+          userId,
+          email: f.email,
+          accountType: "driver",
+          files: {
+            idDoc: await toFileInput(idDoc),
+            license: license ? await toFileInput(license) : undefined,
+            vehiclePhoto: vehiclePhoto ? await toFileInput(vehiclePhoto) : undefined,
+          },
+        },
+      });
+      return { hasSession };
     }, "Kont livrè kreye! An atant valdasyon.");
   }
 
