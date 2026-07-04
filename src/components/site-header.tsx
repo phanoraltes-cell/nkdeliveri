@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, User as UserIcon, LogOut, LayoutDashboard, Menu, Home, Store, ClipboardList } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +68,25 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-soft bg-white text-ink transition hover:bg-brand-soft/40 md:hidden"
+              aria-label="Meni navigasyon"
+            >
+              <Menu className="h-5 w-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem asChild>
+                <Link to="/"><Home className="mr-2 h-4 w-4" /> Akèy</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/restaurants"><Store className="mr-2 h-4 w-4" /> Restoran</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/orders"><ClipboardList className="mr-2 h-4 w-4" /> Kòmand mwen</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Link
             to="/checkout"
             className="relative inline-flex items-center gap-2 rounded-full bg-brand-soft/70 px-4 py-2.5 text-sm font-bold text-brand-deep transition hover:bg-brand-soft"

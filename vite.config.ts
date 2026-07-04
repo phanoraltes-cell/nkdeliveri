@@ -23,7 +23,16 @@ export default defineConfig({
         filename: "sw.js",
         devOptions: { enabled: false },
         manifest: false,
+        // Nitro's client build is assembled into .output/public regardless of
+        // deploy target (Cloudflare, Vercel, etc.) — Vite's own build.outDir
+        // ("dist") is just an intermediate per-environment path in this
+        // multi-environment TanStack Start setup and is never actually
+        // served. Without this override, vite-plugin-pwa wrote sw.js into
+        // dist/ (never deployed, unreachable at /sw.js) and precached 0
+        // files (it globbed the wrong, empty directory).
+        outDir: ".output/public",
         injectManifest: {
+          globDirectory: ".output/public",
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
         },
       }),

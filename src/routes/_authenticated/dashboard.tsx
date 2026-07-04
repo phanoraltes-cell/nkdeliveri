@@ -74,6 +74,27 @@ function DashboardLayout() {
           </button>
         </div>
       </header>
+      <nav className="flex gap-2 overflow-x-auto border-b border-brand-soft/50 bg-white px-5 py-2.5 md:hidden">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <Link
+              key={it.to}
+              to={it.to}
+              activeProps={{ className: "!bg-brand !text-white" }}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/40 px-3 py-1.5 text-xs font-bold text-brand-deep"
+            >
+              <Icon className="h-3.5 w-3.5" /> {it.label}
+            </Link>
+          );
+        })}
+        <Link
+          to="/"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/20 px-3 py-1.5 text-xs font-semibold text-ink-soft"
+        >
+          <LayoutDashboard className="h-3.5 w-3.5" /> Sit la
+        </Link>
+      </nav>
       <div className="mx-auto flex max-w-7xl gap-6 px-5 py-6">
         <aside className="hidden w-56 shrink-0 md:block">
           <nav className="sticky top-24 flex flex-col gap-1 rounded-2xl border border-brand-soft/60 bg-white p-2 shadow-sm">

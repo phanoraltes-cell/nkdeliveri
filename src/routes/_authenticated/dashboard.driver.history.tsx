@@ -152,29 +152,31 @@ function DriverHistory() {
             Ou poko livre okenn kòmand.
           </div>
         )}
-        <div className="overflow-hidden rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">
-              <tr>
-                <th className="px-3 py-2">Dat</th>
-                <th className="px-3 py-2">Kòmand</th>
-                <th className="px-3 py-2">Restoran</th>
-                <th className="px-3 py-2 text-right">Frè livrezon</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.data?.map((d: any) => (
-                <tr key={d.id} className="border-t border-brand-soft/30">
-                  <td className="px-3 py-2 text-xs text-ink-soft">
-                    {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}
-                  </td>
-                  <td className="px-3 py-2 font-bold">{d.orders?.order_number}</td>
-                  <td className="px-3 py-2">{d.orders?.restaurants?.name}</td>
-                  <td className="px-3 py-2 text-right font-bold text-brand-deep">{formatHTG(Number(d.fee))}</td>
+        <div className="rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">
+                <tr>
+                  <th className="px-3 py-2">Dat</th>
+                  <th className="px-3 py-2">Kòmand</th>
+                  <th className="px-3 py-2">Restoran</th>
+                  <th className="px-3 py-2 text-right">Frè livrezon</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {history.data?.map((d: any) => (
+                  <tr key={d.id} className="border-t border-brand-soft/30">
+                    <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
+                      {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 font-bold">{d.orders?.order_number}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{d.orders?.restaurants?.name}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">{formatHTG(Number(d.fee))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>

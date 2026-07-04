@@ -400,7 +400,8 @@ function PayoutHistory({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
+      <div className="rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
+       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-brand-soft/40 text-left text-xs uppercase text-ink-soft">
             <tr>
@@ -526,6 +527,7 @@ function PayoutHistory({
             })}
           </tbody>
         </table>
+       </div>
       </div>
     </div>
   );
