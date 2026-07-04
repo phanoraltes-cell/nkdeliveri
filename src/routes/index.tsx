@@ -73,14 +73,14 @@ const DISH_TYPES: { key: string; label: string }[] = [
 const HOW_STEPS = [
   { icon: Store, title: "Chwazi restoran", desc: "Dekouvri meyè restoran nan zòn ou." },
   { icon: UtensilsCrossed, title: "Chwazi sa w vle", desc: "Ajoute plat ou renmen yo nan panyen an." },
-  { icon: Wallet, title: "Peye fasil", desc: "Peye an sekirite ak MonCash oswa Kat." },
+  { icon: Wallet, title: "Peye fasil", desc: "Peye an sekirite ak MonCash oswa NatCash." },
   { icon: Bike, title: "Resevwa l rapid", desc: "Livrezon cho e rapid jis lakay ou." },
 ];
 
 const APP_BENEFITS = [
   { icon: Layers, title: "Plis chwa", desc: "Yon gwo seleksyon restoran ak plat pou tout gou." },
   { icon: Timer, title: "Livrezon rapid", desc: "Nou garanti livrezon nan mwens pase 45 minit." },
-  { icon: ShieldCheck, title: "Peman sekirite", desc: "Peye fasil ak MonCash, Kat oswa lajan kach." },
+  { icon: ShieldCheck, title: "Peman sekirite", desc: "Peye fasil ak MonCash, NatCash oswa lajan kach." },
   { icon: Headphones, title: "Sipò 24/7", desc: "Nou la pou ede w nenpòt lè w bezwen nou." },
 ];
 
@@ -189,7 +189,7 @@ function Index() {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               className="absolute right-4 top-6 flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-ink shadow-[0_12px_28px_rgba(0,0,0,0.12)]"
             >
-              <CreditCard className="h-4 w-4 text-brand" /> MonCash · Kat
+              <CreditCard className="h-4 w-4 text-brand" /> MonCash · NatCash
             </motion.div>
             <motion.div
               animate={{ y: [0, 8, 0] }}

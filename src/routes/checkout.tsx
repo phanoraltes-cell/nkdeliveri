@@ -16,7 +16,6 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const METHODS = [
-  { id: "stripe", label: "Kat kredi / debi", sub: "Visa · Mastercard (otomatik)" },
   { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv" },
   { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv" },
   { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive" },
@@ -26,7 +25,7 @@ function Checkout() {
   const { items, setQty, remove, subtotal, count } = useCart();
   const { clear } = useCart();
   const { user } = useAuth();
-  const [method, setMethod] = useState<"stripe" | "moncash" | "natcash" | "kach">("stripe");
+  const [method, setMethod] = useState<"moncash" | "natcash" | "kach">("moncash");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
