@@ -134,11 +134,11 @@ function DriverDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
+          { icon: MapPin, title: "Livrezon disponib", desc: "Pran nouvo livrezon", to: "/dashboard/driver/available" as const },
+          { icon: ClipboardList, title: "Livrezon m yo", desc: "Aktyèl ak istwa", to: "/dashboard/driver/history" as const },
+          { icon: DollarSign, title: "Revni m yo", desc: "Peman ak komisyon", to: "/dashboard/driver/earnings" as const },
           { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo + frekans peman", to: "/dashboard/driver/payouts" as const },
           { icon: Bike, title: "Pwofil livrè", desc: "Modifye enfo w yo", to: null },
-          { icon: MapPin, title: "Livrezon disponib", desc: "Pran nouvo livrezon", to: null },
-          { icon: ClipboardList, title: "Livrezon m yo", desc: "Aktyèl ak istwa", to: null },
-          { icon: DollarSign, title: "Revni m yo", desc: "Peman ak komisyon", to: null },
         ].map((c) => {
           const Icon = c.icon;
           const body = (

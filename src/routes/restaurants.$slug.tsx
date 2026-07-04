@@ -1,12 +1,12 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Star } from "lucide-react";
 import { useState } from "react";
 
 const restQuery = (slug: string) =>
@@ -82,6 +82,21 @@ function RestaurantPage() {
   );
   const visibleCats =
     activeCat === "all" ? cats : cats.filter((c: any) => c.id === activeCat);
+
+  const reviews = useQuery({
+    queryKey: ["restaurant-reviews", r.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("restaurant_rating, comment, created_at")
+        .eq("restaurant_id", r.id)
+        .not("restaurant_rating", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="min-h-screen bg-cream">
@@ -173,6 +188,42 @@ function RestaurantPage() {
             </div>
           );
         })}
+
+        <div className="mt-10 border-t border-brand-soft/60 pt-6">
+          <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-extrabold">
+            Avi kliyan yo
+            <span className="flex items-center gap-1 rounded-full bg-brand-soft/60 px-3 py-1 text-sm font-bold text-brand-deep">
+              <Star className="h-4 w-4 fill-brand-deep" /> {Number(r.rating ?? 0).toFixed(1)}
+            </span>
+          </h2>
+          {reviews.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {!reviews.isLoading && (reviews.data?.length ?? 0) === 0 && (
+            <div className="rounded-2xl bg-white p-6 text-center text-sm text-ink-soft shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+              Pa gen avi pou restoran sa a ankò.
+            </div>
+          )}
+          <div className="space-y-3">
+            {reviews.data?.map((rv: any, i: number) => (
+              <div key={i} className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star
+                        key={n}
+                        className={`h-4 w-4 ${n <= (rv.restaurant_rating ?? 0) ? "fill-brand text-brand" : "text-brand-soft"}`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-ink-soft">
+                    {new Date(rv.created_at).toLocaleDateString("fr-HT")}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs font-bold text-ink-soft">Kliyan</div>
+                {rv.comment && <p className="mt-1 text-sm text-ink">{rv.comment}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <SiteFooter />
     </div>

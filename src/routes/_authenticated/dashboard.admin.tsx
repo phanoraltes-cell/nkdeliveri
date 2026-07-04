@@ -115,7 +115,10 @@ function AdminDashboard() {
 
   const updateDriver = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" | "suspended" }) => {
-      const { error } = await supabase.from("drivers").update({ status }).eq("id", id);
+      const { error } = await supabase.rpc("update_driver_status_secure", {
+        _driver_id: id,
+        _status: status,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

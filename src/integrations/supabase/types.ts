@@ -942,6 +942,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_delivery_secure: {
+        Args: { _order_id: string }
+        Returns: Database["public"]["Tables"]["deliveries"]["Row"]
+      }
       create_menu_category_secure: {
         Args: { _name: string; _restaurant_id: string; _sort_order?: number }
         Returns: Database["public"]["Tables"]["menu_categories"]["Row"]
@@ -997,6 +1001,15 @@ export type Database = {
           restaurant_id: string
         }[]
       }
+      get_driver_earnings_summary: {
+        Args: { _driver_id: string; _from: string; _to: string }
+        Returns: {
+          total_deliveries: number
+          total_earnings: number
+          week_start: string
+          week_earnings: number
+        }[]
+      }
       get_restaurant_revenue_summary: {
         Args: { _from: string; _restaurant_id: string; _to: string }
         Returns: {
@@ -1017,6 +1030,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_driver_status_secure: {
+        Args: { _driver_id: string; _status: Database["public"]["Enums"]["driver_status"] }
+        Returns: Database["public"]["Tables"]["drivers"]["Row"]
       }
       update_menu_category_secure: {
         Args: { _category_id: string; _name: string; _sort_order: number }

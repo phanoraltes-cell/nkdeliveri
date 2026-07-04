@@ -33,6 +33,9 @@ import { Route as AuthenticatedDashboardRestaurantPayoutsRouteImport } from './r
 import { Route as AuthenticatedDashboardRestaurantOrdersRouteImport } from './routes/_authenticated/dashboard.restaurant.orders'
 import { Route as AuthenticatedDashboardRestaurantMenuRouteImport } from './routes/_authenticated/dashboard.restaurant.menu'
 import { Route as AuthenticatedDashboardDriverPayoutsRouteImport } from './routes/_authenticated/dashboard.driver.payouts'
+import { Route as AuthenticatedDashboardDriverHistoryRouteImport } from './routes/_authenticated/dashboard.driver.history'
+import { Route as AuthenticatedDashboardDriverEarningsRouteImport } from './routes/_authenticated/dashboard.driver.earnings'
+import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './routes/_authenticated/dashboard.driver.available'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 
 const ProfileRoute = ProfileRouteImport.update({
@@ -167,6 +170,24 @@ const AuthenticatedDashboardDriverPayoutsRoute =
     path: '/payouts',
     getParentRoute: () => AuthenticatedDashboardDriverRoute,
   } as any)
+const AuthenticatedDashboardDriverHistoryRoute =
+  AuthenticatedDashboardDriverHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
+const AuthenticatedDashboardDriverEarningsRoute =
+  AuthenticatedDashboardDriverEarningsRouteImport.update({
+    id: '/earnings',
+    path: '/earnings',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
+const AuthenticatedDashboardDriverAvailableRoute =
+  AuthenticatedDashboardDriverAvailableRouteImport.update({
+    id: '/available',
+    path: '/available',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
 const AuthenticatedDashboardAdminPaymentsRoute =
   AuthenticatedDashboardAdminPaymentsRouteImport.update({
     id: '/payments',
@@ -192,6 +213,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
+  '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
@@ -217,6 +241,9 @@ export interface FileRoutesByTo {
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
+  '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
@@ -245,6 +272,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
+  '/_authenticated/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/_authenticated/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
+  '/_authenticated/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/_authenticated/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/_authenticated/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/_authenticated/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
@@ -273,6 +303,9 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant'
     | '/dashboard/'
     | '/dashboard/admin/payments'
+    | '/dashboard/driver/available'
+    | '/dashboard/driver/earnings'
+    | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
@@ -298,6 +331,9 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant'
     | '/dashboard'
     | '/dashboard/admin/payments'
+    | '/dashboard/driver/available'
+    | '/dashboard/driver/earnings'
+    | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
@@ -325,6 +361,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/payments'
+    | '/_authenticated/dashboard/driver/available'
+    | '/_authenticated/dashboard/driver/earnings'
+    | '/_authenticated/dashboard/driver/history'
     | '/_authenticated/dashboard/driver/payouts'
     | '/_authenticated/dashboard/restaurant/menu'
     | '/_authenticated/dashboard/restaurant/orders'
@@ -516,6 +555,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDriverPayoutsRouteImport
       parentRoute: typeof AuthenticatedDashboardDriverRoute
     }
+    '/_authenticated/dashboard/driver/history': {
+      id: '/_authenticated/dashboard/driver/history'
+      path: '/history'
+      fullPath: '/dashboard/driver/history'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverHistoryRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
+    '/_authenticated/dashboard/driver/earnings': {
+      id: '/_authenticated/dashboard/driver/earnings'
+      path: '/earnings'
+      fullPath: '/dashboard/driver/earnings'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverEarningsRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
+    '/_authenticated/dashboard/driver/available': {
+      id: '/_authenticated/dashboard/driver/available'
+      path: '/available'
+      fullPath: '/dashboard/driver/available'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverAvailableRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
     '/_authenticated/dashboard/admin/payments': {
       id: '/_authenticated/dashboard/admin/payments'
       path: '/payments'
@@ -542,11 +602,20 @@ const AuthenticatedDashboardAdminRouteWithChildren =
   )
 
 interface AuthenticatedDashboardDriverRouteChildren {
+  AuthenticatedDashboardDriverAvailableRoute: typeof AuthenticatedDashboardDriverAvailableRoute
+  AuthenticatedDashboardDriverEarningsRoute: typeof AuthenticatedDashboardDriverEarningsRoute
+  AuthenticatedDashboardDriverHistoryRoute: typeof AuthenticatedDashboardDriverHistoryRoute
   AuthenticatedDashboardDriverPayoutsRoute: typeof AuthenticatedDashboardDriverPayoutsRoute
 }
 
 const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRouteChildren =
   {
+    AuthenticatedDashboardDriverAvailableRoute:
+      AuthenticatedDashboardDriverAvailableRoute,
+    AuthenticatedDashboardDriverEarningsRoute:
+      AuthenticatedDashboardDriverEarningsRoute,
+    AuthenticatedDashboardDriverHistoryRoute:
+      AuthenticatedDashboardDriverHistoryRoute,
     AuthenticatedDashboardDriverPayoutsRoute:
       AuthenticatedDashboardDriverPayoutsRoute,
   }
