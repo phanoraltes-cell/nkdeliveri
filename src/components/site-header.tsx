@@ -22,7 +22,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-4 z-50 px-4">
+    <header className="sticky top-[calc(1rem+var(--sat))] z-50 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))]">
       <div className="mx-auto flex h-20 max-w-[1200px] items-center gap-3 rounded-full border border-brand-soft/60 bg-white/95 px-5 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur">
         <Link to="/" className="flex items-center gap-2.5">
           <img

@@ -78,6 +78,14 @@
 }
 
 :root {
+  /* Device safe-area insets (notch, Dynamic Island, home indicator, foldable
+     hinges). Zero on devices without a cutout; requires viewport-fit=cover
+     on the viewport meta tag to resolve to non-zero values at all. */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+
   --radius: 1.125rem;
   /* NK Delivery brand palette (spec) */
   --brand: oklch(0.706 0.185 45);         /* #F97316 */
@@ -165,5 +173,10 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    /* Keeps footer/CTA content clear of the home-indicator / gesture bar
+       when installed standalone. Left/right handled locally on edge-to-edge
+       elements (header, dashboard nav) so full-bleed backgrounds don't gap
+       in landscape. */
+    padding-bottom: var(--sab);
   }
 }

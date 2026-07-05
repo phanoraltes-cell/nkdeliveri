@@ -82,7 +82,7 @@ export function InstallPrompt() {
   if (dismissed || (!deferredPrompt && !showIOSHelp)) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-sm sm:px-0">
+    <div className="fixed inset-x-0 bottom-0 z-50 pb-[max(1rem,var(--sab))] pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-sm sm:pl-0 sm:pr-0">
       <div className="flex items-start gap-3 rounded-2xl bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)] ring-1 ring-brand-soft/60">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
           {showIOSHelp ? <Share className="h-5 w-5" /> : <Download className="h-5 w-5" />}

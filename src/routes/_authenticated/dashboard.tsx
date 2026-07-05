@@ -42,7 +42,7 @@ function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-brand-soft/50 bg-white px-5 shadow-sm">
+      <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1.25rem,var(--sal))] pr-[max(1.25rem,var(--sar))] shadow-sm">
         <Link to="/" className="flex items-center gap-2">
           <img src="/nk-logo.png" alt="NK" className="h-9 w-9 rounded-full" />
           <span className="font-display text-lg font-extrabold text-ink">
@@ -74,7 +74,7 @@ function DashboardLayout() {
           </button>
         </div>
       </header>
-      <nav className="flex gap-2 overflow-x-auto border-b border-brand-soft/50 bg-white px-5 py-2.5 md:hidden">
+      <nav className="flex gap-2 overflow-x-auto border-b border-brand-soft/50 bg-white py-2.5 pl-[max(1.25rem,var(--sal))] pr-[max(1.25rem,var(--sar))] md:hidden">
         {items.map((it) => {
           const Icon = it.icon;
           return (
