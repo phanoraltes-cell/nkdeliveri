@@ -153,6 +153,12 @@ function OrderDetail() {
   const [restaurantRating, setRestaurantRating] = useState(0);
   const [driverRating, setDriverRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
+  // Must run unconditionally, before the loading/not-found early returns
+  // below — calling it after them would change the hook order between
+  // renders and violate the Rules of Hooks (React would throw or silently
+  // drop hooks, breaking this exact component on the transition from
+  // "loading" to "loaded", which is also where the map should appear).
+  const delivery = useDeliveryForOrder(order.data?.id);
 
   const submitReview = useMutation({
     mutationFn: async (args: { restaurantId: string; driverId: string | null }) => {
@@ -199,7 +205,6 @@ function OrderDetail() {
 
   const o = order.data;
   const payment = o.payments?.[0];
-  const delivery = useDeliveryForOrder(o.id);
   const trackingMarkers: MapMarker[] = (() => {
     if (!delivery) return [];
     const arr: MapMarker[] = [];

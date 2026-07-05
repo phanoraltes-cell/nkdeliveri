@@ -1,12 +1,23 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { reportLovableError } from "@/lib/lovable-error-reporting";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
-    const { data: role } = await supabase.rpc("get_primary_role", { _user_id: data.user.id });
+    const { data: role, error: roleError } = await supabase.rpc("get_primary_role", {
+      _user_id: data.user.id,
+    });
+    // A failed role lookup previously fell back to "customer" silently —
+    // a driver/admin/restaurant owner would get bounced to the wrong
+    // dashboard with no indication why. Still fall back (better than a
+    // hard lockout on a transient network blip) but make the failure
+    // visible so it shows up in error tracking instead of vanishing.
+    if (roleError) {
+      reportLovableError(roleError, { context: "get_primary_role_rpc", userId: data.user.id });
+    }
     return { user: data.user, role: (role as string | null) ?? "customer" };
   },
   component: () => <Outlet />,

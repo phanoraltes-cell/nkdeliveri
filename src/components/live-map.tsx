@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { loadGoogleMaps } from "@/lib/google-maps-loader";
 
 export type MapMarker = {
@@ -34,10 +35,12 @@ export function LiveMap({
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const infoWindowRef = useRef<any>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // init
   useEffect(() => {
     let cancelled = false;
+    setLoadError(null);
     loadGoogleMaps()
       .then((maps) => {
         if (cancelled || !ref.current) return;
@@ -57,7 +60,10 @@ export function LiveMap({
         });
         infoWindowRef.current = new maps.InfoWindow();
       })
-      .catch((err) => console.error("[LiveMap]", err));
+      .catch((err) => {
+        console.error("[LiveMap]", err);
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : String(err));
+      });
     return () => {
       cancelled = true;
     };
@@ -128,13 +134,20 @@ export function LiveMap({
     }
   }, [markers]);
 
-  return (
-    <div
-      ref={ref}
-      className={
-        className ||
-        "h-[400px] w-full rounded-2xl border border-brand-soft/60 bg-brand-soft/20"
-      }
-    />
-  );
+  const boxClassName =
+    className || "h-[400px] w-full rounded-2xl border border-brand-soft/60 bg-brand-soft/20";
+
+  if (loadError) {
+    return (
+      <div
+        className={`${boxClassName} flex flex-col items-center justify-center gap-2 p-4 text-center`}
+      >
+        <AlertTriangle className="h-6 w-6 text-amber-600" />
+        <p className="text-sm font-semibold text-ink">Kat la pa ka chaje</p>
+        <p className="max-w-[32ch] text-xs text-ink-soft">{loadError}</p>
+      </div>
+    );
+  }
+
+  return <div ref={ref} className={boxClassName} />;
 }

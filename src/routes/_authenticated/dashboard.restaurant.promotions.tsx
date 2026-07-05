@@ -57,7 +57,10 @@ function RestaurantPromotions() {
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["restaurant-promotions"] }),
+    onSuccess: (_data, p) => {
+      qc.invalidateQueries({ queryKey: ["restaurant-promotions"] });
+      toast.success(p.active ? "Pwomosyon dezaktive" : "Pwomosyon aktive");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
