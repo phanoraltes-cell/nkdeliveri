@@ -180,7 +180,7 @@ function AdminCustomers() {
         </div>
 
         {subscribers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
-        <div className="max-h-64 overflow-y-auto rounded-xl border border-brand-soft/40">
+        <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-xl border border-brand-soft/40">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">
               <tr>

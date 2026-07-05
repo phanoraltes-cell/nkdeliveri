@@ -157,7 +157,14 @@ function RestaurantPage() {
               <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
                 {items.map((p: any) => (
                   <div key={p.id} className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
-                    {p.image_url && <img src={p.image_url} alt={p.name} className="h-[150px] w-full object-cover" />}
+                    {p.image_url && (
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        loading="lazy"
+                        className="h-[150px] w-full object-cover"
+                      />
+                    )}
                     <div className="flex flex-1 flex-col p-4">
                       <h3 className="font-display text-base font-extrabold">{p.name}</h3>
                       {p.description && <p className="mt-1 mb-2 flex-1 text-xs text-ink-soft">{p.description}</p>}

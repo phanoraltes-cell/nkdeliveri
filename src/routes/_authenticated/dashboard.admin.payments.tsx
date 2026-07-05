@@ -9,8 +9,6 @@ import { ProofThumb } from "@/components/proof-thumb";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Download, FileText } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payments")({
   beforeLoad: ({ context }) => {
@@ -302,7 +300,14 @@ function PayoutHistory({
     toast.success("CSV telechaje");
   }
 
-  function exportPDF() {
+  async function exportPDF() {
+    // jspdf + jspdf-autotable pull in ~1.3MB of transitive deps (html2canvas,
+    // canvg, etc.) — loaded on demand so admins who never export PDF never
+    // pay for it, and it drops out of the SSR bundle entirely.
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
     doc.setFontSize(14);
     doc.text("NK Delivery - Payout history", 40, 40);

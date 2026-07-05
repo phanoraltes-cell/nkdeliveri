@@ -236,7 +236,14 @@ function RestaurantMenu() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibleProducts.map((p) => (
             <div key={p.id} className="overflow-hidden rounded-xl border border-brand-soft/50">
-              {p.image_url && <img src={p.image_url} alt={p.name} className="h-32 w-full object-cover" />}
+              {p.image_url && (
+                <img
+                  src={p.image_url}
+                  alt={p.name}
+                  loading="lazy"
+                  className="h-32 w-full object-cover"
+                />
+              )}
               <div className="p-3">
                 <div className="font-bold">{p.name}</div>
                 <div className="text-xs text-ink-soft">{p.description}</div>

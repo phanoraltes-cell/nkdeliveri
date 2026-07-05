@@ -53,7 +53,12 @@ function RestaurantsPage() {
               params={{ slug: r.slug }}
               className="overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)] transition hover:-translate-y-1"
             >
-              <img src={r.cover_url || ""} alt={r.name} className="h-36 w-full object-cover" />
+              <img
+                src={r.cover_url || ""}
+                alt={r.name}
+                loading="lazy"
+                className="h-36 w-full object-cover"
+              />
               <div className="p-4">
                 <h3 className="font-display text-base font-extrabold">{r.name}</h3>
                 <p className="mt-1 text-xs text-ink-soft">{r.cuisine} · {r.address}</p>
