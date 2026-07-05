@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { registerPWA } from "@/lib/pwa-register";
 import { InstallPrompt } from "@/components/install-prompt";
+import { BottomNav } from "@/components/bottom-nav";
 
 function NotFoundComponent() {
   return (
@@ -159,7 +160,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster position="bottom-center" richColors />
+      <BottomNav />
+      <Toaster
+        position="bottom-center"
+        richColors
+        offset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+        mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+      />
       <InstallPrompt />
     </QueryClientProvider>
   );
