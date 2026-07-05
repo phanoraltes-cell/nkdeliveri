@@ -7,6 +7,9 @@ export type MapMarker = {
   lng: number;
   label?: string;
   color?: "orange" | "green" | "blue" | "red";
+  /** Extra HTML shown in a popup when the marker is clicked (kept plain-text
+   * safe by the caller — do not interpolate untrusted user input directly). */
+  info?: string;
 };
 
 const COLOR_HEX: Record<NonNullable<MapMarker["color"]>, string> = {
@@ -30,6 +33,7 @@ export function LiveMap({
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
+  const infoWindowRef = useRef<any>(null);
 
   // init
   useEffect(() => {
@@ -51,6 +55,7 @@ export function LiveMap({
             { featureType: "poi", stylers: [{ visibility: "off" }] },
           ],
         });
+        infoWindowRef.current = new maps.InfoWindow();
       })
       .catch((err) => console.error("[LiveMap]", err));
     return () => {
@@ -86,6 +91,12 @@ export function LiveMap({
             strokeWeight: 3,
           },
         });
+        mk.addListener("click", () => {
+          const iw = infoWindowRef.current;
+          if (!iw) return;
+          iw.setContent(mk.__nkInfo || "");
+          iw.open({ map, anchor: mk });
+        });
         markersRef.current.set(m.id, mk);
       } else {
         mk.setPosition(pos);
@@ -98,6 +109,7 @@ export function LiveMap({
           strokeWeight: 3,
         });
       }
+      mk.__nkInfo = m.info || m.label || "";
       bounds.extend(pos);
     });
 

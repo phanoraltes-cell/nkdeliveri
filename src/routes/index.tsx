@@ -90,6 +90,32 @@ function Index() {
   const [dishType, setDishType] = useState("all");
   const [q, setQ] = useState("");
   const { add } = useCart();
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+
+  async function subscribeNewsletter(e: React.FormEvent) {
+    e.preventDefault();
+    setSubscribing(true);
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscribers")
+        .insert({ email: newsletterEmail.trim().toLowerCase() });
+      if (error) {
+        if (error.code === "23505") {
+          toast.info("Ou deja enskri!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Mèsi! Ou enskri.");
+      }
+      setNewsletterEmail("");
+    } catch (err: any) {
+      toast.error(err.message || "Erè pandan enskripsyon an");
+    } finally {
+      setSubscribing(false);
+    }
+  }
 
   const restaurants = data.restaurants.filter(
     (r) =>
@@ -475,20 +501,22 @@ function Index() {
               Enskri pou resevwa promosyon, nouvote ak avantaj espesyal.
             </p>
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                toast.success("Mèsi! Ou enskri.");
-              }}
+              onSubmit={subscribeNewsletter}
               className="flex max-w-[460px] items-center rounded-full bg-white p-1.5"
             >
               <input
                 type="email"
                 required
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
                 placeholder="Antre imèl ou"
                 className="flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft"
               />
-              <button className="rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink">
-                Enskri
+              <button
+                disabled={subscribing}
+                className="rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink disabled:opacity-60"
+              >
+                {subscribing ? "…" : "Enskri"}
               </button>
             </form>
           </div>

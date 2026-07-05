@@ -226,6 +226,30 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          source: string
+          subscribed_at: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -999,6 +1023,20 @@ export type Database = {
           natcash_number: string
           payout_mode: string
           restaurant_id: string
+        }[]
+      }
+      get_customers_admin: {
+        Args: { _search?: string }
+        Returns: {
+          id: string
+          email: string
+          first_name: string | null
+          last_name: string | null
+          phone: string | null
+          address: string | null
+          created_at: string
+          total_orders: number
+          total_spent: number
         }[]
       }
       get_driver_earnings_summary: {

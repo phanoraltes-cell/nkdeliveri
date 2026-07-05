@@ -16,11 +16,29 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   component: AdminDashboard,
 });
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+const DELIVERY_STATUS_LABEL: Record<string, string> = {
+  assigned: "Asiyen",
+  en_route_pickup: "Nan wout pou pran l",
+  picked_up: "Pran nan men restoran",
+  en_route_dropoff: "Nan wout pou livre",
+  delivered: "Livre",
+};
+
 function AdminDashboard() {
   const qc = useQueryClient();
   const active = useActiveDeliveries({ admin: true });
   const markers: MapMarker[] = active.flatMap((d) => {
     const arr: MapMarker[] = [];
+    const driverName = escapeHtml(`${d.driver?.first_name ?? ""} ${d.driver?.last_name ?? ""}`.trim() || "Livrè");
+    const orderNumber = escapeHtml(d.order?.order_number ?? "");
     if (d.driver_lat != null && d.driver_lng != null) {
       arr.push({
         id: `drv-${d.id}`,
@@ -28,24 +46,30 @@ function AdminDashboard() {
         lng: Number(d.driver_lng),
         color: "blue",
         label: `${d.driver?.first_name ?? "Livrè"} · ${d.order?.order_number ?? ""}`,
+        info: `<div style="font-size:13px;line-height:1.5"><b>${driverName}</b><br>Kòmand: ${orderNumber}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
       });
     }
     if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+      const address = escapeHtml(d.order.delivery_address ?? "—");
+      const phone = escapeHtml(d.order.contact_phone ?? "—");
       arr.push({
         id: `dst-${d.id}`,
         lat: Number(d.order.delivery_lat),
         lng: Number(d.order.delivery_lng),
         color: "green",
         label: `Adrès ${d.order.order_number}`,
+        info: `<div style="font-size:13px;line-height:1.5"><b>Kòmand ${orderNumber}</b><br>Adrès: ${address}<br>Telefòn: ${phone}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
       });
     }
     if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
+      const restoName = escapeHtml(d.order.restaurants.name ?? "Restoran");
       arr.push({
         id: `rst-${d.id}`,
         lat: Number(d.order.restaurants.lat),
         lng: Number(d.order.restaurants.lng),
         color: "orange",
         label: d.order.restaurants.name ?? "Restoran",
+        info: `<div style="font-size:13px;line-height:1.5"><b>${restoName}</b><br>Kòmand: ${orderNumber}</div>`,
       });
     }
     return arr;
@@ -245,6 +269,7 @@ function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { icon: CreditCard, title: "Peman manyèl", desc: "Valide prèv MonCash/NatCash", to: "/dashboard/admin/payments" as const },
+          { icon: Users, title: "Kliyan & Newsletter", desc: "Swiv kliyan, ekspòte, voye imèl an mas", to: "/dashboard/admin/customers" as const },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
           { icon: Users, title: "Jere itilizatè", desc: "Sispann/aktive kont", to: null },
         ].map((c) => {
