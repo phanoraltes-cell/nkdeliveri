@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_PAYOUT } from "@/lib/admin-payout";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Panye — NK Delivery" }] }),
+  head: () => ({ meta: [{ title: "Panye — NK Delliveri" }] }),
   component: Checkout,
 });
 

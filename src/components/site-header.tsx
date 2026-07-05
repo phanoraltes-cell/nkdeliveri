@@ -27,14 +27,14 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-2.5">
           <img
             src="/nk-logo.png"
-            alt="NK Delivery"
+            alt="NK Delliveri"
             width={44}
             height={44}
             className="h-11 w-11 rounded-full object-contain"
           />
           <div>
             <div className="font-display text-xl font-extrabold tracking-tight leading-none text-ink">
-              NK <span className="text-brand">Delivery</span>
+              NK <span className="text-brand">Delliveri</span>
             </div>
             <div className="text-[0.7rem] uppercase tracking-widest text-ink-soft">
               Gonaïves

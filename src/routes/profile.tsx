@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Pwofil mwen — NK Delivery" }] }),
+  head: () => ({ meta: [{ title: "Pwofil mwen — NK Delliveri" }] }),
   component: Profile,
 });
 

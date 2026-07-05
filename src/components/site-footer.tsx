@@ -20,8 +20,17 @@ export function SiteFooter() {
     <footer className="mt-16 bg-brand text-white">
       <div className="mx-auto grid max-w-[1100px] gap-8 px-5 py-10 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <div className="font-display text-xl font-extrabold text-white">
-            NK <span className="text-cream">Delivery</span>
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/nk-logo.png"
+              alt="NK Delliveri"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-full bg-white object-contain p-0.5"
+            />
+            <div className="font-display text-xl font-extrabold text-white">
+              NK <span className="text-cream">Delliveri</span>
+            </div>
           </div>
           <p className="mt-2 max-w-[40ch] text-sm text-white/85">
             Manje lakay, livre lakay ou. Sèvis livrezon manje nan Gonaïves.
@@ -69,7 +78,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-white/80">
-        © {new Date().getFullYear()} NK Delivery — Tout dwa rezève
+        © {new Date().getFullYear()} NK Delliveri — Tout dwa rezève
       </div>
     </footer>
   );

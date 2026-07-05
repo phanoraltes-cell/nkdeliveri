@@ -310,7 +310,7 @@ function PayoutHistory({
     ]);
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
     doc.setFontSize(14);
-    doc.text("NK Delivery - Payout history", 40, 40);
+    doc.text("NK Delliveri - Payout history", 40, 40);
     doc.setFontSize(10);
     doc.text(`Peryòd: ${fromDate} → ${toDate}`, 40, 58);
     doc.text(

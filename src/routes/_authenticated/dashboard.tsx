@@ -46,7 +46,7 @@ function DashboardLayout() {
         <Link to="/" className="flex items-center gap-2">
           <img src="/nk-logo.png" alt="NK" className="h-9 w-9 rounded-full" />
           <span className="font-display text-lg font-extrabold text-ink">
-            NK <span className="text-brand">Delivery</span>
+            NK <span className="text-brand">Delliveri</span>
           </span>
         </Link>
         <span className="ml-2 rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep">

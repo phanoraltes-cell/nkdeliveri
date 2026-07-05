@@ -52,7 +52,7 @@ self.addEventListener("push", (event) => {
     payload = { body: event.data?.text() || "" };
   }
 
-  const title = payload.title || "NK Delivery";
+  const title = payload.title || "NK Delliveri";
   const options: NotificationOptions = {
     body: payload.body || "",
     icon: "/app-icon-192.png",

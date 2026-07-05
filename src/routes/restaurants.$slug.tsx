@@ -43,9 +43,9 @@ export const Route = createFileRoute("/restaurants/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.r.name} — NK Delivery` },
+          { title: `${loaderData.r.name} — NK Delliveri` },
           { name: "description", content: loaderData.r.description ?? `Kòmande nan ${loaderData.r.name}.` },
-          { property: "og:title", content: `${loaderData.r.name} — NK Delivery` },
+          { property: "og:title", content: `${loaderData.r.name} — NK Delliveri` },
           { property: "og:image", content: loaderData.r.cover_url ?? "" },
         ]
       : [{ title: "Restoran pa jwenn" }, { name: "robots", content: "noindex" }],

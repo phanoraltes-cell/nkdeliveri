@@ -7,7 +7,7 @@ const InputSchema = z.object({
   html: z.string().min(1),
 });
 
-const RESEND_FROM = "NK Delivery <newsletter@nkdeliveri.com>";
+const RESEND_FROM = "NK Delliveri <newsletter@nkdeliveri.com>";
 const BATCH_SIZE = 10;
 
 export const sendNewsletterBroadcast = createServerFn({ method: "POST" })

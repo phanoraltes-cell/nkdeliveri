@@ -88,7 +88,7 @@ export function InstallPrompt() {
           {showIOSHelp ? <Share className="h-5 w-5" /> : <Download className="h-5 w-5" />}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-sm font-extrabold text-ink">Enstale NK Delivery</div>
+          <div className="font-display text-sm font-extrabold text-ink">Enstale NK Delliveri</div>
           {showIOSHelp ? (
             <p className="mt-1 text-xs leading-relaxed text-ink-soft">
               Peze <Share className="inline h-3.5 w-3.5 align-text-bottom" /> anba a, epi chwazi{" "}
