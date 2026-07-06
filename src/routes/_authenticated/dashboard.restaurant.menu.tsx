@@ -153,7 +153,7 @@ function RestaurantMenu() {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             onClick={() => setActiveCat("all")}
-            className={`rounded-full px-3 py-1.5 text-sm font-bold ${activeCat === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+            className={`rounded-full px-3 py-2.5 text-sm font-bold ${activeCat === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
           >
             Tout ({products.data?.length ?? 0})
           </button>
@@ -173,7 +173,7 @@ function RestaurantMenu() {
               ) : (
                 <button
                   onClick={() => setActiveCat(c.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold ${activeCat === c.id ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-bold ${activeCat === c.id ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
                 >
                   {c.name} ({products.data?.filter((p) => p.category_id === c.id).length ?? 0})
                   <span

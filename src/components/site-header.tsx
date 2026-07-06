@@ -23,20 +23,21 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-[calc(1rem+var(--sat))] z-50 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))]">
-      <div className="mx-auto flex h-20 max-w-[1200px] items-center gap-3 rounded-full border border-brand-soft/60 bg-white/95 px-5 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur">
-        <Link to="/" className="flex items-center gap-2.5">
+      <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-1.5 rounded-full border border-brand-soft/60 bg-white/95 px-3 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur sm:h-20 sm:gap-3 sm:px-5">
+        <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2.5">
           <img
             src="/nk-logo.png"
             alt="NK Deliveri"
             width={44}
             height={44}
-            className="h-11 w-11 rounded-full object-contain"
+            className="h-8 w-8 shrink-0 rounded-full object-contain sm:h-11 sm:w-11"
           />
-          <div>
-            <div className="font-display text-xl font-extrabold tracking-tight leading-none text-ink">
+          <div className="min-w-0">
+            <div className="truncate font-display text-base font-extrabold tracking-tight leading-none text-ink sm:text-xl">
               NK <span className="text-brand">Deliveri</span>
             </div>
-            <div className="text-[0.7rem] uppercase tracking-widest text-ink-soft">
+            {/* Redundant with the bottom nav / footer on small screens — cut first when space is tight. */}
+            <div className="hidden text-[0.7rem] uppercase tracking-widest text-ink-soft sm:block">
               Gonaïves
             </div>
           </div>
@@ -67,10 +68,11 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             to="/checkout"
-            className="relative inline-flex items-center gap-2 rounded-full bg-brand-soft/70 px-4 py-2.5 text-sm font-bold text-brand-deep transition hover:bg-brand-soft"
+            aria-label="Panye"
+            className="relative inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand-soft/70 px-3 text-sm font-bold text-brand-deep transition hover:bg-brand-soft sm:px-4"
           >
             <ShoppingBag className="h-4 w-4" />
             <span className="hidden sm:inline">Panye</span>
@@ -83,7 +85,10 @@ export function SiteHeader() {
 
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-deep">
+              <DropdownMenuTrigger
+                aria-label="Meni kont"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-deep"
+              >
                 <UserIcon className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -112,7 +117,7 @@ export function SiteHeader() {
                 </Link>
                 <Link
                   to="/auth/register"
-                  className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)]"
+                  className="inline-flex h-11 items-center rounded-full bg-brand px-3.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)] sm:px-5"
                 >
                   Enskri
                 </Link>

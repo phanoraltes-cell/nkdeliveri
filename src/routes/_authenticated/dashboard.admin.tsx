@@ -235,7 +235,7 @@ function AdminDashboard() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
           >
             <option value="all">Tout estati</option>
             {Object.entries(DELIVERY_STATUS_LABEL).map(([k, v]) => (
@@ -245,7 +245,7 @@ function AdminDashboard() {
           <select
             value={restaurantFilter}
             onChange={(e) => setRestaurantFilter(e.target.value)}
-            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
           >
             <option value="all">Tout restoran</option>
             {restaurantOptions.map((name) => (
@@ -256,7 +256,7 @@ function AdminDashboard() {
             value={zoneQuery}
             onChange={(e) => setZoneQuery(e.target.value)}
             placeholder="Chèche yon zòn/adrès…"
-            className="min-w-[160px] flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs outline-none focus:border-brand"
+            className="min-w-[160px] flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand"
           />
         </div>
 
@@ -308,13 +308,13 @@ function AdminDashboard() {
               </div>
               <button
                 onClick={() => updateResto.mutate({ id: r.id, status: "approved" })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
               </button>
               <button
                 onClick={() => updateResto.mutate({ id: r.id, status: "rejected" })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
               >
                 <XCircle className="h-3.5 w-3.5" /> Refize
               </button>
@@ -342,13 +342,13 @@ function AdminDashboard() {
               </div>
               <button
                 onClick={() => updateDriver.mutate({ id: d.id, status: "approved" })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
               </button>
               <button
                 onClick={() => updateDriver.mutate({ id: d.id, status: "rejected" })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
               >
                 <XCircle className="h-3.5 w-3.5" /> Refize
               </button>

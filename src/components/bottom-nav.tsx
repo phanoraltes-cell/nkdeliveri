@@ -47,7 +47,7 @@ export function BottomNav() {
                 to={it.to}
                 activeOptions={"exact" in it ? { exact: it.exact } : undefined}
                 activeProps={{ className: "!text-brand" }}
-                className="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-ink-soft transition-colors"
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-ink-soft transition-colors"
               >
                 <span className="relative flex h-7 w-7 items-center justify-center">
                   <Icon className="h-6 w-6" />
@@ -57,7 +57,9 @@ export function BottomNav() {
                     </span>
                   )}
                 </span>
-                <span className="text-[0.65rem] font-semibold leading-none">{it.label}</span>
+                <span className="max-w-full truncate text-[0.65rem] font-semibold leading-none">
+                  {it.label}
+                </span>
               </Link>
             );
           })}

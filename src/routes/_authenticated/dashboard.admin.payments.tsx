@@ -185,19 +185,19 @@ function AdminPayments() {
                 value={notes[p.id] || ""}
                 onChange={(e) => setNotes((s) => ({ ...s, [p.id]: e.target.value }))}
                 placeholder="Nòt (opsyonèl)"
-                className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-1.5 text-sm"
+                className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm"
               />
               <button
                 disabled={!p.payment_proofs?.length || decide.isPending}
                 onClick={() => decide.mutate({ id: p.id, decision: "paid", note: notes[p.id] })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
               </button>
               <button
                 disabled={decide.isPending}
                 onClick={() => decide.mutate({ id: p.id, decision: "failed", note: notes[p.id] })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
               >
                 <XCircle className="h-3.5 w-3.5" /> Rejte
               </button>

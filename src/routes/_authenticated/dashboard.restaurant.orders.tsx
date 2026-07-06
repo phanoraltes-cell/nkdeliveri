@@ -97,13 +97,13 @@ function RestaurantOrders() {
       <div className="flex gap-2">
         <button
           onClick={() => setFilter("all")}
-          className={`rounded-full px-4 py-1.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+          className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
         >
           Tout
         </button>
         <button
           onClick={() => setFilter("pending")}
-          className={`rounded-full px-4 py-1.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+          className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
         >
           An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
         </button>
@@ -156,14 +156,14 @@ function RestaurantOrders() {
                   <button
                     disabled={changeStatus.isPending}
                     onClick={() => changeStatus.mutate({ orderId: o.id, status: "confirmed" })}
-                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
                     <Check className="h-3.5 w-3.5" /> Konfime
                   </button>
                   <button
                     disabled={changeStatus.isPending}
                     onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
-                    className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                   >
                     <X className="h-3.5 w-3.5" /> Refize
                   </button>
@@ -174,7 +174,7 @@ function RestaurantOrders() {
                   key={n.to}
                   disabled={changeStatus.isPending}
                   onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
-                  className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                 >
                   {n.label} <ChevronRight className="h-3.5 w-3.5" />
                 </button>
@@ -183,7 +183,7 @@ function RestaurantOrders() {
                 <button
                   disabled={changeStatus.isPending}
                   onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
-                  className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
                 >
                   Anile kòmand
                 </button>

@@ -181,7 +181,7 @@ function RestaurantPage() {
               <button
                 key={c.id}
                 onClick={() => setActiveCat(c.id)}
-                className={`flex items-center gap-1.5 rounded-full border-[1.5px] px-4 py-1.5 text-sm font-semibold transition ${
+                className={`flex items-center gap-1.5 rounded-full border-[1.5px] px-4 py-2.5 text-sm font-semibold transition ${
                   active
                     ? "border-brand bg-brand text-white"
                     : "border-brand-soft bg-white text-ink-soft hover:bg-brand-soft hover:text-brand-deep"

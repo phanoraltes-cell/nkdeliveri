@@ -114,13 +114,13 @@ function AdminCustomers() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
-                className="rounded-full border-2 border-brand-soft bg-white py-1.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
+                className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
               />
             </div>
             <button
               onClick={exportCustomers}
               disabled={!customers.data?.length}
-              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
             >
               <Download className="h-3.5 w-3.5" /> CSV
             </button>
@@ -173,7 +173,7 @@ function AdminCustomers() {
           <button
             onClick={exportSubscribers}
             disabled={!subscribers.data?.length}
-            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" /> CSV
           </button>

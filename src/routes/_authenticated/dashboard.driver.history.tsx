@@ -123,7 +123,7 @@ function DriverHistory() {
                     <button
                       disabled={advance.isPending}
                       onClick={() => advance.mutate({ id: d.id, status: "picked_up" })}
-                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                     >
                       <Package className="h-3.5 w-3.5" /> Pikap fèt
                     </button>
@@ -132,7 +132,7 @@ function DriverHistory() {
                     <button
                       disabled={advance.isPending}
                       onClick={() => advance.mutate({ id: d.id, status: "delivered" })}
-                      className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" /> Livre
                     </button>

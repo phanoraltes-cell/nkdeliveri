@@ -105,7 +105,7 @@ export function InstallPrompt() {
           {!showIOSHelp && (
             <button
               onClick={install}
-              className="mt-2.5 rounded-full bg-brand px-4 py-1.5 text-xs font-bold text-white transition hover:bg-brand-deep"
+              className="mt-2.5 inline-flex h-10 items-center rounded-full bg-brand px-4 text-xs font-bold text-white transition hover:bg-brand-deep"
             >
               Enstale
             </button>

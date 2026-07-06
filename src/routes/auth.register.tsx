@@ -27,7 +27,7 @@ function RegisterPage() {
           {type && (
             <button
               onClick={() => setType(null)}
-              className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-1.5 text-sm font-semibold text-brand-deep hover:bg-brand-soft/40"
+              className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-2.5 text-sm font-semibold text-brand-deep hover:bg-brand-soft/40"
             >
               <ArrowLeft className="h-4 w-4" /> Retounen
             </button>

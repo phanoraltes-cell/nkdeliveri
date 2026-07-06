@@ -42,20 +42,20 @@ function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1.25rem,var(--sal))] pr-[max(1.25rem,var(--sar))] shadow-sm">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/nk-logo.png" alt="NK" width={36} height={36} className="h-9 w-9 rounded-full" />
-          <span className="font-display text-lg font-extrabold text-ink">
+      <header className="sticky top-0 z-40 flex min-h-16 items-center gap-1.5 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] shadow-sm sm:gap-3 sm:pl-[max(1.25rem,var(--sal))] sm:pr-[max(1.25rem,var(--sar))]">
+        <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
+          <img src="/nk-logo.png" alt="NK" width={36} height={36} className="h-8 w-8 shrink-0 rounded-full sm:h-9 sm:w-9" />
+          <span className="truncate font-display text-base font-extrabold text-ink sm:text-lg">
             NK <span className="text-brand">Deliveri</span>
           </span>
         </Link>
-        <span className="ml-2 rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep">
+        <span className="hidden shrink-0 truncate rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep sm:ml-2 sm:inline-block">
           {role.replace("_", " ")}
         </span>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
           <Link
             to="/notifications"
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep hover:bg-brand-soft/40"
+            className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep hover:bg-brand-soft/40"
             aria-label="Notifikasyon"
           >
             <Bell className="h-4 w-4" />
@@ -65,12 +65,13 @@ function DashboardLayout() {
               </span>
             )}
           </Link>
-          <span className="hidden text-sm text-ink-soft sm:inline">{user?.email}</span>
+          <span className="hidden text-sm text-ink-soft md:inline">{user?.email}</span>
           <button
             onClick={signOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-brand-soft bg-white px-3 py-1.5 text-sm font-semibold text-brand-deep hover:bg-brand-soft/40"
+            aria-label="Dekonekte"
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-brand-soft bg-white px-2.5 text-sm font-semibold text-brand-deep hover:bg-brand-soft/40 sm:px-3"
           >
-            <LogOut className="h-4 w-4" /> Dekonekte
+            <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Dekonekte</span>
           </button>
         </div>
       </header>
@@ -82,7 +83,7 @@ function DashboardLayout() {
               key={it.to}
               to={it.to}
               activeProps={{ className: "!bg-brand !text-white" }}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/40 px-3 py-1.5 text-xs font-bold text-brand-deep"
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/40 px-3.5 text-xs font-bold text-brand-deep"
             >
               <Icon className="h-3.5 w-3.5" /> {it.label}
             </Link>
@@ -90,7 +91,7 @@ function DashboardLayout() {
         })}
         <Link
           to="/"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/20 px-3 py-1.5 text-xs font-semibold text-ink-soft"
+          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-brand-soft/20 px-3.5 text-xs font-semibold text-ink-soft"
         >
           <LayoutDashboard className="h-3.5 w-3.5" /> Sit la
         </Link>

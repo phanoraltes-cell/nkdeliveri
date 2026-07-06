@@ -33,7 +33,7 @@ export function DriverLocationReporter({ driverId }: { driverId: string }) {
         </div>
         <button
           onClick={() => (on ? stop() : start())}
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-white shadow-sm transition ${
+          className={`inline-flex h-11 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold text-white shadow-sm transition ${
             on ? "bg-emerald-600 hover:bg-emerald-700" : "bg-brand hover:bg-brand-deep"
           }`}
         >
