@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
 import { pageMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-config";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 const listQuery = queryOptions({
   queryKey: ["restaurants-all"],
@@ -50,6 +51,7 @@ function RestaurantsPage() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-[1100px] px-5 py-10">
+        <Breadcrumb items={[{ label: "Akèy", to: "/" }, { label: "Restoran" }]} />
         <h1 className="mb-2 font-display text-3xl font-extrabold">Tout restoran</h1>
         <p className="mb-6 text-ink-soft">Chwazi kote w vle kòmande jodi a.</p>
         <input

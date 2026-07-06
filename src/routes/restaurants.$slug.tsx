@@ -10,6 +10,7 @@ import { Plus, ArrowLeft, Star } from "lucide-react";
 import { useState } from "react";
 import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 const restQuery = (slug: string) =>
   queryOptions({
@@ -152,6 +153,7 @@ function RestaurantPage() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-[1100px] px-5 py-6">
+        <Breadcrumb items={[{ label: "Akèy", to: "/" }, { label: "Restoran", to: "/restaurants" }, { label: r.name }]} />
         <Link to="/restaurants" className="inline-flex items-center gap-1 text-sm font-bold text-brand-deep">
           <ArrowLeft className="h-4 w-4" /> Tout restoran
         </Link>
