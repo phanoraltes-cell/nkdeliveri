@@ -1,9 +1,14 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
+  // Applies to every nested dashboard route (head() merges down the whole
+  // matched route chain) — account/dashboard pages are never meant to rank,
+  // and robots.txt already blocks /dashboard from being crawled at all.
+  head: () => noIndexMeta("Dashboard — NK Deliveri"),
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });

@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
+import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/orders")({
-  head: () => ({ meta: [{ title: "Kòmand mwen — NK Deliveri" }] }),
+  head: () => noIndexMeta("Kòmand mwen — NK Deliveri"),
   component: Orders,
 });
 

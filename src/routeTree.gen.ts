@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -39,6 +41,16 @@ import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './rou
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -207,6 +219,8 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -237,6 +251,8 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
   '/orders/$id': typeof OrdersIdRoute
@@ -268,6 +284,8 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/orders': typeof OrdersRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -300,6 +318,8 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/orders'
     | '/profile'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/dashboard'
     | '/notifications'
     | '/auth/register'
@@ -330,6 +350,8 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/orders'
     | '/profile'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/notifications'
     | '/auth/register'
     | '/orders/$id'
@@ -360,6 +382,8 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/orders'
     | '/profile'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/_authenticated/dashboard'
     | '/_authenticated/notifications'
     | '/auth/register'
@@ -392,6 +416,8 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   OrdersRoute: typeof OrdersRouteWithChildren
   ProfileRoute: typeof ProfileRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
   AuthIndexRoute: typeof AuthIndexRoute
@@ -400,6 +426,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -733,6 +773,8 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   OrdersRoute: OrdersRouteWithChildren,
   ProfileRoute: ProfileRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
   AuthIndexRoute: AuthIndexRoute,

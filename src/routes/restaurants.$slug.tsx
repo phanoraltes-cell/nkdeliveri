@@ -8,6 +8,8 @@ import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 import { Plus, ArrowLeft, Star } from "lucide-react";
 import { useState } from "react";
+import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
+import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 
 const restQuery = (slug: string) =>
   queryOptions({
@@ -40,16 +42,57 @@ export const Route = createFileRoute("/restaurants/$slug")({
     if (!d) throw notFound();
     return d;
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.r.name} — NK Deliveri` },
-          { name: "description", content: loaderData.r.description ?? `Kòmande nan ${loaderData.r.name}.` },
-          { property: "og:title", content: `${loaderData.r.name} — NK Deliveri` },
-          { property: "og:image", content: loaderData.r.cover_url ?? "" },
-        ]
-      : [{ title: "Restoran pa jwenn" }, { name: "robots", content: "noindex" }],
-  }),
+  head: ({ loaderData }) => {
+    if (!loaderData) return noIndexMeta("Restoran pa jwenn — NK Deliveri");
+    const { r } = loaderData;
+    const description = r.description ?? `Kòmande nan ${r.name}, livrezon rapid nan ${PRIMARY_CITY.name}.`;
+    const path = `/restaurants/${r.slug}`;
+    return {
+      ...pageMeta({
+        title: `${r.name} — NK Deliveri`,
+        description,
+        path,
+        image: r.cover_url ?? undefined,
+      }),
+      scripts: [
+        jsonLdScript({
+          "@context": "https://schema.org",
+          "@type": "Restaurant",
+          name: r.name,
+          description,
+          image: r.cover_url ?? absoluteUrl("/nk-logo.png"),
+          url: absoluteUrl(path),
+          servesCuisine: r.cuisine ?? undefined,
+          telephone: r.phone ?? undefined,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: r.address ?? undefined,
+            addressLocality: PRIMARY_CITY.name,
+            addressRegion: PRIMARY_CITY.region,
+            addressCountry: PRIMARY_CITY.country,
+          },
+          // Only publish a rating once real reviews exist — a 0/placeholder
+          // rating as structured data would misrepresent the restaurant and
+          // risks a Google structured-data quality violation.
+          ...(r.rating != null && r.rating > 0
+            ? { aggregateRating: { "@type": "AggregateRating", ratingValue: r.rating, bestRating: 5 } }
+            : {}),
+          ...(r.lat != null && r.lng != null
+            ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } }
+            : {}),
+        }),
+        jsonLdScript({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Akèy", item: SITE_URL },
+            { "@type": "ListItem", position: 2, name: "Restoran", item: `${SITE_URL}/restaurants` },
+            { "@type": "ListItem", position: 3, name: r.name, item: absoluteUrl(path) },
+          ],
+        }),
+      ],
+    };
+  },
   notFoundComponent: () => (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
@@ -70,6 +113,28 @@ function RestaurantPage() {
   const { data } = useSuspenseQuery(restQuery(params.slug));
   const { add } = useCart();
   const [activeCat, setActiveCat] = useState<string>("all");
+  // Must run unconditionally, before the `if (!data)` early return below —
+  // calling it after would change the hook order between renders and
+  // violate the Rules of Hooks (in practice `data` is never actually null
+  // here since the route's loader already throws notFound() first, but the
+  // hook order must not depend on that regardless).
+  const restaurantId = data?.r.id;
+  const reviews = useQuery({
+    queryKey: ["restaurant-reviews", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("reviews")
+        .select("restaurant_rating, comment, created_at")
+        .eq("restaurant_id", restaurantId!)
+        .not("restaurant_rating", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return rows;
+    },
+  });
+
   if (!data) return null;
   const { r, cats, prods } = data;
 
@@ -82,21 +147,6 @@ function RestaurantPage() {
   );
   const visibleCats =
     activeCat === "all" ? cats : cats.filter((c: any) => c.id === activeCat);
-
-  const reviews = useQuery({
-    queryKey: ["restaurant-reviews", r.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("restaurant_rating, comment, created_at")
-        .eq("restaurant_id", r.id)
-        .not("restaurant_rating", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return data;
-    },
-  });
 
   return (
     <div className="min-h-screen bg-cream">

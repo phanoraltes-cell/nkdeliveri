@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
+import { noIndexMeta } from "@/lib/seo";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
 export const Route = createFileRoute("/auth/")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Konekte — NK Deliveri" }] }),
+  head: () => noIndexMeta("Konekte — NK Deliveri"),
   component: LoginPage,
 });
 

@@ -12,9 +12,10 @@ import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
 import { useOrderDelivery } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
 import { ProofThumb } from "@/components/proof-thumb";
+import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/orders/$id")({
-  head: () => ({ meta: [{ title: "Kòmand — NK Deliveri" }] }),
+  head: () => noIndexMeta("Kòmand — NK Deliveri"),
   // Leaflet touches `window` at module scope and this page is gated behind
   // a session check anyway (no SEO to lose), so it's rendered client-only —
   // same rationale as the _authenticated layout.

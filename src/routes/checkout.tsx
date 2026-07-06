@@ -9,9 +9,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_PAYOUT } from "@/lib/admin-payout";
+import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Panye — NK Deliveri" }] }),
+  head: () => noIndexMeta("Panye — NK Deliveri"),
   component: Checkout,
 });
 

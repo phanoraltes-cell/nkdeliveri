@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
+import { SITE_URL } from "@/lib/site-config";
 import {
   Search,
   Clock,
@@ -52,6 +53,12 @@ const homeDataQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
+  // Title/description/OG already come from the root's defaults — this page
+  // only needs to add its own canonical (root deliberately sets none, see
+  // __root.tsx, to avoid two conflicting <link rel="canonical"> tags).
+  head: () => ({
+    links: [{ rel: "canonical", href: SITE_URL }],
+  }),
   loader: ({ context }) => context.queryClient.ensureQueryData(homeDataQuery),
   component: Index,
 });

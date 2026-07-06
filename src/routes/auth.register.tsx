@@ -7,9 +7,10 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { User, Store, Bike, ArrowLeft, Upload } from "lucide-react";
+import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/auth/register")({
-  head: () => ({ meta: [{ title: "Kreye yon kont — NK Deliveri" }] }),
+  head: () => noIndexMeta("Kreye yon kont — NK Deliveri"),
   component: RegisterPage,
 });
 

@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
+import { pageMeta, jsonLdScript } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site-config";
 
 const listQuery = queryOptions({
   queryKey: ["restaurants-all"],
@@ -20,9 +22,20 @@ const listQuery = queryOptions({
 
 export const Route = createFileRoute("/restaurants/")({
   head: () => ({
-    meta: [
-      { title: "Restoran nan Gonaïves — NK Deliveri" },
-      { name: "description", content: "Wè tout restoran ki disponib pou livrezon nan Gonaïves." },
+    ...pageMeta({
+      title: "Restoran nan Gonaïves — NK Deliveri",
+      description: "Wè tout restoran ki disponib pou livrezon nan Gonaïves.",
+      path: "/restaurants",
+    }),
+    scripts: [
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Akèy", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Restoran", item: `${SITE_URL}/restaurants` },
+        ],
+      }),
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(listQuery),
