@@ -51,7 +51,7 @@ export async function registerPWA() {
 
   const promptUpdate = () => {
     toast("Nouvo vèsyon disponib", {
-      description: "Rafrechi paj la pou itilize dènye mizajou NK Delliveri.",
+      description: "Rafrechi paj la pou itilize dènye mizajou NK Deliveri.",
       duration: Infinity,
       action: {
         label: "Rafrechi",

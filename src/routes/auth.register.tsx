@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { User, Store, Bike, ArrowLeft, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/auth/register")({
-  head: () => ({ meta: [{ title: "Kreye yon kont — NK Delliveri" }] }),
+  head: () => ({ meta: [{ title: "Kreye yon kont — NK Deliveri" }] }),
   component: RegisterPage,
 });
 
@@ -59,7 +59,7 @@ function RegisterPage() {
 function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
   const options: { type: AccountType; icon: any; title: string; desc: string }[] = [
     { type: "customer", icon: User, title: "\u00a0Kliyan", desc: "Kòmande manje nan restoran favori w yo." },
-    { type: "restaurant", icon: Store, title: "Restoran", desc: "Vann plat ou yo sou NK Delliveri." },
+    { type: "restaurant", icon: Store, title: "Restoran", desc: "Vann plat ou yo sou NK Deliveri." },
     { type: "driver", icon: Bike, title: "\u00a0Livrè", desc: "Ranpòte lajan nan livre manje." },
   ];
   return (
@@ -262,7 +262,7 @@ function RestaurantForm() {
         </div>
         <label className="flex items-start gap-2 text-sm text-ink-soft">
           <input type="checkbox" checked={f.terms} onChange={(e) => setF({ ...f, terms: e.target.checked })} className="mt-1" />
-          <span>Mwen aksepte kondisyon patenarya ak platfòm NK Delliveri.</span>
+          <span>Mwen aksepte kondisyon patenarya ak platfòm NK Deliveri.</span>
         </label>
         <button disabled={loading} className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50">
           {loading ? "..." : "Kreye kont restoran"}
@@ -354,7 +354,7 @@ function DriverForm() {
         </div>
         <label className="flex items-start gap-2 text-sm text-ink-soft">
           <input type="checkbox" checked={f.terms} onChange={(e) => setF({ ...f, terms: e.target.checked })} className="mt-1" />
-          <span>Mwen aksepte kondisyon livrè NK Delliveri.</span>
+          <span>Mwen aksepte kondisyon livrè NK Deliveri.</span>
         </label>
         <button disabled={loading} className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50">
           {loading ? "..." : "Kreye kont livrè"}

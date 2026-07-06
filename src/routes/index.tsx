@@ -205,7 +205,7 @@ function Index() {
           >
             <img
               src={heroLivreur}
-              alt="Livrè NK Delliveri"
+              alt="Livrè NK Deliveri"
               width={1024}
               height={1024}
               className="aspect-square w-full rounded-[32px] object-cover shadow-[0_30px_80px_rgba(249,115,22,0.3)]"
@@ -266,7 +266,7 @@ function Index() {
               Ou restoran ?
             </h2>
             <p className="mb-6 max-w-[38ch] text-white/90">
-              Fè biznis ou grandi ak NK Delliveri epi rive jwenn plis kliyan chak jou.
+              Fè biznis ou grandi ak NK Deliveri epi rive jwenn plis kliyan chak jou.
             </p>
             <Link
               to="/auth"
@@ -278,7 +278,7 @@ function Index() {
           <div className="relative">
             <img
               src={chefImg}
-              alt="Chef NK Delliveri"
+              alt="Chef NK Deliveri"
               loading="lazy"
               width={1024}
               height={768}
@@ -395,7 +395,7 @@ function Index() {
           >
             <img
               src={phoneMockup}
-              alt="Aplikasyon NK Delliveri"
+              alt="Aplikasyon NK Deliveri"
               loading="lazy"
               width={768}
               height={1024}
@@ -495,7 +495,7 @@ function Index() {
         <div className="grid overflow-hidden rounded-[32px] bg-brand text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.3fr_1fr]">
           <div className="p-8 md:p-12">
             <h2 className="mb-2 font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold">
-              Rete konekte ak NK Delliveri+
+              Rete konekte ak NK Deliveri+
             </h2>
             <p className="mb-6 text-white/90">
               Enskri pou resevwa promosyon, nouvote ak avantaj espesyal.
@@ -523,7 +523,7 @@ function Index() {
           <div className="relative">
             <img
               src={scooterImg}
-              alt="Scooter NK Delliveri"
+              alt="Scooter NK Deliveri"
               loading="lazy"
               width={1024}
               height={768}

@@ -21,7 +21,7 @@ const listQuery = queryOptions({
 export const Route = createFileRoute("/restaurants/")({
   head: () => ({
     meta: [
-      { title: "Restoran nan Gonaïves — NK Delliveri" },
+      { title: "Restoran nan Gonaïves — NK Deliveri" },
       { name: "description", content: "Wè tout restoran ki disponib pou livrezon nan Gonaïves." },
     ],
   }),

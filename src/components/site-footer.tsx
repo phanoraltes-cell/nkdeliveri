@@ -23,13 +23,13 @@ export function SiteFooter() {
           <div className="flex items-center gap-2.5">
             <img
               src="/nk-logo.png"
-              alt="NK Delliveri"
+              alt="NK Deliveri"
               width={36}
               height={36}
               className="h-9 w-9 rounded-full bg-white object-contain p-0.5"
             />
             <div className="font-display text-xl font-extrabold text-white">
-              NK <span className="text-cream">Delliveri</span>
+              NK <span className="text-cream">Deliveri</span>
             </div>
           </div>
           <p className="mt-2 max-w-[40ch] text-sm text-white/85">
@@ -78,7 +78,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-white/80">
-        © {new Date().getFullYear()} NK Delliveri — Tout dwa rezève
+        © {new Date().getFullYear()} NK Deliveri — Tout dwa rezève
       </div>
     </footer>
   );

@@ -10,7 +10,7 @@ const searchSchema = z.object({ next: z.string().optional() });
 
 export const Route = createFileRoute("/auth/")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Konekte — NK Delliveri" }] }),
+  head: () => ({ meta: [{ title: "Konekte — NK Deliveri" }] }),
   component: LoginPage,
 });
 

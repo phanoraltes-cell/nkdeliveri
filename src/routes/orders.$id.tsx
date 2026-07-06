@@ -13,7 +13,7 @@ import { useDeliveryForOrder } from "@/hooks/use-active-deliveries";
 import { ProofThumb } from "@/components/proof-thumb";
 
 export const Route = createFileRoute("/orders/$id")({
-  head: () => ({ meta: [{ title: "Kòmand — NK Delliveri" }] }),
+  head: () => ({ meta: [{ title: "Kòmand — NK Deliveri" }] }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/auth", search: { next: "/orders" } });
@@ -229,7 +229,7 @@ function OrderDetail() {
   const payRoutingNote =
     payment?.receiver_type === "merchant"
       ? "Peman an ale dirèkteman sou kont restoran an."
-      : "NK Delliveri ap resevwa peman an epi remèt restoran an apre komisyon.";
+      : "NK Deliveri ap resevwa peman an epi remèt restoran an apre komisyon.";
 
   return (
     <div className="min-h-screen bg-cream">

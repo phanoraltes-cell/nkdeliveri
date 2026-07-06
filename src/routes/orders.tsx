@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
 
 export const Route = createFileRoute("/orders")({
-  head: () => ({ meta: [{ title: "Kòmand mwen — NK Delliveri" }] }),
+  head: () => ({ meta: [{ title: "Kòmand mwen — NK Deliveri" }] }),
   component: Orders,
 });
 
