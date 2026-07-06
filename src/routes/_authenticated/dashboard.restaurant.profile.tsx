@@ -78,6 +78,8 @@ function RestaurantProfile() {
       let coverUrl: string | null = null;
       if (logo) logoUrl = await uploadAsset(restaurant.id, "logo", logo);
       if (cover) coverUrl = await uploadAsset(restaurant.id, "cover", cover);
+      // See dashboard.restaurant.payouts.tsx for why this cast is safe: the
+      // generated types over-strictly mark these text RPC params non-null.
       const { error } = await supabase.rpc("update_restaurant_profile_secure", {
         _restaurant_id: restaurant.id,
         _name: f.name.trim(),
@@ -87,7 +89,7 @@ function RestaurantProfile() {
         _address: f.address || null,
         _logo_url: logoUrl,
         _cover_url: coverUrl,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {

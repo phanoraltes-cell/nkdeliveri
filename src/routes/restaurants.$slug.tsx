@@ -224,23 +224,29 @@ function RestaurantPage() {
                       {p.description && <p className="mt-1 mb-2 flex-1 text-xs text-ink-soft">{p.description}</p>}
                       <div className="mt-2 flex items-center justify-between">
                         <span className="font-display text-base font-extrabold text-brand-deep">{formatHTG(Number(p.price))}</span>
-                        <button
-                          onClick={() => {
-                            const res = add({
-                              productId: p.id,
-                              restaurantId: r.id,
-                              restaurantName: r.name,
-                              name: p.name,
-                              price: Number(p.price),
-                              imageUrl: p.image_url,
-                            });
-                            if (res === "replaced") toast.info("Panye w a ranplase");
-                            else toast.success(`${p.name} ajoute`);
-                          }}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition hover:scale-110 hover:bg-brand-deep"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                        {p.stock_quantity === 0 ? (
+                          <span className="rounded-full bg-ink/10 px-3 py-1.5 text-xs font-bold uppercase text-ink-soft">
+                            Fini
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const res = add({
+                                productId: p.id,
+                                restaurantId: r.id,
+                                restaurantName: r.name,
+                                name: p.name,
+                                price: Number(p.price),
+                                imageUrl: p.image_url,
+                              });
+                              if (res === "replaced") toast.info("Panye w a ranplase");
+                              else toast.success(`${p.name} ajoute`);
+                            }}
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition hover:scale-110 hover:bg-brand-deep"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

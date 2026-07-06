@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 import { noIndexMeta } from "@/lib/seo";
+import { AddressManager } from "@/components/address-manager";
+import { ChangePasswordForm } from "@/components/change-password-form";
 
 export const Route = createFileRoute("/profile")({
   head: () => noIndexMeta("Pwofil mwen — NK Deliveri"),
@@ -165,6 +167,19 @@ function Profile() {
             </div>
           )}
         </div>
+
+        {user && (
+          <div className="mt-4 rounded-[18px] bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+            <AddressManager userId={user.id} />
+          </div>
+        )}
+
+        {user && (
+          <div className="mt-4 rounded-[18px] bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+            <h2 className="mb-3 font-display text-lg font-bold text-ink">Chanje modpas</h2>
+            <ChangePasswordForm />
+          </div>
+        )}
       </div>
       <SiteFooter />
     </div>

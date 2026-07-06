@@ -25,7 +25,9 @@ import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as RestaurantsSlugRouteImport } from './routes/restaurants.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -39,6 +41,7 @@ import { Route as AuthenticatedDashboardRestaurantProfileRouteImport } from './r
 import { Route as AuthenticatedDashboardRestaurantPayoutsRouteImport } from './routes/_authenticated/dashboard.restaurant.payouts'
 import { Route as AuthenticatedDashboardRestaurantOrdersRouteImport } from './routes/_authenticated/dashboard.restaurant.orders'
 import { Route as AuthenticatedDashboardRestaurantMenuRouteImport } from './routes/_authenticated/dashboard.restaurant.menu'
+import { Route as AuthenticatedDashboardDriverProfileRouteImport } from './routes/_authenticated/dashboard.driver.profile'
 import { Route as AuthenticatedDashboardDriverPayoutsRouteImport } from './routes/_authenticated/dashboard.driver.payouts'
 import { Route as AuthenticatedDashboardDriverHistoryRouteImport } from './routes/_authenticated/dashboard.driver.history'
 import { Route as AuthenticatedDashboardDriverEarningsRouteImport } from './routes/_authenticated/dashboard.driver.earnings'
@@ -125,9 +128,19 @@ const OrdersIdRoute = OrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => OrdersRoute,
 } as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
   path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -207,6 +220,12 @@ const AuthenticatedDashboardRestaurantMenuRoute =
     path: '/menu',
     getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
   } as any)
+const AuthenticatedDashboardDriverProfileRoute =
+  AuthenticatedDashboardDriverProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
 const AuthenticatedDashboardDriverPayoutsRoute =
   AuthenticatedDashboardDriverPayoutsRouteImport.update({
     id: '/payouts',
@@ -258,7 +277,9 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
@@ -274,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
+  '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -294,7 +316,9 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth': typeof AuthIndexRoute
@@ -310,6 +334,7 @@ export interface FileRoutesByTo {
   '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
+  '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -333,7 +358,9 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/orders/$id': typeof OrdersIdRoute
   '/restaurants/$slug': typeof RestaurantsSlugRoute
   '/auth/': typeof AuthIndexRoute
@@ -349,6 +376,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
   '/_authenticated/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/_authenticated/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
+  '/_authenticated/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
   '/_authenticated/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/_authenticated/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/_authenticated/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -372,7 +400,9 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/notifications'
+    | '/auth/forgot-password'
     | '/auth/register'
+    | '/auth/reset-password'
     | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
@@ -388,6 +418,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/earnings'
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
+    | '/dashboard/driver/profile'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
     | '/dashboard/restaurant/payouts'
@@ -408,7 +439,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/notifications'
+    | '/auth/forgot-password'
     | '/auth/register'
+    | '/auth/reset-password'
     | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth'
@@ -424,6 +457,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/earnings'
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
+    | '/dashboard/driver/profile'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
     | '/dashboard/restaurant/payouts'
@@ -446,7 +480,9 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/dashboard'
     | '/_authenticated/notifications'
+    | '/auth/forgot-password'
     | '/auth/register'
+    | '/auth/reset-password'
     | '/orders/$id'
     | '/restaurants/$slug'
     | '/auth/'
@@ -462,6 +498,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver/earnings'
     | '/_authenticated/dashboard/driver/history'
     | '/_authenticated/dashboard/driver/payouts'
+    | '/_authenticated/dashboard/driver/profile'
     | '/_authenticated/dashboard/restaurant/menu'
     | '/_authenticated/dashboard/restaurant/orders'
     | '/_authenticated/dashboard/restaurant/payouts'
@@ -483,7 +520,9 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   RestaurantsSlugRoute: typeof RestaurantsSlugRoute
   AuthIndexRoute: typeof AuthIndexRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
@@ -603,11 +642,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIdRouteImport
       parentRoute: typeof OrdersRoute
     }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/register': {
       id: '/auth/register'
       path: '/auth/register'
       fullPath: '/auth/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/notifications': {
@@ -701,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantMenuRouteImport
       parentRoute: typeof AuthenticatedDashboardRestaurantRoute
     }
+    '/_authenticated/dashboard/driver/profile': {
+      id: '/_authenticated/dashboard/driver/profile'
+      path: '/profile'
+      fullPath: '/dashboard/driver/profile'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverProfileRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
     '/_authenticated/dashboard/driver/payouts': {
       id: '/_authenticated/dashboard/driver/payouts'
       path: '/payouts'
@@ -769,6 +829,7 @@ interface AuthenticatedDashboardDriverRouteChildren {
   AuthenticatedDashboardDriverEarningsRoute: typeof AuthenticatedDashboardDriverEarningsRoute
   AuthenticatedDashboardDriverHistoryRoute: typeof AuthenticatedDashboardDriverHistoryRoute
   AuthenticatedDashboardDriverPayoutsRoute: typeof AuthenticatedDashboardDriverPayoutsRoute
+  AuthenticatedDashboardDriverProfileRoute: typeof AuthenticatedDashboardDriverProfileRoute
 }
 
 const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRouteChildren =
@@ -781,6 +842,8 @@ const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRou
       AuthenticatedDashboardDriverHistoryRoute,
     AuthenticatedDashboardDriverPayoutsRoute:
       AuthenticatedDashboardDriverPayoutsRoute,
+    AuthenticatedDashboardDriverProfileRoute:
+      AuthenticatedDashboardDriverProfileRoute,
   }
 
 const AuthenticatedDashboardDriverRouteWithChildren =
@@ -880,7 +943,9 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   RestaurantsSlugRoute: RestaurantsSlugRoute,
   AuthIndexRoute: AuthIndexRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,

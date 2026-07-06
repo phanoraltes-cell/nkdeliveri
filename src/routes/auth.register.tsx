@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { User, Store, Bike, ArrowLeft, Upload } from "lucide-react";
 import { noIndexMeta } from "@/lib/seo";
+import { translateAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/auth/register")({
   head: () => noIndexMeta("Kreye yon kont — NK Deliveri"),
@@ -130,8 +131,8 @@ function useSubmit(onDone: () => void) {
         toast.success(successMsg + " Tcheke imèl ou pou konfime kont ou anvan w konekte.");
         nav({ to: "/auth" });
       }
-    } catch (e: any) {
-      toast.error(e.message ?? "Erè");
+    } catch (e) {
+      toast.error(translateAuthError(e));
     } finally {
       setLoading(false);
     }

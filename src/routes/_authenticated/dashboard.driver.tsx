@@ -202,7 +202,7 @@ function DriverDashboard() {
           { icon: ClipboardList, title: "Livrezon m yo", desc: "Aktyèl ak istwa", to: "/dashboard/driver/history" as const },
           { icon: DollarSign, title: "Revni m yo", desc: "Peman ak komisyon", to: "/dashboard/driver/earnings" as const },
           { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo + frekans peman", to: "/dashboard/driver/payouts" as const },
-          { icon: Bike, title: "Pwofil livrè", desc: "Modifye enfo w yo", to: null },
+          { icon: Bike, title: "Pwofil livrè", desc: "Modifye enfo w yo", to: "/dashboard/driver/profile" as const },
         ].map((c) => {
           const Icon = c.icon;
           const body = (

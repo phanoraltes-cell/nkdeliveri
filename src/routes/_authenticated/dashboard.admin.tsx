@@ -6,6 +6,7 @@ import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2,
 import { toast } from "sonner";
 import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders } from "@/hooks/useLiveOrders";
+import { ProofThumb } from "@/components/proof-thumb";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
@@ -156,7 +157,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("restaurants")
-        .select("id, name, cuisine, phone, address, created_at")
+        .select("id, name, cuisine, phone, address, description, logo_url, cover_url, created_at")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -169,7 +170,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, first_name, last_name, phone, vehicle_type, license_plate, created_at")
+        .select("id, first_name, last_name, phone, address, vehicle_type, license_plate, id_doc_url, license_doc_url, vehicle_photo_url, created_at")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -299,25 +300,48 @@ function AdminDashboard() {
         )}
         <div className="space-y-3">
           {pendingRestaurants.data?.map((r) => (
-            <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-soft/50 p-3">
-              <div className="min-w-0 flex-1">
-                <div className="font-bold text-ink">{r.name}</div>
-                <div className="text-xs text-ink-soft">
-                  {r.cuisine || "—"} · {r.phone || "san telefòn"} · {r.address || "san adrès"}
+            <div key={r.id} className="rounded-xl border border-brand-soft/50 p-3">
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="flex gap-2">
+                  {r.logo_url ? (
+                    <ProofThumb path={r.logo_url} alt={`Logo ${r.name}`} />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
+                      San logo
+                    </div>
+                  )}
+                  {r.cover_url ? (
+                    <ProofThumb path={r.cover_url} alt={`Kouvèti ${r.name}`} />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
+                      San kouvèti
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-ink">{r.name}</div>
+                  <div className="text-xs text-ink-soft">
+                    {r.cuisine || "—"} · {r.phone || "san telefòn"} · {r.address || "san adrès"}
+                  </div>
+                  {r.description && (
+                    <p className="mt-1 text-xs text-ink-soft">{r.description}</p>
+                  )}
                 </div>
               </div>
-              <button
-                onClick={() => updateResto.mutate({ id: r.id, status: "approved" })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-              </button>
-              <button
-                onClick={() => updateResto.mutate({ id: r.id, status: "rejected" })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
-              >
-                <XCircle className="h-3.5 w-3.5" /> Refize
-              </button>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => updateResto.mutate({ id: r.id, status: "approved" })}
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
+                </button>
+                <button
+                  onClick={() => updateResto.mutate({ id: r.id, status: "rejected" })}
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
+                >
+                  <XCircle className="h-3.5 w-3.5" /> Refize
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -331,27 +355,47 @@ function AdminDashboard() {
         )}
         <div className="space-y-3">
           {pendingDrivers.data?.map((d) => (
-            <div key={d.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-soft/50 p-3">
-              <div className="min-w-0 flex-1">
-                <div className="font-bold text-ink">
-                  {d.first_name} {d.last_name}
+            <div key={d.id} className="rounded-xl border border-brand-soft/50 p-3">
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {d.id_doc_url ? (
+                    <ProofThumb path={d.id_doc_url} bucket="driver-documents" alt={`Pyès idantite ${d.first_name}`} />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-red-300 bg-red-50 text-center text-[10px] font-semibold text-red-700">
+                      Pa gen pyès idantite!
+                    </div>
+                  )}
+                  {d.license_doc_url && (
+                    <ProofThumb path={d.license_doc_url} bucket="driver-documents" alt={`Pèmi ${d.first_name}`} />
+                  )}
+                  {d.vehicle_photo_url && (
+                    <ProofThumb path={d.vehicle_photo_url} bucket="driver-documents" alt={`Veyikil ${d.first_name}`} />
+                  )}
                 </div>
-                <div className="text-xs text-ink-soft">
-                  {d.vehicle_type || "—"} · {d.license_plate || "san plak"} · {d.phone || "san telefòn"}
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-ink">
+                    {d.first_name} {d.last_name}
+                  </div>
+                  <div className="text-xs text-ink-soft">
+                    {d.vehicle_type || "—"} · {d.license_plate || "san plak"} · {d.phone || "san telefòn"}
+                  </div>
+                  <div className="text-xs text-ink-soft">{d.address || "san adrès"}</div>
                 </div>
               </div>
-              <button
-                onClick={() => updateDriver.mutate({ id: d.id, status: "approved" })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-              </button>
-              <button
-                onClick={() => updateDriver.mutate({ id: d.id, status: "rejected" })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
-              >
-                <XCircle className="h-3.5 w-3.5" /> Refize
-              </button>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => updateDriver.mutate({ id: d.id, status: "approved" })}
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
+                </button>
+                <button
+                  onClick={() => updateDriver.mutate({ id: d.id, status: "rejected" })}
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
+                >
+                  <XCircle className="h-3.5 w-3.5" /> Refize
+                </button>
+              </div>
             </div>
           ))}
         </div>

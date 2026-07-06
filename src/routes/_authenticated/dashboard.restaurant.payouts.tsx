@@ -64,6 +64,12 @@ function MerchantPayouts() {
       if (f.payout_mode === "direct" && !f.moncash_number && !f.natcash_number) {
         throw new Error("Antre omwen yon nimewo MonCash oswa NatCash.");
       }
+      // Postgres text params happily accept NULL despite the generated
+      // types marking them non-nullable (codegen can't infer per-arg
+      // nullability from a plpgsql signature) — cast to keep passing null
+      // for "not configured" exactly as before, not an empty string, since
+      // downstream code (e.g. checkout's payNumber ?? "(pa konfigire)") checks
+      // specifically for null/undefined.
       const { error } = await supabase.rpc("update_restaurant_payout_secure", {
         _restaurant_id: r.id,
         _payout_mode: f.payout_mode,
@@ -71,7 +77,7 @@ function MerchantPayouts() {
         _moncash_account_name: f.moncash_account_name || null,
         _natcash_number: f.natcash_number || null,
         _natcash_account_name: f.natcash_account_name || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] }); },

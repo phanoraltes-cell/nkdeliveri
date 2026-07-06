@@ -4,12 +4,13 @@ import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/use-cart";
 import { formatHTG } from "@/lib/format";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_PAYOUT } from "@/lib/admin-payout";
 import { noIndexMeta } from "@/lib/seo";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -33,6 +34,31 @@ function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [restaurant, setRestaurant] = useState<any>(null);
   const nav = useNavigate();
+
+  const savedAddresses = useQuery({
+    queryKey: ["my-addresses", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("id, label, address_line, city, is_default")
+        .eq("user_id", user!.id)
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Pre-fill from the default saved address once (never overwrites what the
+  // customer is actively typing on a later render).
+  const [addressPrefilled, setAddressPrefilled] = useState(false);
+  useEffect(() => {
+    if (addressPrefilled || address || !savedAddresses.data?.length) return;
+    const def = savedAddresses.data.find((a) => a.is_default) ?? savedAddresses.data[0];
+    setAddress(`${def.address_line}, ${def.city}`);
+    setAddressPrefilled(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAddresses.data]);
 
   const deliveryFee = items.length > 0 ? 150 : 0;
   const serviceFee = 0;
@@ -151,6 +177,20 @@ function Checkout() {
 
               <div className="mt-6">
                 <label className="mb-2 block text-sm font-bold">Adrès livrezon</label>
+                {!!savedAddresses.data?.length && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {savedAddresses.data.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setAddress(`${a.address_line}, ${a.city}`)}
+                        className="inline-flex h-8 items-center gap-1 rounded-full border border-brand-soft bg-white px-2.5 text-xs font-semibold text-brand-deep hover:bg-brand-soft/40"
+                      >
+                        <MapPin className="h-3 w-3" /> {a.label || a.address_line}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <input
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}

@@ -187,15 +187,16 @@ function PromoForm({
         _ends_at: f.ends_at ? new Date(f.ends_at).toISOString() : null,
       };
       if (promo) {
+        // See dashboard.restaurant.payouts.tsx for why this cast is safe.
         const { error } = await supabase.rpc("update_promotion_secure", {
           _promotion_id: promo.id, ...args, _active: promo.active,
-        });
+        } as any);
         if (error) throw error;
         toast.success("Pwomosyon mizajou");
       } else {
         const { error } = await supabase.rpc("create_promotion_secure", {
           _restaurant_id: restaurantId, ...args,
-        });
+        } as any);
         if (error) throw error;
         toast.success("Pwomosyon kreye");
       }

@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { noIndexMeta } from "@/lib/seo";
+import { translateAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -22,6 +23,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     // Surface OAuth failures (e.g. user cancelled consent, provider
@@ -65,15 +68,34 @@ function LoginPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setNeedsConfirmation(false);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Byenveni!");
       nav({ to: (search.next as any) || "/dashboard" });
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      toast.error(translateAuthError(e));
+      if (isEmailNotConfirmedError(e)) setNeedsConfirmation(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function resendConfirmation() {
+    if (!email.trim()) {
+      toast.error("Antre imèl ou anwo a dabò");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: email.trim() });
+      if (error) throw error;
+      toast.success("Nou voye yon nouvo imèl konfimasyon. Tcheke bwat ou (ak spam).");
+    } catch (e) {
+      toast.error(translateAuthError(e));
+    } finally {
+      setResending(false);
     }
   }
 
@@ -101,13 +123,33 @@ function LoginPage() {
           <form onSubmit={submit} className="space-y-3">
             <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email"
               className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand" />
-            <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Modpas"
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand" />
+            <div>
+              <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Modpas"
+                className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand" />
+              <div className="mt-1.5 text-right">
+                <Link to="/auth/forgot-password" className="text-xs font-semibold text-brand-deep hover:underline">
+                  Bliye modpas ou?
+                </Link>
+              </div>
+            </div>
             <button disabled={loading}
               className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50">
               {loading ? "..." : "Konekte"}
             </button>
           </form>
+
+          {needsConfirmation && (
+            <div className="mt-3 rounded-xl border-2 border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              <p>Kont ou pa konfime. Tcheke imèl ou, oswa:</p>
+              <button
+                onClick={resendConfirmation}
+                disabled={resending}
+                className="mt-2 inline-flex h-9 items-center rounded-full bg-amber-600 px-3 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50"
+              >
+                {resending ? "Ap voye…" : "Voye imèl konfimasyon an ankò"}
+              </button>
+            </div>
+          )}
 
           <div className="mt-6 rounded-xl bg-brand-soft/40 p-4 text-center text-sm">
             Pa gen yon kont?{" "}

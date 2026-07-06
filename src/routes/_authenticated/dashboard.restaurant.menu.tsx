@@ -255,6 +255,11 @@ function RestaurantMenu() {
                     {p.available ? "Disponib" : "Pa disponib"}
                   </span>
                 </div>
+                {p.stock_quantity != null && (
+                  <div className={`mt-1 text-[11px] font-semibold ${p.stock_quantity === 0 ? "text-red-600" : "text-ink-soft"}`}>
+                    Stock: {p.stock_quantity}
+                  </div>
+                )}
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={() => setEditingProduct(p)}
@@ -299,6 +304,9 @@ function ProductForm({
     category_id: product?.category_id ?? "",
     dish_type: product?.dish_type ?? "lot",
     available: product?.available ?? true,
+    // Empty string = unlimited/not tracked (stored as NULL), matching the
+    // existing convention for optional fields in this form.
+    stock_quantity: product?.stock_quantity != null ? String(product.stock_quantity) : "",
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -307,6 +315,13 @@ function ProductForm({
     if (!f.name.trim()) return toast.error("Non plat la obligatwa");
     const price = Number(f.price);
     if (!Number.isFinite(price) || price < 0) return toast.error("Pri a envalid");
+    let stockQuantity: number | null = null;
+    if (f.stock_quantity.trim() !== "") {
+      stockQuantity = Number(f.stock_quantity);
+      if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+        return toast.error("Kantite stock la envalid");
+      }
+    }
     setSaving(true);
     try {
       let imageUrl = product?.image_url ?? null;
@@ -322,7 +337,8 @@ function ProductForm({
           _dish_type: f.dish_type,
           _category_id: f.category_id || null,
           _available: f.available,
-        });
+          _stock_quantity: stockQuantity,
+        } as any);
         if (error) throw error;
         toast.success("Plat mizajou");
       } else {
@@ -332,9 +348,10 @@ function ProductForm({
           _name: f.name.trim(),
           _description: f.description || null,
           _price: price,
+          _stock_quantity: stockQuantity,
           _image_url: imageUrl,
           _dish_type: f.dish_type,
-        });
+        } as any);
         if (error) throw error;
         toast.success("Plat ajoute");
       }
@@ -364,6 +381,15 @@ function ProductForm({
           {DISH_TYPES.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
         </select>
         <textarea placeholder="Deskripsyon (opsyonèl)" rows={2} className={inputCls() + " sm:col-span-2"} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        <input
+          placeholder="Kantite stock (kite vid = ilimite)"
+          type="number"
+          min="0"
+          step="1"
+          className={inputCls()}
+          value={f.stock_quantity}
+          onChange={(e) => setF({ ...f, stock_quantity: e.target.value })}
+        />
         <label className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-soft px-3 py-2 text-xs text-ink-soft hover:bg-white">
           <Upload className="h-3.5 w-3.5" /> {photo?.name || "Chanje foto plat la"}
           <input type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
