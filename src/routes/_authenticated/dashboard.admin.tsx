@@ -1,10 +1,11 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { LiveMap, type MapMarker } from "@/components/live-map";
-import { useActiveDeliveries } from "@/hooks/use-active-deliveries";
+import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import { useLiveOrders } from "@/hooks/useLiveOrders";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
@@ -34,46 +35,101 @@ const DELIVERY_STATUS_LABEL: Record<string, string> = {
 
 function AdminDashboard() {
   const qc = useQueryClient();
-  const active = useActiveDeliveries({ admin: true });
-  const markers: MapMarker[] = active.flatMap((d) => {
-    const arr: MapMarker[] = [];
-    const driverName = escapeHtml(`${d.driver?.first_name ?? ""} ${d.driver?.last_name ?? ""}`.trim() || "Livrè");
-    const orderNumber = escapeHtml(d.order?.order_number ?? "");
-    if (d.driver_lat != null && d.driver_lng != null) {
-      arr.push({
-        id: `drv-${d.id}`,
-        lat: Number(d.driver_lat),
-        lng: Number(d.driver_lng),
-        color: "blue",
-        label: `${d.driver?.first_name ?? "Livrè"} · ${d.order?.order_number ?? ""}`,
-        info: `<div style="font-size:13px;line-height:1.5"><b>${driverName}</b><br>Kòmand: ${orderNumber}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
-      });
-    }
-    if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
-      const address = escapeHtml(d.order.delivery_address ?? "—");
-      const phone = escapeHtml(d.order.contact_phone ?? "—");
-      arr.push({
-        id: `dst-${d.id}`,
-        lat: Number(d.order.delivery_lat),
-        lng: Number(d.order.delivery_lng),
-        color: "green",
-        label: `Adrès ${d.order.order_number}`,
-        info: `<div style="font-size:13px;line-height:1.5"><b>Kòmand ${orderNumber}</b><br>Adrès: ${address}<br>Telefòn: ${phone}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
-      });
-    }
-    if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
-      const restoName = escapeHtml(d.order.restaurants.name ?? "Restoran");
-      arr.push({
-        id: `rst-${d.id}`,
-        lat: Number(d.order.restaurants.lat),
-        lng: Number(d.order.restaurants.lng),
-        color: "orange",
-        label: d.order.restaurants.name ?? "Restoran",
-        info: `<div style="font-size:13px;line-height:1.5"><b>${restoName}</b><br>Kòmand: ${orderNumber}</div>`,
-      });
-    }
-    return arr;
+  const active = useLiveOrders({ admin: true });
+
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [restaurantFilter, setRestaurantFilter] = useState<string>("all");
+  const [zoneQuery, setZoneQuery] = useState("");
+
+  const onlineDrivers = useQuery({
+    queryKey: ["admin-online-drivers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, first_name, last_name, current_lat, current_lng, status")
+        .eq("status", "online");
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 15000,
   });
+
+  const approvedRestaurants = useQuery({
+    queryKey: ["admin-map-restaurants"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("id, name, lat, lng, address")
+        .eq("status", "approved");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const restaurantOptions = useMemo(() => {
+    const names = new Set<string>();
+    active.forEach((d) => d.order?.restaurants?.name && names.add(d.order.restaurants.name));
+    approvedRestaurants.data?.forEach((r) => r.name && names.add(r.name));
+    return Array.from(names).sort();
+  }, [active, approvedRestaurants.data]);
+
+  const matchesZone = (text: string | null | undefined) =>
+    !zoneQuery.trim() || (text ?? "").toLowerCase().includes(zoneQuery.trim().toLowerCase());
+
+  const filteredActive = active.filter((d) => {
+    if (statusFilter !== "all" && d.status !== statusFilter) return false;
+    if (restaurantFilter !== "all" && d.order?.restaurants?.name !== restaurantFilter) return false;
+    if (!matchesZone(d.order?.delivery_address) && !matchesZone(d.order?.restaurants?.name)) return false;
+    return true;
+  });
+
+  const filteredRestaurants = (approvedRestaurants.data ?? []).filter((r) => {
+    if (restaurantFilter !== "all" && r.name !== restaurantFilter) return false;
+    if (!matchesZone(r.address) && !matchesZone(r.name)) return false;
+    return true;
+  });
+
+  const markers: MapMarker[] = [
+    ...filteredRestaurants
+      .filter((r) => r.lat != null && r.lng != null)
+      .map((r) => ({
+        id: `rst-${r.id}`,
+        lat: Number(r.lat),
+        lng: Number(r.lng),
+        type: "restaurant" as const,
+        label: r.name ?? "Restoran",
+        info: `<div style="font-size:13px;line-height:1.5"><b>${escapeHtml(r.name ?? "Restoran")}</b><br>${escapeHtml(r.address ?? "")}</div>`,
+      })),
+    ...(onlineDrivers.data ?? [])
+      .filter((d) => d.current_lat != null && d.current_lng != null)
+      .map((d) => {
+        const busy = active.some((a) => a.driver_id === d.id);
+        const name = escapeHtml(`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè");
+        return {
+          id: `drv-${d.id}`,
+          lat: Number(d.current_lat),
+          lng: Number(d.current_lng),
+          type: "driver" as const,
+          label: name,
+          info: `<div style="font-size:13px;line-height:1.5"><b>${name}</b><br>Estati: ${busy ? "An liv rezon" : "Disponib"}</div>`,
+        };
+      }),
+    ...filteredActive
+      .filter((d) => d.order?.delivery_lat != null && d.order?.delivery_lng != null)
+      .map((d) => {
+        const address = escapeHtml(d.order?.delivery_address ?? "—");
+        const phone = escapeHtml(d.order?.contact_phone ?? "—");
+        const orderNumber = escapeHtml(d.order?.order_number ?? "");
+        return {
+          id: `dst-${d.id}`,
+          lat: Number(d.order!.delivery_lat),
+          lng: Number(d.order!.delivery_lng),
+          type: "client" as const,
+          label: `Adrès ${d.order?.order_number}`,
+          info: `<div style="font-size:13px;line-height:1.5"><b>Kòmand ${orderNumber}</b><br>Adrès: ${address}<br>Telefòn: ${phone}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
+        };
+      }),
+  ];
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
@@ -163,17 +219,52 @@ function AdminDashboard() {
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold text-ink">Livrezon aktif · tan reyèl</h2>
-          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
-            {active.length} an kou
-          </span>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-xl font-bold text-ink">Kat an tan reyèl</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+              {onlineDrivers.data?.length ?? 0} livrè aktif
+            </span>
+            <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+              {filteredActive.length} livrezon an kou
+            </span>
+          </div>
         </div>
-        <LiveMap markers={markers} className="h-[420px] w-full rounded-xl" />
+
+        <div className="mb-3 flex flex-wrap gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+          >
+            <option value="all">Tout estati</option>
+            {Object.entries(DELIVERY_STATUS_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+          <select
+            value={restaurantFilter}
+            onChange={(e) => setRestaurantFilter(e.target.value)}
+            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+          >
+            <option value="all">Tout restoran</option>
+            {restaurantOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          <input
+            value={zoneQuery}
+            onChange={(e) => setZoneQuery(e.target.value)}
+            placeholder="Chèche yon zòn/adrès…"
+            className="min-w-[160px] flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-1.5 text-xs outline-none focus:border-brand"
+          />
+        </div>
+
+        <LeafletMap markers={markers} className="h-[420px] w-full rounded-xl" />
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Livrè</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Adrès kliyan</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livrè</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Adrès kliyan</span>
         </div>
       </section>
 

@@ -1,66 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import { MapPin, MapPinOff } from "lucide-react";
 import { toast } from "sonner";
+import { useDriverLocation } from "@/hooks/useDriverLocation";
 
 /**
  * When enabled, reports the driver's current GPS position to every active
- * delivery row assigned to them (~ every 12s). Also updates the driver's
+ * delivery row assigned to them (~ every 8s). Also updates the driver's
  * current_lat/current_lng on the drivers table.
  */
 export function DriverLocationReporter({ driverId }: { driverId: string }) {
-  const [on, setOn] = useState(false);
-  const [last, setLast] = useState<{ lat: number; lng: number; ts: number } | null>(null);
-  const watchId = useRef<number | null>(null);
-  const throttle = useRef<number>(0);
+  const { active: on, last, error, start, stop } = useDriverLocation(driverId);
 
-  const push = async (lat: number, lng: number, heading?: number | null) => {
-    const now = Date.now();
-    if (now - throttle.current < 8000) return;
-    throttle.current = now;
-    setLast({ lat, lng, ts: now });
-
-    await supabase
-      .from("drivers")
-      .update({ current_lat: lat, current_lng: lng })
-      .eq("id", driverId);
-
-    await supabase
-      .from("deliveries")
-      .update({
-        driver_lat: lat,
-        driver_lng: lng,
-        driver_heading: heading ?? null,
-        location_updated_at: new Date().toISOString(),
-      })
-      .eq("driver_id", driverId)
-      .in("status", ["assigned", "picked_up", "en_route_pickup", "en_route_dropoff"]);
-  };
-
-  const start = () => {
-    if (!navigator.geolocation) {
-      toast.error("GPS pa disponib nan navigatè sa a");
-      return;
-    }
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) => push(pos.coords.latitude, pos.coords.longitude, pos.coords.heading),
-      (err) => {
-        console.error(err);
-        toast.error("Pèmisyon GPS refize");
-        setOn(false);
-      },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
-    );
-    setOn(true);
-  };
-
-  const stop = () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    watchId.current = null;
-    setOn(false);
-  };
-
-  useEffect(() => () => stop(), []);
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   return (
     <div className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">

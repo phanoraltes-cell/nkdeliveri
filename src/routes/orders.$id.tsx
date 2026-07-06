@@ -7,13 +7,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Upload, CheckCircle2, Clock, AlertCircle, Star } from "lucide-react";
-import { LiveMap, type MapMarker } from "@/components/live-map";
-import { useDeliveryForOrder } from "@/hooks/use-active-deliveries";
+import { Upload, CheckCircle2, Clock, AlertCircle, Star, Navigation } from "lucide-react";
+import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import { useOrderDelivery } from "@/hooks/useLiveOrders";
+import { useRoute } from "@/hooks/useRoute";
 import { ProofThumb } from "@/components/proof-thumb";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({ meta: [{ title: "Kòmand — NK Deliveri" }] }),
+  // Leaflet touches `window` at module scope and this page is gated behind
+  // a session check anyway (no SEO to lose), so it's rendered client-only —
+  // same rationale as the _authenticated layout.
+  ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/auth", search: { next: "/orders" } });
@@ -158,7 +163,22 @@ function OrderDetail() {
   // renders and violate the Rules of Hooks (React would throw or silently
   // drop hooks, breaking this exact component on the transition from
   // "loading" to "loaded", which is also where the map should appear).
-  const delivery = useDeliveryForOrder(order.data?.id);
+  const delivery = useOrderDelivery(order.data?.id);
+  const driverPoint =
+    delivery?.driver_lat != null && delivery?.driver_lng != null
+      ? { lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng) }
+      : undefined;
+  const headingToPickup = delivery?.status === "assigned" || delivery?.status === "en_route_pickup";
+  const nextStopPoint = headingToPickup
+    ? delivery?.order?.restaurants?.lat != null && delivery?.order?.restaurants?.lng != null
+      ? { lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng) }
+      : undefined
+    : delivery?.order?.delivery_lat != null && delivery?.order?.delivery_lng != null
+    ? { lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng) }
+    : undefined;
+  // Also unconditional and before the early returns below, for the same
+  // Rules-of-Hooks reason as `delivery` above.
+  const trackingRoute = useRoute(driverPoint, nextStopPoint);
 
   const submitReview = useMutation({
     mutationFn: async (args: { restaurantId: string; driverId: string | null }) => {
@@ -209,13 +229,13 @@ function OrderDetail() {
     if (!delivery) return [];
     const arr: MapMarker[] = [];
     if (delivery.driver_lat != null && delivery.driver_lng != null) {
-      arr.push({ id: "drv", lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng), color: "blue", label: "Livrè" });
+      arr.push({ id: "drv", lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng), type: "driver", label: "Livrè" });
     }
     if (delivery.order?.restaurants?.lat != null && delivery.order?.restaurants?.lng != null) {
-      arr.push({ id: "rst", lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng), color: "orange", label: delivery.order.restaurants.name ?? "Restoran" });
+      arr.push({ id: "rst", lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng), type: "restaurant", label: delivery.order.restaurants.name ?? "Restoran" });
     }
     if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
-      arr.push({ id: "dst", lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng), color: "green", label: "Adrès ou" });
+      arr.push({ id: "dst", lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng), type: "client", label: "Adrès ou" });
     }
     return arr;
   })();
@@ -279,7 +299,21 @@ function OrderDetail() {
                 {delivery.status}
               </span>
             </div>
-            <LiveMap markers={trackingMarkers} className="h-[320px] w-full rounded-xl" />
+            <LeafletMap
+              markers={trackingMarkers}
+              route={trackingRoute.data?.path}
+              className="h-[320px] w-full rounded-xl"
+            />
+            {trackingRoute.data && (
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand-deep">
+                <Navigation className="h-3.5 w-3.5" />
+                {(trackingRoute.data.distanceMeters / 1000).toFixed(1)} km ·{" "}
+                {Math.round(trackingRoute.data.durationSeconds / 60)} min{" "}
+                <span className="font-normal text-ink-soft">
+                  {headingToPickup ? "jiska restoran" : "jiska ou"}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

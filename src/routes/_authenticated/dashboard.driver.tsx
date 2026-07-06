@@ -1,11 +1,71 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bike, Clock, MapPin, DollarSign, ClipboardList, Power, Wallet } from "lucide-react";
+import { Bike, Clock, MapPin, DollarSign, ClipboardList, Power, Wallet, Navigation } from "lucide-react";
 import { toast } from "sonner";
-import { LiveMap, type MapMarker } from "@/components/live-map";
-import { useActiveDeliveries } from "@/hooks/use-active-deliveries";
+import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
+import { useRoute } from "@/hooks/useRoute";
 import { DriverLocationReporter } from "@/components/driver-location-reporter";
+
+function formatDistance(m: number) {
+  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`;
+}
+
+function formatDuration(s: number) {
+  const min = Math.round(s / 60);
+  return min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`;
+}
+
+function nextStopFor(d: ActiveDelivery) {
+  const headingToPickup = d.status === "assigned" || d.status === "en_route_pickup";
+  const r = d.order?.restaurants;
+  const target = headingToPickup
+    ? r?.lat != null && r?.lng != null
+      ? { lat: Number(r.lat), lng: Number(r.lng) }
+      : undefined
+    : d.order?.delivery_lat != null && d.order?.delivery_lng != null
+    ? { lat: Number(d.order.delivery_lat), lng: Number(d.order.delivery_lng) }
+    : undefined;
+  const from =
+    d.driver_lat != null && d.driver_lng != null
+      ? { lat: Number(d.driver_lat), lng: Number(d.driver_lng) }
+      : undefined;
+  return { from, target, headingToPickup };
+}
+
+/** Route + distance/ETA from the driver's last known position to their next stop (restaurant, then client). */
+function DeliveryRouteInfo({
+  d,
+  onRoute,
+}: {
+  d: ActiveDelivery;
+  /** Lifts the polyline up to the parent so it can be drawn on the shared map. */
+  onRoute?: (path: [number, number][] | null) => void;
+}) {
+  const { from, target, headingToPickup } = nextStopFor(d);
+  const route = useRoute(from, target);
+
+  useEffect(() => {
+    onRoute?.(route.data?.path ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.data]);
+
+  if (!from) return <span className="text-xs text-ink-soft">Aktive pozisyon w pou wè distans/tan</span>;
+  if (route.isLoading) return <span className="text-xs text-ink-soft">Ap kalkile wout…</span>;
+  if (!route.data) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-deep">
+      <Navigation className="h-3.5 w-3.5" />
+      {formatDistance(route.data.distanceMeters)} · {formatDuration(route.data.durationSeconds)}
+      <span className="font-normal text-ink-soft">
+        {headingToPickup ? "jiska restoran" : "jiska kliyan"}
+      </span>
+    </span>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver")({
   component: DriverDashboard,
@@ -46,17 +106,18 @@ function DriverDashboard() {
   const pending = driver?.status === "pending";
   const online = driver?.status === "online";
 
-  const active = useActiveDeliveries({ driverId: driver?.id });
+  const active = useLiveOrders({ driverId: driver?.id });
+  const [routePath, setRoutePath] = useState<[number, number][] | null>(null);
   const markers: MapMarker[] = active.flatMap((d) => {
     const arr: MapMarker[] = [];
     if (d.driver_lat != null && d.driver_lng != null) {
-      arr.push({ id: `drv-${d.id}`, lat: Number(d.driver_lat), lng: Number(d.driver_lng), color: "blue", label: "Ou" });
+      arr.push({ id: `drv-${d.id}`, lat: Number(d.driver_lat), lng: Number(d.driver_lng), type: "driver", label: "Ou" });
     }
     if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
-      arr.push({ id: `rst-${d.id}`, lat: Number(d.order.restaurants.lat), lng: Number(d.order.restaurants.lng), color: "orange", label: d.order.restaurants.name ?? "Restoran" });
+      arr.push({ id: `rst-${d.id}`, lat: Number(d.order.restaurants.lat), lng: Number(d.order.restaurants.lng), type: "restaurant", label: d.order.restaurants.name ?? "Restoran" });
     }
     if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
-      arr.push({ id: `dst-${d.id}`, lat: Number(d.order.delivery_lat), lng: Number(d.order.delivery_lng), color: "green", label: d.order.order_number });
+      arr.push({ id: `dst-${d.id}`, lat: Number(d.order.delivery_lat), lng: Number(d.order.delivery_lng), type: "client", label: d.order.order_number });
     }
     return arr;
   });
@@ -117,15 +178,18 @@ function DriverDashboard() {
                 {active.length}
               </span>
             </div>
-            <LiveMap markers={markers} className="h-[380px] w-full rounded-xl" />
+            <LeafletMap markers={markers} route={routePath ?? undefined} className="h-[380px] w-full rounded-xl" />
           </section>
           <div className="space-y-4">
             <DriverLocationReporter driverId={driver.id} />
-            {active.map((d) => (
+            {active.map((d, i) => (
               <div key={d.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
                 <div className="text-xs uppercase tracking-wider text-ink-soft">{d.status}</div>
                 <div className="font-bold text-ink">{d.order?.order_number}</div>
                 <div className="text-xs text-ink-soft">{d.order?.delivery_address}</div>
+                <div className="mt-2">
+                  <DeliveryRouteInfo d={d} onRoute={i === 0 ? setRoutePath : undefined} />
+                </div>
               </div>
             ))}
           </div>
