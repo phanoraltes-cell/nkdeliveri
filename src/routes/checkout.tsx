@@ -121,7 +121,7 @@ function Checkout() {
             <>
               {items.map((it) => (
                 <div key={it.productId} className="flex items-center gap-3 border-b border-dashed border-brand-soft py-3">
-                  {it.imageUrl && <img src={it.imageUrl} className="h-14 w-14 rounded-xl object-cover" alt="" />}
+                  {it.imageUrl && <img src={it.imageUrl} width={56} height={56} className="h-14 w-14 rounded-xl object-cover" alt="" />}
                   <div className="flex-1">
                     <b className="block text-sm">{it.name}</b>
                     <span className="text-xs text-ink-soft">{formatHTG(it.price)} · {it.restaurantName}</span>

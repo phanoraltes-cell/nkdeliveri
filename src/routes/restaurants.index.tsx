@@ -70,6 +70,8 @@ function RestaurantsPage() {
                 src={r.cover_url || ""}
                 alt={r.name}
                 loading="lazy"
+                width={240}
+                height={144}
                 className="h-36 w-full object-cover"
               />
               <div className="p-4">

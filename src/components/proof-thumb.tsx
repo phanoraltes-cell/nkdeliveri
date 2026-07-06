@@ -42,7 +42,7 @@ export function ProofThumb({ path }: { path: string }) {
       title="Klike pou agrandi"
     >
       {url ? (
-        <img src={url} alt="Prèv peman" className="h-full w-full object-cover" />
+        <img src={url} alt="Prèv peman" width={96} height={96} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-[10px] text-ink-soft">
           Chajman…

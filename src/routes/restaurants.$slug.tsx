@@ -156,7 +156,7 @@ function RestaurantPage() {
           <ArrowLeft className="h-4 w-4" /> Tout restoran
         </Link>
         <div className="relative mt-4 overflow-hidden rounded-[18px]">
-          <img src={r.cover_url || ""} alt={r.name} className="h-60 w-full object-cover" />
+          <img src={r.cover_url || ""} alt={r.name} width={1100} height={240} className="h-60 w-full object-cover" />
           <div className="absolute inset-0 flex items-end bg-gradient-to-t from-ink/75 to-transparent p-6">
             <div>
               <h1 className="font-display text-3xl font-extrabold text-white">{r.name}</h1>
@@ -212,6 +212,8 @@ function RestaurantPage() {
                         src={p.image_url}
                         alt={p.name}
                         loading="lazy"
+                        width={230}
+                        height={150}
                         className="h-[150px] w-full object-cover"
                       />
                     )}

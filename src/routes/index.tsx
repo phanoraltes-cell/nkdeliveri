@@ -338,6 +338,8 @@ function Index() {
                   src={r.cover_url || r.logo_url || ""}
                   alt={r.name}
                   loading="lazy"
+                  width={280}
+                  height={160}
                   className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"
                 />
                 <button
@@ -457,6 +459,8 @@ function Index() {
                   src={p.image_url || ""}
                   alt={p.name}
                   loading="lazy"
+                  width={280}
+                  height={160}
                   className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"
                 />
               </div>

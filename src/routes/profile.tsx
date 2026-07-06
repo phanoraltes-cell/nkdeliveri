@@ -98,7 +98,7 @@ function Profile() {
               <div className="flex items-center gap-4">
                 <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-brand-soft bg-brand-soft/30">
                   {displayAvatar ? (
-                    <img src={displayAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                    <img src={displayAvatar} alt="Avatar" width={80} height={80} className="h-full w-full object-cover" />
                   ) : (
                     <UserIcon className="h-8 w-8 text-brand-deep" />
                   )}

@@ -44,7 +44,7 @@ function DashboardLayout() {
     <div className="min-h-screen bg-cream">
       <header className="sticky top-0 z-40 flex min-h-16 items-center gap-3 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1.25rem,var(--sal))] pr-[max(1.25rem,var(--sar))] shadow-sm">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/nk-logo.png" alt="NK" className="h-9 w-9 rounded-full" />
+          <img src="/nk-logo.png" alt="NK" width={36} height={36} className="h-9 w-9 rounded-full" />
           <span className="font-display text-lg font-extrabold text-ink">
             NK <span className="text-brand">Deliveri</span>
           </span>

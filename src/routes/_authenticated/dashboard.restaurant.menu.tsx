@@ -241,6 +241,8 @@ function RestaurantMenu() {
                   src={p.image_url}
                   alt={p.name}
                   loading="lazy"
+                  width={240}
+                  height={128}
                   className="h-32 w-full object-cover"
                 />
               )}
