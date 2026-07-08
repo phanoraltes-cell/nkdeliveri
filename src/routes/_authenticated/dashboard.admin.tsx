@@ -2,7 +2,7 @@ import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle } from "lucide-react";
+import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders } from "@/hooks/useLiveOrders";
@@ -269,6 +269,49 @@ function AdminDashboard() {
         </div>
       </section>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
+            <Bike className="h-5 w-5 text-emerald-600" /> Livrè disponib ({onlineDrivers.data?.length ?? 0})
+          </h2>
+          {onlineDrivers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {!onlineDrivers.isLoading && !onlineDrivers.data?.length && (
+            <div className="text-sm text-ink-soft">Pa gen livrè an liy kounye a.</div>
+          )}
+          <ul className="space-y-1.5">
+            {onlineDrivers.data?.map((d) => {
+              const busy = active.some((a) => a.driver_id === d.id);
+              return (
+                <li key={d.id} className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm">
+                  <span className="font-semibold text-ink">{`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè"}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${busy ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+                    {busy ? "An livrezon" : "Disponib"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
+            <Store className="h-5 w-5 text-orange-600" /> Restoran ouvè ({approvedRestaurants.data?.length ?? 0})
+          </h2>
+          {approvedRestaurants.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {!approvedRestaurants.isLoading && !approvedRestaurants.data?.length && (
+            <div className="text-sm text-ink-soft">Pa gen restoran apwouve kounye a.</div>
+          )}
+          <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+            {approvedRestaurants.data?.map((r) => (
+              <li key={r.id} className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm">
+                <span className="min-w-0 truncate font-semibold text-ink">{r.name}</span>
+                <span className="ml-2 shrink-0 text-xs text-ink-soft">{r.address || "—"}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           { icon: Users, label: "Itilizatè", value: s?.users, tone: "bg-blue-50 text-blue-700" },
@@ -405,8 +448,9 @@ function AdminDashboard() {
         {[
           { icon: CreditCard, title: "Peman manyèl", desc: "Valide prèv MonCash/NatCash", to: "/dashboard/admin/payments" as const },
           { icon: Users, title: "Kliyan & Newsletter", desc: "Swiv kliyan, ekspòte, voye imèl an mas", to: "/dashboard/admin/customers" as const },
+          { icon: Users, title: "Jere itilizatè", desc: "Tout kont yo, kèlkeswa wòl", to: "/dashboard/admin/users" as const },
+          { icon: Wallet, title: "Peman platfòm", desc: "Nimewo MonCash/NatCash fallback", to: "/dashboard/admin/payout-settings" as const },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
-          { icon: Users, title: "Jere itilizatè", desc: "Sispann/aktive kont", to: null },
         ].map((c) => {
           const Icon = c.icon;
           const body = (

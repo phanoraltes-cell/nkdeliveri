@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
+import { subscribeToPush } from "@/lib/push";
 
 const DISMISS_KEY = "nk-install-dismissed-at";
 const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+const PUSH_ASKED_KEY = "nk-push-asked-at";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -31,6 +33,22 @@ function recentlyDismissed() {
 }
 
 /**
+ * Asks for notification permission (and subscribes if granted) exactly once
+ * per device — right after a real install (Android/desktop `appinstalled`)
+ * or, for iOS which never fires that event, the first time the app is
+ * opened already in standalone mode. Silently gives up (no repeat nagging)
+ * if the browser already decided the permission or push isn't supported;
+ * the manual toggle in Profile stays as the reliable fallback everywhere a
+ * browser blocks a permission request that isn't tied to a fresh click.
+ */
+async function maybeRequestPushPermission() {
+  if (localStorage.getItem(PUSH_ASKED_KEY)) return;
+  localStorage.setItem(PUSH_ASKED_KEY, String(Date.now()));
+  if (typeof Notification === "undefined" || Notification.permission !== "default") return;
+  await subscribeToPush().catch(() => undefined);
+}
+
+/**
  * Cross-platform "install this app" banner. Android/desktop Chrome/Edge get
  * a native install prompt via beforeinstallprompt; iOS Safari never fires
  * that event at all, so it gets manual Share → Add to Home Screen steps.
@@ -41,7 +59,13 @@ export function InstallPrompt() {
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    if (isStandalone() || recentlyDismissed()) return;
+    // Already installed and running standalone (mainly iOS, which never
+    // fires `appinstalled`) — this is the one moment to ask for push.
+    if (isStandalone()) {
+      void maybeRequestPushPermission();
+      return;
+    }
+    if (recentlyDismissed()) return;
     setDismissed(false);
 
     if (isIOS()) {
@@ -58,6 +82,9 @@ export function InstallPrompt() {
     function onInstalled() {
       setDeferredPrompt(null);
       dismiss();
+      // Give the install animation/toast a moment to settle before stacking
+      // a second native permission prompt on top of it.
+      setTimeout(() => void maybeRequestPushPermission(), 1500);
     }
     window.addEventListener("appinstalled", onInstalled);
 

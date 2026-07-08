@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { Package, CheckCircle2 } from "lucide-react";
+import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/history")({
   beforeLoad: ({ context }) => {
@@ -38,7 +40,8 @@ function DriverHistory() {
   });
 
   const selectCols =
-    "id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))";
+    "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))";
+  const sendDeliveredPush = useServerFn(sendOrderDeliveredPush);
 
   const active = useQuery({
     queryKey: ["me-active-deliveries", driver?.id],
@@ -72,14 +75,19 @@ function DriverHistory() {
   });
 
   const advance = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "picked_up" | "delivered" }) => {
+    mutationFn: async ({ id, status }: { id: string; orderId: string; status: "picked_up" | "delivered" }) => {
       const { error } = await supabase.from("deliveries").update({ status }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       toast.success("Estati livrezon mizajou");
       qc.invalidateQueries({ queryKey: ["me-active-deliveries"] });
       qc.invalidateQueries({ queryKey: ["me-delivery-history"] });
+      if (vars.status === "delivered") {
+        sendDeliveredPush({ data: { orderId: vars.orderId } }).catch((e) =>
+          console.warn("[push] delivered notify failed", e),
+        );
+      }
     },
     onError: (e: any) => toast.error(e.message ?? "Erè"),
   });
@@ -122,7 +130,7 @@ function DriverHistory() {
                   {(d.status === "assigned" || d.status === "en_route_pickup") && (
                     <button
                       disabled={advance.isPending}
-                      onClick={() => advance.mutate({ id: d.id, status: "picked_up" })}
+                      onClick={() => advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })}
                       className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                     >
                       <Package className="h-3.5 w-3.5" /> Pikap fèt
@@ -131,7 +139,7 @@ function DriverHistory() {
                   {(d.status === "picked_up" || d.status === "en_route_dropoff") && (
                     <button
                       disabled={advance.isPending}
-                      onClick={() => advance.mutate({ id: d.id, status: "delivered" })}
+                      onClick={() => advance.mutate({ id: d.id, orderId: d.order_id, status: "delivered" })}
                       className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" /> Livre

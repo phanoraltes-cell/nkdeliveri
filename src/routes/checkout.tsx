@@ -8,9 +8,10 @@ import { Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ADMIN_PAYOUT } from "@/lib/admin-payout";
 import { noIndexMeta } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { sendNewOrderPush } from "@/lib/send-order-push.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -34,6 +35,17 @@ function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [restaurant, setRestaurant] = useState<any>(null);
   const nav = useNavigate();
+  const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
+
+  const platformPayout = useQuery({
+    queryKey: ["platform-payout-public"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_platform_payout_public");
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] : data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const savedAddresses = useQuery({
     queryKey: ["my-addresses", user?.id],
@@ -80,15 +92,15 @@ function Checkout() {
   const merchantDirect = restaurant?.payout_mode === "direct";
   const payNumber =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_number : ADMIN_PAYOUT.moncash.number
+      ? merchantDirect ? restaurant?.moncash_number : platformPayout.data?.moncash_number
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_number : ADMIN_PAYOUT.natcash.number
+      ? merchantDirect ? restaurant?.natcash_number : platformPayout.data?.natcash_number
       : null;
   const payName =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_account_name : ADMIN_PAYOUT.moncash.account_name
+      ? merchantDirect ? restaurant?.moncash_account_name : platformPayout.data?.moncash_account_name
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_account_name : ADMIN_PAYOUT.natcash.account_name
+      ? merchantDirect ? restaurant?.natcash_account_name : platformPayout.data?.natcash_account_name
       : null;
 
   async function submit() {
@@ -123,6 +135,10 @@ function Checkout() {
       if (rpcErr) throw rpcErr;
       clear();
       toast.success("Kòmand kreye ak siksè");
+      // Best-effort — a failed push send must never block order creation.
+      sendNewOrderPushFn({ data: { orderId: orderId as string } }).catch((e) =>
+        console.warn("[push] new-order notify failed", e),
+      );
       nav({ to: "/orders/$id", params: { id: orderId as string } });
     } catch (e: any) {
       toast.error(e.message || "Erè pandan kreyasyon kòmand la");

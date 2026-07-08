@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Store, Package } from "lucide-react";
+import { sendDeliveryAssignedPush } from "@/lib/send-order-push.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/available")({
   beforeLoad: ({ context }) => {
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/available
 function AvailableDeliveries() {
   const { user } = Route.useRouteContext() as any;
   const qc = useQueryClient();
+  const sendAssignedPush = useServerFn(sendDeliveryAssignedPush);
 
   const { data: driver } = useQuery({
     queryKey: ["me-driver", user?.id],
@@ -62,10 +65,11 @@ function AvailableDeliveries() {
       const { error } = await supabase.rpc("claim_delivery_secure", { _order_id: orderId });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, orderId) => {
       toast.success("Ou pran livrezon sa a!");
       qc.invalidateQueries({ queryKey: ["available-deliveries"] });
       qc.invalidateQueries({ queryKey: ["me-active-deliveries"] });
+      sendAssignedPush({ data: { orderId } }).catch((e) => console.warn("[push] assigned notify failed", e));
     },
     onError: (e: any) => toast.error(e.message ?? "Erè"),
   });
