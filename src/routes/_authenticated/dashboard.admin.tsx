@@ -2,7 +2,7 @@ import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle, Wallet } from "lucide-react";
+import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle, Wallet, Percent } from "lucide-react";
 import { toast } from "sonner";
 import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders } from "@/hooks/useLiveOrders";
@@ -450,6 +450,7 @@ function AdminDashboard() {
           { icon: Users, title: "Kliyan & Newsletter", desc: "Swiv kliyan, ekspòte, voye imèl an mas", to: "/dashboard/admin/customers" as const },
           { icon: Users, title: "Jere itilizatè", desc: "Tout kont yo, kèlkeswa wòl", to: "/dashboard/admin/users" as const },
           { icon: Wallet, title: "Peman platfòm", desc: "Nimewo MonCash/NatCash fallback", to: "/dashboard/admin/payout-settings" as const },
+          { icon: Percent, title: "Restoran & Komisyon", desc: "Chwazi pousantaj/montan chak restoran peye", to: "/dashboard/admin/restaurants" as const },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
         ].map((c) => {
           const Icon = c.icon;

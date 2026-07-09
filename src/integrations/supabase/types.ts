@@ -1074,76 +1074,41 @@ export type Database = {
         }
         Returns: string
       }
-      create_product_secure:
-        | {
-            Args: {
-              _category_id: string
-              _description: string
-              _dish_type: string
-              _image_url: string
-              _name: string
-              _price: number
-              _restaurant_id: string
-            }
-            Returns: {
-              archived_at: string | null
-              available: boolean
-              category_id: string | null
-              created_at: string
-              description: string | null
-              dish_type: string | null
-              id: string
-              image_url: string | null
-              name: string
-              popular: boolean
-              price: number
-              restaurant_id: string
-              sort_order: number
-              stock_quantity: number | null
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "products"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              _category_id: string
-              _description: string
-              _dish_type: string
-              _image_url: string
-              _name: string
-              _price: number
-              _restaurant_id: string
-              _stock_quantity?: number
-            }
-            Returns: {
-              archived_at: string | null
-              available: boolean
-              category_id: string | null
-              created_at: string
-              description: string | null
-              dish_type: string | null
-              id: string
-              image_url: string | null
-              name: string
-              popular: boolean
-              price: number
-              restaurant_id: string
-              sort_order: number
-              stock_quantity: number | null
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "products"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      create_product_secure: {
+        Args: {
+          _category_id: string
+          _description: string
+          _dish_type: string
+          _image_url: string
+          _name: string
+          _price: number
+          _restaurant_id: string
+          _stock_quantity?: number
+        }
+        Returns: {
+          archived_at: string | null
+          available: boolean
+          category_id: string | null
+          created_at: string
+          description: string | null
+          dish_type: string | null
+          id: string
+          image_url: string | null
+          name: string
+          popular: boolean
+          price: number
+          restaurant_id: string
+          sort_order: number
+          stock_quantity: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_promotion_secure: {
         Args: {
           _code: string
@@ -1256,6 +1221,19 @@ export type Database = {
           paid_amount: number
           pending_amount: number
           total_orders: number
+        }[]
+      }
+      get_restaurants_admin: {
+        Args: never
+        Returns: {
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          cuisine: string
+          id: string
+          monthly_commission_amount: number
+          name: string
+          status: Database["public"]["Enums"]["restaurant_status"]
         }[]
       }
       has_role: {
@@ -1430,78 +1408,42 @@ export type Database = {
         }
         Returns: undefined
       }
-      update_product_secure:
-        | {
-            Args: {
-              _available: boolean
-              _category_id: string
-              _description: string
-              _dish_type: string
-              _image_url: string
-              _name: string
-              _price: number
-              _product_id: string
-            }
-            Returns: {
-              archived_at: string | null
-              available: boolean
-              category_id: string | null
-              created_at: string
-              description: string | null
-              dish_type: string | null
-              id: string
-              image_url: string | null
-              name: string
-              popular: boolean
-              price: number
-              restaurant_id: string
-              sort_order: number
-              stock_quantity: number | null
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "products"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              _available: boolean
-              _category_id: string
-              _description: string
-              _dish_type: string
-              _image_url: string
-              _name: string
-              _price: number
-              _product_id: string
-              _stock_quantity?: number
-            }
-            Returns: {
-              archived_at: string | null
-              available: boolean
-              category_id: string | null
-              created_at: string
-              description: string | null
-              dish_type: string | null
-              id: string
-              image_url: string | null
-              name: string
-              popular: boolean
-              price: number
-              restaurant_id: string
-              sort_order: number
-              stock_quantity: number | null
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "products"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      update_product_secure: {
+        Args: {
+          _available: boolean
+          _category_id: string
+          _description: string
+          _dish_type: string
+          _image_url: string
+          _name: string
+          _price: number
+          _product_id: string
+          _stock_quantity?: number
+        }
+        Returns: {
+          archived_at: string | null
+          available: boolean
+          category_id: string | null
+          created_at: string
+          description: string | null
+          dish_type: string | null
+          id: string
+          image_url: string | null
+          name: string
+          popular: boolean
+          price: number
+          restaurant_id: string
+          sort_order: number
+          stock_quantity: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_promotion_secure: {
         Args: {
           _active: boolean
@@ -1531,6 +1473,33 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "promotions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_restaurant_commission_secure: {
+        Args: {
+          _commission_rate: number
+          _commission_type: string
+          _monthly_commission_amount: number
+          _restaurant_id: string
+        }
+        Returns: {
+          commission_rate: number | null
+          commission_type: string | null
+          created_at: string
+          moncash_account_name: string | null
+          moncash_number: string | null
+          monthly_commission_amount: number | null
+          natcash_account_name: string | null
+          natcash_number: string | null
+          payout_mode: string
+          restaurant_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_payout_details"
           isOneToOne: true
           isSetofReturn: false
         }
