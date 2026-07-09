@@ -140,14 +140,14 @@ function RestaurantPage() {
   const { r, cats, prods } = data;
 
   const catCounts: Record<string, number> = cats.reduce(
-    (acc: Record<string, number>, c: any) => {
-      acc[c.id] = prods.filter((p: any) => p.category_id === c.id).length;
+    (acc: Record<string, number>, c) => {
+      acc[c.id] = prods.filter((p) => p.category_id === c.id).length;
       return acc;
     },
     { all: prods.length },
   );
   const visibleCats =
-    activeCat === "all" ? cats : cats.filter((c: any) => c.id === activeCat);
+    activeCat === "all" ? cats : cats.filter((c) => c.id === activeCat);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -173,7 +173,7 @@ function RestaurantPage() {
         </div>
 
         <div className="sticky top-16 z-20 -mx-5 mt-8 flex flex-wrap gap-2.5 border-b border-brand-soft/60 bg-cream/95 px-5 py-3 backdrop-blur">
-          {[{ id: "all", name: "Tout" }, ...cats].map((c: any) => {
+          {[{ id: "all", name: "Tout" }, ...cats].map((c) => {
             const active = activeCat === c.id;
             const count = catCounts[c.id] ?? 0;
             if (c.id !== "all" && count === 0) return null;
@@ -200,14 +200,14 @@ function RestaurantPage() {
           })}
         </div>
 
-        {visibleCats.map((cat: any) => {
-          const items = prods.filter((p: any) => p.category_id === cat.id);
+        {visibleCats.map((cat) => {
+          const items = prods.filter((p) => p.category_id === cat.id);
           if (items.length === 0) return null;
           return (
             <div key={cat.id} className="mt-8">
               <h2 className="mb-4 font-display text-xl font-extrabold">{cat.name}</h2>
               <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
-                {items.map((p: any) => (
+                {items.map((p) => (
                   <div key={p.id} className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
                     {p.image_url && (
                       <img
@@ -270,7 +270,7 @@ function RestaurantPage() {
             </div>
           )}
           <div className="space-y-3">
-            {reviews.data?.map((rv: any, i: number) => (
+            {reviews.data?.map((rv, i) => (
               <div key={i} className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">

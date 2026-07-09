@@ -7,7 +7,7 @@ import { Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payout-settings")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -68,7 +68,7 @@ function AdminPayoutSettings() {
       toast.success("Paramèt peman anrejistre");
       qc.invalidateQueries({ queryKey: ["platform-payout-settings"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   return (

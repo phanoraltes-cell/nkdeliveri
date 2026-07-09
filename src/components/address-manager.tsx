@@ -50,7 +50,7 @@ export function AddressManager({ userId }: { userId: string }) {
       toast.success("Adrès efase");
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const setDefault = useMutation({
@@ -71,7 +71,7 @@ export function AddressManager({ userId }: { userId: string }) {
       toast.success("Adrès pa defo mizajou");
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   return (
@@ -214,8 +214,8 @@ function AddressForm({
       }
       onSaved();
       onClose();
-    } catch (e: any) {
-      toast.error(e.message ?? "Erè");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè");
     } finally {
       setSaving(false);
     }

@@ -1,13 +1,16 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 
+type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
+
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/promotions")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -20,10 +23,10 @@ function inputCls() {
 }
 
 function RestaurantPromotions() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<Promotion | null>(null);
 
   const { data: restaurant } = useQuery({
     queryKey: ["me-restaurant-id", user?.id],
@@ -49,10 +52,14 @@ function RestaurantPromotions() {
   });
 
   const toggleActive = useMutation({
-    mutationFn: async (p: any) => {
+    mutationFn: async (p: Promotion) => {
+      // The generator types these args as non-nullable because the SQL
+      // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
+      // NULL for these columns regardless, so these casts just correct an
+      // overly-strict generated type, no behavior change.
       const { error } = await supabase.rpc("update_promotion_secure", {
-        _promotion_id: p.id, _title: p.title, _description: p.description, _discount_type: p.discount_type,
-        _discount_value: p.discount_value, _code: p.code, _starts_at: p.starts_at, _ends_at: p.ends_at,
+        _promotion_id: p.id, _title: p.title, _description: p.description as string, _discount_type: p.discount_type,
+        _discount_value: p.discount_value, _code: p.code as string, _starts_at: p.starts_at as string, _ends_at: p.ends_at as string,
         _active: !p.active,
       });
       if (error) throw error;
@@ -61,7 +68,7 @@ function RestaurantPromotions() {
       qc.invalidateQueries({ queryKey: ["restaurant-promotions"] });
       toast.success(p.active ? "Pwomosyon dezaktive" : "Pwomosyon aktive");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const remove = useMutation({
@@ -70,7 +77,7 @@ function RestaurantPromotions() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Pwomosyon efase"); qc.invalidateQueries({ queryKey: ["restaurant-promotions"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   return (
@@ -158,7 +165,7 @@ function RestaurantPromotions() {
 
 function PromoForm({
   restaurantId, promo, onClose, onSaved,
-}: { restaurantId: string; promo: any | null; onClose: () => void; onSaved: () => void }) {
+}: { restaurantId: string; promo: Promotion | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({
     title: promo?.title ?? "",
     description: promo?.description ?? "",
@@ -177,33 +184,36 @@ function PromoForm({
     if (f.discount_type === "percentage" && value > 100) return toast.error("Rabè an pousantaj pa ka depase 100%");
     setSaving(true);
     try {
+      // The generator types these args as non-nullable because the SQL
+      // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
+      // NULL for these columns regardless, so these casts just correct an
+      // overly-strict generated type, no behavior change.
       const args = {
         _title: f.title.trim(),
-        _description: f.description || null,
+        _description: (f.description || null) as string,
         _discount_type: f.discount_type,
         _discount_value: value,
-        _code: f.code || null,
-        _starts_at: f.starts_at ? new Date(f.starts_at).toISOString() : null,
-        _ends_at: f.ends_at ? new Date(f.ends_at).toISOString() : null,
+        _code: (f.code || null) as string,
+        _starts_at: (f.starts_at ? new Date(f.starts_at).toISOString() : null) as string,
+        _ends_at: (f.ends_at ? new Date(f.ends_at).toISOString() : null) as string,
       };
       if (promo) {
-        // See dashboard.restaurant.payouts.tsx for why this cast is safe.
         const { error } = await supabase.rpc("update_promotion_secure", {
           _promotion_id: promo.id, ...args, _active: promo.active,
-        } as any);
+        });
         if (error) throw error;
         toast.success("Pwomosyon mizajou");
       } else {
         const { error } = await supabase.rpc("create_promotion_secure", {
           _restaurant_id: restaurantId, ...args,
-        } as any);
+        });
         if (error) throw error;
         toast.success("Pwomosyon kreye");
       }
       onSaved();
       onClose();
-    } catch (e: any) {
-      toast.error(e.message ?? "Erè");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè");
     } finally {
       setSaving(false);
     }

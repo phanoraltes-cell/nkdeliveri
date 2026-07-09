@@ -37,8 +37,8 @@ async function fetchActiveDeliveries(scope: Scope): Promise<ActiveDelivery[]> {
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? [])
-    .filter((d: any) => (scope.customerId ? d.orders?.customer_id === scope.customerId : true))
-    .map((d: any) => ({
+    .filter((d) => (scope.customerId ? d.orders?.customer_id === scope.customerId : true))
+    .map((d) => ({
       id: d.id,
       order_id: d.order_id,
       driver_id: d.driver_id,
@@ -87,7 +87,7 @@ async function fetchOrderDelivery(orderId: string): Promise<ActiveDelivery | nul
   const { data, error } = await supabase
     .from("deliveries")
     .select(
-      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, restaurants(name, lat, lng))",
+      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, contact_phone, status, restaurants(name, lat, lng))",
     )
     .eq("order_id", orderId)
     .maybeSingle();
@@ -101,8 +101,8 @@ async function fetchOrderDelivery(orderId: string): Promise<ActiveDelivery | nul
     driver_lat: data.driver_lat,
     driver_lng: data.driver_lng,
     location_updated_at: data.location_updated_at,
-    driver: (data as any).drivers,
-    order: (data as any).orders,
+    driver: data.drivers,
+    order: data.orders,
   };
 }
 

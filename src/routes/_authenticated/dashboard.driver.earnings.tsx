@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/earnings")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "driver" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/earnings"
 });
 
 function DriverEarnings() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const today = new Date().toISOString().slice(0, 10);
   const monthsAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
   const [fromDate] = useState(monthsAgo);

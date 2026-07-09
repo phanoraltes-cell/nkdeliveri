@@ -59,7 +59,7 @@ function Orders() {
           </div>
         ) : (
           <div className="space-y-3">
-            {data.map((o: any) => (
+            {data.map((o) => (
               <Link
                 key={o.id}
                 to="/orders/$id"

@@ -9,7 +9,7 @@ import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/history")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "driver" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -27,7 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function DriverHistory() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
 
   const { data: driver } = useQuery({
@@ -39,8 +39,6 @@ function DriverHistory() {
     },
   });
 
-  const selectCols =
-    "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))";
   const sendDeliveredPush = useServerFn(sendOrderDeliveredPush);
 
   const active = useQuery({
@@ -49,7 +47,9 @@ function DriverHistory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("deliveries")
-        .select(selectCols)
+        .select(
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))"
+        )
         .eq("driver_id", driver!.id)
         .in("status", ["assigned", "en_route_pickup", "picked_up", "en_route_dropoff"])
         .order("assigned_at", { ascending: false });
@@ -64,7 +64,9 @@ function DriverHistory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("deliveries")
-        .select(selectCols)
+        .select(
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))"
+        )
         .eq("driver_id", driver!.id)
         .eq("status", "delivered")
         .order("delivered_at", { ascending: false })
@@ -89,7 +91,7 @@ function DriverHistory() {
         );
       }
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   return (
@@ -113,7 +115,7 @@ function DriverHistory() {
           </div>
         )}
         <div className="space-y-3">
-          {active.data?.map((d: any) => (
+          {active.data?.map((d) => (
             <div key={d.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -172,7 +174,7 @@ function DriverHistory() {
                 </tr>
               </thead>
               <tbody>
-                {history.data?.map((d: any) => (
+                {history.data?.map((d) => (
                   <tr key={d.id} className="border-t border-brand-soft/30">
                     <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
                       {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}

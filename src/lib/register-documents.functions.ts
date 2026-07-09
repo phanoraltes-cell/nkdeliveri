@@ -41,7 +41,7 @@ function decode(file: z.infer<typeof FileInput>) {
 // the user once they actually log in. Stamp ownership explicitly so those
 // policies keep working.
 async function stampOwner(supabaseAdmin: SupabaseClient, bucket: string, path: string, userId: string) {
-  await supabaseAdmin.schema("storage" as any).from("objects").update({ owner: userId }).match({
+  await supabaseAdmin.schema("storage").from("objects").update({ owner: userId }).match({
     bucket_id: bucket,
     name: path,
   });

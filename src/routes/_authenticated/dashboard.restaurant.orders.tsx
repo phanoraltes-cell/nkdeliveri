@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -8,7 +9,7 @@ import { Check, X, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/orders")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -36,7 +37,7 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
 };
 
 function RestaurantOrders() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "pending">("all");
 
@@ -71,7 +72,7 @@ function RestaurantOrders() {
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
       const { error } = await supabase.rpc("update_order_status_secure", {
         _order_id: orderId,
-        _new_status: status as any,
+        _new_status: status as Database["public"]["Enums"]["order_status"],
       });
       if (error) throw error;
     },
@@ -79,7 +80,7 @@ function RestaurantOrders() {
       toast.success("Estati kòmand mizajou");
       qc.invalidateQueries({ queryKey: ["restaurant-orders"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   const pendingCount = orders.data?.filter((o) => o.status === "pending").length ?? 0;
@@ -117,7 +118,7 @@ function RestaurantOrders() {
       )}
 
       <div className="space-y-3">
-        {orders.data?.map((o: any) => (
+        {orders.data?.map((o) => (
           <div key={o.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -138,7 +139,7 @@ function RestaurantOrders() {
             </div>
 
             <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
-              {o.order_items?.map((it: any) => (
+              {o.order_items?.map((it) => (
                 <li key={it.id} className="flex justify-between px-3 py-1.5">
                   <span>{it.quantity}× {it.product_name}</span>
                   <span className="font-bold">{formatHTG(Number(it.unit_price) * it.quantity)}</span>

@@ -1,14 +1,18 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
 
+type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
+type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
+
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/menu")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -40,13 +44,13 @@ async function uploadDishPhoto(restaurantId: string, file: File) {
 }
 
 function RestaurantMenu() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const [activeCat, setActiveCat] = useState<string>("all");
   const [newCatName, setNewCatName] = useState("");
   const [editingCat, setEditingCat] = useState<{ id: string; name: string } | null>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<MenuProduct | null>(null);
 
   const { data: restaurant } = useQuery({
     queryKey: ["me-restaurant-id", user?.id],
@@ -101,7 +105,7 @@ function RestaurantMenu() {
       if (error) throw error;
     },
     onSuccess: () => { setNewCatName(""); toast.success("Kategori ajoute"); invalidate(); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const updateCategory = useMutation({
@@ -113,7 +117,7 @@ function RestaurantMenu() {
       if (error) throw error;
     },
     onSuccess: () => { setEditingCat(null); toast.success("Kategori mizajou"); invalidate(); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const deleteCategory = useMutation({
@@ -122,7 +126,7 @@ function RestaurantMenu() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Kategori efase"); if (activeCat !== "all") setActiveCat("all"); invalidate(); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const deleteProduct = useMutation({
@@ -131,7 +135,7 @@ function RestaurantMenu() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Plat retire nan meni an"); invalidate(); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const visibleProducts = (products.data ?? []).filter(
@@ -292,8 +296,8 @@ function ProductForm({
   restaurantId, categories, product, onClose, onSaved,
 }: {
   restaurantId: string;
-  categories: any[];
-  product: any | null;
+  categories: MenuCategory[];
+  product: MenuProduct | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -327,38 +331,42 @@ function ProductForm({
       let imageUrl = product?.image_url ?? null;
       if (photo) imageUrl = await uploadDishPhoto(restaurantId, photo);
 
+      // The generator types these args as non-nullable because the SQL
+      // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
+      // NULL for these columns regardless, so these casts just correct an
+      // overly-strict generated type, no behavior change.
       if (product) {
         const { error } = await supabase.rpc("update_product_secure", {
           _product_id: product.id,
           _name: f.name.trim(),
-          _description: f.description || null,
+          _description: (f.description || null) as string,
           _price: price,
-          _image_url: imageUrl,
+          _image_url: imageUrl as string,
           _dish_type: f.dish_type,
-          _category_id: f.category_id || null,
+          _category_id: (f.category_id || null) as string,
           _available: f.available,
-          _stock_quantity: stockQuantity,
-        } as any);
+          _stock_quantity: stockQuantity ?? undefined,
+        });
         if (error) throw error;
         toast.success("Plat mizajou");
       } else {
         const { error } = await supabase.rpc("create_product_secure", {
           _restaurant_id: restaurantId,
-          _category_id: f.category_id || null,
+          _category_id: (f.category_id || null) as string,
           _name: f.name.trim(),
-          _description: f.description || null,
+          _description: (f.description || null) as string,
           _price: price,
-          _stock_quantity: stockQuantity,
-          _image_url: imageUrl,
+          _stock_quantity: stockQuantity ?? undefined,
+          _image_url: imageUrl as string,
           _dish_type: f.dish_type,
-        } as any);
+        });
         if (error) throw error;
         toast.success("Plat ajoute");
       }
       onSaved();
       onClose();
-    } catch (e: any) {
-      toast.error(e.message ?? "Erè");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè");
     } finally {
       setSaving(false);
     }

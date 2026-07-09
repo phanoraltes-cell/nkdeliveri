@@ -12,13 +12,29 @@ import { Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payments")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
   },
   component: AdminPayments,
 });
+
+async function fetchPayoutHistory() {
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_account_name, receiver_number, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, product_name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
+    )
+    .in("method", ["moncash", "natcash"])
+    .in("status", ["paid", "failed"])
+    .order("reviewed_at", { ascending: false, nullsFirst: false })
+    .limit(200);
+  if (error) throw error;
+  return data;
+}
+
+type PayoutHistoryRow = NonNullable<Awaited<ReturnType<typeof fetchPayoutHistory>>>[number];
 
 function AdminPayments() {
   const qc = useQueryClient();
@@ -51,19 +67,7 @@ function AdminPayments() {
   const history = useQuery({
     queryKey: ["admin-payout-history"],
     enabled: tab === "history",
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select(
-          "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_account_name, receiver_number, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, product_name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
-        )
-        .in("method", ["moncash", "natcash"])
-        .in("status", ["paid", "failed"])
-        .order("reviewed_at", { ascending: false, nullsFirst: false })
-        .limit(200);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: fetchPayoutHistory,
   });
 
   const decide = useMutation({
@@ -88,7 +92,7 @@ function AdminPayments() {
       toast.success(v.decision === "paid" ? "Peman apwouve, kòmand konfime" : "Peman rejte");
       qc.invalidateQueries({ queryKey: ["admin-manual-payments"] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   return (
@@ -128,7 +132,7 @@ function AdminPayments() {
       )}
 
       <div className="space-y-4">
-        {list.data?.map((p: any) => (
+        {list.data?.map((p) => (
           <div key={p.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
@@ -161,7 +165,7 @@ function AdminPayments() {
               <div className="mt-3">
                 <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv peman</div>
                 <div className="flex flex-wrap gap-3">
-                  {p.payment_proofs.map((pr: any) => (
+                  {p.payment_proofs.map((pr) => (
                     <div key={pr.id} className="space-y-1">
                       <ProofThumb path={pr.file_url} />
                       {(pr.transaction_ref || pr.sender_phone) && (
@@ -238,7 +242,7 @@ function PayoutHistory({
   setFromDate,
   setToDate,
 }: {
-  data: any[] | undefined;
+  data: PayoutHistoryRow[] | undefined;
   loading: boolean;
   filter: "all" | "moncash" | "natcash";
   setFilter: (v: "all" | "moncash" | "natcash") => void;
@@ -504,7 +508,7 @@ function PayoutHistory({
                             <div className="md:col-span-2">
                               <div className="mb-1 font-display text-sm font-extrabold text-ink">Atik</div>
                               <ul className="divide-y divide-brand-soft/40 rounded-lg border border-brand-soft/40 bg-white text-xs">
-                                {p.orders.order_items.map((it: any) => (
+                                {p.orders.order_items.map((it) => (
                                   <li key={it.id} className="flex justify-between px-3 py-1.5">
                                     <span>{it.quantity}× {it.product_name}</span>
                                     <span className="font-bold">{formatHTG(Number(it.unit_price) * Number(it.quantity))}</span>
@@ -517,7 +521,7 @@ function PayoutHistory({
                             <div className="md:col-span-2">
                               <div className="mb-1 font-display text-sm font-extrabold text-ink">Prèv peman</div>
                               <div className="flex flex-wrap gap-3">
-                                {p.payment_proofs.map((pr: any) => (
+                                {p.payment_proofs.map((pr) => (
                                   <ProofThumb key={pr.id} path={pr.file_url} />
                                 ))}
                               </div>

@@ -11,7 +11,7 @@ import { Download, Search, Send, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/customers")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -61,7 +61,7 @@ function AdminCustomers() {
       setSubject("");
       setBody("");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   function exportCustomers() {

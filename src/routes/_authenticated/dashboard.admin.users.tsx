@@ -7,7 +7,7 @@ import { Download, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/users")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }

@@ -33,7 +33,15 @@ function Checkout() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [restaurant, setRestaurant] = useState<any>(null);
+  const [restaurant, setRestaurant] = useState<{
+    id: string;
+    name: string;
+    moncash_account_name?: string;
+    moncash_number?: string;
+    natcash_account_name?: string;
+    natcash_number?: string;
+    payout_mode?: string;
+  } | null>(null);
   const nav = useNavigate();
   const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
 
@@ -140,8 +148,8 @@ function Checkout() {
         console.warn("[push] new-order notify failed", e),
       );
       nav({ to: "/orders/$id", params: { id: orderId as string } });
-    } catch (e: any) {
-      toast.error(e.message || "Erè pandan kreyasyon kòmand la");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè pandan kreyasyon kòmand la");
     } finally {
       setSubmitting(false);
     }
@@ -235,7 +243,7 @@ function Checkout() {
                   {METHODS.map((m) => (
                     <button
                       key={m.id}
-                      onClick={() => setMethod(m.id as any)}
+                      onClick={() => setMethod(m.id)}
                       className={`rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
                         method === m.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white hover:border-brand"
                       }`}

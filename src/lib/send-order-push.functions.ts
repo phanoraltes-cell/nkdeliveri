@@ -30,8 +30,11 @@ async function pushToUsers(userIds: string[], payload: { title: string; body: st
   await Promise.all(
     subs.map(async (s) => {
       try {
-        const subscription = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
-        const built = await buildPushPayload(message as any, subscription as any, vapid as any);
+        // The web-push package's PushSubscription type carries expirationTime
+        // (from the browser API) — the Supabase row never stores it, so it's
+        // always null here, which the package treats the same as absent.
+        const subscription = { endpoint: s.endpoint, expirationTime: null, keys: { p256dh: s.p256dh, auth: s.auth } };
+        const built = await buildPushPayload(message, subscription, vapid);
         const res = await fetch(s.endpoint, built as unknown as RequestInit);
         if (res.status === 404 || res.status === 410) deadEndpoints.push(s.endpoint);
         else if (res.ok || res.status === 201) sent++;
@@ -62,7 +65,7 @@ export const sendNewOrderPush = createServerFn({ method: "POST" })
     // Only the customer who placed it may trigger this notification.
     if (order.customer_id !== context.userId) throw new Error("Forbidden");
 
-    const ownerId = (order as any).restaurants?.owner_id as string | undefined;
+    const ownerId = order.restaurants?.owner_id;
     if (!ownerId) return { sent: 0 };
 
     return pushToUsers([ownerId], {
@@ -87,10 +90,10 @@ export const sendDeliveryAssignedPush = createServerFn({ method: "POST" })
       .eq("order_id", data.orderId)
       .single();
     if (error || !delivery) throw new Error(error?.message || "Delivery not found");
-    const driverUserId = (delivery as any).drivers?.user_id as string | undefined;
+    const driverUserId = delivery.drivers?.user_id;
     if (!driverUserId || driverUserId !== context.userId) throw new Error("Forbidden");
 
-    const order = (delivery as any).orders;
+    const order = delivery.orders;
     return pushToUsers([driverUserId], {
       title: "Nouvo livrezon pou ou 🛵",
       body: `Kòmand ${order?.order_number ?? ""} — ${order?.delivery_address ?? ""}`,
@@ -113,12 +116,12 @@ export const sendOrderDeliveredPush = createServerFn({ method: "POST" })
       .eq("order_id", data.orderId)
       .single();
     if (error || !delivery) throw new Error(error?.message || "Delivery not found");
-    const driverUserId = (delivery as any).drivers?.user_id as string | undefined;
+    const driverUserId = delivery.drivers?.user_id;
     if (!driverUserId || driverUserId !== context.userId) throw new Error("Forbidden");
     if (delivery.status !== "delivered") return { sent: 0, skipped: true };
 
-    const order = (delivery as any).orders;
-    const customerId = order?.customer_id as string | undefined;
+    const order = delivery.orders;
+    const customerId = order?.customer_id;
     if (!customerId) return { sent: 0 };
 
     return pushToUsers([customerId], {

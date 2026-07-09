@@ -12,10 +12,11 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true
-  );
+  // `navigator.standalone` is a non-standard Safari-only flag (missing from
+  // the DOM lib types) for "launched from the home screen icon" — the only
+  // way iOS signals PWA installation, since it never fires appinstalled.
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
 }
 
 function isIOS() {

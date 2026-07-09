@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/revenue")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/reven
 });
 
 function RestaurantRevenue() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const [fromDate, setFromDate] = useState(monthAgo);
@@ -113,7 +113,7 @@ function RestaurantRevenue() {
               </tr>
             </thead>
             <tbody>
-              {payments.data?.map((p: any) => (
+              {payments.data?.map((p) => (
                 <tr key={p.id} className="border-t border-brand-soft/30">
                   <td className="px-3 py-2 text-xs text-ink-soft">{new Date(p.created_at).toLocaleDateString("fr-HT")}</td>
                   <td className="px-3 py-2 font-bold">{p.orders?.order_number}</td>

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 });
 
 function NotificationsPage() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my-notifications", user?.id],
@@ -41,7 +41,7 @@ function NotificationsPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-notifications"] }),
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const unread = (data ?? []).filter((n) => !n.read_at);
@@ -82,7 +82,7 @@ function NotificationsPage() {
 
       <ul className="space-y-2">
         {data?.map((n) => {
-          const orderId = (n.data as any)?.order_id as string | undefined;
+          const orderId = (n.data as { order_id?: string } | null)?.order_id;
           const inner = (
             <div
               className={`flex gap-3 rounded-2xl border p-4 transition ${

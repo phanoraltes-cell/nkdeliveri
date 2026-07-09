@@ -121,7 +121,7 @@ function OrderDetail() {
       qc.invalidateQueries({ queryKey: ["order", id] });
       qc.invalidateQueries({ queryKey: ["proofs", id] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   async function submitProof(e: React.FormEvent) {
@@ -192,7 +192,7 @@ function OrderDetail() {
       toast.success("Mèsi pou avi w!");
       qc.invalidateQueries({ queryKey: ["review", id] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   if (order.isLoading) {
@@ -313,7 +313,7 @@ function OrderDetail() {
 
         <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
           <div className="mb-3 font-display text-base font-bold">Detay</div>
-          {o.order_items?.map((it: any, i: number) => (
+          {o.order_items?.map((it, i) => (
             <div key={i} className="flex justify-between border-b border-dashed border-brand-soft py-2 text-sm">
               <span>{it.quantity}× {it.product_name}</span>
               <span>{formatHTG(it.line_total)}</span>
@@ -391,7 +391,7 @@ function OrderDetail() {
               <div className="mt-4">
                 <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv voye</div>
                 <ul className="space-y-2 text-sm">
-                  {proofs.data.map((p: any) => (
+                  {proofs.data.map((p) => (
                     <li key={p.id} className="flex items-center gap-3 rounded-lg bg-cream px-3 py-2">
                       <ProofThumb path={p.file_url} />
                       <div>

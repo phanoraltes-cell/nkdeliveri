@@ -81,7 +81,7 @@ function DriverProfile() {
       setAvatar(null);
       qc.invalidateQueries({ queryKey: ["me-driver-profile"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   function onPickAvatar(file: File | null) {

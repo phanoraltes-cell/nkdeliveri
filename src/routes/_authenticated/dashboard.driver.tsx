@@ -100,7 +100,7 @@ function DriverDashboard() {
       qc.invalidateQueries({ queryKey: ["me-driver"] });
       toast.success("Estati aktyalize");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const pending = driver?.status === "pending";

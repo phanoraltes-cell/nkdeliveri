@@ -7,7 +7,7 @@ import { Upload } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profile")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -37,7 +37,7 @@ async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: F
 }
 
 function RestaurantProfile() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
 
   const { data: restaurant, isLoading } = useQuery({
@@ -63,7 +63,7 @@ function RestaurantProfile() {
       phone: restaurant.phone ?? "",
       address: restaurant.address ?? "",
     });
-    const h = (restaurant.opening_hours as any) ?? {};
+    const h = (restaurant.opening_hours as typeof hours | null) ?? {};
     const next: typeof hours = {};
     for (const d of DAYS) {
       next[d.key] = h[d.key] ?? { open: "10:00", close: "22:00", closed: false };
@@ -78,18 +78,20 @@ function RestaurantProfile() {
       let coverUrl: string | null = null;
       if (logo) logoUrl = await uploadAsset(restaurant.id, "logo", logo);
       if (cover) coverUrl = await uploadAsset(restaurant.id, "cover", cover);
-      // See dashboard.restaurant.payouts.tsx for why this cast is safe: the
-      // generated types over-strictly mark these text RPC params non-null.
+      // The generator types these args as non-nullable because the SQL
+      // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
+      // NULL for these columns regardless, so these casts just correct an
+      // overly-strict generated type, no behavior change.
       const { error } = await supabase.rpc("update_restaurant_profile_secure", {
         _restaurant_id: restaurant.id,
         _name: f.name.trim(),
-        _description: f.description || null,
-        _cuisine: f.cuisine || null,
-        _phone: f.phone || null,
-        _address: f.address || null,
-        _logo_url: logoUrl,
-        _cover_url: coverUrl,
-      } as any);
+        _description: (f.description || null) as string,
+        _cuisine: (f.cuisine || null) as string,
+        _phone: (f.phone || null) as string,
+        _address: (f.address || null) as string,
+        _logo_url: logoUrl as string,
+        _cover_url: coverUrl as string,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -98,7 +100,7 @@ function RestaurantProfile() {
       setCover(null);
       qc.invalidateQueries({ queryKey: ["me-restaurant-full"] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const saveHours = useMutation({
@@ -111,7 +113,7 @@ function RestaurantProfile() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Orè mizajou"); qc.invalidateQueries({ queryKey: ["me-restaurant-full"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   if (isLoading) return <div className="text-ink-soft">Chajman…</div>;

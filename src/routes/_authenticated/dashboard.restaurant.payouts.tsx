@@ -7,7 +7,7 @@ import { formatHTG } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/payouts")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/payou
 });
 
 function MerchantPayouts() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
 
   const { data: r, isLoading } = useQuery({
@@ -35,7 +35,17 @@ function MerchantPayouts() {
         .eq("restaurant_id", rest.id)
         .maybeSingle();
       if (e2) throw e2;
-      return { id: rest.id, ...(pd ?? {}) } as any;
+      return {
+        id: rest.id,
+        moncash_number: pd?.moncash_number ?? null,
+        moncash_account_name: pd?.moncash_account_name ?? null,
+        natcash_number: pd?.natcash_number ?? null,
+        natcash_account_name: pd?.natcash_account_name ?? null,
+        payout_mode: pd?.payout_mode ?? "via_admin",
+        commission_type: pd?.commission_type ?? "per_order",
+        commission_rate: pd?.commission_rate ?? 10,
+        monthly_commission_amount: pd?.monthly_commission_amount ?? 0,
+      };
     },
   });
 
@@ -73,15 +83,15 @@ function MerchantPayouts() {
       const { error } = await supabase.rpc("update_restaurant_payout_secure", {
         _restaurant_id: r.id,
         _payout_mode: f.payout_mode,
-        _moncash_number: f.moncash_number || null,
-        _moncash_account_name: f.moncash_account_name || null,
-        _natcash_number: f.natcash_number || null,
-        _natcash_account_name: f.natcash_account_name || null,
-      } as any);
+        _moncash_number: (f.moncash_number || null) as string,
+        _moncash_account_name: (f.moncash_account_name || null) as string,
+        _natcash_number: (f.natcash_number || null) as string,
+        _natcash_account_name: (f.natcash_account_name || null) as string,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   if (isLoading) return <div className="text-ink-soft">Chajman…</div>;

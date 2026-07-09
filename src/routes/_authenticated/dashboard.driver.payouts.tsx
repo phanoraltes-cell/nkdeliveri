@@ -7,7 +7,7 @@ import { formatHTG } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/payouts")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "driver" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/payouts")
 });
 
 function DriverPayouts() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
 
   const { data: d, isLoading } = useQuery({
@@ -63,7 +63,7 @@ function DriverPayouts() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-driver-payouts"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   if (isLoading) return <div className="text-ink-soft">Chajman…</div>;

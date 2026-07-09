@@ -6,7 +6,7 @@ import { finalizeRegistrationDocuments } from "@/lib/register-documents.function
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
-import { User, Store, Bike, ArrowLeft, Upload } from "lucide-react";
+import { User, Store, Bike, ArrowLeft, Upload, type LucideIcon } from "lucide-react";
 import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError } from "@/lib/auth-errors";
 
@@ -59,7 +59,7 @@ function RegisterPage() {
 }
 
 function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
-  const options: { type: AccountType; icon: any; title: string; desc: string }[] = [
+  const options: { type: AccountType; icon: LucideIcon; title: string; desc: string }[] = [
     { type: "customer", icon: User, title: "\u00a0Kliyan", desc: "Kòmande manje nan restoran favori w yo." },
     { type: "restaurant", icon: Store, title: "Restoran", desc: "Vann plat ou yo sou NK Deliveri." },
     { type: "driver", icon: Bike, title: "\u00a0Livrè", desc: "Ranpòte lajan nan livre manje." },
@@ -90,7 +90,7 @@ function inputCls() {
   return "w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand";
 }
 
-async function baseSignUp(email: string, password: string, data: Record<string, any>) {
+async function baseSignUp(email: string, password: string, data: Record<string, string>) {
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,

@@ -10,7 +10,7 @@ import { sendDeliveryAssignedPush } from "@/lib/send-order-push.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/available")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "driver" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/available
 });
 
 function AvailableDeliveries() {
-  const { user } = Route.useRouteContext() as any;
+  const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const sendAssignedPush = useServerFn(sendDeliveryAssignedPush);
 
@@ -71,7 +71,7 @@ function AvailableDeliveries() {
       qc.invalidateQueries({ queryKey: ["me-active-deliveries"] });
       sendAssignedPush({ data: { orderId } }).catch((e) => console.warn("[push] assigned notify failed", e));
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   const online = driver?.status === "online";
@@ -100,7 +100,7 @@ function AvailableDeliveries() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {available.data?.map((o: any) => (
+        {available.data?.map((o) => (
           <div key={o.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="font-display text-lg font-extrabold">{o.order_number}</span>

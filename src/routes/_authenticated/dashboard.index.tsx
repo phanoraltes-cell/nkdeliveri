@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role as string;
+    const { role } = context;
     const map: Record<string, string> = {
       customer: "/dashboard/customer",
       restaurant_owner: "/dashboard/restaurant",

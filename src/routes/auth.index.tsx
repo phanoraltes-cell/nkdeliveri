@@ -41,12 +41,12 @@ function LoginPage() {
 
     // Redirect immediately if already signed in...
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: (search.next as any) || "/dashboard" });
+      if (data.session) nav({ to: search.next || "/dashboard" });
     });
     // ...and also once the OAuth redirect finishes exchanging its code for a
     // session — getSession() above can race ahead of that exchange.
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) nav({ to: (search.next as any) || "/dashboard" });
+      if (event === "SIGNED_IN" && session) nav({ to: search.next || "/dashboard" });
     });
     return () => sub.subscription.unsubscribe();
   }, [nav, search.next]);
@@ -73,7 +73,7 @@ function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Byenveni!");
-      nav({ to: (search.next as any) || "/dashboard" });
+      nav({ to: search.next || "/dashboard" });
     } catch (e) {
       toast.error(translateAuthError(e));
       if (isEmailNotConfirmedError(e)) setNeedsConfirmation(true);

@@ -48,7 +48,7 @@ const homeDataQuery = queryOptions({
         .eq("available", true)
         .limit(16),
     ]);
-    return { restaurants: rests.data ?? [], products: (prods.data ?? []) as any[] };
+    return { restaurants: rests.data ?? [], products: prods.data ?? [] };
   },
 });
 
@@ -117,8 +117,8 @@ function Index() {
         toast.success("Mèsi! Ou enskri.");
       }
       setNewsletterEmail("");
-    } catch (err: any) {
-      toast.error(err.message || "Erè pandan enskripsyon an");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erè pandan enskripsyon an");
     } finally {
       setSubscribing(false);
     }
@@ -131,13 +131,13 @@ function Index() {
   );
 
   const filteredProducts = data.products.filter(
-    (p: any) => dishType === "all" || p.dish_type === dishType,
+    (p) => dishType === "all" || p.dish_type === dishType,
   );
   const dishCounts = DISH_TYPES.reduce<Record<string, number>>((acc, d) => {
     acc[d.key] =
       d.key === "all"
         ? data.products.length
-        : data.products.filter((p: any) => p.dish_type === d.key).length;
+        : data.products.filter((p) => p.dish_type === d.key).length;
     return acc;
   }, {});
 
@@ -449,7 +449,7 @@ function Index() {
           })}
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredProducts.slice(0, 8).map((p: any) => (
+          {filteredProducts.slice(0, 8).map((p) => (
             <div
               key={p.id}
               className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"

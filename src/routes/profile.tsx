@@ -75,7 +75,7 @@ function Profile() {
       setAvatar(null);
       qc.invalidateQueries({ queryKey: ["my-profile"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Erè"),
+    onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
   function onPickAvatar(file: File | null) {

@@ -1,13 +1,13 @@
 import { createFileRoute, Outlet, Link, redirect, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, User, Store, Bike, ShieldCheck, Bell } from "lucide-react";
+import { LogOut, LayoutDashboard, User, Store, Bike, ShieldCheck, Bell, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardLayout,
 });
 
-const NAV_BY_ROLE: Record<string, { to: string; label: string; icon: any }[]> = {
+const NAV_BY_ROLE: Record<string, { to: string; label: string; icon: LucideIcon }[]> = {
   customer: [{ to: "/dashboard/customer", label: "Dashboard Kliyan", icon: User }],
   restaurant_owner: [{ to: "/dashboard/restaurant", label: "Dashboard Restoran", icon: Store }],
   restaurant_staff: [{ to: "/dashboard/restaurant", label: "Dashboard Restoran", icon: Store }],

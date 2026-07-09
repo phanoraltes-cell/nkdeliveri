@@ -10,7 +10,7 @@ import { ProofThumb } from "@/components/proof-thumb";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
-    const role = (context as any).role;
+    const { role } = context;
     if (role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
@@ -191,7 +191,7 @@ function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
       toast.success("Estati restoran aktyalize");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const updateDriver = useMutation({
@@ -207,7 +207,7 @@ function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
       toast.success("Estati livrè aktyalize");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const s = stats.data;

@@ -26,7 +26,7 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
       .single();
     if (pErr || !payment) throw new Error(pErr?.message || "Payment not found");
 
-    const order = (payment as any).orders;
+    const order = payment.orders;
     if (!order) throw new Error("Order not found");
 
     const status = payment.status as string;
@@ -83,11 +83,15 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
     await Promise.all(
       subs.map(async (s) => {
         try {
+          // expirationTime comes from the browser Push API and is never
+          // stored on the Supabase row, so it's always null here — the
+          // package treats that the same as absent.
           const subscription = {
             endpoint: s.endpoint,
+            expirationTime: null,
             keys: { p256dh: s.p256dh, auth: s.auth },
           };
-          const payload = await buildPushPayload(message as any, subscription as any, vapid as any);
+          const payload = await buildPushPayload(message, subscription, vapid);
           const res = await fetch(s.endpoint, payload as unknown as RequestInit);
           if (res.status === 404 || res.status === 410) {
             deadEndpoints.push(s.endpoint);
