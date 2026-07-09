@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MapPin, Plus, Pencil, Trash2, Star, X } from "lucide-react";
+import { inputClsCompact as inputCls } from "@/lib/utils";
 
 type Address = {
   id: string;
@@ -12,10 +13,6 @@ type Address = {
   notes: string | null;
   is_default: boolean;
 };
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand";
-}
 
 /** Full CRUD for a customer's saved delivery addresses (public.addresses — RLS-scoped to auth.uid()). */
 export function AddressManager({ userId }: { userId: string }) {

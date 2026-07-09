@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // VAPID public key is safe to expose (paired with a server-only private key).
-export const VAPID_PUBLIC_KEY =
+const VAPID_PUBLIC_KEY =
   "BJ06H-steLp_4SCqpiR746JG6cBaOiccHD6vrIY9w6zVqHo0ABCgxfer4j8RuDkRjfbXq2fYjKJ2ymeKHEFtUK8";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -20,11 +20,6 @@ export function isPushSupported(): boolean {
     "PushManager" in window &&
     "Notification" in window
   );
-}
-
-export async function getPushPermissionState(): Promise<NotificationPermission | "unsupported"> {
-  if (!isPushSupported()) return "unsupported";
-  return Notification.permission;
 }
 
 async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null> {

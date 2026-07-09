@@ -5,14 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import { inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/profile")({
   component: DriverProfile,
 });
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand";
-}
 
 function DriverProfile() {
   const { user } = Route.useRouteContext();

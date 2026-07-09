@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
+import { inputClsCompact as inputCls } from "@/lib/utils";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
@@ -17,10 +18,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/promo
   },
   component: RestaurantPromotions,
 });
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand";
-}
 
 function RestaurantPromotions() {
   const { user } = Route.useRouteContext();

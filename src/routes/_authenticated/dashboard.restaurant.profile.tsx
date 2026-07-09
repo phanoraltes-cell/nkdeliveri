@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
+import { inputClsCompact as inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profile")({
   beforeLoad: ({ context }) => {
@@ -24,10 +25,6 @@ const DAYS: { key: string; label: string }[] = [
   { key: "sat", label: "Samdi" },
   { key: "sun", label: "Dimanch" },
 ];
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand";
-}
 
 async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: File) {
   const path = `${restaurantId}/${kind}-${Date.now()}-${file.name}`;

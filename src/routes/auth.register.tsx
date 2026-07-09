@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { User, Store, Bike, ArrowLeft, Upload, type LucideIcon } from "lucide-react";
 import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError } from "@/lib/auth-errors";
+import { inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth/register")({
   head: () => noIndexMeta("Kreye yon kont — NK Deliveri"),
@@ -86,9 +87,6 @@ function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
   );
 }
 
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand";
-}
 
 async function baseSignUp(email: string, password: string, data: Record<string, string>) {
   const { data: signUpData, error } = await supabase.auth.signUp({

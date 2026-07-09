@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
+import { inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payout-settings")({
   beforeLoad: ({ context }) => {
@@ -14,10 +15,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/payout-set
   },
   component: AdminPayoutSettings,
 });
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand";
-}
 
 function AdminPayoutSettings() {
   const qc = useQueryClient();

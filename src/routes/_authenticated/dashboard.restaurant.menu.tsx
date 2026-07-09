@@ -6,6 +6,7 @@ import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
+import { inputClsCompact as inputCls } from "@/lib/utils";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
@@ -31,10 +32,6 @@ const DISH_TYPES = [
   { key: "bwason", label: "Bwason" },
   { key: "lot", label: "Lòt" },
 ];
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand";
-}
 
 async function uploadDishPhoto(restaurantId: string, file: File) {
   const path = `${restaurantId}/${Date.now()}-${file.name}`;

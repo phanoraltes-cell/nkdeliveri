@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 import { noIndexMeta } from "@/lib/seo";
+import { inputCls } from "@/lib/utils";
 import { AddressManager } from "@/components/address-manager";
 import { ChangePasswordForm } from "@/components/change-password-form";
 
@@ -15,10 +16,6 @@ export const Route = createFileRoute("/profile")({
   head: () => noIndexMeta("Pwofil mwen — NK Deliveri"),
   component: Profile,
 });
-
-function inputCls() {
-  return "w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand";
-}
 
 function Profile() {
   const { user } = useAuth();
