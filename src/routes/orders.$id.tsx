@@ -99,25 +99,18 @@ function OrderDetail() {
         .upload(path, file, { upsert: false });
       if (upErr) throw upErr;
 
-      const { error: insErr } = await supabase.from("payment_proofs").insert({
-        payment_id: payment.id,
-        file_url: path,
-        transaction_ref: txRef || null,
-        sender_phone: senderPhone || null,
-        notes: notes || null,
-        uploaded_by: user!.id,
+      // The generator types these args as non-nullable `string` because the
+      // SQL params lack a `DEFAULT NULL` marker it recognizes — Postgres
+      // accepts NULL for a plain `text` param regardless, so this cast just
+      // corrects an overly-strict generated type, no behavior change.
+      const { error: rpcErr } = await supabase.rpc("submit_payment_proof_secure", {
+        _payment_id: payment.id,
+        _file_url: path,
+        _transaction_ref: (txRef || null) as string,
+        _sender_phone: (senderPhone || null) as string,
+        _notes: (notes || null) as string,
       });
-      if (insErr) throw insErr;
-
-      const { error: payErr } = await supabase
-        .from("payments")
-        .update({
-          status: "under_review",
-          transaction_ref: txRef || null,
-          sender_phone: senderPhone || null,
-        })
-        .eq("id", payment.id);
-      if (payErr) throw payErr;
+      if (rpcErr) throw rpcErr;
     },
     onSuccess: () => {
       toast.success("Prèv peman voye. Yon administratè ap verifye li.");

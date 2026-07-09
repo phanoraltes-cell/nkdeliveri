@@ -50,11 +50,16 @@ function DriverPayouts() {
   const save = useMutation({
     mutationFn: async () => {
       if (!d?.id) throw new Error("Pwofil livrè pa jwenn");
-      const { error } = await supabase.from("drivers").update({
-        moncash_number: f.moncash_number || null,
-        natcash_number: f.natcash_number || null,
-        payout_frequency: f.payout_frequency,
-      }).eq("id", d.id);
+      // The generator types these args as non-nullable `string` because the
+      // SQL params lack a `DEFAULT NULL` marker it recognizes — Postgres
+      // accepts NULL for a plain `text` param regardless, so this cast just
+      // corrects an overly-strict generated type, no behavior change.
+      const { error } = await supabase.rpc("update_driver_payout_secure", {
+        _driver_id: d.id,
+        _moncash_number: (f.moncash_number || null) as string,
+        _natcash_number: (f.natcash_number || null) as string,
+        _payout_frequency: f.payout_frequency,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-driver-payouts"] }); },

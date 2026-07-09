@@ -1265,6 +1265,79 @@ export type Database = {
         }
         Returns: boolean
       }
+      submit_payment_proof_secure: {
+        Args: {
+          _file_url: string
+          _notes: string
+          _payment_id: string
+          _sender_phone: string
+          _transaction_ref: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          order_id: string
+          receiver_account_name: string | null
+          receiver_number: string | null
+          receiver_restaurant_id: string | null
+          receiver_type: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_name: string | null
+          sender_phone: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          transaction_ref: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_driver_payout_secure: {
+        Args: {
+          _driver_id: string
+          _moncash_number: string
+          _natcash_number: string
+          _payout_frequency: string
+        }
+        Returns: {
+          address: string | null
+          commission_rate: number
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          first_name: string | null
+          id: string
+          id_doc_url: string | null
+          last_name: string | null
+          license_doc_url: string | null
+          license_plate: string | null
+          moncash_number: string | null
+          natcash_number: string | null
+          payout_frequency: string
+          phone: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "drivers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_driver_status_secure: {
         Args: {
           _driver_id: string
