@@ -10,13 +10,20 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 });
 
 function NotificationsPage() {
+  const { user } = Route.useRouteContext() as any;
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
-    queryKey: ["my-notifications"],
+    queryKey: ["my-notifications", user?.id],
     queryFn: async () => {
+      // RLS ("notif own") already scopes every row to auth.uid(), so this
+      // filter can't change what comes back — it's here so the query reads
+      // "my notifications" on its own and stays correct if that policy is
+      // ever loosened (e.g. to let a role read others' rows) without this
+      // file being touched.
       const { data, error } = await supabase
         .from("notifications")
         .select("id, type, title, body, data, read_at, created_at")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
