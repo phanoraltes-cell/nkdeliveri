@@ -19,7 +19,7 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const METHODS = [
-  { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv", logo: "/moncash-logo.jpg" },
+  { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv", logo: "/moncash-logo.webp" },
   { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo.png" },
   { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
 ] as const;
@@ -315,7 +315,7 @@ function Checkout() {
                 {(method === "moncash" || method === "natcash") && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
                     <img
-                      src={method === "moncash" ? "/moncash-logo.jpg" : "/natcash-logo.png"}
+                      src={method === "moncash" ? "/moncash-logo.webp" : "/natcash-logo.png"}
                       alt=""
                       width={40}
                       height={28}

@@ -24,7 +24,7 @@ export function SiteFooter() {
   ] as const;
 
   const payments = [
-    { name: "MonCash", kind: "image", src: "/moncash-logo.jpg" },
+    { name: "MonCash", kind: "image", src: "/moncash-logo.webp" },
     { name: "NatCash", kind: "image", src: "/natcash-logo.png" },
     { name: "Kach", kind: "icon" },
   ] as const;
@@ -122,9 +122,9 @@ export function SiteFooter() {
                     <img
                       src={p.src}
                       alt={p.name}
-                      width={72}
+                      width={64}
                       height={28}
-                      className="h-7 w-auto object-contain"
+                      className="h-7 w-16 object-contain"
                     />
                   )}
                   {p.kind === "icon" && (
