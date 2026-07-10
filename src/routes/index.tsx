@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
+import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import { SITE_URL } from "@/lib/site-config";
 import {
@@ -43,7 +44,9 @@ const homeDataQuery = queryOptions({
         .limit(8),
       supabase
         .from("products")
-        .select("id,name,description,price,image_url,dish_type,restaurant_id,restaurants!inner(name,slug,status)")
+        .select(
+          "id,name,description,price,image_url,dish_type,restaurant_id,restaurants!inner(name,slug,status)",
+        )
         .eq("available", true)
         .eq("restaurants.status", "approved")
         .order("created_at", { ascending: false })
@@ -80,7 +83,11 @@ const DISH_TYPES: { key: string; label: string }[] = [
 
 const HOW_STEPS = [
   { icon: Store, title: "Chwazi restoran", desc: "Dekouvri meyè restoran nan zòn ou." },
-  { icon: UtensilsCrossed, title: "Chwazi sa w vle", desc: "Ajoute plat ou renmen yo nan panyen an." },
+  {
+    icon: UtensilsCrossed,
+    title: "Chwazi sa w vle",
+    desc: "Ajoute plat ou renmen yo nan panyen an.",
+  },
   { icon: Wallet, title: "Peye fasil", desc: "Peye an sekirite ak MonCash oswa NatCash." },
   { icon: Bike, title: "Resevwa l rapid", desc: "Livrezon cho e rapid jis lakay ou." },
 ];
@@ -88,7 +95,11 @@ const HOW_STEPS = [
 const APP_BENEFITS = [
   { icon: Layers, title: "Plis chwa", desc: "Yon gwo seleksyon restoran ak plat pou tout gou." },
   { icon: Timer, title: "Livrezon rapid", desc: "Nou garanti livrezon nan mwens pase 45 minit." },
-  { icon: ShieldCheck, title: "Peman sekirite", desc: "Peye fasil ak MonCash, NatCash oswa lajan kach." },
+  {
+    icon: ShieldCheck,
+    title: "Peman sekirite",
+    desc: "Peye fasil ak MonCash, NatCash oswa lajan kach.",
+  },
   { icon: Headphones, title: "Sipò 24/7", desc: "Nou la pou ede w nenpòt lè w bezwen nou." },
 ];
 
@@ -98,6 +109,18 @@ function Index() {
   const [dishType, setDishType] = useState("all");
   const [q, setQ] = useState("");
   const { add } = useCart();
+  const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
+  const nav = useNavigate();
+
+  function onToggleFavorite(e: React.MouseEvent, restaurantId: string) {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      toast.error("Ou dwe konekte pou mete yon restoran an favori");
+      nav({ to: "/auth", search: { next: "/" } });
+      return;
+    }
+    toggleFavorite(restaurantId);
+  }
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
 
@@ -164,8 +187,8 @@ function Index() {
               <span className="text-brand">livre lakay ou</span>
             </h1>
             <p className="mb-8 max-w-[46ch] text-[15px] leading-relaxed text-ink-soft">
-              Kòmande manje kreyòl otantik nan meyè restoran Gonaïves yo epi
-              resevwa l cho lakay ou nan mwens pase 45 minit.
+              Kòmande manje kreyòl otantik nan meyè restoran Gonaïves yo epi resevwa l cho lakay ou
+              nan mwens pase 45 minit.
             </p>
             <form
               onSubmit={(e) => e.preventDefault()}
@@ -195,9 +218,7 @@ function Index() {
                     <s.Icon className="h-5 w-5" />
                   </span>
                   <div>
-                    <b className="block font-display text-xl font-extrabold text-ink">
-                      {s.n}
-                    </b>
+                    <b className="block font-display text-xl font-extrabold text-ink">{s.n}</b>
                     <span className="block text-xs text-ink-soft">{s.l}</span>
                   </div>
                 </div>
@@ -257,9 +278,7 @@ function Index() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-soft/50 text-brand transition group-hover:scale-110 group-hover:bg-brand group-hover:text-white">
                 <s.icon className="h-8 w-8" />
               </div>
-              <h3 className="mb-1.5 font-display text-lg font-extrabold text-ink">
-                {s.title}
-              </h3>
+              <h3 className="mb-1.5 font-display text-lg font-extrabold text-ink">{s.title}</h3>
               <p className="text-sm text-ink-soft">{s.desc}</p>
             </motion.div>
           ))}
@@ -344,11 +363,13 @@ function Index() {
                   className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"
                 />
                 <button
-                  aria-label="Favori"
-                  onClick={(e) => e.preventDefault()}
-                  className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink-soft shadow-md transition hover:text-brand"
+                  aria-label={isFavorite(r.id) ? "Retire nan favori" : "Mete an favori"}
+                  onClick={(e) => onToggleFavorite(e, r.id)}
+                  className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md transition hover:text-brand ${
+                    isFavorite(r.id) ? "text-brand" : "text-ink-soft"
+                  }`}
                 >
-                  <Heart className="h-4 w-4" />
+                  <Heart className={`h-4 w-4 ${isFavorite(r.id) ? "fill-current" : ""}`} />
                 </button>
               </div>
               <div className="p-4">
@@ -466,12 +487,8 @@ function Index() {
                 />
               </div>
               <div className="flex flex-1 flex-col p-4">
-                <h3 className="font-display text-[0.98rem] font-extrabold text-ink">
-                  {p.name}
-                </h3>
-                <p className="mt-1 mb-3 flex-1 text-xs text-ink-soft">
-                  {p.restaurants?.name}
-                </p>
+                <h3 className="font-display text-[0.98rem] font-extrabold text-ink">{p.name}</h3>
+                <p className="mt-1 mb-3 flex-1 text-xs text-ink-soft">{p.restaurants?.name}</p>
                 <div className="flex items-center justify-between">
                   <span className="font-display text-base font-extrabold text-brand-deep">
                     {formatHTG(Number(p.price))}
@@ -486,8 +503,7 @@ function Index() {
                         price: Number(p.price),
                         imageUrl: p.image_url,
                       });
-                      if (res === "replaced")
-                        toast.info("Panye w a ranplase — restoran diferan");
+                      if (res === "replaced") toast.info("Panye w a ranplase — restoran diferan");
                       else toast.success(`${p.name} ajoute nan panye`);
                     }}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white shadow-[0_6px_16px_rgba(249,115,22,0.35)] transition hover:scale-110 hover:bg-brand-deep"

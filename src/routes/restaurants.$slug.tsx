@@ -1,12 +1,13 @@
-import { createFileRoute, notFound, Link } from "@tanstack/react-router";
+import { createFileRoute, notFound, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
+import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Star } from "lucide-react";
+import { Plus, ArrowLeft, Star, Heart } from "lucide-react";
 import { useState } from "react";
 import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
@@ -46,7 +47,8 @@ export const Route = createFileRoute("/restaurants/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) return noIndexMeta("Restoran pa jwenn — NK Deliveri");
     const { r } = loaderData;
-    const description = r.description ?? `Kòmande nan ${r.name}, livrezon rapid nan ${PRIMARY_CITY.name}.`;
+    const description =
+      r.description ?? `Kòmande nan ${r.name}, livrezon rapid nan ${PRIMARY_CITY.name}.`;
     const path = `/restaurants/${r.slug}`;
     return {
       ...pageMeta({
@@ -76,7 +78,13 @@ export const Route = createFileRoute("/restaurants/$slug")({
           // rating as structured data would misrepresent the restaurant and
           // risks a Google structured-data quality violation.
           ...(r.rating != null && r.rating > 0
-            ? { aggregateRating: { "@type": "AggregateRating", ratingValue: r.rating, bestRating: 5 } }
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: r.rating,
+                  bestRating: 5,
+                },
+              }
             : {}),
           ...(r.lat != null && r.lng != null
             ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } }
@@ -99,7 +107,9 @@ export const Route = createFileRoute("/restaurants/$slug")({
       <SiteHeader />
       <div className="mx-auto max-w-[1100px] px-5 py-16 text-center">
         <h1 className="font-display text-3xl font-extrabold">Restoran pa jwenn</h1>
-        <Link to="/restaurants" className="mt-4 inline-block text-brand-deep font-bold">← Retounen</Link>
+        <Link to="/restaurants" className="mt-4 inline-block text-brand-deep font-bold">
+          ← Retounen
+        </Link>
       </div>
     </div>
   ),
@@ -113,6 +123,8 @@ function RestaurantPage() {
   const params = Route.useParams();
   const { data } = useSuspenseQuery(restQuery(params.slug));
   const { add } = useCart();
+  const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
+  const nav = useNavigate();
   const [activeCat, setActiveCat] = useState<string>("all");
   // Must run unconditionally, before the `if (!data)` early return below —
   // calling it after would change the hook order between renders and
@@ -139,6 +151,15 @@ function RestaurantPage() {
   if (!data) return null;
   const { r, cats, prods } = data;
 
+  function onToggleFavorite() {
+    if (!isLoggedIn) {
+      toast.error("Ou dwe konekte pou mete yon restoran an favori");
+      nav({ to: "/auth", search: { next: `/restaurants/${r.slug}` } });
+      return;
+    }
+    toggleFavorite(r.id);
+  }
+
   // Adding a dish is category-optional ("San kategori" is the default in the
   // owner's form) — without this, any uncategorized dish matched no section
   // below and silently never appeared on the public restaurant page (it
@@ -151,24 +172,50 @@ function RestaurantPage() {
 
   const catCounts: Record<string, number> = sections.reduce(
     (acc: Record<string, number>, c) => {
-      acc[c.id] = c.id === UNCATEGORIZED ? uncategorized.length : prods.filter((p) => p.category_id === c.id).length;
+      acc[c.id] =
+        c.id === UNCATEGORIZED
+          ? uncategorized.length
+          : prods.filter((p) => p.category_id === c.id).length;
       return acc;
     },
     { all: prods.length },
   );
-  const visibleCats =
-    activeCat === "all" ? sections : sections.filter((c) => c.id === activeCat);
+  const visibleCats = activeCat === "all" ? sections : sections.filter((c) => c.id === activeCat);
 
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-[1100px] px-5 py-6">
-        <Breadcrumb items={[{ label: "Akèy", to: "/" }, { label: "Restoran", to: "/restaurants" }, { label: r.name }]} />
-        <Link to="/restaurants" className="inline-flex items-center gap-1 text-sm font-bold text-brand-deep">
+        <Breadcrumb
+          items={[
+            { label: "Akèy", to: "/" },
+            { label: "Restoran", to: "/restaurants" },
+            { label: r.name },
+          ]}
+        />
+        <Link
+          to="/restaurants"
+          className="inline-flex items-center gap-1 text-sm font-bold text-brand-deep"
+        >
           <ArrowLeft className="h-4 w-4" /> Tout restoran
         </Link>
         <div className="relative mt-4 overflow-hidden rounded-[18px]">
-          <img src={r.cover_url || ""} alt={r.name} width={1100} height={240} className="h-60 w-full object-cover" />
+          <img
+            src={r.cover_url || ""}
+            alt={r.name}
+            width={1100}
+            height={240}
+            className="h-60 w-full object-cover"
+          />
+          <button
+            aria-label={isFavorite(r.id) ? "Retire nan favori" : "Mete an favori"}
+            onClick={onToggleFavorite}
+            className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md transition hover:text-brand ${
+              isFavorite(r.id) ? "text-brand" : "text-ink-soft"
+            }`}
+          >
+            <Heart className={`h-4 w-4 ${isFavorite(r.id) ? "fill-current" : ""}`} />
+          </button>
           <div className="absolute inset-0 flex items-end gap-3 bg-gradient-to-t from-ink/75 to-transparent p-6">
             {r.logo_url && (
               <img
@@ -181,11 +228,19 @@ function RestaurantPage() {
             )}
             <div>
               <h1 className="font-display text-3xl font-extrabold text-white">{r.name}</h1>
-              <p className="mt-1 text-sm text-white/85">{r.cuisine} · {r.address}</p>
+              <p className="mt-1 text-sm text-white/85">
+                {r.cuisine} · {r.address}
+              </p>
               <div className="mt-2 flex gap-2 text-xs">
-                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-brand-deep">★ {Number(r.rating).toFixed(1)}</span>
-                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">{r.avg_prep_time} min</span>
-                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">Livrezon {formatHTG(Number(r.delivery_fee))}</span>
+                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-brand-deep">
+                  ★ {Number(r.rating).toFixed(1)}
+                </span>
+                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">
+                  {r.avg_prep_time} min
+                </span>
+                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">
+                  Livrezon {formatHTG(Number(r.delivery_fee))}
+                </span>
               </div>
             </div>
           </div>
@@ -221,14 +276,19 @@ function RestaurantPage() {
 
         {visibleCats.map((cat) => {
           const items =
-            cat.id === UNCATEGORIZED ? uncategorized : prods.filter((p) => p.category_id === cat.id);
+            cat.id === UNCATEGORIZED
+              ? uncategorized
+              : prods.filter((p) => p.category_id === cat.id);
           if (items.length === 0) return null;
           return (
             <div key={cat.id} className="mt-8">
               <h2 className="mb-4 font-display text-xl font-extrabold">{cat.name}</h2>
               <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
                 {items.map((p) => (
-                  <div key={p.id} className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+                  <div
+                    key={p.id}
+                    className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)]"
+                  >
                     {p.image_url && (
                       <img
                         src={p.image_url}
@@ -241,9 +301,13 @@ function RestaurantPage() {
                     )}
                     <div className="flex flex-1 flex-col p-4">
                       <h3 className="font-display text-base font-extrabold">{p.name}</h3>
-                      {p.description && <p className="mt-1 mb-2 flex-1 text-xs text-ink-soft">{p.description}</p>}
+                      {p.description && (
+                        <p className="mt-1 mb-2 flex-1 text-xs text-ink-soft">{p.description}</p>
+                      )}
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="font-display text-base font-extrabold text-brand-deep">{formatHTG(Number(p.price))}</span>
+                        <span className="font-display text-base font-extrabold text-brand-deep">
+                          {formatHTG(Number(p.price))}
+                        </span>
                         {p.stock_quantity === 0 ? (
                           <span className="rounded-full bg-ink/10 px-3 py-1.5 text-xs font-bold uppercase text-ink-soft">
                             Fini
@@ -291,7 +355,10 @@ function RestaurantPage() {
           )}
           <div className="space-y-3">
             {reviews.data?.map((rv, i) => (
-              <div key={i} className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+              <div
+                key={i}
+                className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((n) => (

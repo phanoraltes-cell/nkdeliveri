@@ -1,10 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useState } from "react";
+import { Heart } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
+import { useFavorites } from "@/hooks/useFavorites";
 import { pageMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
@@ -47,6 +50,18 @@ function RestaurantsPage() {
   const { data } = useSuspenseQuery(listQuery);
   const [q, setQ] = useState("");
   const filtered = data.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()));
+  const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
+  const nav = useNavigate();
+
+  function onToggleFavorite(e: React.MouseEvent, restaurantId: string) {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      toast.error("Ou dwe konekte pou mete yon restoran an favori");
+      nav({ to: "/auth", search: { next: "/restaurants" } });
+      return;
+    }
+    toggleFavorite(restaurantId);
+  }
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
@@ -68,19 +83,34 @@ function RestaurantsPage() {
               params={{ slug: r.slug }}
               className="overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)] transition hover:-translate-y-1"
             >
-              <img
-                src={r.cover_url || ""}
-                alt={r.name}
-                loading="lazy"
-                width={240}
-                height={144}
-                className="h-36 w-full object-cover"
-              />
+              <div className="relative">
+                <img
+                  src={r.cover_url || ""}
+                  alt={r.name}
+                  loading="lazy"
+                  width={240}
+                  height={144}
+                  className="h-36 w-full object-cover"
+                />
+                <button
+                  aria-label={isFavorite(r.id) ? "Retire nan favori" : "Mete an favori"}
+                  onClick={(e) => onToggleFavorite(e, r.id)}
+                  className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md transition hover:text-brand ${
+                    isFavorite(r.id) ? "text-brand" : "text-ink-soft"
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 ${isFavorite(r.id) ? "fill-current" : ""}`} />
+                </button>
+              </div>
               <div className="p-4">
                 <h3 className="font-display text-base font-extrabold">{r.name}</h3>
-                <p className="mt-1 text-xs text-ink-soft">{r.cuisine} · {r.address}</p>
+                <p className="mt-1 text-xs text-ink-soft">
+                  {r.cuisine} · {r.address}
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink-soft">
-                  <span className="rounded-full bg-brand-soft px-2 py-0.5 font-bold text-brand-deep">★ {Number(r.rating).toFixed(1)}</span>
+                  <span className="rounded-full bg-brand-soft px-2 py-0.5 font-bold text-brand-deep">
+                    ★ {Number(r.rating).toFixed(1)}
+                  </span>
                   <span>{r.avg_prep_time} min</span>
                   <span>{formatHTG(Number(r.delivery_fee))}</span>
                 </div>
