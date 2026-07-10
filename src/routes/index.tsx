@@ -43,9 +43,10 @@ const homeDataQuery = queryOptions({
         .limit(8),
       supabase
         .from("products")
-        .select("id,name,description,price,image_url,dish_type,restaurant_id,restaurants(name,slug)")
-        .eq("popular", true)
+        .select("id,name,description,price,image_url,dish_type,restaurant_id,restaurants!inner(name,slug,status)")
         .eq("available", true)
+        .eq("restaurants.status", "approved")
+        .order("created_at", { ascending: false })
         .limit(16),
     ]);
     return { restaurants: rests.data ?? [], products: prods.data ?? [] };
