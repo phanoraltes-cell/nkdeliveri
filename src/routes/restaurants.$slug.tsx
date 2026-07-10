@@ -139,15 +139,25 @@ function RestaurantPage() {
   if (!data) return null;
   const { r, cats, prods } = data;
 
-  const catCounts: Record<string, number> = cats.reduce(
+  // Adding a dish is category-optional ("San kategori" is the default in the
+  // owner's form) — without this, any uncategorized dish matched no section
+  // below and silently never appeared on the public restaurant page (it
+  // still showed up on the homepage, which doesn't group by category).
+  const UNCATEGORIZED = "__uncategorized__";
+  const uncategorized = prods.filter((p) => p.category_id == null);
+  const sections = uncategorized.length
+    ? [...cats, { id: UNCATEGORIZED, name: "Lòt plat", sort_order: Infinity }]
+    : cats;
+
+  const catCounts: Record<string, number> = sections.reduce(
     (acc: Record<string, number>, c) => {
-      acc[c.id] = prods.filter((p) => p.category_id === c.id).length;
+      acc[c.id] = c.id === UNCATEGORIZED ? uncategorized.length : prods.filter((p) => p.category_id === c.id).length;
       return acc;
     },
     { all: prods.length },
   );
   const visibleCats =
-    activeCat === "all" ? cats : cats.filter((c) => c.id === activeCat);
+    activeCat === "all" ? sections : sections.filter((c) => c.id === activeCat);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -159,7 +169,16 @@ function RestaurantPage() {
         </Link>
         <div className="relative mt-4 overflow-hidden rounded-[18px]">
           <img src={r.cover_url || ""} alt={r.name} width={1100} height={240} className="h-60 w-full object-cover" />
-          <div className="absolute inset-0 flex items-end bg-gradient-to-t from-ink/75 to-transparent p-6">
+          <div className="absolute inset-0 flex items-end gap-3 bg-gradient-to-t from-ink/75 to-transparent p-6">
+            {r.logo_url && (
+              <img
+                src={r.logo_url}
+                alt=""
+                width={64}
+                height={64}
+                className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-lg"
+              />
+            )}
             <div>
               <h1 className="font-display text-3xl font-extrabold text-white">{r.name}</h1>
               <p className="mt-1 text-sm text-white/85">{r.cuisine} · {r.address}</p>
@@ -173,7 +192,7 @@ function RestaurantPage() {
         </div>
 
         <div className="sticky top-16 z-20 -mx-5 mt-8 flex flex-wrap gap-2.5 border-b border-brand-soft/60 bg-cream/95 px-5 py-3 backdrop-blur">
-          {[{ id: "all", name: "Tout" }, ...cats].map((c) => {
+          {[{ id: "all", name: "Tout" }, ...sections].map((c) => {
             const active = activeCat === c.id;
             const count = catCounts[c.id] ?? 0;
             if (c.id !== "all" && count === 0) return null;
@@ -201,7 +220,8 @@ function RestaurantPage() {
         </div>
 
         {visibleCats.map((cat) => {
-          const items = prods.filter((p) => p.category_id === cat.id);
+          const items =
+            cat.id === UNCATEGORIZED ? uncategorized : prods.filter((p) => p.category_id === cat.id);
           if (items.length === 0) return null;
           return (
             <div key={cat.id} className="mt-8">

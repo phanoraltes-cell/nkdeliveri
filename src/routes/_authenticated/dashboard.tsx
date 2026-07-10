@@ -16,6 +16,13 @@ const NAV_BY_ROLE: Record<string, { to: string; label: string; icon: LucideIcon 
   super_admin: [{ to: "/dashboard/admin", label: "Dashboard Admin", icon: ShieldCheck }],
 };
 
+// Only roles with an actual profile-editing page get a clickable icon.
+const PROFILE_LINK_BY_ROLE: Record<string, string | undefined> = {
+  customer: "/profile",
+  driver: "/dashboard/driver/profile",
+  restaurant_owner: "/dashboard/restaurant/profile",
+};
+
 function DashboardLayout() {
   const { role, user } = Route.useRouteContext();
   const router = useRouter();
@@ -33,6 +40,23 @@ function DashboardLayout() {
       return count ?? 0;
     },
   });
+
+  const { data: avatarUrl } = useQuery({
+    queryKey: ["header-avatar", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", user!.id).maybeSingle();
+      return data?.avatar_url ?? null;
+    },
+  });
+  const profileLink = PROFILE_LINK_BY_ROLE[role];
+  const avatarNode = avatarUrl ? (
+    <img src={avatarUrl} alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full border border-brand-soft object-cover" />
+  ) : (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft/60 text-brand-deep">
+      <User className="h-4 w-4" />
+    </div>
+  );
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -65,6 +89,13 @@ function DashboardLayout() {
               </span>
             )}
           </Link>
+          {profileLink ? (
+            <Link to={profileLink} aria-label="Pwofil mwen" className="shrink-0">
+              {avatarNode}
+            </Link>
+          ) : (
+            avatarNode
+          )}
           <span className="hidden text-sm text-ink-soft md:inline">{user?.email}</span>
           <button
             onClick={signOut}
