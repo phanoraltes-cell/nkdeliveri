@@ -6,11 +6,12 @@ import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Check, X, ChevronRight } from "lucide-react";
+import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/orders")({
   beforeLoad: ({ context }) => {
     const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
+    if (role !== "restaurant_owner" && role !== "restaurant_staff" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
   },
@@ -41,14 +42,7 @@ function RestaurantOrders() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "pending">("all");
 
-  const { data: restaurant } = useQuery({
-    queryKey: ["me-restaurant-id", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("restaurants").select("id, name").eq("owner_id", user!.id).maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: restaurant } = useMyRestaurant(user?.id);
 
   const orders = useQuery({
     queryKey: ["restaurant-orders", restaurant?.id, filter],

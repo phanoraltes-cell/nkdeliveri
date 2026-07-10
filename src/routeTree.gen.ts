@@ -41,6 +41,7 @@ import { Route as AuthenticatedDashboardRestaurantProfileRouteImport } from './r
 import { Route as AuthenticatedDashboardRestaurantPayoutsRouteImport } from './routes/_authenticated/dashboard.restaurant.payouts'
 import { Route as AuthenticatedDashboardRestaurantOrdersRouteImport } from './routes/_authenticated/dashboard.restaurant.orders'
 import { Route as AuthenticatedDashboardRestaurantMenuRouteImport } from './routes/_authenticated/dashboard.restaurant.menu'
+import { Route as AuthenticatedDashboardRestaurantEmployeesRouteImport } from './routes/_authenticated/dashboard.restaurant.employees'
 import { Route as AuthenticatedDashboardDriverProfileRouteImport } from './routes/_authenticated/dashboard.driver.profile'
 import { Route as AuthenticatedDashboardDriverPayoutsRouteImport } from './routes/_authenticated/dashboard.driver.payouts'
 import { Route as AuthenticatedDashboardDriverHistoryRouteImport } from './routes/_authenticated/dashboard.driver.history'
@@ -223,6 +224,12 @@ const AuthenticatedDashboardRestaurantMenuRoute =
     path: '/menu',
     getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
   } as any)
+const AuthenticatedDashboardRestaurantEmployeesRoute =
+  AuthenticatedDashboardRestaurantEmployeesRouteImport.update({
+    id: '/employees',
+    path: '/employees',
+    getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
+  } as any)
 const AuthenticatedDashboardDriverProfileRoute =
   AuthenticatedDashboardDriverProfileRouteImport.update({
     id: '/profile',
@@ -320,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -362,6 +370,7 @@ export interface FileRoutesByTo {
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
   '/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -407,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/_authenticated/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/_authenticated/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/_authenticated/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
   '/_authenticated/dashboard/restaurant/menu': typeof AuthenticatedDashboardRestaurantMenuRoute
   '/_authenticated/dashboard/restaurant/orders': typeof AuthenticatedDashboardRestaurantOrdersRoute
   '/_authenticated/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/driver/profile'
+    | '/dashboard/restaurant/employees'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
     | '/dashboard/restaurant/payouts'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/driver/profile'
+    | '/dashboard/restaurant/employees'
     | '/dashboard/restaurant/menu'
     | '/dashboard/restaurant/orders'
     | '/dashboard/restaurant/payouts'
@@ -538,6 +550,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver/history'
     | '/_authenticated/dashboard/driver/payouts'
     | '/_authenticated/dashboard/driver/profile'
+    | '/_authenticated/dashboard/restaurant/employees'
     | '/_authenticated/dashboard/restaurant/menu'
     | '/_authenticated/dashboard/restaurant/orders'
     | '/_authenticated/dashboard/restaurant/payouts'
@@ -793,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantMenuRouteImport
       parentRoute: typeof AuthenticatedDashboardRestaurantRoute
     }
+    '/_authenticated/dashboard/restaurant/employees': {
+      id: '/_authenticated/dashboard/restaurant/employees'
+      path: '/employees'
+      fullPath: '/dashboard/restaurant/employees'
+      preLoaderRoute: typeof AuthenticatedDashboardRestaurantEmployeesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRestaurantRoute
+    }
     '/_authenticated/dashboard/driver/profile': {
       id: '/_authenticated/dashboard/driver/profile'
       path: '/profile'
@@ -921,6 +941,7 @@ const AuthenticatedDashboardDriverRouteWithChildren =
   )
 
 interface AuthenticatedDashboardRestaurantRouteChildren {
+  AuthenticatedDashboardRestaurantEmployeesRoute: typeof AuthenticatedDashboardRestaurantEmployeesRoute
   AuthenticatedDashboardRestaurantMenuRoute: typeof AuthenticatedDashboardRestaurantMenuRoute
   AuthenticatedDashboardRestaurantOrdersRoute: typeof AuthenticatedDashboardRestaurantOrdersRoute
   AuthenticatedDashboardRestaurantPayoutsRoute: typeof AuthenticatedDashboardRestaurantPayoutsRoute
@@ -931,6 +952,8 @@ interface AuthenticatedDashboardRestaurantRouteChildren {
 
 const AuthenticatedDashboardRestaurantRouteChildren: AuthenticatedDashboardRestaurantRouteChildren =
   {
+    AuthenticatedDashboardRestaurantEmployeesRoute:
+      AuthenticatedDashboardRestaurantEmployeesRoute,
     AuthenticatedDashboardRestaurantMenuRoute:
       AuthenticatedDashboardRestaurantMenuRoute,
     AuthenticatedDashboardRestaurantOrdersRoute:

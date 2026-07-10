@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
+import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
@@ -14,7 +15,7 @@ type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/menu")({
   beforeLoad: ({ context }) => {
     const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
+    if (role !== "restaurant_owner" && role !== "restaurant_staff" && role !== "admin" && role !== "super_admin") {
       throw redirect({ to: "/dashboard" });
     }
   },
@@ -49,14 +50,7 @@ function RestaurantMenu() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<MenuProduct | null>(null);
 
-  const { data: restaurant } = useQuery({
-    queryKey: ["me-restaurant-id", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("restaurants").select("id, name").eq("owner_id", user!.id).maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: restaurant } = useMyRestaurant(user?.id);
 
   const categories = useQuery({
     queryKey: ["restaurant-categories", restaurant?.id],

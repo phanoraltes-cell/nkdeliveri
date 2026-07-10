@@ -1021,6 +1021,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_restaurant_employee_secure: {
+        Args: { _email: string; _restaurant_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          restaurant_id: string
+          role: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_employees"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_delivery_secure: {
         Args: { _order_id: string }
         Returns: {
@@ -1242,6 +1258,21 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_restaurant_employees_secure: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          user_id: string
+        }[]
+      }
+      remove_restaurant_employee_secure: {
+        Args: { _id: string }
+        Returns: undefined
       }
       submit_payment_proof_secure: {
         Args: {
