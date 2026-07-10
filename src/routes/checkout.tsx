@@ -19,9 +19,9 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const METHODS = [
-  { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv" },
-  { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv" },
-  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive" },
+  { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv", logo: "/moncash-logo.jpg" },
+  { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo.png" },
+  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
 ] as const;
 
 function Checkout() {
@@ -86,7 +86,10 @@ function Checkout() {
 
   const restaurantId = items[0]?.restaurantId;
   useEffect(() => {
-    if (!restaurantId) { setRestaurant(null); return; }
+    if (!restaurantId) {
+      setRestaurant(null);
+      return;
+    }
     (async () => {
       const [{ data: r }, { data: p }] = await Promise.all([
         supabase.from("restaurants").select("id, name").eq("id", restaurantId).maybeSingle(),
@@ -100,16 +103,24 @@ function Checkout() {
   const merchantDirect = restaurant?.payout_mode === "direct";
   const payNumber =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_number : platformPayout.data?.moncash_number
+      ? merchantDirect
+        ? restaurant?.moncash_number
+        : platformPayout.data?.moncash_number
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_number : platformPayout.data?.natcash_number
-      : null;
+        ? merchantDirect
+          ? restaurant?.natcash_number
+          : platformPayout.data?.natcash_number
+        : null;
   const payName =
     method === "moncash"
-      ? merchantDirect ? restaurant?.moncash_account_name : platformPayout.data?.moncash_account_name
+      ? merchantDirect
+        ? restaurant?.moncash_account_name
+        : platformPayout.data?.moncash_account_name
       : method === "natcash"
-      ? merchantDirect ? restaurant?.natcash_account_name : platformPayout.data?.natcash_account_name
-      : null;
+        ? merchantDirect
+          ? restaurant?.natcash_account_name
+          : platformPayout.data?.natcash_account_name
+        : null;
 
   async function submit() {
     if (!user) {
@@ -165,26 +176,50 @@ function Checkout() {
           {count === 0 ? (
             <div className="py-10 text-center text-ink-soft">
               Panye w vid pou kounye a.{" "}
-              <Link to="/" className="font-bold text-brand-deep">Kòmanse kòmande</Link>
+              <Link to="/" className="font-bold text-brand-deep">
+                Kòmanse kòmande
+              </Link>
             </div>
           ) : (
             <>
               {items.map((it) => (
-                <div key={it.productId} className="flex items-center gap-3 border-b border-dashed border-brand-soft py-3">
-                  {it.imageUrl && <img src={it.imageUrl} width={56} height={56} className="h-14 w-14 rounded-xl object-cover" alt="" />}
+                <div
+                  key={it.productId}
+                  className="flex items-center gap-3 border-b border-dashed border-brand-soft py-3"
+                >
+                  {it.imageUrl && (
+                    <img
+                      src={it.imageUrl}
+                      width={56}
+                      height={56}
+                      className="h-14 w-14 rounded-xl object-cover"
+                      alt=""
+                    />
+                  )}
                   <div className="flex-1">
                     <b className="block text-sm">{it.name}</b>
-                    <span className="text-xs text-ink-soft">{formatHTG(it.price)} · {it.restaurantName}</span>
+                    <span className="text-xs text-ink-soft">
+                      {formatHTG(it.price)} · {it.restaurantName}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setQty(it.productId, it.qty - 1)} className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep">
+                    <button
+                      onClick={() => setQty(it.productId, it.qty - 1)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep"
+                    >
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{it.qty}</span>
-                    <button onClick={() => setQty(it.productId, it.qty + 1)} className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep">
+                    <button
+                      onClick={() => setQty(it.productId, it.qty + 1)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep"
+                    >
                       <Plus className="h-3 w-3" />
                     </button>
-                    <button onClick={() => remove(it.productId)} className="ml-1 text-ink-soft hover:text-destructive">
+                    <button
+                      onClick={() => remove(it.productId)}
+                      className="ml-1 text-ink-soft hover:text-destructive"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -192,10 +227,17 @@ function Checkout() {
               ))}
 
               <div className="mt-4 space-y-1 text-sm">
-                <div className="flex justify-between text-ink-soft"><span>Sou-total</span><span>{formatHTG(subtotal)}</span></div>
-                <div className="flex justify-between text-ink-soft"><span>Frè livrezon</span><span>{formatHTG(deliveryFee)}</span></div>
+                <div className="flex justify-between text-ink-soft">
+                  <span>Sou-total</span>
+                  <span>{formatHTG(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-ink-soft">
+                  <span>Frè livrezon</span>
+                  <span>{formatHTG(deliveryFee)}</span>
+                </div>
                 <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-3 font-display text-lg font-extrabold">
-                  <span>Total</span><span>{formatHTG(total)}</span>
+                  <span>Total</span>
+                  <span>{formatHTG(total)}</span>
                 </div>
               </div>
 
@@ -228,7 +270,9 @@ function Checkout() {
                   placeholder="+509 …"
                   className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
                 />
-                <label className="mt-3 mb-2 block text-sm font-bold">Nòt pou livrezon (opsyonèl)</label>
+                <label className="mt-3 mb-2 block text-sm font-bold">
+                  Nòt pou livrezon (opsyonèl)
+                </label>
                 <input
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -244,24 +288,51 @@ function Checkout() {
                     <button
                       key={m.id}
                       onClick={() => setMethod(m.id)}
-                      className={`rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
-                        method === m.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white hover:border-brand"
+                      className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
+                        method === m.id
+                          ? "border-brand bg-brand-soft"
+                          : "border-brand-soft bg-white hover:border-brand"
                       }`}
                     >
-                      {m.label}
-                      <small className="mt-0.5 block text-xs font-normal text-ink-soft">{m.sub}</small>
+                      {m.logo && (
+                        <img
+                          src={m.logo}
+                          alt=""
+                          width={40}
+                          height={28}
+                          className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
+                        />
+                      )}
+                      <span>
+                        {m.label}
+                        <small className="mt-0.5 block text-xs font-normal text-ink-soft">
+                          {m.sub}
+                        </small>
+                      </span>
                     </button>
                   ))}
                 </div>
                 {(method === "moncash" || method === "natcash") && (
-                  <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
-                    Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
-                    <b>
-                      {method === "moncash" ? "MonCash " : "NatCash "}
-                      {payNumber ?? "(pa konfigire)"}
-                    </b>
-                    {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj
-                    kòmand la. {merchantDirect ? "Peman an ale dirèkteman sou kont restoran an." : "Yon administratè ap verifye epi konfime kòmand la."}
+                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+                    <img
+                      src={method === "moncash" ? "/moncash-logo.jpg" : "/natcash-logo.png"}
+                      alt=""
+                      width={40}
+                      height={28}
+                      className="h-7 w-10 shrink-0 rounded-md border border-amber-200 bg-white object-contain p-0.5"
+                    />
+                    <div>
+                      Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
+                      <b>
+                        {method === "moncash" ? "MonCash " : "NatCash "}
+                        {payNumber ?? "(pa konfigire)"}
+                      </b>
+                      {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj
+                      kòmand la.{" "}
+                      {merchantDirect
+                        ? "Peman an ale dirèkteman sou kont restoran an."
+                        : "Yon administratè ap verifye epi konfime kòmand la."}
+                    </div>
                   </div>
                 )}
               </div>

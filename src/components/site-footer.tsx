@@ -24,8 +24,8 @@ export function SiteFooter() {
   ] as const;
 
   const payments = [
-    { name: "MonCash", kind: "text", className: "bg-[#ED1C24] text-white" },
-    { name: "NatCash", kind: "text", className: "bg-[#003DA5] text-white" },
+    { name: "MonCash", kind: "image", src: "/moncash-logo.jpg" },
+    { name: "NatCash", kind: "image", src: "/natcash-logo.png" },
     { name: "Kach", kind: "icon" },
   ] as const;
 
@@ -115,13 +115,17 @@ export function SiteFooter() {
               {payments.map((p) => (
                 <span
                   key={p.name}
-                  className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-md px-3 shadow-sm ${
-                    p.kind === "text" ? p.className : "bg-white"
-                  }`}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-white px-3 shadow-sm"
                   title={p.name}
                 >
-                  {p.kind === "text" && (
-                    <span className="text-sm font-extrabold italic tracking-tight">{p.name}</span>
+                  {p.kind === "image" && (
+                    <img
+                      src={p.src}
+                      alt={p.name}
+                      width={72}
+                      height={28}
+                      className="h-7 w-auto object-contain"
+                    />
                   )}
                   {p.kind === "icon" && (
                     <>
