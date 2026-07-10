@@ -1037,6 +1037,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      add_user_role_secure: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       claim_delivery_secure: {
         Args: { _order_id: string }
         Returns: {
@@ -1172,6 +1179,7 @@ export type Database = {
       get_all_users_admin: {
         Args: { _search?: string }
         Returns: {
+          banned_until: string
           created_at: string
           email: string
           first_name: string
@@ -1272,6 +1280,13 @@ export type Database = {
       }
       remove_restaurant_employee_secure: {
         Args: { _id: string }
+        Returns: undefined
+      }
+      remove_user_role_secure: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: undefined
       }
       submit_payment_proof_secure: {
