@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { AlertTriangle, WifiOff } from "lucide-react";
@@ -65,11 +65,16 @@ function MapUpdater({ markers, center }: { markers: MapMarker[]; center?: { lat:
 }
 
 /** Disables scroll-wheel zoom by default so the map doesn't hijack page scroll.
- *  Enables it only after the user clicks the map, and disables again on mouse-out. */
+ *  Enables it only after the user clicks the map, and disables again on mouse-out.
+ *  Also adds zoom control at bottomright so it isn't clipped by overflow-hidden + rounded corners. */
 function ScrollWheelToggle() {
   const map = useMap();
   useEffect(() => {
     map.scrollWheelZoom.disable();
+
+    // Add zoom control at bottomright to avoid being clipped at top by overflow-hidden + border-radius
+    const zoomCtrl = L.control.zoom({ position: "bottomright" });
+    zoomCtrl.addTo(map);
 
     const enableZoom = () => map.scrollWheelZoom.enable();
     const disableZoom = () => map.scrollWheelZoom.disable();
@@ -80,6 +85,7 @@ function ScrollWheelToggle() {
     return () => {
       map.off("click", enableZoom);
       map.off("mouseout", disableZoom);
+      zoomCtrl.remove();
     };
   }, [map]);
 
@@ -118,7 +124,7 @@ export function LeafletMap({
         center={initialCenter}
         zoom={zoom}
         className="h-full w-full"
-        zoomControl
+        zoomControl={false}
         scrollWheelZoom={false}
         style={{ background: "#FED7AA20" }}
       >
