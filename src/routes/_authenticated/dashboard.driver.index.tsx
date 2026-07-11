@@ -178,7 +178,7 @@ function DriverDashboard() {
                 {active.length}
               </span>
             </div>
-            <LeafletMap markers={markers} route={routePath ?? undefined} className="h-[380px] w-full rounded-xl" />
+            <LeafletMap markers={markers} route={routePath ?? undefined} className="h-[240px] sm:h-[320px] lg:h-[380px] w-full rounded-xl" />
           </section>
           <div className="space-y-4">
             <DriverLocationReporter driverId={driver.id} />

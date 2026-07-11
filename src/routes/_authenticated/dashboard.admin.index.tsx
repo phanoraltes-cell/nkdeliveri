@@ -255,7 +255,7 @@ function AdminDashboard() {
           />
         </div>
 
-        <LeafletMap markers={markers} className="h-[420px] w-full rounded-xl" />
+        <LeafletMap markers={markers} className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl" />
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran</span>
           <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livrè</span>

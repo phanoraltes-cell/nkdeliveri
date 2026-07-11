@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { AlertTriangle, WifiOff } from "lucide-react";
@@ -64,6 +64,28 @@ function MapUpdater({ markers, center }: { markers: MapMarker[]; center?: { lat:
   return null;
 }
 
+/** Disables scroll-wheel zoom by default so the map doesn't hijack page scroll.
+ *  Enables it only after the user clicks the map, and disables again on mouse-out. */
+function ScrollWheelToggle() {
+  const map = useMap();
+  useEffect(() => {
+    map.scrollWheelZoom.disable();
+
+    const enableZoom = () => map.scrollWheelZoom.enable();
+    const disableZoom = () => map.scrollWheelZoom.disable();
+
+    map.on("click", enableZoom);
+    map.on("mouseout", disableZoom);
+
+    return () => {
+      map.off("click", enableZoom);
+      map.off("mouseout", disableZoom);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export function LeafletMap({
   markers,
   center,
@@ -91,13 +113,13 @@ export function LeafletMap({
     className || "h-[400px] w-full rounded-2xl border border-brand-soft/60 bg-brand-soft/20";
 
   return (
-    <div className={`relative overflow-hidden ${boxClassName}`}>
+    <div className={`relative overflow-hidden ${boxClassName}`} style={{ touchAction: "pan-y" }}>
       <MapContainer
         center={initialCenter}
         zoom={zoom}
         className="h-full w-full"
         zoomControl
-        scrollWheelZoom
+        scrollWheelZoom={false}
         style={{ background: "#FED7AA20" }}
       >
         <TileLayer
@@ -109,6 +131,7 @@ export function LeafletMap({
           }}
         />
         <MapUpdater markers={markers} center={center} />
+        <ScrollWheelToggle />
         {route && route.length > 1 && (
           <Polyline positions={route} pathOptions={{ color: "#F97316", weight: 4, opacity: 0.85 }} />
         )}
