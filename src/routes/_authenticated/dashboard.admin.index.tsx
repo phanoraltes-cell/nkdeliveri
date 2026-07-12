@@ -2,11 +2,30 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Store, Bike, ClipboardList, CreditCard, BarChart3, CheckCircle2, XCircle, Wallet, Percent } from "lucide-react";
+import {
+  Users,
+  Store,
+  Bike,
+  ClipboardList,
+  CreditCard,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  Wallet,
+  Percent,
+  Inbox,
+} from "lucide-react";
 import { toast } from "sonner";
 import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
-import { useLiveOrders } from "@/hooks/useLiveOrders";
+import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
 import { ProofThumb } from "@/components/proof-thumb";
+import { KpiCard } from "@/components/dashboard/cards/kpi-card";
+import { EmptyState } from "@/components/dashboard/cards/empty-state";
+import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
+import { DataTable } from "@/components/dashboard/tables/data-table";
+import { formatHTG } from "@/lib/format";
+
+const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   component: AdminDashboard,
@@ -74,7 +93,8 @@ function AdminDashboard() {
   const filteredActive = active.filter((d) => {
     if (statusFilter !== "all" && d.status !== statusFilter) return false;
     if (restaurantFilter !== "all" && d.order?.restaurants?.name !== restaurantFilter) return false;
-    if (!matchesZone(d.order?.delivery_address) && !matchesZone(d.order?.restaurants?.name)) return false;
+    if (!matchesZone(d.order?.delivery_address) && !matchesZone(d.order?.restaurants?.name))
+      return false;
     return true;
   });
 
@@ -133,8 +153,14 @@ function AdminDashboard() {
         supabase.from("profiles").select("id", { head: true, count: "exact" }),
         supabase.from("restaurants").select("id", { head: true, count: "exact" }),
         supabase.from("drivers").select("id", { head: true, count: "exact" }),
-        supabase.from("restaurants").select("id", { head: true, count: "exact" }).eq("status", "pending"),
-        supabase.from("drivers").select("id", { head: true, count: "exact" }).eq("status", "pending"),
+        supabase
+          .from("restaurants")
+          .select("id", { head: true, count: "exact" })
+          .eq("status", "pending"),
+        supabase
+          .from("drivers")
+          .select("id", { head: true, count: "exact" })
+          .eq("status", "pending"),
       ]);
       return {
         users: users.count ?? 0,
@@ -143,6 +169,37 @@ function AdminDashboard() {
         pendingRestaurants: pendingR.count ?? 0,
         pendingDrivers: pendingD.count ?? 0,
       };
+    },
+  });
+
+  const weeklyRevenue = useQuery({
+    queryKey: ["admin-weekly-revenue"],
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 6);
+      since.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("created_at, total")
+        .gte("created_at", since.toISOString())
+        .neq("status", "cancelled")
+        .neq("status", "refunded");
+      if (error) throw error;
+
+      const byDay = new Map<string, number>();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(since);
+        d.setDate(since.getDate() + i);
+        byDay.set(d.toDateString(), 0);
+      }
+      for (const o of data ?? []) {
+        const key = new Date(o.created_at).toDateString();
+        if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + Number(o.total));
+      }
+      return Array.from(byDay.entries()).map(([dateStr, value]) => ({
+        label: CREOLE_DAY[new Date(dateStr).getDay()],
+        value,
+      }));
     },
   });
 
@@ -164,7 +221,9 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, first_name, last_name, phone, address, vehicle_type, license_plate, id_doc_url, license_doc_url, vehicle_photo_url, created_at")
+        .select(
+          "id, first_name, last_name, phone, address, vehicle_type, license_plate, id_doc_url, license_doc_url, vehicle_photo_url, created_at",
+        )
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -173,7 +232,13 @@ function AdminDashboard() {
   });
 
   const updateResto = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" | "suspended" }) => {
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "approved" | "rejected" | "suspended";
+    }) => {
       const { error } = await supabase.rpc("update_restaurant_status_secure", {
         _restaurant_id: id,
         _status: status,
@@ -189,7 +254,13 @@ function AdminDashboard() {
   });
 
   const updateDriver = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" | "suspended" }) => {
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "approved" | "rejected" | "suspended";
+    }) => {
       const { error } = await supabase.rpc("update_driver_status_secure", {
         _driver_id: id,
         _status: status,
@@ -234,7 +305,9 @@ function AdminDashboard() {
           >
             <option value="all">Tout estati</option>
             {Object.entries(DELIVERY_STATUS_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
+              <option key={k} value={k}>
+                {v}
+              </option>
             ))}
           </select>
           <select
@@ -244,7 +317,9 @@ function AdminDashboard() {
           >
             <option value="all">Tout restoran</option>
             {restaurantOptions.map((name) => (
-              <option key={name} value={name}>{name}</option>
+              <option key={name} value={name}>
+                {name}
+              </option>
             ))}
           </select>
           <input
@@ -255,18 +330,28 @@ function AdminDashboard() {
           />
         </div>
 
-        <LeafletMap markers={markers} className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl" />
+        <LeafletMap
+          markers={markers}
+          className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl"
+        />
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livrè</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Adrès kliyan</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livrè
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Adrès kliyan
+          </span>
         </div>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
-            <Bike className="h-5 w-5 text-emerald-600" /> Livrè disponib ({onlineDrivers.data?.length ?? 0})
+            <Bike className="h-5 w-5 text-emerald-600" /> Livrè disponib (
+            {onlineDrivers.data?.length ?? 0})
           </h2>
           {onlineDrivers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
           {!onlineDrivers.isLoading && !onlineDrivers.data?.length && (
@@ -276,9 +361,16 @@ function AdminDashboard() {
             {onlineDrivers.data?.map((d) => {
               const busy = active.some((a) => a.driver_id === d.id);
               return (
-                <li key={d.id} className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm">
-                  <span className="font-semibold text-ink">{`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè"}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${busy ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+                <li
+                  key={d.id}
+                  className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm"
+                >
+                  <span className="font-semibold text-ink">
+                    {`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè"}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${busy ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}
+                  >
                     {busy ? "An livrezon" : "Disponib"}
                   </span>
                 </li>
@@ -289,7 +381,8 @@ function AdminDashboard() {
 
         <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
-            <Store className="h-5 w-5 text-orange-600" /> Restoran ouvè ({approvedRestaurants.data?.length ?? 0})
+            <Store className="h-5 w-5 text-orange-600" /> Restoran ouvè (
+            {approvedRestaurants.data?.length ?? 0})
           </h2>
           {approvedRestaurants.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
           {!approvedRestaurants.isLoading && !approvedRestaurants.data?.length && (
@@ -297,7 +390,10 @@ function AdminDashboard() {
           )}
           <ul className="max-h-64 space-y-1.5 overflow-y-auto">
             {approvedRestaurants.data?.map((r) => (
-              <li key={r.id} className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm">
+              <li
+                key={r.id}
+                className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm"
+              >
                 <span className="min-w-0 truncate font-semibold text-ink">{r.name}</span>
                 <span className="ml-2 shrink-0 text-xs text-ink-soft">{r.address || "—"}</span>
               </li>
@@ -307,30 +403,66 @@ function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {[
-          { icon: Users, label: "Itilizatè", value: s?.users, tone: "bg-blue-50 text-blue-700" },
-          { icon: Store, label: "Restoran", value: s?.restaurants, tone: "bg-orange-50 text-orange-700" },
-          { icon: Bike, label: "Livrè", value: s?.drivers, tone: "bg-emerald-50 text-emerald-700" },
-          { icon: ClipboardList, label: "Restoran an atant", value: s?.pendingRestaurants, tone: "bg-amber-50 text-amber-800" },
-          { icon: ClipboardList, label: "Livrè an atant", value: s?.pendingDrivers, tone: "bg-amber-50 text-amber-800" },
-        ].map((k) => {
-          const Icon = k.icon;
-          return (
-            <div key={k.label} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
-              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${k.tone}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="mt-2 font-display text-3xl font-extrabold text-ink">
-                {k.value ?? "—"}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-ink-soft">{k.label}</div>
-            </div>
-          );
-        })}
+        <KpiCard label="Itilizatè" value={s?.users ?? "—"} icon={Users} />
+        <KpiCard label="Restoran" value={s?.restaurants ?? "—"} icon={Store} />
+        <KpiCard label="Livrè" value={s?.drivers ?? "—"} icon={Bike} />
+        <KpiCard
+          label="Restoran an atant"
+          value={s?.pendingRestaurants ?? "—"}
+          icon={ClipboardList}
+        />
+        <KpiCard label="Livrè an atant" value={s?.pendingDrivers ?? "—"} icon={ClipboardList} />
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-display text-xl font-bold text-ink">Restoran an atant valdasyon</h2>
+        <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
+        {weeklyRevenue.isLoading ? (
+          <div className="text-sm text-ink-soft">Chajman…</div>
+        ) : (
+          <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 font-display text-xl font-bold text-ink">Livrezon an kou</h2>
+        <DataTable<ActiveDelivery>
+          rows={filteredActive}
+          getRowKey={(d) => d.id}
+          mobileTitleKey="order"
+          emptyState={
+            <EmptyState
+              icon={Inbox}
+              title="Pa gen livrezon an kou"
+              description="Livrezon aktif yo ap parèt isit la an tan reyèl."
+            />
+          }
+          columns={[
+            { key: "order", header: "Kòmand", cell: (d) => d.order?.order_number ?? "—" },
+            {
+              key: "restaurant",
+              header: "Restoran",
+              cell: (d) => d.order?.restaurants?.name ?? "—",
+            },
+            {
+              key: "driver",
+              header: "Livrè",
+              cell: (d) =>
+                d.driver ? `${d.driver.first_name ?? ""} ${d.driver.last_name ?? ""}`.trim() : "—",
+            },
+            { key: "address", header: "Adrès", cell: (d) => d.order?.delivery_address ?? "—" },
+            {
+              key: "status",
+              header: "Estati",
+              cell: (d) => DELIVERY_STATUS_LABEL[d.status] ?? d.status,
+            },
+          ]}
+        />
+      </section>
+
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <h2 className="mb-4 font-display text-xl font-bold text-ink">
+          Restoran an atant valdasyon
+        </h2>
         {pendingRestaurants.isLoading && <div className="text-ink-soft">Chajman...</div>}
         {pendingRestaurants.data?.length === 0 && (
           <div className="text-sm text-ink-soft">Pa gen okenn restoran an atant.</div>
@@ -360,9 +492,7 @@ function AdminDashboard() {
                   <div className="text-xs text-ink-soft">
                     {r.cuisine || "—"} · {r.phone || "san telefòn"} · {r.address || "san adrès"}
                   </div>
-                  {r.description && (
-                    <p className="mt-1 text-xs text-ink-soft">{r.description}</p>
-                  )}
+                  {r.description && <p className="mt-1 text-xs text-ink-soft">{r.description}</p>}
                 </div>
               </div>
               <div className="mt-3 flex gap-2">
@@ -396,17 +526,29 @@ function AdminDashboard() {
               <div className="flex flex-wrap items-start gap-3">
                 <div className="flex flex-wrap gap-2">
                   {d.id_doc_url ? (
-                    <ProofThumb path={d.id_doc_url} bucket="driver-documents" alt={`Pyès idantite ${d.first_name}`} />
+                    <ProofThumb
+                      path={d.id_doc_url}
+                      bucket="driver-documents"
+                      alt={`Pyès idantite ${d.first_name}`}
+                    />
                   ) : (
                     <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-red-300 bg-red-50 text-center text-[10px] font-semibold text-red-700">
                       Pa gen pyès idantite!
                     </div>
                   )}
                   {d.license_doc_url && (
-                    <ProofThumb path={d.license_doc_url} bucket="driver-documents" alt={`Pèmi ${d.first_name}`} />
+                    <ProofThumb
+                      path={d.license_doc_url}
+                      bucket="driver-documents"
+                      alt={`Pèmi ${d.first_name}`}
+                    />
                   )}
                   {d.vehicle_photo_url && (
-                    <ProofThumb path={d.vehicle_photo_url} bucket="driver-documents" alt={`Veyikil ${d.first_name}`} />
+                    <ProofThumb
+                      path={d.vehicle_photo_url}
+                      bucket="driver-documents"
+                      alt={`Veyikil ${d.first_name}`}
+                    />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -414,7 +556,8 @@ function AdminDashboard() {
                     {d.first_name} {d.last_name}
                   </div>
                   <div className="text-xs text-ink-soft">
-                    {d.vehicle_type || "—"} · {d.license_plate || "san plak"} · {d.phone || "san telefòn"}
+                    {d.vehicle_type || "—"} · {d.license_plate || "san plak"} ·{" "}
+                    {d.phone || "san telefòn"}
                   </div>
                   <div className="text-xs text-ink-soft">{d.address || "san adrès"}</div>
                 </div>
@@ -440,16 +583,44 @@ function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { icon: CreditCard, title: "Peman manyèl", desc: "Valide prèv MonCash/NatCash", to: "/dashboard/admin/payments" as const },
-          { icon: Users, title: "Kliyan & Newsletter", desc: "Swiv kliyan, ekspòte, voye imèl an mas", to: "/dashboard/admin/customers" as const },
-          { icon: Users, title: "Jere itilizatè", desc: "Tout kont yo, kèlkeswa wòl", to: "/dashboard/admin/users" as const },
-          { icon: Wallet, title: "Peman platfòm", desc: "Nimewo MonCash/NatCash fallback", to: "/dashboard/admin/payout-settings" as const },
-          { icon: Percent, title: "Restoran & Komisyon", desc: "Chwazi pousantaj/montan chak restoran peye", to: "/dashboard/admin/restaurants" as const },
+          {
+            icon: CreditCard,
+            title: "Peman manyèl",
+            desc: "Valide prèv MonCash/NatCash",
+            to: "/dashboard/admin/payments" as const,
+          },
+          {
+            icon: Users,
+            title: "Kliyan & Newsletter",
+            desc: "Swiv kliyan, ekspòte, voye imèl an mas",
+            to: "/dashboard/admin/customers" as const,
+          },
+          {
+            icon: Users,
+            title: "Jere itilizatè",
+            desc: "Tout kont yo, kèlkeswa wòl",
+            to: "/dashboard/admin/users" as const,
+          },
+          {
+            icon: Wallet,
+            title: "Peman platfòm",
+            desc: "Nimewo MonCash/NatCash fallback",
+            to: "/dashboard/admin/payout-settings" as const,
+          },
+          {
+            icon: Percent,
+            title: "Restoran & Komisyon",
+            desc: "Chwazi pousantaj/montan chak restoran peye",
+            to: "/dashboard/admin/restaurants" as const,
+          },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
         ].map((c) => {
           const Icon = c.icon;
           const body = (
-            <div key={c.title} className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+            <div
+              key={c.title}
+              className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm"
+            >
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
                 <Icon className="h-5 w-5" />
               </div>
@@ -461,8 +632,12 @@ function AdminDashboard() {
             </div>
           );
           return c.to ? (
-            <Link key={c.title} to={c.to} className="block">{body}</Link>
-          ) : body;
+            <Link key={c.title} to={c.to} className="block">
+              {body}
+            </Link>
+          ) : (
+            body
+          );
         })}
       </div>
     </div>

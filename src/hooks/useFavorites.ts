@@ -43,6 +43,7 @@ export function useFavorites() {
   });
 
   return {
+    favoriteIds,
     isFavorite: (restaurantId: string) => favoriteIds.includes(restaurantId),
     toggleFavorite: toggle.mutate,
     isLoggedIn: !!user,

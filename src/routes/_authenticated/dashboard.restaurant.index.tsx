@@ -1,12 +1,54 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Store, ClipboardList, Package, BarChart3, Users, Percent, Clock, Wallet, type LucideIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Store,
+  ClipboardList,
+  Package,
+  BarChart3,
+  Users,
+  Percent,
+  Clock,
+  Wallet,
+  ShoppingBag,
+  ChefHat,
+  Flame,
+  Inbox,
+  type LucideIcon,
+} from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
+import { supabase } from "@/integrations/supabase/client";
+import { formatHTG } from "@/lib/format";
+import { KpiCard } from "@/components/dashboard/cards/kpi-card";
+import { EmptyState } from "@/components/dashboard/cards/empty-state";
+import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
+import { DataTable } from "@/components/dashboard/tables/data-table";
+
+const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/")({
   component: RestaurantDashboard,
 });
 
 type Tile = { icon: LucideIcon; title: string; desc: string; to: string | null };
+type RecentOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  total: number;
+  created_at: string;
+};
+
+const ORDER_STATUS_LABEL: Record<string, string> = {
+  pending: "An atant peman",
+  confirmed: "Konfime",
+  preparing: "Ap prepare",
+  ready: "Prè",
+  assigned: "Livrè asiyen",
+  picked_up: "An wout",
+  delivered: "Livre",
+  cancelled: "Anile",
+  refunded: "Ranbouse",
+};
 
 function RestaurantDashboard() {
   const { user } = Route.useRouteContext();
@@ -14,19 +56,161 @@ function RestaurantDashboard() {
 
   const pending = restaurant?.status === "pending";
   const isOwner = restaurant?.isOwner ?? false;
+  const restaurantId = restaurant?.id;
+
+  const todayStats = useQuery({
+    queryKey: ["restaurant-today-stats", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const since = new Date();
+      since.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("status, total")
+        .eq("restaurant_id", restaurantId!)
+        .gte("created_at", since.toISOString());
+      if (error) throw error;
+      const rows = data ?? [];
+      return {
+        ordersToday: rows.length,
+        pending: rows.filter((o) => o.status === "pending").length,
+        preparing: rows.filter((o) => o.status === "preparing").length,
+        revenueToday: rows
+          .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
+          .reduce((sum, o) => sum + Number(o.total), 0),
+      };
+    },
+  });
+
+  const weeklyRevenue = useQuery({
+    queryKey: ["restaurant-weekly-revenue", restaurantId],
+    enabled: !!restaurantId && isOwner,
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 6);
+      since.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("created_at, total")
+        .eq("restaurant_id", restaurantId!)
+        .gte("created_at", since.toISOString())
+        .neq("status", "cancelled")
+        .neq("status", "refunded");
+      if (error) throw error;
+
+      const byDay = new Map<string, number>();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(since);
+        d.setDate(since.getDate() + i);
+        byDay.set(d.toDateString(), 0);
+      }
+      for (const o of data ?? []) {
+        const key = new Date(o.created_at).toDateString();
+        if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + Number(o.total));
+      }
+      return Array.from(byDay.entries()).map(([dateStr, value]) => ({
+        label: CREOLE_DAY[new Date(dateStr).getDay()],
+        value,
+      }));
+    },
+  });
+
+  const popularDishes = useQuery({
+    queryKey: ["restaurant-popular-dishes", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 30);
+      const { data, error } = await supabase
+        .from("order_items")
+        .select("product_name, quantity, orders!inner(restaurant_id, created_at)")
+        .eq("orders.restaurant_id", restaurantId!)
+        .gte("orders.created_at", since.toISOString());
+      if (error) throw error;
+
+      const byDish = new Map<string, number>();
+      for (const item of data ?? []) {
+        byDish.set(item.product_name, (byDish.get(item.product_name) ?? 0) + item.quantity);
+      }
+      return Array.from(byDish.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, qty]) => ({ name, qty }));
+    },
+  });
+
+  const recentOrders = useQuery({
+    queryKey: ["restaurant-recent-orders", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, order_number, status, total, created_at")
+        .eq("restaurant_id", restaurantId!)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data as RecentOrder[];
+    },
+  });
 
   const ownerTiles: Tile[] = [
-    { icon: ClipboardList, title: "Kòmand", desc: "Konfime, refize, swiv estati an tan reyèl", to: "/dashboard/restaurant/orders" },
-    { icon: Package, title: "Meni", desc: "Kategori, plat ak foto", to: "/dashboard/restaurant/menu" },
-    { icon: BarChart3, title: "Revni", desc: "Vant, komisyon ak istwa peman", to: "/dashboard/restaurant/revenue" },
-    { icon: Wallet, title: "Peman ak Komisyon", desc: "Nimewo MonCash/NatCash, mòd + komisyon", to: "/dashboard/restaurant/payouts" },
-    { icon: Percent, title: "Pwomosyon", desc: "Ofri espesyal", to: "/dashboard/restaurant/promotions" },
-    { icon: Store, title: "Pwofil restoran", desc: "Enfo, logo, kouvèti, orè ouvèti", to: "/dashboard/restaurant/profile" },
-    { icon: Users, title: "Anplwaye", desc: "Ajoute manm ekip la", to: "/dashboard/restaurant/employees" },
+    {
+      icon: ClipboardList,
+      title: "Kòmand",
+      desc: "Konfime, refize, swiv estati an tan reyèl",
+      to: "/dashboard/restaurant/orders",
+    },
+    {
+      icon: Package,
+      title: "Meni",
+      desc: "Kategori, plat ak foto",
+      to: "/dashboard/restaurant/menu",
+    },
+    {
+      icon: BarChart3,
+      title: "Revni",
+      desc: "Vant, komisyon ak istwa peman",
+      to: "/dashboard/restaurant/revenue",
+    },
+    {
+      icon: Wallet,
+      title: "Peman ak Komisyon",
+      desc: "Nimewo MonCash/NatCash, mòd + komisyon",
+      to: "/dashboard/restaurant/payouts",
+    },
+    {
+      icon: Percent,
+      title: "Pwomosyon",
+      desc: "Ofri espesyal",
+      to: "/dashboard/restaurant/promotions",
+    },
+    {
+      icon: Store,
+      title: "Pwofil restoran",
+      desc: "Enfo, logo, kouvèti, orè ouvèti",
+      to: "/dashboard/restaurant/profile",
+    },
+    {
+      icon: Users,
+      title: "Anplwaye",
+      desc: "Ajoute manm ekip la",
+      to: "/dashboard/restaurant/employees",
+    },
   ];
   const staffTiles: Tile[] = [
-    { icon: ClipboardList, title: "Kòmand", desc: "Konfime, refize, swiv estati an tan reyèl", to: "/dashboard/restaurant/orders" },
-    { icon: Package, title: "Meni", desc: "Kategori, plat ak foto", to: "/dashboard/restaurant/menu" },
+    {
+      icon: ClipboardList,
+      title: "Kòmand",
+      desc: "Konfime, refize, swiv estati an tan reyèl",
+      to: "/dashboard/restaurant/orders",
+    },
+    {
+      icon: Package,
+      title: "Meni",
+      desc: "Kategori, plat ak foto",
+      to: "/dashboard/restaurant/menu",
+    },
   ];
   const tiles = isOwner ? ownerTiles : staffTiles;
 
@@ -47,8 +231,8 @@ function RestaurantDashboard() {
               pending
                 ? "bg-amber-100 text-amber-800"
                 : restaurant.status === "approved"
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-red-100 text-red-800"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-red-100 text-red-800"
             }`}
           >
             {restaurant.status}
@@ -64,11 +248,88 @@ function RestaurantDashboard() {
             <Clock className="h-5 w-5" /> Kont ou an atant valdasyon
           </div>
           <p className="mt-1 text-sm text-amber-800">
-            Yon administratè ap revize enfòmasyon restoran ou. Ou pral resevwa yon email lè kont ou apwouve. Nan
-            entèval, ou ka konplete pwofil ou ak menu ou.
+            Yon administratè ap revize enfòmasyon restoran ou. Ou pral resevwa yon email lè kont ou
+            apwouve. Nan entèval, ou ka konplete pwofil ou ak menu ou.
           </p>
         </div>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Kòmand jodi a"
+          value={todayStats.data?.ordersToday ?? "—"}
+          icon={ShoppingBag}
+        />
+        <KpiCard label="An atant" value={todayStats.data?.pending ?? "—"} icon={ClipboardList} />
+        <KpiCard label="Ap prepare" value={todayStats.data?.preparing ?? "—"} icon={ChefHat} />
+        {isOwner && (
+          <KpiCard
+            label="Revni jodi a"
+            value={todayStats.data ? formatHTG(todayStats.data.revenueToday) : "—"}
+            icon={Wallet}
+          />
+        )}
+      </div>
+
+      {isOwner && (
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+          <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
+          {weeklyRevenue.isLoading ? (
+            <div className="text-sm text-ink-soft">Chajman…</div>
+          ) : (
+            <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+          )}
+        </section>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
+            <Flame className="h-5 w-5 text-brand-deep" /> Plat popilè (30 jou)
+          </h2>
+          {!popularDishes.isLoading && !popularDishes.data?.length && (
+            <div className="text-sm text-ink-soft">Poko gen ase kòmand pou montre plat popilè.</div>
+          )}
+          <ul className="space-y-1.5">
+            {popularDishes.data?.map((d, i) => (
+              <li
+                key={d.name}
+                className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm"
+              >
+                <span className="min-w-0 truncate font-semibold text-ink">
+                  {i + 1}. {d.name}
+                </span>
+                <span className="shrink-0 text-xs font-bold text-brand-deep">{d.qty} vann</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="mb-3 font-display text-lg font-bold text-ink">Dènye kòmand</h2>
+          <DataTable<RecentOrder>
+            rows={recentOrders.data ?? []}
+            getRowKey={(o) => o.id}
+            mobileTitleKey="order_number"
+            emptyState={
+              <EmptyState
+                icon={Inbox}
+                title="Pa gen kòmand"
+                description="Kòmand ki fèk antre yo ap parèt isit la."
+              />
+            }
+            columns={[
+              { key: "order_number", header: "Kòmand", cell: (o) => o.order_number },
+              { key: "total", header: "Total", cell: (o) => formatHTG(Number(o.total)) },
+              {
+                key: "status",
+                header: "Estati",
+                cell: (o) => ORDER_STATUS_LABEL[o.status] ?? o.status,
+              },
+            ]}
+          />
+        </section>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map((c) => {
@@ -89,8 +350,12 @@ function RestaurantDashboard() {
             </div>
           );
           return c.to ? (
-            <Link key={c.title} to={c.to} className="block">{body}</Link>
-          ) : body;
+            <Link key={c.title} to={c.to} className="block">
+              {body}
+            </Link>
+          ) : (
+            body
+          );
         })}
       </div>
     </div>

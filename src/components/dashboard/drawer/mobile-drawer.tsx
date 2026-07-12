@@ -1,0 +1,106 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Menu, LogOut, User, LayoutGrid } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { getNavItems, PROFILE_LINK_BY_ROLE } from "../sidebar/nav-items";
+
+type MobileDrawerProps = {
+  role: string;
+  onSignOut: () => void;
+};
+
+/** Hamburger-triggered off-canvas nav for <md screens — replaces the old horizontal scrollable tab strip. */
+export function MobileDrawer({ role, onSignOut }: MobileDrawerProps) {
+  const [open, setOpen] = useState(false);
+  const items = getNavItems(role);
+  const profileLink = PROFILE_LINK_BY_ROLE[role];
+
+  function closeAnd(action?: () => void) {
+    setOpen(false);
+    action?.();
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button
+          aria-label="Louvri meni"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-soft bg-white text-ink md:hidden"
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </SheetTrigger>
+      <SheetContent
+        side="left"
+        className="flex w-[280px] flex-col gap-0 bg-cream p-0 sm:max-w-[280px]"
+      >
+        <SheetHeader className="border-b border-brand-soft/50 p-4 text-left">
+          <SheetTitle asChild>
+            <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2">
+              <img
+                src="/nk-logo.png"
+                alt="NK"
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-full"
+              />
+              <span className="font-display text-base font-extrabold text-ink">
+                NK <span className="text-brand">Deliveri</span>
+              </span>
+            </Link>
+          </SheetTitle>
+        </SheetHeader>
+
+        <nav
+          aria-label="Navigasyon dashboard"
+          className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
+        >
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                activeProps={{ className: "!bg-brand !text-white" }}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {item.label}
+              </Link>
+            );
+          })}
+          <div className="my-2 border-t border-brand-soft/40" />
+          <Link
+            to="/"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-brand-soft/30"
+          >
+            <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Retounen sou sit la
+          </Link>
+        </nav>
+
+        <div className="flex flex-col gap-1 border-t border-brand-soft/50 p-3">
+          {profileLink && (
+            <Link
+              to={profileLink}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
+            >
+              <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Pwofil
+            </Link>
+          )}
+          <button
+            onClick={() => closeAnd(onSignOut)}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
+          >
+            <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Dekonekte
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
