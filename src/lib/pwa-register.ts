@@ -1,24 +1,15 @@
 import { toast } from "sonner";
 
-function isPreviewHost(hostname: string): boolean {
-  return (
-    hostname.startsWith("id-preview--") ||
-    hostname.startsWith("preview--") ||
-    hostname === "lovableproject.com" ||
-    hostname.endsWith(".lovableproject.com") ||
-    hostname === "lovableproject-dev.com" ||
-    hostname.endsWith(".lovableproject-dev.com") ||
-    hostname === "beta.lovable.dev" ||
-    hostname.endsWith(".beta.lovable.dev")
-  );
-}
-
 async function unregisterAppSw() {
   if (!("serviceWorker" in navigator)) return;
   const regs = await navigator.serviceWorker.getRegistrations();
   await Promise.allSettled(
     regs
-      .filter((r) => (r.active?.scriptURL ?? r.waiting?.scriptURL ?? r.installing?.scriptURL ?? "").endsWith("/sw.js"))
+      .filter((r) =>
+        (r.active?.scriptURL ?? r.waiting?.scriptURL ?? r.installing?.scriptURL ?? "").endsWith(
+          "/sw.js",
+        ),
+      )
       .map((r) => r.unregister()),
   );
 }
@@ -30,11 +21,7 @@ export async function registerPWA() {
 
   const url = new URL(window.location.href);
   const inIframe = window.self !== window.top;
-  if (
-    inIframe ||
-    isPreviewHost(window.location.hostname) ||
-    url.searchParams.get("sw") === "off"
-  ) {
+  if (inIframe || url.searchParams.get("sw") === "off") {
     await unregisterAppSw();
     return;
   }

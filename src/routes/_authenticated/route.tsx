@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { noIndexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -21,7 +20,7 @@ export const Route = createFileRoute("/_authenticated")({
     // hard lockout on a transient network blip) but make the failure
     // visible so it shows up in error tracking instead of vanishing.
     if (roleError) {
-      reportLovableError(roleError, { context: "get_primary_role_rpc", userId: data.user.id });
+      console.error("[auth] get_primary_role_rpc failed", roleError, { userId: data.user.id });
     }
     return { user: data.user, role: (role as string | null) ?? "customer" };
   },

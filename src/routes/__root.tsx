@@ -10,7 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { registerPWA } from "@/lib/pwa-register";
@@ -54,7 +53,6 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
     document.title = "Yon erè rive — NK Deliveri";
   }, [error]);
 
@@ -123,7 +121,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "NK Deliveri" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "twitter:title", content: "NK Deliveri — Manje lakay, livre lakay ou" },
-      { name: "twitter:description", content: "Livrezon manje nan Gonaïves. MonCash, NatCash, Kach." },
+      {
+        name: "twitter:description",
+        content: "Livrezon manje nan Gonaïves. MonCash, NatCash, Kach.",
+      },
       { property: "og:image", content: absoluteUrl("/nk-logo.png") },
       { name: "twitter:image", content: absoluteUrl("/nk-logo.png") },
     ],

@@ -13,7 +13,6 @@ Ta mission : restructurer entièrement les dashboards de NK Deliveri pour obteni
 - **Icônes** : `lucide-react` déjà installé, à utiliser exclusivement.
 - **Langue de l'UI : créole haïtien**, cohérent avec le reste du site (public + dashboards existants). Tous les libellés de nav et de composants doivent être en créole. Le français reste uniquement la langue de rédaction de ce prompt/des specs.
 - **Auth & rôles** : Supabase Auth, rôle récupéré via RPC `get_primary_role`, injecté dans le `routeContext` (`{ user, role }`), consommé via `Route.useRouteContext()`. Rôles réels : `customer`, `restaurant_owner`, `restaurant_staff`, `driver`, `admin`, `super_admin`. Prévoir une visibilité conditionnelle de certains items de nav selon le sous-rôle (ex. `restaurant_staff` ne voit pas forcément "Anplwaye"/Employés, `super_admin` voit des items que `admin` ne voit pas).
-- **Projet géré via Lovable.dev** : ne pas toucher à l'historique git, ne pas ajouter de plugins Vite déjà couverts par `@lovable.dev/vite-tanstack-config`.
 
 ## Objectifs
 
