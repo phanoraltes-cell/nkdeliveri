@@ -163,7 +163,11 @@ export type Database = {
           last_name: string | null
           license_doc_url: string | null
           license_plate: string | null
+          // Anticipates migration 20260712120000_add_driver_payout_account_names.sql
+          // (not yet applied) — re-run `supabase gen types` after applying it.
+          moncash_account_name: string | null
           moncash_number: string | null
+          natcash_account_name: string | null
           natcash_number: string | null
           payout_frequency: string
           phone: string | null
@@ -185,7 +189,9 @@ export type Database = {
           last_name?: string | null
           license_doc_url?: string | null
           license_plate?: string | null
+          moncash_account_name?: string | null
           moncash_number?: string | null
+          natcash_account_name?: string | null
           natcash_number?: string | null
           payout_frequency?: string
           phone?: string | null
@@ -207,7 +213,9 @@ export type Database = {
           last_name?: string | null
           license_doc_url?: string | null
           license_plate?: string | null
+          moncash_account_name?: string | null
           moncash_number?: string | null
+          natcash_account_name?: string | null
           natcash_number?: string | null
           payout_frequency?: string
           phone?: string | null
@@ -1358,7 +1366,9 @@ export type Database = {
       update_driver_payout_secure: {
         Args: {
           _driver_id: string
+          _moncash_account_name: string
           _moncash_number: string
+          _natcash_account_name: string
           _natcash_number: string
           _payout_frequency: string
         }
@@ -1374,7 +1384,9 @@ export type Database = {
           last_name: string | null
           license_doc_url: string | null
           license_plate: string | null
+          moncash_account_name: string | null
           moncash_number: string | null
+          natcash_account_name: string | null
           natcash_number: string | null
           payout_frequency: string
           phone: string | null
@@ -1408,7 +1420,9 @@ export type Database = {
           last_name: string | null
           license_doc_url: string | null
           license_plate: string | null
+          moncash_account_name: string | null
           moncash_number: string | null
+          natcash_account_name: string | null
           natcash_number: string | null
           payout_frequency: string
           phone: string | null

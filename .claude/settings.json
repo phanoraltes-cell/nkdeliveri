@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/**)",
+      "Bash(node _preview-shot.mjs http://localhost:8081/preview-restaurant-dashboard 1440 1400 __TRACKED_VAR__/restaurant-real.png)",
+      "Bash(node _preview-shot.mjs http://localhost:8081/preview-restaurant-shell 1200 1500 __TRACKED_VAR__/restaurant-shell.png)",
+      "Bash(powershell -Command \"Stop-Process -Id 14112 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 14204 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(node _preview-shot.mjs http://localhost:8080/preview-driver-shell 1200 1300 __TRACKED_VAR__/driver-shell.png)",
+      "Bash(powershell -Command \"Stop-Process -Id 8364 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(node _preview-shot.mjs http://localhost:8080/preview-customer-shell 1000 2400 __TRACKED_VAR__/customer-shell.png)",
+      "Bash(powershell -Command \"Stop-Process -Id 6412 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(git commit -m ' *)",
+      "Bash(node _verify.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(powershell -Command \"Stop-Process -Id 5668 -Force -ErrorAction SilentlyContinue\")"
+    ]
+  }
+}

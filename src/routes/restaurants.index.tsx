@@ -3,6 +3,7 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -24,7 +25,10 @@ const listQuery = queryOptions({
   },
 });
 
+const searchSchema = z.object({ q: z.string().optional() });
+
 export const Route = createFileRoute("/restaurants/")({
+  validateSearch: searchSchema,
   head: () => ({
     ...pageMeta({
       title: "Restoran nan Gonaïves — NK Deliveri",
@@ -48,7 +52,8 @@ export const Route = createFileRoute("/restaurants/")({
 
 function RestaurantsPage() {
   const { data } = useSuspenseQuery(listQuery);
-  const [q, setQ] = useState("");
+  const { q: initialQ } = Route.useSearch();
+  const [q, setQ] = useState(initialQ ?? "");
   const filtered = data.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()));
   const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
   const nav = useNavigate();

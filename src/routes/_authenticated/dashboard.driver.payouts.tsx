@@ -24,7 +24,9 @@ function DriverPayouts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, moncash_number, natcash_number, payout_frequency, commission_rate")
+        .select(
+          "id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_frequency, commission_rate",
+        )
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -34,7 +36,9 @@ function DriverPayouts() {
 
   const [f, setF] = useState({
     moncash_number: "",
+    moncash_account_name: "",
     natcash_number: "",
+    natcash_account_name: "",
     payout_frequency: "daily",
   });
 
@@ -42,7 +46,9 @@ function DriverPayouts() {
     if (!d) return;
     setF({
       moncash_number: d.moncash_number ?? "",
+      moncash_account_name: d.moncash_account_name ?? "",
       natcash_number: d.natcash_number ?? "",
+      natcash_account_name: d.natcash_account_name ?? "",
       payout_frequency: d.payout_frequency ?? "daily",
     });
   }, [d?.id]);
@@ -57,12 +63,17 @@ function DriverPayouts() {
       const { error } = await supabase.rpc("update_driver_payout_secure", {
         _driver_id: d.id,
         _moncash_number: (f.moncash_number || null) as string,
+        _moncash_account_name: (f.moncash_account_name || null) as string,
         _natcash_number: (f.natcash_number || null) as string,
+        _natcash_account_name: (f.natcash_account_name || null) as string,
         _payout_frequency: f.payout_frequency,
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-driver-payouts"] }); },
+    onSuccess: () => {
+      toast.success("Konfigirasyon anrejistre");
+      qc.invalidateQueries({ queryKey: ["me-driver-payouts"] });
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -75,14 +86,36 @@ function DriverPayouts() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Peman ak Komisyon</h1>
           <p className="mt-1 text-ink-soft">Chwazi kilè admin peye w komisyon w yo.</p>
         </div>
-        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Dashboard
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Nimewo peman</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <FieldD label="Nimewo MonCash" value={f.moncash_number} onChange={(v) => setF((s) => ({ ...s, moncash_number: v }))} placeholder="+509 …" />
-          <FieldD label="Nimewo NatCash" value={f.natcash_number} onChange={(v) => setF((s) => ({ ...s, natcash_number: v }))} placeholder="+509 …" />
+          <FieldD
+            label="Nimewo MonCash"
+            value={f.moncash_number}
+            onChange={(v) => setF((s) => ({ ...s, moncash_number: v }))}
+            placeholder="+509 …"
+          />
+          <FieldD
+            label="Non kont MonCash"
+            value={f.moncash_account_name}
+            onChange={(v) => setF((s) => ({ ...s, moncash_account_name: v }))}
+          />
+          <FieldD
+            label="Nimewo NatCash"
+            value={f.natcash_number}
+            onChange={(v) => setF((s) => ({ ...s, natcash_number: v }))}
+            placeholder="+509 …"
+          />
+          <FieldD
+            label="Non kont NatCash"
+            value={f.natcash_account_name}
+            onChange={(v) => setF((s) => ({ ...s, natcash_account_name: v }))}
+          />
         </div>
       </section>
 
@@ -98,7 +131,9 @@ function DriverPayouts() {
               type="button"
               onClick={() => setF((s) => ({ ...s, payout_frequency: o.id }))}
               className={`rounded-2xl border-2 p-3 text-left ${
-                f.payout_frequency === o.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white"
+                f.payout_frequency === o.id
+                  ? "border-brand bg-brand-soft"
+                  : "border-brand-soft bg-white"
               }`}
             >
               <div className="font-bold">{o.label}</div>
@@ -107,8 +142,8 @@ function DriverPayouts() {
           ))}
         </div>
         <div className="mt-4 rounded-xl bg-brand-soft/40 p-3 text-xs text-ink-soft">
-          Komisyon pa livrezon an: <b>{formatHTG(Number(d?.commission_rate ?? 100))}</b>.
-          Sèl yon administratè NK ka chanje montan sa a.
+          Komisyon pa livrezon an: <b>{formatHTG(Number(d?.commission_rate ?? 100))}</b>. Sèl yon
+          administratè NK ka chanje montan sa a.
         </div>
       </section>
 
@@ -124,8 +159,18 @@ function DriverPayouts() {
 }
 
 function FieldD({
-  label, value, onChange, type = "text", placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">{label}</span>

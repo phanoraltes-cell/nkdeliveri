@@ -208,7 +208,10 @@ function Index() {
 
             {/* Search bar */}
             <form
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                nav({ to: "/restaurants", search: { q } });
+              }}
               className="flex max-w-[520px] items-center rounded-full bg-white p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.25)] ring-1 ring-white/20"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center text-ink-soft">
@@ -257,8 +260,20 @@ function Index() {
             className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-white/95 px-5 py-3 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur md:absolute md:right-8 md:bottom-8 md:mt-0"
           >
             <span className="text-sm font-semibold text-ink">Peman disponib</span>
-            <img src="/moncash-logo.webp" alt="MonCash" className="h-7 rounded object-contain" />
-            <img src="/natcash-logo.png" alt="NatCash" className="h-7 rounded object-contain" />
+            <div className="flex h-8 w-24 items-center justify-center">
+              <img
+                src="/moncash-logo.webp"
+                alt="MonCash"
+                className="max-h-full max-w-full rounded object-contain"
+              />
+            </div>
+            <div className="flex h-8 w-24 items-center justify-center">
+              <img
+                src="/natcash-logo.png"
+                alt="NatCash"
+                className="max-h-full max-w-full rounded object-contain"
+              />
+            </div>
           </motion.div>
         </div>
       </section>
