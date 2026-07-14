@@ -17,6 +17,14 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
     });
     if (!isAdmin) throw new Error("Forbidden");
 
+    const { data: allowed, error: rlErr } = await supabase.rpc("check_rate_limit_secure", {
+      _action: "send_payment_review_push",
+      _max_hits: 30,
+      _window_seconds: 600,
+    });
+    if (rlErr) throw new Error(rlErr.message);
+    if (!allowed) throw new Error("Twòp notifikasyon nan yon ti tan. Tanpri eseye ankò pita.");
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: payment, error: pErr } = await supabaseAdmin

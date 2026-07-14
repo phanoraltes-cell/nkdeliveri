@@ -20,6 +20,14 @@ export const sendNewsletterBroadcast = createServerFn({ method: "POST" })
     const { data: isSuperAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
     if (!isAdmin && !isSuperAdmin) throw new Error("Forbidden");
 
+    const { data: allowed, error: rlErr } = await supabase.rpc("check_rate_limit_secure", {
+      _action: "send_newsletter",
+      _max_hits: 3,
+      _window_seconds: 3600,
+    });
+    if (rlErr) throw new Error(rlErr.message);
+    if (!allowed) throw new Error("Twòp anvwa nan yon ti tan. Tanpri eseye ankò nan yon èdtan.");
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       throw new Error(

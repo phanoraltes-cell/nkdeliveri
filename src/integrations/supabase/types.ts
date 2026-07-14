@@ -1081,6 +1081,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_rate_limit_secure: {
+        Args: {
+          _action: string
+          _actor_override?: string | null
+          _max_hits: number
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       claim_delivery_secure: {
         Args: { _order_id: string }
         Returns: {
