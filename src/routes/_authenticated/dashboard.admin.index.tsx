@@ -9,8 +9,6 @@ import {
   ClipboardList,
   CreditCard,
   BarChart3,
-  CheckCircle2,
-  XCircle,
   Wallet,
   Percent,
   Inbox,
@@ -18,22 +16,24 @@ import {
 import { toast } from "sonner";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
-import { ProofThumb } from "@/components/proof-thumb";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DashboardShortcutGrid } from "@/components/dashboard/dashboard-shortcut-grid";
+import { LiveMapSection } from "@/components/dashboard/admin/live-map-section";
+import { PendingRestaurantsSection } from "@/components/dashboard/admin/pending-restaurants-section";
+import { PendingDriversSection } from "@/components/dashboard/admin/pending-drivers-section";
 import { formatHTG } from "@/lib/format";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
+import { escapeHtml } from "@/lib/html";
+import { DELIVERY_STATUS_LABEL } from "@/lib/delivery-status";
 
-// Leaflet (~150KB) and recharts (~350KB) are only needed once this page has
-// mounted — loading them as part of the main route chunk would delay every
-// dashboard visit for the sake of a map/chart below the fold.
-const LeafletMap = lazy(() =>
-  import("@/components/maps/LeafletMap").then((m) => ({ default: m.LeafletMap })),
-);
+// recharts (~350KB) is only needed once this page has mounted — loading it
+// as part of the main route chunk would delay every dashboard visit for the
+// sake of a chart below the fold. (LeafletMap is lazy too, but that import
+// now lives inside LiveMapSection, which owns the whole map card.)
 const RevenueChart = lazy(() =>
   import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
 );
@@ -41,22 +41,6 @@ const RevenueChart = lazy(() =>
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   component: AdminDashboard,
 });
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-const DELIVERY_STATUS_LABEL: Record<string, string> = {
-  assigned: "Asiyen",
-  en_route_pickup: "Nan wout pou pran l",
-  picked_up: "Pran nan men restoran",
-  en_route_dropoff: "Nan wout pou livre",
-  delivered: "Livre",
-};
 
 function AdminDashboard() {
   const qc = useQueryClient();
@@ -301,72 +285,18 @@ function AdminDashboard() {
         <p className="mt-1 text-ink-soft">Jere platfòm nan: itilizatè, restoran, livrè, peman.</p>
       </div>
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-xl font-bold text-ink">Kat an tan reyèl</h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-              {onlineDrivers.data?.length ?? 0} livrè aktif
-            </span>
-            <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
-              {filteredActive.length} livrezon an kou
-            </span>
-          </div>
-        </div>
-
-        <div className="mb-3 flex flex-wrap gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
-          >
-            <option value="all">Tout estati</option>
-            {Object.entries(DELIVERY_STATUS_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select
-            value={restaurantFilter}
-            onChange={(e) => setRestaurantFilter(e.target.value)}
-            className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
-          >
-            <option value="all">Tout restoran</option>
-            {restaurantOptions.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <input
-            value={zoneQuery}
-            onChange={(e) => setZoneQuery(e.target.value)}
-            placeholder="Chèche yon zòn/adrès…"
-            className="min-w-[160px] flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand"
-          />
-        </div>
-
-        <Suspense
-          fallback={<Skeleton className="h-[260px] w-full rounded-xl sm:h-[340px] lg:h-[420px]" />}
-        >
-          <LeafletMap
-            markers={markers}
-            className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl"
-          />
-        </Suspense>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Livrè
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Adrès kliyan
-          </span>
-        </div>
-      </section>
+      <LiveMapSection
+        markers={markers}
+        onlineDriverCount={onlineDrivers.data?.length ?? 0}
+        activeDeliveryCount={filteredActive.length}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        restaurantFilter={restaurantFilter}
+        onRestaurantFilterChange={setRestaurantFilter}
+        restaurantOptions={restaurantOptions}
+        zoneQuery={zoneQuery}
+        onZoneQueryChange={setZoneQuery}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -480,127 +410,19 @@ function AdminDashboard() {
         />
       </section>
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-display text-xl font-bold text-ink">
-          Restoran an atant valdasyon
-        </h2>
-        {pendingRestaurants.isLoading && <div className="text-ink-soft">Chajman...</div>}
-        {pendingRestaurants.data?.length === 0 && (
-          <div className="text-sm text-ink-soft">Pa gen okenn restoran an atant.</div>
-        )}
-        <div className="space-y-3">
-          {pendingRestaurants.data?.map((r) => (
-            <div key={r.id} className="rounded-xl border border-brand-soft/50 p-3">
-              <div className="flex flex-wrap items-start gap-3">
-                <div className="flex gap-2">
-                  {r.logo_url ? (
-                    <ProofThumb path={r.logo_url} alt={`Logo ${r.name}`} />
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
-                      San logo
-                    </div>
-                  )}
-                  {r.cover_url ? (
-                    <ProofThumb path={r.cover_url} alt={`Kouvèti ${r.name}`} />
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
-                      San kouvèti
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-ink">{r.name}</div>
-                  <div className="text-xs text-ink-soft">
-                    {r.cuisine || "—"} · {r.phone || "san telefòn"} · {r.address || "san adrès"}
-                  </div>
-                  {r.description && <p className="mt-1 text-xs text-ink-soft">{r.description}</p>}
-                </div>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => updateResto.mutate({ id: r.id, status: "approved" })}
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-                </button>
-                <button
-                  onClick={() => updateResto.mutate({ id: r.id, status: "rejected" })}
-                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
-                >
-                  <XCircle className="h-3.5 w-3.5" /> Refize
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PendingRestaurantsSection
+        restaurants={pendingRestaurants.data}
+        isLoading={pendingRestaurants.isLoading}
+        onApprove={(id) => updateResto.mutate({ id, status: "approved" })}
+        onReject={(id) => updateResto.mutate({ id, status: "rejected" })}
+      />
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-display text-xl font-bold text-ink">Livrè an atant valdasyon</h2>
-        {pendingDrivers.isLoading && <div className="text-ink-soft">Chajman...</div>}
-        {pendingDrivers.data?.length === 0 && (
-          <div className="text-sm text-ink-soft">Pa gen okenn livrè an atant.</div>
-        )}
-        <div className="space-y-3">
-          {pendingDrivers.data?.map((d) => (
-            <div key={d.id} className="rounded-xl border border-brand-soft/50 p-3">
-              <div className="flex flex-wrap items-start gap-3">
-                <div className="flex flex-wrap gap-2">
-                  {d.id_doc_url ? (
-                    <ProofThumb
-                      path={d.id_doc_url}
-                      bucket="driver-documents"
-                      alt={`Pyès idantite ${d.first_name}`}
-                    />
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-red-300 bg-red-50 text-center text-[10px] font-semibold text-red-700">
-                      Pa gen pyès idantite!
-                    </div>
-                  )}
-                  {d.license_doc_url && (
-                    <ProofThumb
-                      path={d.license_doc_url}
-                      bucket="driver-documents"
-                      alt={`Pèmi ${d.first_name}`}
-                    />
-                  )}
-                  {d.vehicle_photo_url && (
-                    <ProofThumb
-                      path={d.vehicle_photo_url}
-                      bucket="driver-documents"
-                      alt={`Veyikil ${d.first_name}`}
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-ink">
-                    {d.first_name} {d.last_name}
-                  </div>
-                  <div className="text-xs text-ink-soft">
-                    {d.vehicle_type || "—"} · {d.license_plate || "san plak"} ·{" "}
-                    {d.phone || "san telefòn"}
-                  </div>
-                  <div className="text-xs text-ink-soft">{d.address || "san adrès"}</div>
-                </div>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => updateDriver.mutate({ id: d.id, status: "approved" })}
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-                </button>
-                <button
-                  onClick={() => updateDriver.mutate({ id: d.id, status: "rejected" })}
-                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
-                >
-                  <XCircle className="h-3.5 w-3.5" /> Refize
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PendingDriversSection
+        drivers={pendingDrivers.data}
+        isLoading={pendingDrivers.isLoading}
+        onApprove={(id) => updateDriver.mutate({ id, status: "approved" })}
+        onReject={(id) => updateDriver.mutate({ id, status: "rejected" })}
+      />
 
       <DashboardShortcutGrid
         items={[

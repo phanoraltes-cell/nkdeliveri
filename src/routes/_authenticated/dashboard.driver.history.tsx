@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Package, CheckCircle2 } from "lucide-react";
 import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
+import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/history")({
   beforeLoad: ({ context }) => {
@@ -16,15 +17,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/history")
   },
   component: DriverHistory,
 });
-
-const STATUS_LABEL: Record<string, string> = {
-  assigned: "Asiyen",
-  en_route_pickup: "Nan wout pou pran l",
-  picked_up: "Pran nan men restoran",
-  en_route_dropoff: "Nan wout pou livre",
-  delivered: "Livre",
-  cancelled: "Anile",
-};
 
 function DriverHistory() {
   const { user } = Route.useRouteContext();

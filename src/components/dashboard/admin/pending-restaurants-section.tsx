@@ -1,0 +1,84 @@
+import { CheckCircle2, XCircle } from "lucide-react";
+import { ProofThumb } from "@/components/proof-thumb";
+
+export type PendingRestaurant = {
+  id: string;
+  name: string;
+  cuisine: string | null;
+  phone: string | null;
+  address: string | null;
+  description: string | null;
+  logo_url: string | null;
+  cover_url: string | null;
+  created_at: string;
+};
+
+type PendingRestaurantsSectionProps = {
+  restaurants: PendingRestaurant[] | undefined;
+  isLoading: boolean;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+};
+
+/** Admin dashboard's restaurant-approval queue, with logo/cover previews and an approve/reject action pair. */
+export function PendingRestaurantsSection({
+  restaurants,
+  isLoading,
+  onApprove,
+  onReject,
+}: PendingRestaurantsSectionProps) {
+  return (
+    <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+      <h2 className="mb-4 font-display text-xl font-bold text-ink">Restoran an atant valdasyon</h2>
+      {isLoading && <div className="text-ink-soft">Chajman...</div>}
+      {restaurants?.length === 0 && (
+        <div className="text-sm text-ink-soft">Pa gen okenn restoran an atant.</div>
+      )}
+      <div className="space-y-3">
+        {restaurants?.map((r) => (
+          <div key={r.id} className="rounded-xl border border-brand-soft/50 p-3">
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="flex gap-2">
+                {r.logo_url ? (
+                  <ProofThumb path={r.logo_url} alt={`Logo ${r.name}`} />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
+                    San logo
+                  </div>
+                )}
+                {r.cover_url ? (
+                  <ProofThumb path={r.cover_url} alt={`Kouvèti ${r.name}`} />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-brand-soft/60 text-[10px] text-ink-soft">
+                    San kouvèti
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-ink">{r.name}</div>
+                <div className="text-xs text-ink-soft">
+                  {r.cuisine || "—"} · {r.phone || "san telefòn"} · {r.address || "san adrès"}
+                </div>
+                {r.description && <p className="mt-1 text-xs text-ink-soft">{r.description}</p>}
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => onApprove(r.id)}
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
+              </button>
+              <button
+                onClick={() => onReject(r.id)}
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
+              >
+                <XCircle className="h-3.5 w-3.5" /> Refize
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
