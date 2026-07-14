@@ -87,10 +87,21 @@ async function stampOwner(
   path: string,
   userId: string,
 ) {
-  await supabaseAdmin.schema("storage").from("objects").update({ owner: userId }).match({
-    bucket_id: bucket,
-    name: path,
-  });
+  const { error } = await supabaseAdmin
+    .schema("storage")
+    .from("objects")
+    .update({ owner: userId })
+    .match({ bucket_id: bucket, name: path });
+  // The upload itself already succeeded by the time this runs, so a failure
+  // here isn't fatal to the request — but it's exactly the failure mode the
+  // comment above warns about (owner=auth.uid() RLS policies silently
+  // breaking for this file later), so it must be discoverable, not swallowed.
+  if (error) {
+    console.error(
+      `[finalizeRegistrationDocuments] failed to stamp owner on ${bucket}/${path}`,
+      error,
+    );
+  }
 }
 
 /**

@@ -23,10 +23,14 @@ export const suspendUserAccount = createServerFn({ method: "POST" })
     // Suspending another admin/super_admin requires super_admin — a plain
     // admin locking out another admin is the same privilege-escalation path
     // the role-management RPCs already guard against.
-    const { data: targetRoles } = await supabaseAdmin
+    const { data: targetRoles, error: rolesErr } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", data.userId);
+    // Fail closed: if this lookup errors, targetRoles ?? [] would silently
+    // read as "no elevated role", bypassing the super_admin-only check below
+    // for an account that may well be an admin.
+    if (rolesErr) throw new Error(rolesErr.message);
     const targetHasElevatedRole = (targetRoles ?? []).some(
       (r) => r.role === "admin" || r.role === "super_admin",
     );

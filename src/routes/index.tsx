@@ -52,6 +52,8 @@ const homeDataQuery = queryOptions({
         .order("created_at", { ascending: false })
         .limit(16),
     ]);
+    if (rests.error) throw rests.error;
+    if (prods.error) throw prods.error;
     return { restaurants: rests.data ?? [], products: prods.data ?? [] };
   },
 });

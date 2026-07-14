@@ -18,10 +18,11 @@ export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps)
     enabled: !!user,
     refetchInterval: 30000,
     queryFn: async () => {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
         .is("read_at", null);
+      if (error) throw error;
       return count ?? 0;
     },
   });
@@ -30,11 +31,12 @@ export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps)
     queryKey: ["header-avatar", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("avatar_url")
         .eq("id", user!.id)
         .maybeSingle();
+      if (error) throw error;
       return data?.avatar_url ?? null;
     },
   });

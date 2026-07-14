@@ -17,10 +17,15 @@ async function pushToUsers(
   if (userIds.length === 0) return { sent: 0 };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: subs } = await supabaseAdmin
+  const { data: subs, error: subsErr } = await supabaseAdmin
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
     .in("user_id", userIds);
+  // Push delivery is a best-effort side effect of an order/delivery state
+  // change that has already been recorded — log rather than throw, so a
+  // subscriptions lookup failure doesn't get mistaken for that change
+  // itself failing.
+  if (subsErr) console.error("[pushToUsers] failed to load subscriptions", subsErr);
   if (!subs || subs.length === 0) return { sent: 0 };
 
   const { buildPushPayload } = await import("@block65/webcrypto-web-push");

@@ -76,11 +76,17 @@ export async function subscribeToPush(): Promise<{ ok: true } | { ok: false; err
   return { ok: true };
 }
 
-export async function unsubscribeFromPush(): Promise<void> {
+export async function unsubscribeFromPush(): Promise<{ ok: boolean; error?: string }> {
   const reg = await getReadyRegistration();
   const sub = await reg?.pushManager.getSubscription();
-  if (sub) {
-    await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-    await sub.unsubscribe();
-  }
+  if (!sub) return { ok: true };
+
+  const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+  if (error) return { ok: false, error: error.message };
+  // Only unsubscribe at the browser level once the row is actually gone —
+  // otherwise a DB-side failure would leave a stale subscription the
+  // server keeps trying (and failing) to push to, with no way for the
+  // user to tell anything is wrong.
+  await sub.unsubscribe();
+  return { ok: true };
 }

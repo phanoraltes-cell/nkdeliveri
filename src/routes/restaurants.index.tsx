@@ -16,11 +16,12 @@ import { Breadcrumb } from "@/components/breadcrumb";
 const listQuery = queryOptions({
   queryKey: ["restaurants-all"],
   queryFn: async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("restaurants")
       .select("id,slug,name,cuisine,logo_url,cover_url,rating,avg_prep_time,delivery_fee,address")
       .eq("status", "approved")
       .order("rating", { ascending: false });
+    if (error) throw error;
     return data ?? [];
   },
 });

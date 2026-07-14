@@ -17,23 +17,28 @@ const restQuery = (slug: string) =>
   queryOptions({
     queryKey: ["restaurant", slug],
     queryFn: async () => {
-      const { data: r } = await supabase
+      const { data: r, error: rErr } = await supabase
         .from("restaurants")
         .select("*")
         .eq("slug", slug)
         .eq("status", "approved")
         .maybeSingle();
+      // maybeSingle() only errors on a real failure or >1 match — zero rows
+      // is `{ data: null, error: null }`, a genuine "not found", not an error.
+      if (rErr) throw rErr;
       if (!r) return null;
-      const { data: cats } = await supabase
+      const { data: cats, error: catsErr } = await supabase
         .from("menu_categories")
         .select("*")
         .eq("restaurant_id", r.id)
         .order("sort_order");
-      const { data: prods } = await supabase
+      if (catsErr) throw catsErr;
+      const { data: prods, error: prodsErr } = await supabase
         .from("products")
         .select("*")
         .eq("restaurant_id", r.id)
         .eq("available", true);
+      if (prodsErr) throw prodsErr;
       return { r, cats: cats ?? [], prods: prods ?? [] };
     },
   });

@@ -61,10 +61,14 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
     if (order.customer_id) recipients.add(order.customer_id as string);
     if (order.restaurants?.owner_id) recipients.add(order.restaurants.owner_id as string);
 
-    const { data: subs } = await supabaseAdmin
+    const { data: subs, error: subsErr } = await supabaseAdmin
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth, user_id")
       .in("user_id", Array.from(recipients));
+    // Push delivery is a best-effort side effect of a payment review that has
+    // already been recorded — log rather than throw, so a subscriptions
+    // lookup failure doesn't get mistaken for the review itself failing.
+    if (subsErr) console.error("[sendPaymentReviewPush] failed to load subscriptions", subsErr);
 
     if (!subs || subs.length === 0) return { sent: 0 };
 

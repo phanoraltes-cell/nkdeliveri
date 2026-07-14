@@ -32,9 +32,13 @@ export function PushToggle() {
     setBusy(true);
     try {
       if (enabled) {
-        await unsubscribeFromPush();
-        setEnabled(false);
-        toast.success("Notifikasyon push dezaktive");
+        const res = await unsubscribeFromPush();
+        if (res.ok) {
+          setEnabled(false);
+          toast.success("Notifikasyon push dezaktive");
+        } else {
+          toast.error(res.error);
+        }
       } else {
         const res = await subscribeToPush();
         if (res.ok) {

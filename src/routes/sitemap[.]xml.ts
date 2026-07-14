@@ -33,10 +33,15 @@ export const Route = createFileRoute("/sitemap.xml")({
       // Regenerated on every request from the live restaurants table, so a
       // newly-approved restaurant appears here with no redeploy needed.
       GET: async () => {
-        const { data: restaurants } = await supabase
+        const { data: restaurants, error } = await supabase
           .from("restaurants")
           .select("slug, updated_at")
           .eq("status", "approved");
+        // A search-engine-facing sitemap shouldn't 500 on a transient DB
+        // hiccup — degrade to the static URLs rather than serving nothing,
+        // but log so a persistent failure (missing restaurant URLs) is
+        // discoverable instead of silently shrinking the sitemap forever.
+        if (error) console.error("[sitemap.xml] failed to load restaurants", error);
 
         const restaurantUrls: UrlEntry[] = (restaurants ?? [])
           .filter((r) => r.slug)
