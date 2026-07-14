@@ -7,6 +7,9 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Check, X, ChevronRight } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
+
+const PAGE_SIZE = 30;
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/orders")({
   beforeLoad: ({ context }) => {
@@ -46,24 +49,53 @@ function RestaurantOrders() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "pending">("all");
+  const [page, setPage] = useState(1);
 
   const { data: restaurant } = useMyRestaurant(user?.id);
 
+  // "An atant" (pending) is the actionable queue staff work off of, live —
+  // it must never be silently truncated by pagination, but it's also
+  // naturally bounded (a restaurant only has so many orders awaiting
+  // confirmation at once). "Tout" (all) includes the restaurant's entire
+  // order history and grows without bound, so only that view is paginated.
   const orders = useQuery({
-    queryKey: ["restaurant-orders", restaurant?.id, filter],
+    queryKey: ["restaurant-orders", restaurant?.id, filter, filter === "all" ? page : 0],
     enabled: !!restaurant?.id,
     queryFn: async () => {
       let q = supabase
         .from("orders")
         .select(
           "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price), payments(status, method)",
+          filter === "all" ? { count: "exact" } : undefined,
         )
         .eq("restaurant_id", restaurant!.id)
         .order("created_at", { ascending: false });
-      if (filter === "pending") q = q.eq("status", "pending");
-      const { data, error } = await q;
+      if (filter === "pending") {
+        q = q.eq("status", "pending");
+      } else {
+        const from = (page - 1) * PAGE_SIZE;
+        q = q.range(from, from + PAGE_SIZE - 1);
+      }
+      const { data, error, count } = await q;
       if (error) throw error;
-      return data;
+      return { rows: data, totalCount: count ?? 0 };
+    },
+  });
+
+  // Independent of the (possibly paginated) list above, so the badge stays
+  // accurate for the whole restaurant regardless of which page/filter the
+  // list itself is showing.
+  const pendingBadge = useQuery({
+    queryKey: ["restaurant-orders-pending-count", restaurant?.id],
+    enabled: !!restaurant?.id,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("restaurant_id", restaurant!.id)
+        .eq("status", "pending");
+      if (error) throw error;
+      return count ?? 0;
     },
   });
 
@@ -78,11 +110,19 @@ function RestaurantOrders() {
     onSuccess: () => {
       toast.success("Estati kòmand mizajou");
       qc.invalidateQueries({ queryKey: ["restaurant-orders"] });
+      qc.invalidateQueries({ queryKey: ["restaurant-orders-pending-count"] });
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
-  const pendingCount = orders.data?.filter((o) => o.status === "pending").length ?? 0;
+  const rows = orders.data?.rows ?? [];
+  const totalCount = orders.data?.totalCount ?? 0;
+  const pendingCount = pendingBadge.data ?? 0;
+
+  function updateFilter(f: "all" | "pending") {
+    setFilter(f);
+    setPage(1);
+  }
 
   return (
     <div className="space-y-5">
@@ -101,13 +141,13 @@ function RestaurantOrders() {
 
       <div className="flex gap-2">
         <button
-          onClick={() => setFilter("all")}
+          onClick={() => updateFilter("all")}
           className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
         >
           Tout
         </button>
         <button
-          onClick={() => setFilter("pending")}
+          onClick={() => updateFilter("pending")}
           className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
         >
           An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
@@ -115,14 +155,14 @@ function RestaurantOrders() {
       </div>
 
       {orders.isLoading && <div className="text-ink-soft">Chajman…</div>}
-      {!orders.isLoading && (orders.data?.length ?? 0) === 0 && (
+      {!orders.isLoading && rows.length === 0 && (
         <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
           Pa gen kòmand pou filtè sa a.
         </div>
       )}
 
       <div className="space-y-3">
-        {orders.data?.map((o) => (
+        {rows.map((o) => (
           <div
             key={o.id}
             className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
@@ -213,6 +253,14 @@ function RestaurantOrders() {
           </div>
         ))}
       </div>
+      {filter === "all" && (
+        <PaginationControls
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCount}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 }

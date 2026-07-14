@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -12,24 +12,42 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { pageMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
 
-const listQuery = queryOptions({
-  queryKey: ["restaurants-all"],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("restaurants")
-      .select("id,slug,name,cuisine,logo_url,cover_url,rating,avg_prep_time,delivery_fee,address")
-      .eq("status", "approved")
-      .order("rating", { ascending: false });
-    if (error) throw error;
-    return data ?? [];
-  },
+const PAGE_SIZE = 24;
+
+const listQuery = (q: string, page: number) =>
+  queryOptions({
+    queryKey: ["restaurants-all", q, page],
+    queryFn: async () => {
+      const from = (page - 1) * PAGE_SIZE;
+      let query = supabase
+        .from("restaurants")
+        .select(
+          "id,slug,name,cuisine,logo_url,cover_url,rating,avg_prep_time,delivery_fee,address",
+          { count: "exact" },
+        )
+        .eq("status", "approved");
+      // Search moved server-side alongside pagination: filtering the
+      // already-fetched page client-side (as this used to) would silently
+      // only search whatever page happened to be loaded.
+      if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
+      const { data, error, count } = await query
+        .order("rating", { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      return { rows: data ?? [], totalCount: count ?? 0 };
+    },
+  });
+
+const searchSchema = z.object({
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).optional(),
 });
-
-const searchSchema = z.object({ q: z.string().optional() });
 
 export const Route = createFileRoute("/restaurants/")({
   validateSearch: searchSchema,
+  loaderDeps: ({ search }) => ({ q: search.q ?? "", page: search.page ?? 1 }),
   head: () => ({
     ...pageMeta({
       title: "Restoran nan Gonaïves — NK Deliveri",
@@ -47,17 +65,36 @@ export const Route = createFileRoute("/restaurants/")({
       }),
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(listQuery),
+  loader: ({ context, deps }) => context.queryClient.ensureQueryData(listQuery(deps.q, deps.page)),
   component: RestaurantsPage,
 });
 
 function RestaurantsPage() {
-  const { data } = useSuspenseQuery(listQuery);
-  const { q: initialQ } = Route.useSearch();
-  const [q, setQ] = useState(initialQ ?? "");
-  const filtered = data.filter((r) => r.name.toLowerCase().includes(q.toLowerCase()));
+  const { q, page } = Route.useSearch();
+  const { data } = useSuspenseQuery(listQuery(q ?? "", page ?? 1));
+  const { rows, totalCount } = data;
   const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
   const nav = useNavigate();
+  const navSearch = Route.useNavigate();
+
+  function updateSearch(next: { q?: string; page?: number }) {
+    navSearch({ search: (prev) => ({ ...prev, ...next }), replace: true });
+  }
+
+  // Typing updates this immediately for a responsive input; the URL (and
+  // therefore the server query) only follows after a short pause, so each
+  // keystroke doesn't trigger its own fetch.
+  const [inputValue, setInputValue] = useState(q ?? "");
+  useEffect(() => {
+    setInputValue(q ?? "");
+  }, [q]);
+  useEffect(() => {
+    const trimmed = inputValue.trim();
+    if (trimmed === (q ?? "").trim()) return;
+    const id = setTimeout(() => updateSearch({ q: inputValue || undefined, page: 1 }), 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue]);
 
   function onToggleFavorite(e: React.MouseEvent, restaurantId: string) {
     e.preventDefault();
@@ -76,13 +113,13 @@ function RestaurantsPage() {
         <h1 className="mb-2 font-display text-3xl font-extrabold">Tout restoran</h1>
         <p className="mb-6 text-ink-soft">Chwazi kote w vle kòmande jodi a.</p>
         <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           placeholder="Chèche pa non…"
           className="mb-6 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm outline-none focus:border-brand"
         />
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
-          {filtered.map((r) => (
+          {rows.map((r) => (
             <Link
               key={r.id}
               to="/restaurants/$slug"
@@ -124,6 +161,18 @@ function RestaurantsPage() {
             </Link>
           ))}
         </div>
+        {rows.length === 0 && (
+          <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center text-ink-soft">
+            Pa gen restoran ki koresponn.
+          </div>
+        )}
+        <PaginationControls
+          page={page ?? 1}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCount}
+          onPageChange={(p) => updateSearch({ page: p })}
+          className="mt-6"
+        />
       </div>
       <SiteFooter />
     </div>
