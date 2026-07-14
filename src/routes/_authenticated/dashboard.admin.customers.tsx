@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Download, Search, Send, Mail } from "lucide-react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
@@ -254,15 +255,9 @@ function AdminCustomers() {
                     {new Date(s.subscribed_at).toLocaleDateString("fr-HT")}
                   </td>
                   <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        s.unsubscribed_at
-                          ? "bg-ink/10 text-ink-soft"
-                          : "bg-emerald-100 text-emerald-800"
-                      }`}
-                    >
+                    <StatusBadge tone={s.unsubscribed_at ? "neutral" : "good"}>
                       {s.unsubscribed_at ? "Dezabone" : "Aktif"}
-                    </span>
+                    </StatusBadge>
                   </td>
                 </tr>
               ))}

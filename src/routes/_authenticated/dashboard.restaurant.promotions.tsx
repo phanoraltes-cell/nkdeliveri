@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
@@ -139,11 +140,9 @@ function RestaurantPromotions() {
               <div>
                 <div className="flex items-center gap-2 font-display text-lg font-extrabold">
                   {p.title}
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.active ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}
-                  >
+                  <StatusBadge tone={p.active ? "good" : "neutral"}>
                     {p.active ? "Aktif" : "Dezaktive"}
-                  </span>
+                  </StatusBadge>
                 </div>
                 {p.description && <div className="text-sm text-ink-soft">{p.description}</div>}
                 <div className="mt-1 text-sm font-bold text-brand-deep">

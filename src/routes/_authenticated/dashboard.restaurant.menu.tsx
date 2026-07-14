@@ -9,6 +9,7 @@ import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { assertValidUploadFile } from "@/lib/file-validation";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
@@ -295,11 +296,9 @@ function RestaurantMenu() {
                   <span className="font-display font-extrabold text-brand-deep">
                     {formatHTG(Number(p.price))}
                   </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.available ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}
-                  >
+                  <StatusBadge tone={p.available ? "good" : "neutral"}>
                     {p.available ? "Disponib" : "Pa disponib"}
-                  </span>
+                  </StatusBadge>
                 </div>
                 {p.stock_quantity != null && (
                   <div

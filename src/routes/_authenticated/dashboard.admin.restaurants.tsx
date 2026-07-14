@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Percent, Store } from "lucide-react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 const PAGE_SIZE = 50;
 
@@ -87,15 +88,9 @@ function AdminRestaurants() {
                   <div className="font-display text-base font-bold text-ink">{r.name}</div>
                   <div className="text-xs text-ink-soft">
                     {r.cuisine || "—"} ·{" "}
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        r.status === "approved"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
+                    <StatusBadge tone={r.status === "approved" ? "good" : "warn"}>
                       {STATUS_LABEL[r.status] || r.status}
-                    </span>
+                    </StatusBadge>
                   </div>
                 </div>
               </div>

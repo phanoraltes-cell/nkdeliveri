@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { useState } from "react";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/revenue")({
   beforeLoad: ({ context }) => {
@@ -158,17 +159,11 @@ function RestaurantRevenue() {
                     {formatHTG(Number(p.amount))}
                   </td>
                   <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        p.status === "paid"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : p.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                      }`}
+                    <StatusBadge
+                      tone={p.status === "paid" ? "good" : p.status === "failed" ? "bad" : "warn"}
                     >
                       {p.status}
-                    </span>
+                    </StatusBadge>
                   </td>
                 </tr>
               ))}

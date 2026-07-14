@@ -26,6 +26,7 @@ import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // See dashboard.admin.index.tsx for why these are lazy: leaflet/recharts
@@ -249,17 +250,12 @@ function DriverDashboard() {
           <p className="mt-1 text-ink-soft">Jere disponiblite w ak livrezon w yo.</p>
         </div>
         {driver && (
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-              pending
-                ? "bg-amber-100 text-amber-800"
-                : online
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-gray-100 text-gray-700"
-            }`}
+          <StatusBadge
+            tone={pending ? "warn" : online ? "good" : "neutral"}
+            className="px-3 py-1 text-xs"
           >
             {driver.status}
-          </span>
+          </StatusBadge>
         )}
       </div>
 

@@ -23,6 +23,7 @@ import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
@@ -216,17 +217,12 @@ function RestaurantDashboard() {
           </p>
         </div>
         {restaurant && isOwner && (
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-              pending
-                ? "bg-amber-100 text-amber-800"
-                : restaurant.status === "approved"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-red-100 text-red-800"
-            }`}
+          <StatusBadge
+            tone={pending ? "warn" : restaurant.status === "approved" ? "good" : "bad"}
+            className="px-3 py-1 text-xs"
           >
             {restaurant.status}
-          </span>
+          </StatusBadge>
         )}
       </div>
 

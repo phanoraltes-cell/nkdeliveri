@@ -6,6 +6,7 @@ import { sendPaymentReviewPush } from "@/lib/send-push.functions";
 import { formatHTG } from "@/lib/format";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { ProofThumb } from "@/components/proof-thumb";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { toast } from "sonner";
 import { Fragment, useState } from "react";
 import { Download, FileText } from "lucide-react";
@@ -488,15 +489,9 @@ function PayoutHistory({
                         {formatHTG(Number(p.amount))}
                       </td>
                       <td className="px-3 py-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                            p.status === "paid"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
+                        <StatusBadge tone={p.status === "paid" ? "good" : "bad"}>
                           {p.status}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td className="px-3 py-2 text-right">
                         <button

@@ -23,6 +23,7 @@ import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { formatHTG } from "@/lib/format";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
@@ -387,11 +388,9 @@ function AdminDashboard() {
                   <span className="font-semibold text-ink">
                     {`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè"}
                   </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${busy ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}
-                  >
+                  <StatusBadge tone={busy ? "warn" : "good"}>
                     {busy ? "An livrezon" : "Disponib"}
-                  </span>
+                  </StatusBadge>
                 </li>
               );
             })}
