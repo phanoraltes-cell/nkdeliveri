@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { sendPaymentReviewPush } from "@/lib/send-push.functions";
 import { formatHTG } from "@/lib/format";
+import { downloadCSV } from "@/lib/csv-export";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { ProofThumb } from "@/components/proof-thumb";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -319,35 +320,22 @@ function PayoutHistory({
       "Estati",
       "Nòt",
     ];
-    const csv = [
-      headers.join(","),
-      ...rows.map((r) =>
-        [
-          r.date,
-          r.order,
-          r.restaurant,
-          r.method,
-          r.tx,
-          r.sender,
-          r.receiver,
-          r.amount,
-          r.status,
-          r.notes,
-        ]
-          .map((v) => {
-            const s = String(v ?? "").replace(/"/g, '""');
-            return /[",\n]/.test(s) ? `"${s}"` : s;
-          })
-          .join(","),
-      ),
-    ].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `payout-history_${fromDate}_${toDate}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCSV(
+      `payout-history_${fromDate}_${toDate}.csv`,
+      headers,
+      rows.map((r) => [
+        r.date,
+        r.order,
+        r.restaurant,
+        r.method,
+        r.tx,
+        r.sender,
+        r.receiver,
+        r.amount,
+        r.status,
+        r.notes,
+      ]),
+    );
     toast.success("CSV telechaje");
   }
 
