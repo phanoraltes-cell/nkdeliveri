@@ -23,14 +23,13 @@ import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
 // only needed once this page has mounted.
 const RevenueChart = lazy(() =>
   import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
 );
-
-const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/")({
   component: RestaurantDashboard,
@@ -89,13 +88,9 @@ function RestaurantDashboard() {
     },
   });
 
-  const weeklyRevenue = useQuery({
-    queryKey: ["restaurant-weekly-revenue", restaurantId],
-    enabled: !!restaurantId && isOwner,
-    queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 6);
-      since.setHours(0, 0, 0, 0);
+  const weeklyRevenue = useWeeklySeries(
+    ["restaurant-weekly-revenue", restaurantId],
+    async (since) => {
       const { data, error } = await supabase
         .from("orders")
         .select("created_at, total")
@@ -104,23 +99,11 @@ function RestaurantDashboard() {
         .neq("status", "cancelled")
         .neq("status", "refunded");
       if (error) throw error;
-
-      const byDay = new Map<string, number>();
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(since);
-        d.setDate(since.getDate() + i);
-        byDay.set(d.toDateString(), 0);
-      }
-      for (const o of data ?? []) {
-        const key = new Date(o.created_at).toDateString();
-        if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + Number(o.total));
-      }
-      return Array.from(byDay.entries()).map(([dateStr, value]) => ({
-        label: CREOLE_DAY[new Date(dateStr).getDay()],
-        value,
-      }));
+      return data ?? [];
     },
-  });
+    (o) => ({ date: o.created_at, value: Number(o.total) }),
+    { enabled: !!restaurantId && isOwner },
+  );
 
   const popularDishes = useQuery({
     queryKey: ["restaurant-popular-dishes", restaurantId],

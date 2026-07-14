@@ -26,6 +26,7 @@ import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // See dashboard.admin.index.tsx for why these are lazy: leaflet/recharts
 // are only needed once this page has mounted.
@@ -36,7 +37,6 @@ const RevenueChart = lazy(() =>
   import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
 );
 
-const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 type ReviewRow = {
   id: string;
   driver_rating: number | null;
@@ -171,13 +171,9 @@ function DriverDashboard() {
     },
   });
 
-  const weeklyEarnings = useQuery({
-    queryKey: ["driver-weekly-earnings", driver?.id],
-    enabled: !!driver?.id,
-    queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 6);
-      since.setHours(0, 0, 0, 0);
+  const weeklyEarnings = useWeeklySeries(
+    ["driver-weekly-earnings", driver?.id],
+    async (since) => {
       const { data, error } = await supabase
         .from("deliveries")
         .select("fee, delivered_at")
@@ -185,24 +181,11 @@ function DriverDashboard() {
         .eq("status", "delivered")
         .gte("delivered_at", since.toISOString());
       if (error) throw error;
-
-      const byDay = new Map<string, number>();
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(since);
-        d.setDate(since.getDate() + i);
-        byDay.set(d.toDateString(), 0);
-      }
-      for (const row of data ?? []) {
-        if (!row.delivered_at) continue;
-        const key = new Date(row.delivered_at).toDateString();
-        if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + Number(row.fee));
-      }
-      return Array.from(byDay.entries()).map(([dateStr, value]) => ({
-        label: CREOLE_DAY[new Date(dateStr).getDay()],
-        value,
-      }));
+      return data ?? [];
     },
-  });
+    (row) => ({ date: row.delivered_at, value: Number(row.fee) }),
+    { enabled: !!driver?.id },
+  );
 
   const reviews = useQuery({
     queryKey: ["driver-reviews", driver?.id],
