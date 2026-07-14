@@ -97,64 +97,86 @@ function AdminDashboard() {
     return Array.from(names).sort();
   }, [active, approvedRestaurants.data]);
 
-  const matchesZone = (text: string | null | undefined) =>
-    !zoneQuery.trim() || (text ?? "").toLowerCase().includes(zoneQuery.trim().toLowerCase());
+  function matchesZone(text: string | null | undefined) {
+    return !zoneQuery.trim() || (text ?? "").toLowerCase().includes(zoneQuery.trim().toLowerCase());
+  }
 
-  const filteredActive = active.filter((d) => {
-    if (statusFilter !== "all" && d.status !== statusFilter) return false;
-    if (restaurantFilter !== "all" && d.order?.restaurants?.name !== restaurantFilter) return false;
-    if (!matchesZone(d.order?.delivery_address) && !matchesZone(d.order?.restaurants?.name))
-      return false;
-    return true;
-  });
-
-  const filteredRestaurants = (approvedRestaurants.data ?? []).filter((r) => {
-    if (restaurantFilter !== "all" && r.name !== restaurantFilter) return false;
-    if (!matchesZone(r.address) && !matchesZone(r.name)) return false;
-    return true;
-  });
-
-  const markers: MapMarker[] = [
-    ...filteredRestaurants
-      .filter((r) => r.lat != null && r.lng != null)
-      .map((r) => ({
-        id: `rst-${r.id}`,
-        lat: Number(r.lat),
-        lng: Number(r.lng),
-        type: "restaurant" as const,
-        label: r.name ?? "Restoran",
-        info: `<div style="font-size:13px;line-height:1.5"><b>${escapeHtml(r.name ?? "Restoran")}</b><br>${escapeHtml(r.address ?? "")}</div>`,
-      })),
-    ...(onlineDrivers.data ?? [])
-      .filter((d) => d.current_lat != null && d.current_lng != null)
-      .map((d) => {
-        const busy = active.some((a) => a.driver_id === d.id);
-        const name = escapeHtml(`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè");
-        return {
-          id: `drv-${d.id}`,
-          lat: Number(d.current_lat),
-          lng: Number(d.current_lng),
-          type: "driver" as const,
-          label: name,
-          info: `<div style="font-size:13px;line-height:1.5"><b>${name}</b><br>Estati: ${busy ? "An liv rezon" : "Disponib"}</div>`,
-        };
+  const filteredActive = useMemo(
+    () =>
+      active.filter((d) => {
+        if (statusFilter !== "all" && d.status !== statusFilter) return false;
+        if (restaurantFilter !== "all" && d.order?.restaurants?.name !== restaurantFilter)
+          return false;
+        if (!matchesZone(d.order?.delivery_address) && !matchesZone(d.order?.restaurants?.name))
+          return false;
+        return true;
       }),
-    ...filteredActive
-      .filter((d) => d.order?.delivery_lat != null && d.order?.delivery_lng != null)
-      .map((d) => {
-        const address = escapeHtml(d.order?.delivery_address ?? "—");
-        const phone = escapeHtml(d.order?.contact_phone ?? "—");
-        const orderNumber = escapeHtml(d.order?.order_number ?? "");
-        return {
-          id: `dst-${d.id}`,
-          lat: Number(d.order!.delivery_lat),
-          lng: Number(d.order!.delivery_lng),
-          type: "client" as const,
-          label: `Adrès ${d.order?.order_number}`,
-          info: `<div style="font-size:13px;line-height:1.5"><b>Kòmand ${orderNumber}</b><br>Adrès: ${address}<br>Telefòn: ${phone}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
-        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [active, statusFilter, restaurantFilter, zoneQuery],
+  );
+
+  const filteredRestaurants = useMemo(
+    () =>
+      (approvedRestaurants.data ?? []).filter((r) => {
+        if (restaurantFilter !== "all" && r.name !== restaurantFilter) return false;
+        if (!matchesZone(r.address) && !matchesZone(r.name)) return false;
+        return true;
       }),
-  ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [approvedRestaurants.data, restaurantFilter, zoneQuery],
+  );
+
+  // Rebuilding this array (with its escapeHtml popup strings) is the
+  // heaviest per-render work on this page, and it feeds LeafletMap — a
+  // library component that reconciles markers on every prop change. Without
+  // memoization it was recomputed (and the map re-processed every marker)
+  // on every render of this fairly large dashboard, including ones
+  // triggered by state that has nothing to do with the map (e.g. the
+  // payments/approval mutations below).
+  const markers: MapMarker[] = useMemo(
+    () => [
+      ...filteredRestaurants
+        .filter((r) => r.lat != null && r.lng != null)
+        .map((r) => ({
+          id: `rst-${r.id}`,
+          lat: Number(r.lat),
+          lng: Number(r.lng),
+          type: "restaurant" as const,
+          label: r.name ?? "Restoran",
+          info: `<div style="font-size:13px;line-height:1.5"><b>${escapeHtml(r.name ?? "Restoran")}</b><br>${escapeHtml(r.address ?? "")}</div>`,
+        })),
+      ...(onlineDrivers.data ?? [])
+        .filter((d) => d.current_lat != null && d.current_lng != null)
+        .map((d) => {
+          const busy = active.some((a) => a.driver_id === d.id);
+          const name = escapeHtml(`${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè");
+          return {
+            id: `drv-${d.id}`,
+            lat: Number(d.current_lat),
+            lng: Number(d.current_lng),
+            type: "driver" as const,
+            label: name,
+            info: `<div style="font-size:13px;line-height:1.5"><b>${name}</b><br>Estati: ${busy ? "An liv rezon" : "Disponib"}</div>`,
+          };
+        }),
+      ...filteredActive
+        .filter((d) => d.order?.delivery_lat != null && d.order?.delivery_lng != null)
+        .map((d) => {
+          const address = escapeHtml(d.order?.delivery_address ?? "—");
+          const phone = escapeHtml(d.order?.contact_phone ?? "—");
+          const orderNumber = escapeHtml(d.order?.order_number ?? "");
+          return {
+            id: `dst-${d.id}`,
+            lat: Number(d.order!.delivery_lat),
+            lng: Number(d.order!.delivery_lng),
+            type: "client" as const,
+            label: `Adrès ${d.order?.order_number}`,
+            info: `<div style="font-size:13px;line-height:1.5"><b>Kòmand ${orderNumber}</b><br>Adrès: ${address}<br>Telefòn: ${phone}<br>Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? escapeHtml(d.status)}</div>`,
+          };
+        }),
+    ],
+    [filteredRestaurants, filteredActive, onlineDrivers.data, active],
+  );
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
