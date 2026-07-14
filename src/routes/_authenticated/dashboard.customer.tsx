@@ -346,6 +346,7 @@ function RestaurantSection({
                   alt=""
                   width={48}
                   height={48}
+                  loading="lazy"
                   className="h-12 w-12 shrink-0 rounded-xl bg-brand-soft/40 object-cover"
                 />
                 <div className="min-w-0">

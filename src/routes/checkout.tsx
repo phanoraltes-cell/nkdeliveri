@@ -192,6 +192,7 @@ function Checkout() {
                       src={it.imageUrl}
                       width={56}
                       height={56}
+                      loading="lazy"
                       className="h-14 w-14 rounded-xl object-cover"
                       alt=""
                     />
@@ -300,6 +301,7 @@ function Checkout() {
                           alt=""
                           width={40}
                           height={28}
+                          loading="lazy"
                           className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
                         />
                       )}
@@ -319,6 +321,7 @@ function Checkout() {
                       alt=""
                       width={40}
                       height={28}
+                      loading="lazy"
                       className="h-7 w-10 shrink-0 rounded-md border border-amber-200 bg-white object-contain p-0.5"
                     />
                     <div>
