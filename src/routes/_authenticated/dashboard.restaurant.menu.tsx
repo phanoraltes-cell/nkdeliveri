@@ -16,7 +16,12 @@ type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/menu")({
   beforeLoad: ({ context }) => {
     const { role } = context;
-    if (role !== "restaurant_owner" && role !== "restaurant_staff" && role !== "admin" && role !== "super_admin") {
+    if (
+      role !== "restaurant_owner" &&
+      role !== "restaurant_staff" &&
+      role !== "admin" &&
+      role !== "super_admin"
+    ) {
       throw redirect({ to: "/dashboard" });
     }
   },
@@ -38,7 +43,9 @@ const DISH_TYPES = [
 async function uploadDishPhoto(restaurantId: string, file: File) {
   assertValidUploadFile(file, "menu-photos");
   const path = `${restaurantId}/${Date.now()}-${file.name}`;
-  const { error } = await supabase.storage.from("menu-photos").upload(path, file, { upsert: false });
+  const { error } = await supabase.storage
+    .from("menu-photos")
+    .upload(path, file, { upsert: false });
   if (error) throw error;
   return supabase.storage.from("menu-photos").getPublicUrl(path).data.publicUrl;
 }
@@ -97,7 +104,11 @@ function RestaurantMenu() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { setNewCatName(""); toast.success("Kategori ajoute"); invalidate(); },
+    onSuccess: () => {
+      setNewCatName("");
+      toast.success("Kategori ajoute");
+      invalidate();
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -105,11 +116,17 @@ function RestaurantMenu() {
     mutationFn: async (c: { id: string; name: string }) => {
       const cat = categories.data?.find((x) => x.id === c.id);
       const { error } = await supabase.rpc("update_menu_category_secure", {
-        _category_id: c.id, _name: c.name, _sort_order: cat?.sort_order ?? 0,
+        _category_id: c.id,
+        _name: c.name,
+        _sort_order: cat?.sort_order ?? 0,
       });
       if (error) throw error;
     },
-    onSuccess: () => { setEditingCat(null); toast.success("Kategori mizajou"); invalidate(); },
+    onSuccess: () => {
+      setEditingCat(null);
+      toast.success("Kategori mizajou");
+      invalidate();
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -118,7 +135,11 @@ function RestaurantMenu() {
       const { error } = await supabase.rpc("delete_menu_category_secure", { _category_id: id });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Kategori efase"); if (activeCat !== "all") setActiveCat("all"); invalidate(); },
+    onSuccess: () => {
+      toast.success("Kategori efase");
+      if (activeCat !== "all") setActiveCat("all");
+      invalidate();
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -127,7 +148,10 @@ function RestaurantMenu() {
       const { error } = await supabase.rpc("delete_product_secure", { _product_id: id });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Plat retire nan meni an"); invalidate(); },
+    onSuccess: () => {
+      toast.success("Plat retire nan meni an");
+      invalidate();
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -142,7 +166,12 @@ function RestaurantMenu() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Meni</h1>
           <p className="mt-1 text-ink-soft">Jere kategori ak plat ou yo.</p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -164,8 +193,15 @@ function RestaurantMenu() {
                     onChange={(e) => setEditingCat({ id: c.id, name: e.target.value })}
                     className="w-28 bg-transparent text-sm outline-none"
                   />
-                  <button onClick={() => updateCategory.mutate(editingCat)} className="text-emerald-600"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => setEditingCat(null)} className="text-ink-soft"><X className="h-3.5 w-3.5" /></button>
+                  <button
+                    onClick={() => updateCategory.mutate(editingCat)}
+                    className="text-emerald-600"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => setEditingCat(null)} className="text-ink-soft">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ) : (
                 <button
@@ -175,14 +211,20 @@ function RestaurantMenu() {
                   {c.name} ({products.data?.filter((p) => p.category_id === c.id).length ?? 0})
                   <span
                     role="button"
-                    onClick={(e) => { e.stopPropagation(); setEditingCat({ id: c.id, name: c.name }); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCat({ id: c.id, name: c.name });
+                    }}
                     className="opacity-60 hover:opacity-100"
                   >
                     <Pencil className="h-3 w-3" />
                   </span>
                   <span
                     role="button"
-                    onClick={(e) => { e.stopPropagation(); if (confirm(`Efase kategori "${c.name}"?`)) deleteCategory.mutate(c.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Efase kategori "${c.name}"?`)) deleteCategory.mutate(c.id);
+                    }}
                     className="opacity-60 hover:opacity-100"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -225,7 +267,10 @@ function RestaurantMenu() {
             restaurantId={restaurant.id}
             categories={categories.data ?? []}
             product={editingProduct}
-            onClose={() => { setShowAddProduct(false); setEditingProduct(null); }}
+            onClose={() => {
+              setShowAddProduct(false);
+              setEditingProduct(null);
+            }}
             onSaved={invalidate}
           />
         )}
@@ -247,13 +292,19 @@ function RestaurantMenu() {
                 <div className="font-bold">{p.name}</div>
                 <div className="text-xs text-ink-soft">{p.description}</div>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="font-display font-extrabold text-brand-deep">{formatHTG(Number(p.price))}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.available ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}>
+                  <span className="font-display font-extrabold text-brand-deep">
+                    {formatHTG(Number(p.price))}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.available ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}
+                  >
                     {p.available ? "Disponib" : "Pa disponib"}
                   </span>
                 </div>
                 {p.stock_quantity != null && (
-                  <div className={`mt-1 text-[11px] font-semibold ${p.stock_quantity === 0 ? "text-red-600" : "text-ink-soft"}`}>
+                  <div
+                    className={`mt-1 text-[11px] font-semibold ${p.stock_quantity === 0 ? "text-red-600" : "text-ink-soft"}`}
+                  >
                     Stock: {p.stock_quantity}
                   </div>
                 )}
@@ -265,7 +316,9 @@ function RestaurantMenu() {
                     Modifye
                   </button>
                   <button
-                    onClick={() => { if (confirm(`Retire "${p.name}" nan meni an?`)) deleteProduct.mutate(p.id); }}
+                    onClick={() => {
+                      if (confirm(`Retire "${p.name}" nan meni an?`)) deleteProduct.mutate(p.id);
+                    }}
                     className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -286,7 +339,11 @@ function RestaurantMenu() {
 }
 
 function ProductForm({
-  restaurantId, categories, product, onClose, onSaved,
+  restaurantId,
+  categories,
+  product,
+  onClose,
+  onSaved,
 }: {
   restaurantId: string;
   categories: MenuCategory[];
@@ -369,19 +426,56 @@ function ProductForm({
     <div className="mt-4 rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display font-bold">{product ? "Modifye plat" : "Nouvo plat"}</h3>
-        <button onClick={onClose} className="text-ink-soft hover:text-ink"><X className="h-4 w-4" /></button>
+        <button onClick={onClose} className="text-ink-soft hover:text-ink">
+          <X className="h-4 w-4" />
+        </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <input placeholder="Non plat la" className={inputCls()} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <input placeholder="Pri (HTG)" type="number" min="0" step="1" className={inputCls()} value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} />
-        <select className={inputCls()} value={f.category_id} onChange={(e) => setF({ ...f, category_id: e.target.value })}>
+        <input
+          placeholder="Non plat la"
+          className={inputCls()}
+          value={f.name}
+          onChange={(e) => setF({ ...f, name: e.target.value })}
+        />
+        <input
+          placeholder="Pri (HTG)"
+          type="number"
+          min="0"
+          step="1"
+          className={inputCls()}
+          value={f.price}
+          onChange={(e) => setF({ ...f, price: e.target.value })}
+        />
+        <select
+          className={inputCls()}
+          value={f.category_id}
+          onChange={(e) => setF({ ...f, category_id: e.target.value })}
+        >
           <option value="">San kategori</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
         </select>
-        <select className={inputCls()} value={f.dish_type} onChange={(e) => setF({ ...f, dish_type: e.target.value })}>
-          {DISH_TYPES.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+        <select
+          className={inputCls()}
+          value={f.dish_type}
+          onChange={(e) => setF({ ...f, dish_type: e.target.value })}
+        >
+          {DISH_TYPES.map((d) => (
+            <option key={d.key} value={d.key}>
+              {d.label}
+            </option>
+          ))}
         </select>
-        <textarea placeholder="Deskripsyon (opsyonèl)" rows={2} className={inputCls() + " sm:col-span-2"} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        <textarea
+          placeholder="Deskripsyon (opsyonèl)"
+          rows={2}
+          className={inputCls() + " sm:col-span-2"}
+          value={f.description}
+          onChange={(e) => setF({ ...f, description: e.target.value })}
+        />
         <input
           placeholder="Kantite stock (kite vid = ilimite)"
           type="number"
@@ -393,10 +487,19 @@ function ProductForm({
         />
         <label className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-soft px-3 py-2 text-xs text-ink-soft hover:bg-white">
           <Upload className="h-3.5 w-3.5" /> {photo?.name || "Chanje foto plat la"}
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+          />
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={f.available} onChange={(e) => setF({ ...f, available: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={f.available}
+            onChange={(e) => setF({ ...f, available: e.target.checked })}
+          />
           Disponib pou kòmande
         </label>
       </div>

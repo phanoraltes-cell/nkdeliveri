@@ -61,7 +61,10 @@ export function AddressManager({ userId }: { userId: string }) {
         .eq("user_id", userId)
         .neq("id", id);
       if (e1) throw e1;
-      const { error: e2 } = await supabase.from("addresses").update({ is_default: true }).eq("id", id);
+      const { error: e2 } = await supabase
+        .from("addresses")
+        .update({ is_default: true })
+        .eq("id", id);
       if (e2) throw e2;
     },
     onSuccess: () => {
@@ -95,7 +98,10 @@ export function AddressManager({ userId }: { userId: string }) {
 
       <div className="space-y-2">
         {addresses.data?.map((a) => (
-          <div key={a.id} className="flex flex-wrap items-start gap-2 rounded-xl border border-brand-soft/50 p-3">
+          <div
+            key={a.id}
+            className="flex flex-wrap items-start gap-2 rounded-xl border border-brand-soft/50 p-3"
+          >
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-deep" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 font-bold text-ink">
@@ -135,7 +141,9 @@ export function AddressManager({ userId }: { userId: string }) {
                 <Pencil className="h-4 w-4" />
               </button>
               <button
-                onClick={() => confirm(`Efase "${a.label || a.address_line}"?`) && remove.mutate(a.id)}
+                onClick={() =>
+                  confirm(`Efase "${a.label || a.address_line}"?`) && remove.mutate(a.id)
+                }
                 aria-label="Efase"
                 title="Efase"
                 className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 hover:bg-red-50"

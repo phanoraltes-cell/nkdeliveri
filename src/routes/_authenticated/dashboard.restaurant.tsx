@@ -11,7 +11,12 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant")({
   beforeLoad: ({ context }) => {
     const { role } = context;
-    if (role !== "restaurant_owner" && role !== "restaurant_staff" && role !== "admin" && role !== "super_admin") {
+    if (
+      role !== "restaurant_owner" &&
+      role !== "restaurant_staff" &&
+      role !== "admin" &&
+      role !== "super_admin"
+    ) {
       throw redirect({ to: "/dashboard" });
     }
   },

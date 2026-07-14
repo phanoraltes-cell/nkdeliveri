@@ -41,9 +41,13 @@ function AdminRestaurants() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Restoran & Komisyon</h1>
-          <p className="mt-1 text-ink-soft">Chwazi konbyen chak restoran peye kòm komisyon platfòm.</p>
+          <p className="mt-1 text-ink-soft">
+            Chwazi konbyen chak restoran peye kòm komisyon platfòm.
+          </p>
         </div>
-        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">← Admin</Link>
+        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Admin
+        </Link>
       </div>
 
       {restaurants.isLoading && <div className="text-ink-soft">Chajman…</div>}
@@ -56,9 +60,17 @@ function AdminRestaurants() {
       <div className="space-y-3">
         {restaurants.data?.map((r) =>
           editingId === r.id ? (
-            <CommissionForm key={r.id} restaurant={r} onClose={() => setEditingId(null)} onSaved={() => qc.invalidateQueries({ queryKey: ["admin-restaurants"] })} />
+            <CommissionForm
+              key={r.id}
+              restaurant={r}
+              onClose={() => setEditingId(null)}
+              onSaved={() => qc.invalidateQueries({ queryKey: ["admin-restaurants"] })}
+            />
           ) : (
-            <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+            <div
+              key={r.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+            >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
                   <Store className="h-5 w-5" />
@@ -69,7 +81,9 @@ function AdminRestaurants() {
                     {r.cuisine || "—"} ·{" "}
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        r.status === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                        r.status === "approved"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
                       }`}
                     >
                       {STATUS_LABEL[r.status] || r.status}
@@ -80,9 +94,13 @@ function AdminRestaurants() {
               <div className="flex items-center gap-3">
                 <div className="text-right text-sm">
                   {r.commission_type === "monthly" ? (
-                    <div className="font-bold text-brand-deep">{formatHTG(Number(r.monthly_commission_amount))}/mwa</div>
+                    <div className="font-bold text-brand-deep">
+                      {formatHTG(Number(r.monthly_commission_amount))}/mwa
+                    </div>
                   ) : (
-                    <div className="font-bold text-brand-deep">{Number(r.commission_rate)}% pa kòmand</div>
+                    <div className="font-bold text-brand-deep">
+                      {Number(r.commission_rate)}% pa kòmand
+                    </div>
                   )}
                 </div>
                 <button
@@ -174,7 +192,9 @@ function CommissionForm({
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {type === "per_order" ? (
           <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Pousantaj (%)</span>
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Pousantaj (%)
+            </span>
             <input
               type="number"
               min="0"
@@ -187,7 +207,9 @@ function CommissionForm({
           </label>
         ) : (
           <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Montan chak mwa (HTG)</span>
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Montan chak mwa (HTG)
+            </span>
             <input
               type="number"
               min="0"
@@ -208,7 +230,10 @@ function CommissionForm({
         >
           {save.isPending ? "Ap sove…" : "Sove komisyon"}
         </button>
-        <button onClick={onClose} className="rounded-full border-2 border-brand-soft px-5 py-2 text-sm font-bold text-ink-soft hover:bg-brand-soft/30">
+        <button
+          onClick={onClose}
+          className="rounded-full border-2 border-brand-soft px-5 py-2 text-sm font-bold text-ink-soft hover:bg-brand-soft/30"
+        >
           Anile
         </button>
       </div>

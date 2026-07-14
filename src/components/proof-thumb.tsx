@@ -88,10 +88,7 @@ export function ProofThumb({
             className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
-          <div
-            className="absolute right-4 top-4 flex gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="absolute right-4 top-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
             <a
               href={url}
               download

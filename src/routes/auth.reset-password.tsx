@@ -74,15 +74,16 @@ function ResetPassword() {
         <div className="rounded-[18px] bg-white p-8 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Chwazi nouvo modpas</h1>
 
-          {ready === "checking" && (
-            <p className="text-sm text-ink-soft">Ap verifye lyen an…</p>
-          )}
+          {ready === "checking" && <p className="text-sm text-ink-soft">Ap verifye lyen an…</p>}
 
           {ready === "invalid" && (
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm text-red-900">
               Lyen sa a envalid oswa li ekspire. Mande yon nouvo lyen.
               <div className="mt-3">
-                <Link to="/auth/forgot-password" className="font-bold text-brand-deep hover:underline">
+                <Link
+                  to="/auth/forgot-password"
+                  className="font-bold text-brand-deep hover:underline"
+                >
                   Mande yon nouvo lyen →
                 </Link>
               </div>

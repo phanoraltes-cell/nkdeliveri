@@ -24,7 +24,11 @@ function RestaurantRevenue() {
   const { data: restaurant } = useQuery({
     queryKey: ["me-restaurant-id", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("restaurants").select("id").eq("owner_id", user!.id).maybeSingle();
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("id")
+        .eq("owner_id", user!.id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -50,7 +54,9 @@ function RestaurantRevenue() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id, method, status, amount, created_at, orders!inner(order_number, restaurant_id, created_at)")
+        .select(
+          "id, method, status, amount, created_at, orders!inner(order_number, restaurant_id, created_at)",
+        )
         .eq("orders.restaurant_id", restaurant!.id)
         .gte("orders.created_at", fromDate)
         .lte("orders.created_at", toDate + "T23:59:59")
@@ -66,19 +72,36 @@ function RestaurantRevenue() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Revni ak Peman</h1>
-          <p className="mt-1 text-ink-soft">Tout chif yo kalkile sèvè-side — pa gen kalkil manyèl.</p>
+          <p className="mt-1 text-ink-soft">
+            Tout chif yo kalkile sèvè-side — pa gen kalkil manyèl.
+          </p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-1 text-xs text-ink-soft">
           Depi
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs" />
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
+          />
         </label>
         <label className="flex items-center gap-1 text-xs text-ink-soft">
           Jiska
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs" />
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
+          />
         </label>
       </div>
 
@@ -89,9 +112,20 @@ function RestaurantRevenue() {
           <StatCard label="Kòmand total" value={String(summary.data.total_orders)} />
           <StatCard label="Livre" value={String(summary.data.delivered_orders)} />
           <StatCard label="Anile" value={String(summary.data.cancelled_orders)} />
-          <StatCard label="Revni brit (livre)" value={formatHTG(Number(summary.data.gross_revenue))} accent />
-          <StatCard label={`Komisyon platfòm (${summary.data.commission_rate}%)`} value={formatHTG(Number(summary.data.commission_amount))} />
-          <StatCard label="Ou dwe resevwa (net)" value={formatHTG(Number(summary.data.net_payout))} accent />
+          <StatCard
+            label="Revni brit (livre)"
+            value={formatHTG(Number(summary.data.gross_revenue))}
+            accent
+          />
+          <StatCard
+            label={`Komisyon platfòm (${summary.data.commission_rate}%)`}
+            value={formatHTG(Number(summary.data.commission_amount))}
+          />
+          <StatCard
+            label="Ou dwe resevwa (net)"
+            value={formatHTG(Number(summary.data.net_payout))}
+            accent
+          />
           <StatCard label="Peman konfime" value={formatHTG(Number(summary.data.paid_amount))} />
           <StatCard label="Peman an atant" value={formatHTG(Number(summary.data.pending_amount))} />
         </div>
@@ -115,14 +149,24 @@ function RestaurantRevenue() {
             <tbody>
               {payments.data?.map((p) => (
                 <tr key={p.id} className="border-t border-brand-soft/30">
-                  <td className="px-3 py-2 text-xs text-ink-soft">{new Date(p.created_at).toLocaleDateString("fr-HT")}</td>
+                  <td className="px-3 py-2 text-xs text-ink-soft">
+                    {new Date(p.created_at).toLocaleDateString("fr-HT")}
+                  </td>
                   <td className="px-3 py-2 font-bold">{p.orders?.order_number}</td>
                   <td className="px-3 py-2 uppercase">{p.method}</td>
-                  <td className="px-3 py-2 text-right font-bold text-brand-deep">{formatHTG(Number(p.amount))}</td>
+                  <td className="px-3 py-2 text-right font-bold text-brand-deep">
+                    {formatHTG(Number(p.amount))}
+                  </td>
                   <td className="px-3 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      p.status === "paid" ? "bg-emerald-100 text-emerald-800" : p.status === "failed" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"
-                    }`}>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        p.status === "paid"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : p.status === "failed"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
                       {p.status}
                     </span>
                   </td>
@@ -131,7 +175,9 @@ function RestaurantRevenue() {
             </tbody>
           </table>
           {payments.data?.length === 0 && (
-            <div className="p-6 text-center text-sm text-ink-soft">Pa gen peman pou peryòd sa a.</div>
+            <div className="p-6 text-center text-sm text-ink-soft">
+              Pa gen peman pou peryòd sa a.
+            </div>
           )}
         </div>
       </section>
@@ -143,7 +189,11 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
   return (
     <div className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
       <div className="text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</div>
-      <div className={`mt-1 font-display text-xl font-extrabold ${accent ? "text-brand-deep" : "text-ink"}`}>{value}</div>
+      <div
+        className={`mt-1 font-display text-xl font-extrabold ${accent ? "text-brand-deep" : "text-ink"}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }

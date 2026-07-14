@@ -81,7 +81,12 @@ async function verifyOptionalBearerMatchesUser(userId: string): Promise<void> {
 // (read/update/delete on driver-documents, restaurant-assets, ...) fail for
 // the user once they actually log in. Stamp ownership explicitly so those
 // policies keep working.
-async function stampOwner(supabaseAdmin: SupabaseClient, bucket: string, path: string, userId: string) {
+async function stampOwner(
+  supabaseAdmin: SupabaseClient,
+  bucket: string,
+  path: string,
+  userId: string,
+) {
   await supabaseAdmin.schema("storage").from("objects").update({ owner: userId }).match({
     bucket_id: bucket,
     name: path,
@@ -115,7 +120,9 @@ export const finalizeRegistrationDocuments = createServerFn({ method: "POST" })
     if (rlErr) throw new Error(rlErr.message);
     if (!allowed) throw new Error("Twòp tantativ. Tanpri eseye ankò nan 30 minit.");
 
-    const { data: userResult, error: userErr } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+    const { data: userResult, error: userErr } = await supabaseAdmin.auth.admin.getUserById(
+      data.userId,
+    );
     if (userErr || !userResult?.user) throw new Error("Kont pa jwenn");
     if (userResult.user.email?.toLowerCase() !== data.email.toLowerCase()) {
       throw new Error("Imèl pa koresponn");
@@ -142,7 +149,9 @@ export const finalizeRegistrationDocuments = createServerFn({ method: "POST" })
           .upload(path, buf, { contentType: data.files.logo.type, upsert: false });
         if (error) throw new Error(`Logo: ${error.message}`);
         await stampOwner(supabaseAdmin, "restaurant-assets", path, data.userId);
-        updates.logo_url = supabaseAdmin.storage.from("restaurant-assets").getPublicUrl(path).data.publicUrl;
+        updates.logo_url = supabaseAdmin.storage
+          .from("restaurant-assets")
+          .getPublicUrl(path).data.publicUrl;
       }
       if (data.files.cover && !restaurant.cover_url) {
         const buf = decode(data.files.cover);
@@ -152,10 +161,15 @@ export const finalizeRegistrationDocuments = createServerFn({ method: "POST" })
           .upload(path, buf, { contentType: data.files.cover.type, upsert: false });
         if (error) throw new Error(`Kouvèti: ${error.message}`);
         await stampOwner(supabaseAdmin, "restaurant-assets", path, data.userId);
-        updates.cover_url = supabaseAdmin.storage.from("restaurant-assets").getPublicUrl(path).data.publicUrl;
+        updates.cover_url = supabaseAdmin.storage
+          .from("restaurant-assets")
+          .getPublicUrl(path).data.publicUrl;
       }
       if (Object.keys(updates).length) {
-        const { error } = await supabaseAdmin.from("restaurants").update(updates).eq("owner_id", data.userId);
+        const { error } = await supabaseAdmin
+          .from("restaurants")
+          .update(updates)
+          .eq("owner_id", data.userId);
         if (error) throw new Error(error.message);
       }
       return { uploaded: Object.keys(updates) };
@@ -173,8 +187,13 @@ export const finalizeRegistrationDocuments = createServerFn({ method: "POST" })
       throw new Error("Delè finalizasyon an ekspire. Kontakte sipò.");
     }
 
-    const updates: { id_doc_url?: string; license_doc_url?: string; vehicle_photo_url?: string } = {};
-    const slots: [keyof typeof data.files, "id_doc_url" | "license_doc_url" | "vehicle_photo_url", string][] = [
+    const updates: { id_doc_url?: string; license_doc_url?: string; vehicle_photo_url?: string } =
+      {};
+    const slots: [
+      keyof typeof data.files,
+      "id_doc_url" | "license_doc_url" | "vehicle_photo_url",
+      string,
+    ][] = [
       ["idDoc", "id_doc_url", "id"],
       ["license", "license_doc_url", "license"],
       ["vehiclePhoto", "vehicle_photo_url", "vehicle"],
@@ -194,7 +213,10 @@ export const finalizeRegistrationDocuments = createServerFn({ method: "POST" })
       updates[column] = path;
     }
     if (Object.keys(updates).length) {
-      const { error } = await supabaseAdmin.from("drivers").update(updates).eq("user_id", data.userId);
+      const { error } = await supabaseAdmin
+        .from("drivers")
+        .update(updates)
+        .eq("user_id", data.userId);
       if (error) throw new Error(error.message);
     }
     return { uploaded: Object.keys(updates) };

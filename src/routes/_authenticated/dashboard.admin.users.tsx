@@ -39,7 +39,13 @@ const ROLE_TONE: Record<string, string> = {
   super_admin: "bg-purple-50 text-purple-700",
 };
 
-const ASSIGNABLE_ROLES: AppRole[] = ["customer", "restaurant_owner", "driver", "admin", "super_admin"];
+const ASSIGNABLE_ROLES: AppRole[] = [
+  "customer",
+  "restaurant_owner",
+  "driver",
+  "admin",
+  "super_admin",
+];
 
 function AdminUsers() {
   const { user } = Route.useRouteContext();
@@ -71,7 +77,10 @@ function AdminUsers() {
       `itilizate_${new Date().toISOString().slice(0, 10)}.csv`,
       ["Imèl", "Prenon", "Non", "Telefòn", "Wòl", "Enskri sou"],
       filtered.map((u) => [
-        u.email, u.first_name ?? "", u.last_name ?? "", u.phone ?? "",
+        u.email,
+        u.first_name ?? "",
+        u.last_name ?? "",
+        u.phone ?? "",
         (u.roles ?? []).map((r: string) => ROLE_LABEL[r] ?? r).join(", "),
         new Date(u.created_at).toLocaleDateString("fr-HT"),
       ]),
@@ -80,19 +89,31 @@ function AdminUsers() {
 
   const addRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase.rpc("add_user_role_secure", { _user_id: userId, _role: role });
+      const { error } = await supabase.rpc("add_user_role_secure", {
+        _user_id: userId,
+        _role: role,
+      });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Wòl ajoute"); qc.invalidateQueries({ queryKey: ["admin-all-users"] }); },
+    onSuccess: () => {
+      toast.success("Wòl ajoute");
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+    },
     onError: (e) => toast.error(e.message),
   });
 
   const removeRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase.rpc("remove_user_role_secure", { _user_id: userId, _role: role });
+      const { error } = await supabase.rpc("remove_user_role_secure", {
+        _user_id: userId,
+        _role: role,
+      });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Wòl retire"); qc.invalidateQueries({ queryKey: ["admin-all-users"] }); },
+    onSuccess: () => {
+      toast.success("Wòl retire");
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -100,7 +121,10 @@ function AdminUsers() {
     mutationFn: async (userId: string) => {
       await suspendFn({ data: { userId } });
     },
-    onSuccess: () => { toast.success("Kont sispann"); qc.invalidateQueries({ queryKey: ["admin-all-users"] }); },
+    onSuccess: () => {
+      toast.success("Kont sispann");
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+    },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
@@ -108,7 +132,10 @@ function AdminUsers() {
     mutationFn: async (userId: string) => {
       await reactivateFn({ data: { userId } });
     },
-    onSuccess: () => { toast.success("Kont reyaktive"); qc.invalidateQueries({ queryKey: ["admin-all-users"] }); },
+    onSuccess: () => {
+      toast.success("Kont reyaktive");
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+    },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
@@ -119,7 +146,9 @@ function AdminUsers() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Jere itilizatè</h1>
           <p className="mt-1 text-ink-soft">Tout kont sou platfòm nan, kèlkeswa wòl yo.</p>
         </div>
-        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">← Admin</Link>
+        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Admin
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -144,7 +173,9 @@ function AdminUsers() {
             >
               <option value="all">Tout wòl</option>
               {Object.entries(ROLE_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>
+                  {v}
+                </option>
               ))}
             </select>
             <button
@@ -184,13 +215,17 @@ function AdminUsers() {
                   <tr key={u.id} className="border-t border-brand-soft/30 align-top">
                     <td className="whitespace-nowrap px-3 py-2 font-bold">
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
-                      {isSelf && <span className="ml-1 text-[10px] font-normal text-ink-soft">(ou)</span>}
+                      {isSelf && (
+                        <span className="ml-1 text-[10px] font-normal text-ink-soft">(ou)</span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-xs">{u.email}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-xs">{u.phone ?? "—"}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap items-center gap-1">
-                        {(u.roles ?? []).length === 0 && <span className="text-xs text-ink-soft">—</span>}
+                        {(u.roles ?? []).length === 0 && (
+                          <span className="text-xs text-ink-soft">—</span>
+                        )}
                         {(u.roles ?? []).map((r: string) => (
                           <span
                             key={r}
@@ -198,7 +233,9 @@ function AdminUsers() {
                           >
                             {ROLE_LABEL[r] ?? r}
                             <button
-                              onClick={() => removeRole.mutate({ userId: u.id, role: r as AppRole })}
+                              onClick={() =>
+                                removeRole.mutate({ userId: u.id, role: r as AppRole })
+                              }
                               disabled={removeRole.isPending}
                               aria-label={`Retire wòl ${ROLE_LABEL[r] ?? r}`}
                               className="hover:text-red-700 disabled:opacity-50"
@@ -211,11 +248,15 @@ function AdminUsers() {
                       <div className="mt-1.5 flex items-center gap-1">
                         <select
                           value={pendingRoleToAdd}
-                          onChange={(e) => setAddRoleFor((s) => ({ ...s, [u.id]: e.target.value as AppRole }))}
+                          onChange={(e) =>
+                            setAddRoleFor((s) => ({ ...s, [u.id]: e.target.value as AppRole }))
+                          }
                           className="rounded-md border border-brand-soft bg-white px-1.5 py-1 text-[10px]"
                         >
                           {ASSIGNABLE_ROLES.map((r) => (
-                            <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+                            <option key={r} value={r}>
+                              {ROLE_LABEL[r]}
+                            </option>
                           ))}
                         </select>
                         <button
@@ -241,7 +282,9 @@ function AdminUsers() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => confirm(`Sispann kont ${u.email}?`) && suspend.mutate(u.id)}
+                          onClick={() =>
+                            confirm(`Sispann kont ${u.email}?`) && suspend.mutate(u.id)
+                          }
                           disabled={suspend.isPending || isSelf}
                           title={isSelf ? "Ou pa ka sispann pwòp kont ou" : undefined}
                           className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
@@ -256,7 +299,9 @@ function AdminUsers() {
             </tbody>
           </table>
           {!users.isLoading && filtered.length === 0 && (
-            <div className="p-6 text-center text-sm text-ink-soft">Pa gen itilizatè ki koresponn.</div>
+            <div className="p-6 text-center text-sm text-ink-soft">
+              Pa gen itilizatè ki koresponn.
+            </div>
           )}
         </div>
       </section>

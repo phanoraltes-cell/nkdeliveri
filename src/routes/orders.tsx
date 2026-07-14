@@ -32,7 +32,9 @@ function Orders() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, order_number, status, total, currency, created_at, restaurants(name), payments(status, method)")
+        .select(
+          "id, order_number, status, total, currency, created_at, restaurants(name), payments(status, method)",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -48,7 +50,10 @@ function Orders() {
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft">Chajman…</div>
         ) : !user ? (
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft">
-            <Link to="/auth" className="font-bold text-brand-deep">Konekte</Link> pou wè kòmand ou yo.
+            <Link to="/auth" className="font-bold text-brand-deep">
+              Konekte
+            </Link>{" "}
+            pou wè kòmand ou yo.
           </div>
         ) : !data || data.length === 0 ? (
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft shadow-[0_8px_24px_rgba(194,90,5,0.10)]">

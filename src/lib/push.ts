@@ -31,9 +31,7 @@ async function getReadyRegistration(): Promise<ServiceWorkerRegistration | null>
   }
 }
 
-export async function subscribeToPush(): Promise<
-  { ok: true } | { ok: false; error: string }
-> {
+export async function subscribeToPush(): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!isPushSupported()) return { ok: false, error: "Navigatè a pa sipòte notifikasyon push." };
 
   const perm = await Notification.requestPermission();
@@ -47,7 +45,10 @@ export async function subscribeToPush(): Promise<
     const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer,
+      applicationServerKey: key.buffer.slice(
+        key.byteOffset,
+        key.byteOffset + key.byteLength,
+      ) as ArrayBuffer,
     });
   }
 

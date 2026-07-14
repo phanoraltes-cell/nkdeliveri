@@ -14,24 +14,23 @@ Part 2 : Rapport d'Audit & Architecture (NKDeliveri)
 Après analyse approfondie de votre code source local, voici mon audit technique :
 
 1. Sécurité & RLS (Niveau de confiance : Excellent, sauf 1 vulnérabilité)
-Points Forts (Defense in Depth) : L'implémentation de la sécurité au niveau de la base de données est exemplaire. Toutes les écritures (INSERT, UPDATE, DELETE) sur les tables critiques comme 
+   Points Forts (Defense in Depth) : L'implémentation de la sécurité au niveau de la base de données est exemplaire. Toutes les écritures (INSERT, UPDATE, DELETE) sur les tables critiques comme
 
 restaurants
-, 
+,
 
 products
-, et 
+, et
 
 orders
- ont été révoquées pour les utilisateurs authentifiés. Les écritures passent par des fonctions Postgres sécurisées en SECURITY DEFINER (RPC) qui valident l'identité de l'appelant via auth.uid().
+ont été révoquées pour les utilisateurs authentifiés. Les écritures passent par des fonctions Postgres sécurisées en SECURITY DEFINER (RPC) qui valident l'identité de l'appelant via auth.uid().
 ⚠️ Faille de confidentialité identifiée :
-Fichier concerné : 
+Fichier concerné :
 
 20260703063224_308a6758-e6f5-4553-ac9c-e3ae119153f0.sql
 Problème : La politique RLS pour la table profiles autorise la lecture à tous les utilisateurs authentifiés (USING (true)). N'importe quel client connecté peut donc requêter et lister l'adresse, le nom et le numéro de téléphone de tous les autres utilisateurs/clients de la plateforme.
-Correction recommandée : Restreindre le SELECT pour que l'utilisateur ne puisse lire que son profil (auth.uid() = id), sauf s'il a un rôle admin, ou si c'est un livreur/restaurateur lié à une commande active de ce client.
-2. Architecture & Performance
-Optimisation des notifications : Dans le layout global 
+Correction recommandée : Restreindre le SELECT pour que l'utilisateur ne puisse lire que son profil (auth.uid() = id), sauf s'il a un rôle admin, ou si c'est un livreur/restaurateur lié à une commande active de ce client. 2. Architecture & Performance
+Optimisation des notifications : Dans le layout global
 
 dashboard.tsx
 , le nombre de notifications non lues est récupéré en faisant du polling toutes les 30 secondes. Cela surcharge inutilement la base de données et n'est pas instantané.
@@ -41,12 +40,12 @@ Voici les améliorations prioritaires à apporter aux différents dashboards pou
 
 📋 Dashboard Restoran (Restaurateurs)
 Activer la gestion de l'équipe ("Anplwaye") :
-Le bouton "Anplwaye" dans 
+Le bouton "Anplwaye" dans
 
 dashboard.restaurant.tsx
- est actuellement inactif (to: null). La table restaurant_employees existe déjà en base de données. Il faut créer l'interface pour permettre au propriétaire du restaurant d'inviter des gérants ou des cuisiniers et leur attribuer des accès restreints.
+est actuellement inactif (to: null). La table restaurant_employees existe déjà en base de données. Il faut créer l'interface pour permettre au propriétaire du restaurant d'inviter des gérants ou des cuisiniers et leur attribuer des accès restreints.
 Impression des Bons de Commande (Billet de cuisine) :
-Ajouter un bouton "Enprime" (Imprimer) dans la gestion des commandes 
+Ajouter un bouton "Enprime" (Imprimer) dans la gestion des commandes
 
 dashboard.restaurant.orders.tsx
 . Comme vous avez déjà la bibliothèque jspdf installée, nous pouvons générer un reçu PDF format ticket de caisse (80mm) téléchargeable ou imprimable directement pour la cuisine.
@@ -59,7 +58,7 @@ Mise à jour automatique de la localisation :
 Activer le tracking GPS en arrière-plan via l'API Geolocation du navigateur pour mettre à jour la position du livreur en temps réel sur la carte de l'administrateur et du client.
 👑 Dashboard Admin (Administration)
 Amélioration de la carte en direct ("LiveMap") :
-Dans 
+Dans
 
 dashboard.admin.tsx
 , la carte affiche les marqueurs mais ne dessine pas l'itinéraire. Proposer un tracé (Polyline) reliant le Resto ➔ Livreur ➔ Client pour visualiser le trajet de livraison en temps réel.

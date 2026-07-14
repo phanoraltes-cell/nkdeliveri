@@ -24,7 +24,7 @@ async function fetchPayoutHistory() {
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_account_name, receiver_number, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, product_name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
+      "id, method, status, amount, currency, created_at, reviewed_at, review_notes, transaction_ref, sender_phone, receiver_type, receiver_account_name, receiver_number, order_id, orders(order_number, total, subtotal, delivery_fee, status, created_at, customer_id, delivery_address, restaurants(name, phone), order_items(id, quantity, unit_price, product_name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)",
     )
     .in("method", ["moncash", "natcash"])
     .in("status", ["paid", "failed"])
@@ -54,7 +54,7 @@ function AdminPayments() {
       const { data, error } = await supabase
         .from("payments")
         .select(
-          "id, method, status, amount, currency, created_at, transaction_ref, sender_phone, order_id, orders(order_number, total, customer_id, restaurants(name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)"
+          "id, method, status, amount, currency, created_at, transaction_ref, sender_phone, order_id, orders(order_number, total, customer_id, restaurants(name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)",
         )
         .in("method", ["moncash", "natcash"])
         .in("status", ["awaiting_proof", "under_review"])
@@ -71,7 +71,15 @@ function AdminPayments() {
   });
 
   const decide = useMutation({
-    mutationFn: async ({ id, decision, note }: { id: string; decision: "paid" | "failed"; note?: string }) => {
+    mutationFn: async ({
+      id,
+      decision,
+      note,
+    }: {
+      id: string;
+      decision: "paid" | "failed";
+      note?: string;
+    }) => {
       const { error } = await supabase
         .from("payments")
         .update({
@@ -123,93 +131,107 @@ function AdminPayments() {
       </div>
 
       {tab === "pending" && (
-      <>
-      {list.isLoading && <div className="text-ink-soft">Chajman…</div>}
-      {list.data?.length === 0 && (
-        <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
-          Pa gen peman manyèl an atant.
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {list.data?.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-display text-lg font-extrabold">
-                  {p.orders?.order_number}
-                  <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-deep">
-                    {p.method}
-                  </span>
-                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-                    {p.status}
-                  </span>
-                </div>
-                <div className="text-xs text-ink-soft">
-                  {p.orders?.restaurants?.name} · {new Date(p.created_at).toLocaleString("fr-HT")}
-                </div>
-              </div>
-              <div className="text-right font-display text-xl font-extrabold text-brand-deep">
-                {formatHTG(Number(p.amount))}
-              </div>
+        <>
+          {list.isLoading && <div className="text-ink-soft">Chajman…</div>}
+          {list.data?.length === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
+              Pa gen peman manyèl an atant.
             </div>
+          )}
 
-            {p.transaction_ref && (
-              <div className="mt-2 text-sm">Tx: <b>{p.transaction_ref}</b></div>
-            )}
-            {p.sender_phone && (
-              <div className="text-sm">Soti nan: <b>{p.sender_phone}</b></div>
-            )}
-
-            {p.payment_proofs?.length > 0 ? (
-              <div className="mt-3">
-                <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv peman</div>
-                <div className="flex flex-wrap gap-3">
-                  {p.payment_proofs.map((pr) => (
-                    <div key={pr.id} className="space-y-1">
-                      <ProofThumb path={pr.file_url} />
-                      {(pr.transaction_ref || pr.sender_phone) && (
-                        <div className="max-w-[96px] text-[10px] leading-tight text-ink-soft">
-                          {pr.transaction_ref && <div>Tx: <b>{pr.transaction_ref}</b></div>}
-                          {pr.sender_phone && <div>{pr.sender_phone}</div>}
-                        </div>
-                      )}
+          <div className="space-y-4">
+            {list.data?.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-display text-lg font-extrabold">
+                      {p.orders?.order_number}
+                      <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                        {p.method}
+                      </span>
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+                        {p.status}
+                      </span>
                     </div>
-                  ))}
+                    <div className="text-xs text-ink-soft">
+                      {p.orders?.restaurants?.name} ·{" "}
+                      {new Date(p.created_at).toLocaleString("fr-HT")}
+                    </div>
+                  </div>
+                  <div className="text-right font-display text-xl font-extrabold text-brand-deep">
+                    {formatHTG(Number(p.amount))}
+                  </div>
+                </div>
+
+                {p.transaction_ref && (
+                  <div className="mt-2 text-sm">
+                    Tx: <b>{p.transaction_ref}</b>
+                  </div>
+                )}
+                {p.sender_phone && (
+                  <div className="text-sm">
+                    Soti nan: <b>{p.sender_phone}</b>
+                  </div>
+                )}
+
+                {p.payment_proofs?.length > 0 ? (
+                  <div className="mt-3">
+                    <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv peman</div>
+                    <div className="flex flex-wrap gap-3">
+                      {p.payment_proofs.map((pr) => (
+                        <div key={pr.id} className="space-y-1">
+                          <ProofThumb path={pr.file_url} />
+                          {(pr.transaction_ref || pr.sender_phone) && (
+                            <div className="max-w-[96px] text-[10px] leading-tight text-ink-soft">
+                              {pr.transaction_ref && (
+                                <div>
+                                  Tx: <b>{pr.transaction_ref}</b>
+                                </div>
+                              )}
+                              {pr.sender_phone && <div>{pr.sender_phone}</div>}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    Poko gen prèv voye.
+                  </div>
+                )}
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <input
+                    value={notes[p.id] || ""}
+                    onChange={(e) => setNotes((s) => ({ ...s, [p.id]: e.target.value }))}
+                    placeholder="Nòt (opsyonèl)"
+                    className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm"
+                  />
+                  <button
+                    disabled={!p.payment_proofs?.length || decide.isPending}
+                    onClick={() => decide.mutate({ id: p.id, decision: "paid", note: notes[p.id] })}
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
+                  </button>
+                  <button
+                    disabled={decide.isPending}
+                    onClick={() =>
+                      decide.mutate({ id: p.id, decision: "failed", note: notes[p.id] })
+                    }
+                    className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
+                  >
+                    <XCircle className="h-3.5 w-3.5" /> Rejte
+                  </button>
                 </div>
               </div>
-            ) : (
-              <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                Poko gen prèv voye.
-              </div>
-            )}
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <input
-                value={notes[p.id] || ""}
-                onChange={(e) => setNotes((s) => ({ ...s, [p.id]: e.target.value }))}
-                placeholder="Nòt (opsyonèl)"
-                className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm"
-              />
-              <button
-                disabled={!p.payment_proofs?.length || decide.isPending}
-                onClick={() => decide.mutate({ id: p.id, decision: "paid", note: notes[p.id] })}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-              </button>
-              <button
-                disabled={decide.isPending}
-                onClick={() => decide.mutate({ id: p.id, decision: "failed", note: notes[p.id] })}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
-              >
-                <XCircle className="h-3.5 w-3.5" /> Rejte
-              </button>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
-      </>
+        </>
       )}
 
       {tab === "history" && (
@@ -275,23 +297,47 @@ function PayoutHistory({
     method: (p.method || "").toUpperCase(),
     tx: p.transaction_ref || "",
     sender: p.sender_phone || "",
-    receiver: [p.receiver_type, p.receiver_account_name, p.receiver_number].filter(Boolean).join(" · "),
+    receiver: [p.receiver_type, p.receiver_account_name, p.receiver_number]
+      .filter(Boolean)
+      .join(" · "),
     amount: Number(p.amount || 0),
     status: p.status,
     notes: p.review_notes || "",
   }));
 
   function exportCSV() {
-    const headers = ["Dat", "Kòmand", "Restoran", "Metòd", "Tx", "Soti nan", "Voye bay", "Mòn (HTG)", "Estati", "Nòt"];
+    const headers = [
+      "Dat",
+      "Kòmand",
+      "Restoran",
+      "Metòd",
+      "Tx",
+      "Soti nan",
+      "Voye bay",
+      "Mòn (HTG)",
+      "Estati",
+      "Nòt",
+    ];
     const csv = [
       headers.join(","),
       ...rows.map((r) =>
-        [r.date, r.order, r.restaurant, r.method, r.tx, r.sender, r.receiver, r.amount, r.status, r.notes]
+        [
+          r.date,
+          r.order,
+          r.restaurant,
+          r.method,
+          r.tx,
+          r.sender,
+          r.receiver,
+          r.amount,
+          r.status,
+          r.notes,
+        ]
           .map((v) => {
             const s = String(v ?? "").replace(/"/g, '""');
             return /[",\n]/.test(s) ? `"${s}"` : s;
           })
-          .join(",")
+          .join(","),
       ),
     ].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -320,7 +366,7 @@ function PayoutHistory({
     doc.text(
       `Metòd: ${filter} · Estati: ${statusFilter} · Total apwouve: ${formatHTG(totalPaid)} · ${rows.length} peman`,
       40,
-      74
+      74,
     );
     autoTable(doc, {
       startY: 90,
@@ -398,7 +444,8 @@ function PayoutHistory({
           <FileText className="h-3.5 w-3.5" /> PDF
         </button>
         <div className="ml-auto text-sm text-ink-soft">
-          Total apwouve: <b className="text-brand-deep">{formatHTG(totalPaid)}</b> · {filtered.length} peman
+          Total apwouve: <b className="text-brand-deep">{formatHTG(totalPaid)}</b> ·{" "}
+          {filtered.length} peman
         </div>
       </div>
 
@@ -410,133 +457,174 @@ function PayoutHistory({
       )}
 
       <div className="rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
-       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-brand-soft/40 text-left text-xs uppercase text-ink-soft">
-            <tr>
-              <th className="px-3 py-2">Dat</th>
-              <th className="px-3 py-2">Kòmand</th>
-              <th className="px-3 py-2">Restoran</th>
-              <th className="px-3 py-2">Metòd</th>
-              <th className="px-3 py-2">Tx</th>
-              <th className="px-3 py-2 text-right">Mòn</th>
-              <th className="px-3 py-2">Estati</th>
-              <th className="px-3 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => {
-              const open = openId === p.id;
-              return (
-                <>
-                  <tr key={p.id} className="border-t border-brand-soft/40 hover:bg-brand-soft/20">
-                    <td className="px-3 py-2 text-xs text-ink-soft">
-                      {new Date(p.reviewed_at || p.created_at).toLocaleString("fr-HT")}
-                    </td>
-                    <td className="px-3 py-2 font-bold">{p.orders?.order_number}</td>
-                    <td className="px-3 py-2">{p.orders?.restaurants?.name || "—"}</td>
-                    <td className="px-3 py-2 uppercase">{p.method}</td>
-                    <td className="px-3 py-2 text-xs">{p.transaction_ref || "—"}</td>
-                    <td className="px-3 py-2 text-right font-bold text-brand-deep">
-                      {formatHTG(Number(p.amount))}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          p.status === "paid"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        onClick={() => setOpenId(open ? null : p.id)}
-                        className="text-xs font-bold text-brand-deep hover:underline"
-                      >
-                        {open ? "Fèmen" : "Detay"}
-                      </button>
-                    </td>
-                  </tr>
-                  {open && (
-                    <tr className="border-t border-brand-soft/40 bg-brand-soft/10">
-                      <td colSpan={8} className="px-4 py-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-1 text-sm">
-                            <div className="font-display text-base font-extrabold text-ink">Kòmand</div>
-                            <div>Nimewo: <b>{p.orders?.order_number}</b></div>
-                            <div>Estati kòmand: <b>{p.orders?.status}</b></div>
-                            <div>Sub-total: <b>{formatHTG(Number(p.orders?.subtotal || 0))}</b></div>
-                            <div>Frè livrezon: <b>{formatHTG(Number(p.orders?.delivery_fee || 0))}</b></div>
-                            <div>Total: <b>{formatHTG(Number(p.orders?.total || 0))}</b></div>
-                            {p.orders?.delivery_address && (
-                              <div className="text-xs text-ink-soft">
-                                Adrès: {typeof p.orders.delivery_address === "string"
-                                  ? p.orders.delivery_address
-                                  : JSON.stringify(p.orders.delivery_address)}
-                              </div>
-                            )}
-                            <Link
-                              to="/orders/$id"
-                              params={{ id: p.order_id }}
-                              className="mt-2 inline-block text-xs font-bold text-brand-deep hover:underline"
-                            >
-                              Ouvri paj kòmand →
-                            </Link>
-                          </div>
-                          <div className="space-y-1 text-sm">
-                            <div className="font-display text-base font-extrabold text-ink">Peman</div>
-                            <div>Metòd: <b className="uppercase">{p.method}</b></div>
-                            <div>Voye bay: <b>{p.receiver_type || "—"}</b> {p.receiver_account_name ? `· ${p.receiver_account_name}` : ""}</div>
-                            {p.receiver_number && <div>Nimewo resevè: <b>{p.receiver_number}</b></div>}
-                            {p.sender_phone && <div>Soti nan: <b>{p.sender_phone}</b></div>}
-                            {p.transaction_ref && <div>Tx: <b>{p.transaction_ref}</b></div>}
-                            {p.reviewed_at && (
-                              <div className="text-xs text-ink-soft">
-                                Revize: {new Date(p.reviewed_at).toLocaleString("fr-HT")}
-                              </div>
-                            )}
-                            {p.review_notes && (
-                              <div className="rounded-lg bg-white p-2 text-xs">
-                                Nòt admin: {p.review_notes}
-                              </div>
-                            )}
-                          </div>
-                          {p.orders?.order_items?.length > 0 && (
-                            <div className="md:col-span-2">
-                              <div className="mb-1 font-display text-sm font-extrabold text-ink">Atik</div>
-                              <ul className="divide-y divide-brand-soft/40 rounded-lg border border-brand-soft/40 bg-white text-xs">
-                                {p.orders.order_items.map((it) => (
-                                  <li key={it.id} className="flex justify-between px-3 py-1.5">
-                                    <span>{it.quantity}× {it.product_name}</span>
-                                    <span className="font-bold">{formatHTG(Number(it.unit_price) * Number(it.quantity))}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {p.payment_proofs?.length > 0 && (
-                            <div className="md:col-span-2">
-                              <div className="mb-1 font-display text-sm font-extrabold text-ink">Prèv peman</div>
-                              <div className="flex flex-wrap gap-3">
-                                {p.payment_proofs.map((pr) => (
-                                  <ProofThumb key={pr.id} path={pr.file_url} />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-brand-soft/40 text-left text-xs uppercase text-ink-soft">
+              <tr>
+                <th className="px-3 py-2">Dat</th>
+                <th className="px-3 py-2">Kòmand</th>
+                <th className="px-3 py-2">Restoran</th>
+                <th className="px-3 py-2">Metòd</th>
+                <th className="px-3 py-2">Tx</th>
+                <th className="px-3 py-2 text-right">Mòn</th>
+                <th className="px-3 py-2">Estati</th>
+                <th className="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => {
+                const open = openId === p.id;
+                return (
+                  <>
+                    <tr key={p.id} className="border-t border-brand-soft/40 hover:bg-brand-soft/20">
+                      <td className="px-3 py-2 text-xs text-ink-soft">
+                        {new Date(p.reviewed_at || p.created_at).toLocaleString("fr-HT")}
+                      </td>
+                      <td className="px-3 py-2 font-bold">{p.orders?.order_number}</td>
+                      <td className="px-3 py-2">{p.orders?.restaurants?.name || "—"}</td>
+                      <td className="px-3 py-2 uppercase">{p.method}</td>
+                      <td className="px-3 py-2 text-xs">{p.transaction_ref || "—"}</td>
+                      <td className="px-3 py-2 text-right font-bold text-brand-deep">
+                        {formatHTG(Number(p.amount))}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            p.status === "paid"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          onClick={() => setOpenId(open ? null : p.id)}
+                          className="text-xs font-bold text-brand-deep hover:underline"
+                        >
+                          {open ? "Fèmen" : "Detay"}
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </>
-              );
-            })}
-          </tbody>
-        </table>
-       </div>
+                    {open && (
+                      <tr className="border-t border-brand-soft/40 bg-brand-soft/10">
+                        <td colSpan={8} className="px-4 py-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1 text-sm">
+                              <div className="font-display text-base font-extrabold text-ink">
+                                Kòmand
+                              </div>
+                              <div>
+                                Nimewo: <b>{p.orders?.order_number}</b>
+                              </div>
+                              <div>
+                                Estati kòmand: <b>{p.orders?.status}</b>
+                              </div>
+                              <div>
+                                Sub-total: <b>{formatHTG(Number(p.orders?.subtotal || 0))}</b>
+                              </div>
+                              <div>
+                                Frè livrezon:{" "}
+                                <b>{formatHTG(Number(p.orders?.delivery_fee || 0))}</b>
+                              </div>
+                              <div>
+                                Total: <b>{formatHTG(Number(p.orders?.total || 0))}</b>
+                              </div>
+                              {p.orders?.delivery_address && (
+                                <div className="text-xs text-ink-soft">
+                                  Adrès:{" "}
+                                  {typeof p.orders.delivery_address === "string"
+                                    ? p.orders.delivery_address
+                                    : JSON.stringify(p.orders.delivery_address)}
+                                </div>
+                              )}
+                              <Link
+                                to="/orders/$id"
+                                params={{ id: p.order_id }}
+                                className="mt-2 inline-block text-xs font-bold text-brand-deep hover:underline"
+                              >
+                                Ouvri paj kòmand →
+                              </Link>
+                            </div>
+                            <div className="space-y-1 text-sm">
+                              <div className="font-display text-base font-extrabold text-ink">
+                                Peman
+                              </div>
+                              <div>
+                                Metòd: <b className="uppercase">{p.method}</b>
+                              </div>
+                              <div>
+                                Voye bay: <b>{p.receiver_type || "—"}</b>{" "}
+                                {p.receiver_account_name ? `· ${p.receiver_account_name}` : ""}
+                              </div>
+                              {p.receiver_number && (
+                                <div>
+                                  Nimewo resevè: <b>{p.receiver_number}</b>
+                                </div>
+                              )}
+                              {p.sender_phone && (
+                                <div>
+                                  Soti nan: <b>{p.sender_phone}</b>
+                                </div>
+                              )}
+                              {p.transaction_ref && (
+                                <div>
+                                  Tx: <b>{p.transaction_ref}</b>
+                                </div>
+                              )}
+                              {p.reviewed_at && (
+                                <div className="text-xs text-ink-soft">
+                                  Revize: {new Date(p.reviewed_at).toLocaleString("fr-HT")}
+                                </div>
+                              )}
+                              {p.review_notes && (
+                                <div className="rounded-lg bg-white p-2 text-xs">
+                                  Nòt admin: {p.review_notes}
+                                </div>
+                              )}
+                            </div>
+                            {p.orders?.order_items?.length > 0 && (
+                              <div className="md:col-span-2">
+                                <div className="mb-1 font-display text-sm font-extrabold text-ink">
+                                  Atik
+                                </div>
+                                <ul className="divide-y divide-brand-soft/40 rounded-lg border border-brand-soft/40 bg-white text-xs">
+                                  {p.orders.order_items.map((it) => (
+                                    <li key={it.id} className="flex justify-between px-3 py-1.5">
+                                      <span>
+                                        {it.quantity}× {it.product_name}
+                                      </span>
+                                      <span className="font-bold">
+                                        {formatHTG(Number(it.unit_price) * Number(it.quantity))}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {p.payment_proofs?.length > 0 && (
+                              <div className="md:col-span-2">
+                                <div className="mb-1 font-display text-sm font-extrabold text-ink">
+                                  Prèv peman
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                  {p.payment_proofs.map((pr) => (
+                                    <ProofThumb key={pr.id} path={pr.file_url} />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

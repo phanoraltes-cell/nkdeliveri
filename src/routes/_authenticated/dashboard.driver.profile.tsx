@@ -30,7 +30,12 @@ function DriverProfile() {
   });
 
   const [f, setF] = useState({
-    first_name: "", last_name: "", phone: "", address: "", vehicle_type: "", license_plate: "",
+    first_name: "",
+    last_name: "",
+    phone: "",
+    address: "",
+    vehicle_type: "",
+    license_plate: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -45,6 +50,11 @@ function DriverProfile() {
       vehicle_type: data.driver.vehicle_type ?? "",
       license_plate: data.driver.license_plate ?? "",
     });
+    // `data.driver` is intentionally omitted: this seeds the editable form
+    // once when the record first loads (keyed on id), not on every
+    // background refetch — including it would wipe in-progress edits
+    // whenever react-query silently revalidates this query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.driver?.id]);
 
   const save = useMutation({
@@ -54,7 +64,9 @@ function DriverProfile() {
       if (avatar) {
         assertValidUploadFile(avatar, "avatars");
         const path = `${user.id}/avatar-${Date.now()}-${avatar.name}`;
-        const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatar, { upsert: false });
+        const { error: upErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatar, { upsert: false });
         if (upErr) throw upErr;
         avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
       }
@@ -71,7 +83,10 @@ function DriverProfile() {
         .eq("user_id", user.id);
       if (e1) throw e1;
       if (avatar) {
-        const { error: e2 } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
+        const { error: e2 } = await supabase
+          .from("profiles")
+          .update({ avatar_url: avatarUrl })
+          .eq("id", user.id);
         if (e2) throw e2;
       }
     },
@@ -97,7 +112,9 @@ function DriverProfile() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Pwofil livrè</h1>
           <p className="mt-1 text-ink-soft">Modifye enfòmasyon w yo ak modpas ou.</p>
         </div>
-        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Dashboard
+        </Link>
       </div>
 
       {isLoading ? (
@@ -110,14 +127,25 @@ function DriverProfile() {
             <div className="mb-4 flex items-center gap-4">
               <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-brand-soft bg-brand-soft/30">
                 {displayAvatar ? (
-                  <img src={displayAvatar} alt="Avatar" width={80} height={80} className="h-full w-full object-cover" />
+                  <img
+                    src={displayAvatar}
+                    alt="Avatar"
+                    width={80}
+                    height={80}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <UserIcon className="h-8 w-8 text-brand-deep" />
                 )}
                 <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
                   <Upload className="h-5 w-5" />
                 </span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onPickAvatar(e.target.files?.[0] ?? null)}
+                />
               </label>
               <div className="text-sm">
                 <div className="font-bold">{user?.email}</div>
@@ -128,23 +156,48 @@ function DriverProfile() {
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Prenon</span>
-                <input className={inputCls()} value={f.first_name} onChange={(e) => setF({ ...f, first_name: e.target.value })} />
+                <input
+                  className={inputCls()}
+                  value={f.first_name}
+                  onChange={(e) => setF({ ...f, first_name: e.target.value })}
+                />
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Non</span>
-                <input className={inputCls()} value={f.last_name} onChange={(e) => setF({ ...f, last_name: e.target.value })} />
+                <input
+                  className={inputCls()}
+                  value={f.last_name}
+                  onChange={(e) => setF({ ...f, last_name: e.target.value })}
+                />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Telefòn</span>
-                <input className={inputCls()} placeholder="+509 …" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                  Telefòn
+                </span>
+                <input
+                  className={inputCls()}
+                  placeholder="+509 …"
+                  value={f.phone}
+                  onChange={(e) => setF({ ...f, phone: e.target.value })}
+                />
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Adrès</span>
-                <input className={inputCls()} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
+                <input
+                  className={inputCls()}
+                  value={f.address}
+                  onChange={(e) => setF({ ...f, address: e.target.value })}
+                />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Tip veyikil</span>
-                <select className={inputCls()} value={f.vehicle_type} onChange={(e) => setF({ ...f, vehicle_type: e.target.value })}>
+                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                  Tip veyikil
+                </span>
+                <select
+                  className={inputCls()}
+                  value={f.vehicle_type}
+                  onChange={(e) => setF({ ...f, vehicle_type: e.target.value })}
+                >
                   <option value="">—</option>
                   <option value="moto">Moto</option>
                   <option value="bicycle">Bekàn</option>
@@ -153,8 +206,14 @@ function DriverProfile() {
                 </select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Nimewo plak</span>
-                <input className={inputCls()} value={f.license_plate} onChange={(e) => setF({ ...f, license_plate: e.target.value })} />
+                <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                  Nimewo plak
+                </span>
+                <input
+                  className={inputCls()}
+                  value={f.license_plate}
+                  onChange={(e) => setF({ ...f, license_plate: e.target.value })}
+                />
               </label>
             </div>
 

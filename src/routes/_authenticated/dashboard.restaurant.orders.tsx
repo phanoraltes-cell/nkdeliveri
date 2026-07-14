@@ -11,7 +11,12 @@ import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/orders")({
   beforeLoad: ({ context }) => {
     const { role } = context;
-    if (role !== "restaurant_owner" && role !== "restaurant_staff" && role !== "admin" && role !== "super_admin") {
+    if (
+      role !== "restaurant_owner" &&
+      role !== "restaurant_staff" &&
+      role !== "admin" &&
+      role !== "super_admin"
+    ) {
       throw redirect({ to: "/dashboard" });
     }
   },
@@ -51,7 +56,7 @@ function RestaurantOrders() {
       let q = supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price), payments(status, method)"
+          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price), payments(status, method)",
         )
         .eq("restaurant_id", restaurant!.id)
         .order("created_at", { ascending: false });
@@ -86,7 +91,12 @@ function RestaurantOrders() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Kòmand</h1>
           <p className="mt-1 text-ink-soft">Jere kòmand k ap antre yo an tan reyèl.</p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <div className="flex gap-2">
@@ -113,7 +123,10 @@ function RestaurantOrders() {
 
       <div className="space-y-3">
         {orders.data?.map((o) => (
-          <div key={o.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+          <div
+            key={o.id}
+            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="font-display text-lg font-extrabold">
@@ -135,8 +148,12 @@ function RestaurantOrders() {
             <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
               {o.order_items?.map((it) => (
                 <li key={it.id} className="flex justify-between px-3 py-1.5">
-                  <span>{it.quantity}× {it.product_name}</span>
-                  <span className="font-bold">{formatHTG(Number(it.unit_price) * it.quantity)}</span>
+                  <span>
+                    {it.quantity}× {it.product_name}
+                  </span>
+                  <span className="font-bold">
+                    {formatHTG(Number(it.unit_price) * it.quantity)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -174,15 +191,18 @@ function RestaurantOrders() {
                   {n.label} <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               ))}
-              {o.status !== "pending" && o.status !== "cancelled" && o.status !== "delivered" && o.status !== "refunded" && (
-                <button
-                  disabled={changeStatus.isPending}
-                  onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
-                  className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                >
-                  Anile kòmand
-                </button>
-              )}
+              {o.status !== "pending" &&
+                o.status !== "cancelled" &&
+                o.status !== "delivered" &&
+                o.status !== "refunded" && (
+                  <button
+                    disabled={changeStatus.isPending}
+                    onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
+                    className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Anile kòmand
+                  </button>
+                )}
             </div>
           </div>
         ))}

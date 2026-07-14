@@ -26,7 +26,11 @@ function Profile() {
     queryKey: ["my-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user!.id)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -44,6 +48,11 @@ function Profile() {
       phone: profile.phone ?? "",
       address: profile.address ?? "",
     });
+    // `profile` is intentionally omitted: this seeds the editable form once
+    // when the record first loads (keyed on id), not on every background
+    // refetch — including it would wipe in-progress edits whenever
+    // react-query silently revalidates this query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
   const save = useMutation({
@@ -53,7 +62,9 @@ function Profile() {
       if (avatar) {
         assertValidUploadFile(avatar, "avatars");
         const path = `${user.id}/avatar-${Date.now()}-${avatar.name}`;
-        const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatar, { upsert: false });
+        const { error: upErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatar, { upsert: false });
         if (upErr) throw upErr;
         avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
       }
@@ -99,7 +110,13 @@ function Profile() {
               <div className="flex items-center gap-4">
                 <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-brand-soft bg-brand-soft/30">
                   {displayAvatar ? (
-                    <img src={displayAvatar} alt="Avatar" width={80} height={80} className="h-full w-full object-cover" />
+                    <img
+                      src={displayAvatar}
+                      alt="Avatar"
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <UserIcon className="h-8 w-8 text-brand-deep" />
                   )}
@@ -121,7 +138,9 @@ function Profile() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Prenon</span>
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Prenon
+                  </span>
                   <input
                     className={inputCls()}
                     value={f.first_name}
@@ -137,7 +156,9 @@ function Profile() {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Telefòn</span>
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Telefòn
+                  </span>
                   <input
                     className={inputCls()}
                     placeholder="+509 …"
@@ -146,7 +167,9 @@ function Profile() {
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Adrès</span>
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Adrès
+                  </span>
                   <input
                     className={inputCls()}
                     placeholder="Kote w abite…"

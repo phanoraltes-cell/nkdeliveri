@@ -9,7 +9,8 @@ export const Route = createFileRoute("/contact")({
   head: () =>
     pageMeta({
       title: "Kontakte NK Deliveri",
-      description: "Yon kesyon, yon pwoblèm ak yon kòmand, oswa ou vle vin patenè? Kontakte ekip NK Deliveri.",
+      description:
+        "Yon kesyon, yon pwoblèm ak yon kòmand, oswa ou vle vin patenè? Kontakte ekip NK Deliveri.",
       path: "/contact",
     }),
   component: Contact,
@@ -22,7 +23,8 @@ function Contact() {
       <div className="mx-auto max-w-[640px] px-5 py-12">
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">Kontakte nou</h1>
         <p className="mb-6 text-ink-soft">
-          Yon kesyon sou yon kòmand, yon restoran ki enterese vin patenè, oswa yon lòt bagay? Ekri nou.
+          Yon kesyon sou yon kòmand, yon restoran ki enterese vin patenè, oswa yon lòt bagay? Ekri
+          nou.
         </p>
         <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
           <a
@@ -33,8 +35,10 @@ function Contact() {
           </a>
           <p className="mt-4 text-sm text-ink-soft">
             Pou yon pwoblèm ki gen rapò ak yon kòmand an kou, gade{" "}
-            <a href="/faq" className="font-bold text-brand-deep hover:underline">FAQ</a> nou an
-            oswa itilize paj "Kòmand mwen" apre ou konekte.
+            <a href="/faq" className="font-bold text-brand-deep hover:underline">
+              FAQ
+            </a>{" "}
+            nou an oswa itilize paj "Kòmand mwen" apre ou konekte.
           </p>
         </div>
       </div>

@@ -44,8 +44,8 @@ function ForgotPassword() {
           {sent ? (
             <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
               <Mail className="mb-2 h-5 w-5" />
-              Si yon kont egziste ak <b>{email}</b>, ou pral resevwa yon imèl ak yon lyen pou
-              chwazi yon nouvo modpas. Tcheke bwat ou (ak spam).
+              Si yon kont egziste ak <b>{email}</b>, ou pral resevwa yon imèl ak yon lyen pou chwazi
+              yon nouvo modpas. Tcheke bwat ou (ak spam).
             </div>
           ) : (
             <>

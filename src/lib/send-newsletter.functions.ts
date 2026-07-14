@@ -17,7 +17,10 @@ export const sendNewsletterBroadcast = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
 
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    const { data: isSuperAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    const { data: isSuperAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "super_admin",
+    });
     if (!isAdmin && !isSuperAdmin) throw new Error("Forbidden");
 
     const { data: allowed, error: rlErr } = await supabase.rpc("check_rate_limit_secure", {

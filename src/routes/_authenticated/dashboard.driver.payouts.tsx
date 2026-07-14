@@ -51,6 +51,11 @@ function DriverPayouts() {
       natcash_account_name: d.natcash_account_name ?? "",
       payout_frequency: d.payout_frequency ?? "daily",
     });
+    // `d` is intentionally omitted: this seeds the editable form once when the
+    // record first loads (keyed on id), not on every background refetch —
+    // including `d` here would wipe in-progress edits whenever react-query
+    // silently revalidates this query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [d?.id]);
 
   const save = useMutation({

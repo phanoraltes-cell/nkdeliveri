@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 export type DriverPosition = { lat: number; lng: number; heading: number | null; ts: number };
 
 const PUSH_THROTTLE_MS = 8000;
-const ACTIVE_DELIVERY_STATUSES = ["assigned", "picked_up", "en_route_pickup", "en_route_dropoff"] as const;
+const ACTIVE_DELIVERY_STATUSES = [
+  "assigned",
+  "picked_up",
+  "en_route_pickup",
+  "en_route_dropoff",
+] as const;
 
 /**
  * Watches this device's GPS via the Geolocation API and pushes it (~every
@@ -27,7 +32,10 @@ export function useDriverLocation(driverId: string) {
       throttleRef.current = now;
       setLast({ lat, lng, heading, ts: now });
 
-      await supabase.from("drivers").update({ current_lat: lat, current_lng: lng }).eq("id", driverId);
+      await supabase
+        .from("drivers")
+        .update({ current_lat: lat, current_lng: lng })
+        .eq("id", driverId);
       await supabase
         .from("deliveries")
         .update({

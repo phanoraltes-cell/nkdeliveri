@@ -39,7 +39,11 @@ export async function getRoute(from: RoutePoint, to: RoutePoint): Promise<RouteR
   if (!res.ok) throw new Error(`OSRM ${res.status}`);
   const body = (await res.json()) as {
     code: string;
-    routes?: Array<{ geometry: { coordinates: [number, number][] }; distance: number; duration: number }>;
+    routes?: Array<{
+      geometry: { coordinates: [number, number][] };
+      distance: number;
+      duration: number;
+    }>;
   };
 
   const route = body.code === "Ok" ? body.routes?.[0] : undefined;

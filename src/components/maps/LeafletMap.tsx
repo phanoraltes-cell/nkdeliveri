@@ -42,7 +42,13 @@ function getIcon(type: MarkerType): L.DivIcon {
 const GONAIVES_CENTER: [number, number] = [19.4515, -72.6836];
 
 /** Imperatively re-centers/fits the map when markers change, without remounting the MapContainer. */
-function MapUpdater({ markers, center }: { markers: MapMarker[]; center?: { lat: number; lng: number } }) {
+function MapUpdater({
+  markers,
+  center,
+}: {
+  markers: MapMarker[];
+  center?: { lat: number; lng: number };
+}) {
   const map = useMap();
   const lastKeyRef = useRef<string>("");
 
@@ -139,14 +145,20 @@ export function LeafletMap({
         <MapUpdater markers={markers} center={center} />
         <ScrollWheelToggle />
         {route && route.length > 1 && (
-          <Polyline positions={route} pathOptions={{ color: "#F97316", weight: 4, opacity: 0.85 }} />
+          <Polyline
+            positions={route}
+            pathOptions={{ color: "#F97316", weight: 4, opacity: 0.85 }}
+          />
         )}
         {markers.map((m) => (
           <Marker key={m.id} position={[m.lat, m.lng]} icon={getIcon(m.type)}>
             {(m.info || m.label) && (
               <Popup>
                 {m.info ? (
-                  <div style={{ fontSize: 13, lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: m.info }} />
+                  <div
+                    style={{ fontSize: 13, lineHeight: 1.5 }}
+                    dangerouslySetInnerHTML={{ __html: m.info }}
+                  />
                 ) : (
                   m.label
                 )}

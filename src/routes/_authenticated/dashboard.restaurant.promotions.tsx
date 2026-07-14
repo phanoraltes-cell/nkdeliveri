@@ -28,7 +28,11 @@ function RestaurantPromotions() {
   const { data: restaurant } = useQuery({
     queryKey: ["me-restaurant-id", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("restaurants").select("id").eq("owner_id", user!.id).maybeSingle();
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("id")
+        .eq("owner_id", user!.id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -55,8 +59,14 @@ function RestaurantPromotions() {
       // NULL for these columns regardless, so these casts just correct an
       // overly-strict generated type, no behavior change.
       const { error } = await supabase.rpc("update_promotion_secure", {
-        _promotion_id: p.id, _title: p.title, _description: p.description as string, _discount_type: p.discount_type,
-        _discount_value: p.discount_value, _code: p.code as string, _starts_at: p.starts_at as string, _ends_at: p.ends_at as string,
+        _promotion_id: p.id,
+        _title: p.title,
+        _description: p.description as string,
+        _discount_type: p.discount_type,
+        _discount_value: p.discount_value,
+        _code: p.code as string,
+        _starts_at: p.starts_at as string,
+        _ends_at: p.ends_at as string,
         _active: !p.active,
       });
       if (error) throw error;
@@ -73,7 +83,10 @@ function RestaurantPromotions() {
       const { error } = await supabase.rpc("delete_promotion_secure", { _promotion_id: id });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Pwomosyon efase"); qc.invalidateQueries({ queryKey: ["restaurant-promotions"] }); },
+    onSuccess: () => {
+      toast.success("Pwomosyon efase");
+      qc.invalidateQueries({ queryKey: ["restaurant-promotions"] });
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -84,11 +97,19 @@ function RestaurantPromotions() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Pwomosyon</h1>
           <p className="mt-1 text-ink-soft">Kreye ofri espesyal pou atire plis kliyan.</p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <button
-        onClick={() => { setEditing(null); setShowForm(true); }}
+        onClick={() => {
+          setEditing(null);
+          setShowForm(true);
+        }}
         className="inline-flex items-center gap-1 rounded-full bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-deep"
       >
         <Plus className="h-4 w-4" /> Nouvo pwomosyon
@@ -105,19 +126,30 @@ function RestaurantPromotions() {
 
       <div className="space-y-3">
         {promos.data?.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+          <div
+            key={p.id}
+            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 font-display text-lg font-extrabold">
                   {p.title}
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.active ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${p.active ? "bg-emerald-100 text-emerald-800" : "bg-ink/10 text-ink-soft"}`}
+                  >
                     {p.active ? "Aktif" : "Dezaktive"}
                   </span>
                 </div>
                 {p.description && <div className="text-sm text-ink-soft">{p.description}</div>}
                 <div className="mt-1 text-sm font-bold text-brand-deep">
-                  {p.discount_type === "percentage" ? `${p.discount_value}% rabè` : `${p.discount_value} HTG rabè`}
-                  {p.code && <span className="ml-2 rounded bg-brand-soft/60 px-2 py-0.5 text-xs">Kòd: {p.code}</span>}
+                  {p.discount_type === "percentage"
+                    ? `${p.discount_value}% rabè`
+                    : `${p.discount_value} HTG rabè`}
+                  {p.code && (
+                    <span className="ml-2 rounded bg-brand-soft/60 px-2 py-0.5 text-xs">
+                      Kòd: {p.code}
+                    </span>
+                  )}
                 </div>
                 {(p.starts_at || p.ends_at) && (
                   <div className="mt-1 text-xs text-ink-soft">
@@ -135,13 +167,18 @@ function RestaurantPromotions() {
                   {p.active ? "Dezaktive" : "Aktive"}
                 </button>
                 <button
-                  onClick={() => { setEditing(p); setShowForm(true); }}
+                  onClick={() => {
+                    setEditing(p);
+                    setShowForm(true);
+                  }}
                   className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
                 >
                   Modifye
                 </button>
                 <button
-                  onClick={() => { if (confirm(`Efase "${p.title}"?`)) remove.mutate(p.id); }}
+                  onClick={() => {
+                    if (confirm(`Efase "${p.title}"?`)) remove.mutate(p.id);
+                  }}
                   className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -161,8 +198,16 @@ function RestaurantPromotions() {
 }
 
 function PromoForm({
-  restaurantId, promo, onClose, onSaved,
-}: { restaurantId: string; promo: Promotion | null; onClose: () => void; onSaved: () => void }) {
+  restaurantId,
+  promo,
+  onClose,
+  onSaved,
+}: {
+  restaurantId: string;
+  promo: Promotion | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [f, setF] = useState({
     title: promo?.title ?? "",
     description: promo?.description ?? "",
@@ -178,7 +223,8 @@ function PromoForm({
     if (!f.title.trim()) return toast.error("Tit pwomosyon an obligatwa");
     const value = Number(f.discount_value);
     if (!Number.isFinite(value) || value <= 0) return toast.error("Valè rabè a envalid");
-    if (f.discount_type === "percentage" && value > 100) return toast.error("Rabè an pousantaj pa ka depase 100%");
+    if (f.discount_type === "percentage" && value > 100)
+      return toast.error("Rabè an pousantaj pa ka depase 100%");
     setSaving(true);
     try {
       // The generator types these args as non-nullable because the SQL
@@ -196,13 +242,16 @@ function PromoForm({
       };
       if (promo) {
         const { error } = await supabase.rpc("update_promotion_secure", {
-          _promotion_id: promo.id, ...args, _active: promo.active,
+          _promotion_id: promo.id,
+          ...args,
+          _active: promo.active,
         });
         if (error) throw error;
         toast.success("Pwomosyon mizajou");
       } else {
         const { error } = await supabase.rpc("create_promotion_secure", {
-          _restaurant_id: restaurantId, ...args,
+          _restaurant_id: restaurantId,
+          ...args,
         });
         if (error) throw error;
         toast.success("Pwomosyon kreye");
@@ -219,27 +268,68 @@ function PromoForm({
   return (
     <div className="rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-display font-bold">{promo ? "Modifye pwomosyon" : "Nouvo pwomosyon"}</h3>
-        <button onClick={onClose} className="text-ink-soft hover:text-ink"><X className="h-4 w-4" /></button>
+        <h3 className="font-display font-bold">
+          {promo ? "Modifye pwomosyon" : "Nouvo pwomosyon"}
+        </h3>
+        <button onClick={onClose} className="text-ink-soft hover:text-ink">
+          <X className="h-4 w-4" />
+        </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <input placeholder="Tit (ex: 20% sou premye kòmand)" className={inputCls() + " sm:col-span-2"} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-        <select className={inputCls()} value={f.discount_type} onChange={(e) => setF({ ...f, discount_type: e.target.value })}>
+        <input
+          placeholder="Tit (ex: 20% sou premye kòmand)"
+          className={inputCls() + " sm:col-span-2"}
+          value={f.title}
+          onChange={(e) => setF({ ...f, title: e.target.value })}
+        />
+        <select
+          className={inputCls()}
+          value={f.discount_type}
+          onChange={(e) => setF({ ...f, discount_type: e.target.value })}
+        >
           <option value="percentage">Pousantaj (%)</option>
           <option value="fixed">Montan fiks (HTG)</option>
         </select>
-        <input placeholder={f.discount_type === "percentage" ? "Valè (ex: 15)" : "Valè (ex: 100)"} type="number" min="0" className={inputCls()} value={f.discount_value} onChange={(e) => setF({ ...f, discount_value: e.target.value })} />
-        <input placeholder="Kòd pwomo (opsyonèl)" className={inputCls()} value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} />
+        <input
+          placeholder={f.discount_type === "percentage" ? "Valè (ex: 15)" : "Valè (ex: 100)"}
+          type="number"
+          min="0"
+          className={inputCls()}
+          value={f.discount_value}
+          onChange={(e) => setF({ ...f, discount_value: e.target.value })}
+        />
+        <input
+          placeholder="Kòd pwomo (opsyonèl)"
+          className={inputCls()}
+          value={f.code}
+          onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })}
+        />
         <div />
         <label className="block">
           <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Kòmanse</span>
-          <input type="date" className={inputCls()} value={f.starts_at} onChange={(e) => setF({ ...f, starts_at: e.target.value })} />
+          <input
+            type="date"
+            className={inputCls()}
+            value={f.starts_at}
+            onChange={(e) => setF({ ...f, starts_at: e.target.value })}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Fini</span>
-          <input type="date" className={inputCls()} value={f.ends_at} onChange={(e) => setF({ ...f, ends_at: e.target.value })} />
+          <input
+            type="date"
+            className={inputCls()}
+            value={f.ends_at}
+            onChange={(e) => setF({ ...f, ends_at: e.target.value })}
+          />
         </label>
-        <textarea placeholder="Deskripsyon (opsyonèl)" rows={2} className={inputCls() + " sm:col-span-2"} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        <textarea
+          placeholder="Deskripsyon (opsyonèl)"
+          rows={2}
+          className={inputCls() + " sm:col-span-2"}
+          value={f.description}
+          onChange={(e) => setF({ ...f, description: e.target.value })}
+        />
       </div>
       <button
         disabled={saving}

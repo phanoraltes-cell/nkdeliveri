@@ -26,7 +26,11 @@ function AvailableDeliveries() {
   const { data: driver } = useQuery({
     queryKey: ["me-driver", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("drivers").select("id, status").eq("user_id", user!.id).maybeSingle();
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, status")
+        .eq("user_id", user!.id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -38,7 +42,7 @@ function AvailableDeliveries() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, total, delivery_address, created_at, restaurants(name, address), deliveries!left(id)"
+          "id, order_number, total, delivery_address, created_at, restaurants(name, address), deliveries!left(id)",
         )
         .eq("status", "ready")
         .is("deliveries.id", null)
@@ -51,8 +55,12 @@ function AvailableDeliveries() {
   useEffect(() => {
     const channel = supabase
       .channel("available-deliveries-orders")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => available.refetch())
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => available.refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () =>
+        available.refetch(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () =>
+        available.refetch(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -69,7 +77,9 @@ function AvailableDeliveries() {
       toast.success("Ou pran livrezon sa a!");
       qc.invalidateQueries({ queryKey: ["available-deliveries"] });
       qc.invalidateQueries({ queryKey: ["me-active-deliveries"] });
-      sendAssignedPush({ data: { orderId } }).catch((e) => console.warn("[push] assigned notify failed", e));
+      sendAssignedPush({ data: { orderId } }).catch((e) =>
+        console.warn("[push] assigned notify failed", e),
+      );
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
@@ -83,7 +93,9 @@ function AvailableDeliveries() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Livrezon disponib</h1>
           <p className="mt-1 text-ink-soft">Kòmand ki prè pou pran livrezon.</p>
         </div>
-        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Dashboard
+        </Link>
       </div>
 
       {!online && (
@@ -101,14 +113,21 @@ function AvailableDeliveries() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {available.data?.map((o) => (
-          <div key={o.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+          <div
+            key={o.id}
+            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+          >
             <div className="flex items-center justify-between">
               <span className="font-display text-lg font-extrabold">{o.order_number}</span>
-              <span className="font-display text-lg font-extrabold text-brand-deep">{formatHTG(Number(o.total))}</span>
+              <span className="font-display text-lg font-extrabold text-brand-deep">
+                {formatHTG(Number(o.total))}
+              </span>
             </div>
             <div className="mt-2 flex items-start gap-2 text-sm text-ink-soft">
               <Store className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{o.restaurants?.name} — {o.restaurants?.address}</span>
+              <span>
+                {o.restaurants?.name} — {o.restaurants?.address}
+              </span>
             </div>
             <div className="mt-1 flex items-start gap-2 text-sm text-ink-soft">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />

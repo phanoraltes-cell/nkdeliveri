@@ -99,7 +99,11 @@ function NotificationsPage() {
               </div>
               {!n.read_at && (
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); markRead.mutate([n.id]); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    markRead.mutate([n.id]);
+                  }}
                   className="self-start rounded-full bg-white px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white"
                 >
                   Li
@@ -110,10 +114,16 @@ function NotificationsPage() {
           return (
             <li key={n.id}>
               {orderId ? (
-                <Link to="/orders/$id" params={{ id: orderId }} onClick={() => !n.read_at && markRead.mutate([n.id])}>
+                <Link
+                  to="/orders/$id"
+                  params={{ id: orderId }}
+                  onClick={() => !n.read_at && markRead.mutate([n.id])}
+                >
                   {inner}
                 </Link>
-              ) : inner}
+              ) : (
+                inner
+              )}
             </li>
           );
         })}

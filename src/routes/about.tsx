@@ -24,8 +24,8 @@ function About() {
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">Apwopo NK Deliveri</h1>
         <p className="text-ink-soft">
           NK Deliveri se yon platfòm livrezon manje ki konekte restoran lokal yo ak kliyan nan{" "}
-          {PRIMARY_CITY.name}. Objektif nou senp: fè w jwenn manje kreyòl otantik cho lakay ou,
-          san tèt chaje, ak peman ki fasil pou tout moun — MonCash, NatCash, oswa kach nan men.
+          {PRIMARY_CITY.name}. Objektif nou senp: fè w jwenn manje kreyòl otantik cho lakay ou, san
+          tèt chaje, ak peman ki fasil pou tout moun — MonCash, NatCash, oswa kach nan men.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -33,7 +33,8 @@ function About() {
             <Store className="mx-auto h-8 w-8 text-brand-deep" />
             <div className="mt-2 font-display font-bold text-ink">Restoran</div>
             <p className="mt-1 text-sm text-ink-soft">
-              Nou travay ak restoran ki apwouve nan {PRIMARY_CITY.name} pou garanti kalite ak fyabilite.
+              Nou travay ak restoran ki apwouve nan {PRIMARY_CITY.name} pou garanti kalite ak
+              fyabilite.
             </p>
           </div>
           <div className="rounded-2xl border border-brand-soft/60 bg-white p-5 text-center shadow-sm">

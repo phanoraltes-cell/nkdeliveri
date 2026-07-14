@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
-import {
-  isPushSupported,
-  subscribeToPush,
-  unsubscribeFromPush,
-} from "@/lib/push";
+import { isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 
 export function PushToggle() {
   const [supported, setSupported] = useState(true);

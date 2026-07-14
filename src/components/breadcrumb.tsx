@@ -22,7 +22,10 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={isLast ? "page" : undefined} className={isLast ? "font-semibold text-ink" : ""}>
+                <span
+                  aria-current={isLast ? "page" : undefined}
+                  className={isLast ? "font-semibold text-ink" : ""}
+                >
                   {item.label}
                 </span>
               )}

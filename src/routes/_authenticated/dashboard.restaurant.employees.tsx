@@ -71,7 +71,12 @@ function RestaurantEmployees() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Anplwaye</h1>
           <p className="mt-1 text-ink-soft">Manm ekip ki ka jere Kòmand ak Meni restoran an.</p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -109,7 +114,10 @@ function RestaurantEmployees() {
         )}
         <ul className="space-y-2">
           {employees.data?.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded-xl border border-brand-soft/50 p-3">
+            <li
+              key={e.id}
+              className="flex items-center justify-between rounded-xl border border-brand-soft/50 p-3"
+            >
               <div>
                 <div className="font-bold text-ink">
                   {`${e.first_name ?? ""} ${e.last_name ?? ""}`.trim() || "Anplwaye"}

@@ -72,12 +72,17 @@ function AdminPayoutSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-ink">Peman platfòm (fallback)</h1>
+          <h1 className="font-display text-3xl font-extrabold text-ink">
+            Peman platfòm (fallback)
+          </h1>
           <p className="mt-1 text-ink-soft">
-            Nimewo sa yo itilize nan checkout lè yon restoran poko konfigire pwòp kont peman dirèk li.
+            Nimewo sa yo itilize nan checkout lè yon restoran poko konfigire pwòp kont peman dirèk
+            li.
           </p>
         </div>
-        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">← Admin</Link>
+        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Admin
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-6 shadow-sm">
@@ -96,7 +101,9 @@ function AdminPayoutSettings() {
                 placeholder="+509 ...."
                 className={inputCls()}
               />
-              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">Non kont lan</label>
+              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">
+                Non kont lan
+              </label>
               <input
                 value={form.moncash_account_name}
                 onChange={(e) => setForm({ ...form, moncash_account_name: e.target.value })}
@@ -114,7 +121,9 @@ function AdminPayoutSettings() {
                 placeholder="+509 ...."
                 className={inputCls()}
               />
-              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">Non kont lan</label>
+              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">
+                Non kont lan
+              </label>
               <input
                 value={form.natcash_account_name}
                 onChange={(e) => setForm({ ...form, natcash_account_name: e.target.value })}

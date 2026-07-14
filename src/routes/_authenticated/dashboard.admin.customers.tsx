@@ -68,10 +68,25 @@ function AdminCustomers() {
     if (!customers.data?.length) return;
     downloadCSV(
       `kliyan_${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Imèl", "Prenon", "Non", "Telefòn", "Adrès", "Enskri sou", "Kòmand total", "Total achte (HTG)"],
+      [
+        "Imèl",
+        "Prenon",
+        "Non",
+        "Telefòn",
+        "Adrès",
+        "Enskri sou",
+        "Kòmand total",
+        "Total achte (HTG)",
+      ],
       customers.data.map((c) => [
-        c.email, c.first_name ?? "", c.last_name ?? "", c.phone ?? "", c.address ?? "",
-        new Date(c.created_at).toLocaleDateString("fr-HT"), c.total_orders, Number(c.total_spent),
+        c.email,
+        c.first_name ?? "",
+        c.last_name ?? "",
+        c.phone ?? "",
+        c.address ?? "",
+        new Date(c.created_at).toLocaleDateString("fr-HT"),
+        c.total_orders,
+        Number(c.total_spent),
       ]),
     );
     toast.success("CSV telechaje");
@@ -97,9 +112,13 @@ function AdminCustomers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Kliyan &amp; Newsletter</h1>
-          <p className="mt-1 text-ink-soft">Swiv kliyan yo, ekspòte done, voye enfòmasyon bay abone yo.</p>
+          <p className="mt-1 text-ink-soft">
+            Swiv kliyan yo, ekspòte done, voye enfòmasyon bay abone yo.
+          </p>
         </div>
-        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">← Admin</Link>
+        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Admin
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -197,9 +216,13 @@ function AdminCustomers() {
                     {new Date(s.subscribed_at).toLocaleDateString("fr-HT")}
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      s.unsubscribed_at ? "bg-ink/10 text-ink-soft" : "bg-emerald-100 text-emerald-800"
-                    }`}>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        s.unsubscribed_at
+                          ? "bg-ink/10 text-ink-soft"
+                          : "bg-emerald-100 text-emerald-800"
+                      }`}
+                    >
                       {s.unsubscribed_at ? "Dezabone" : "Aktif"}
                     </span>
                   </td>
@@ -235,7 +258,8 @@ function AdminCustomers() {
               onClick={() => broadcast.mutate()}
               className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
             >
-              <Send className="h-4 w-4" /> {broadcast.isPending ? "Ap voye…" : "Voye bay tout abone yo"}
+              <Send className="h-4 w-4" />{" "}
+              {broadcast.isPending ? "Ap voye…" : "Voye bay tout abone yo"}
             </button>
           </div>
         </div>

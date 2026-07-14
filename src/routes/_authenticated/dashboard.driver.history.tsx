@@ -33,7 +33,11 @@ function DriverHistory() {
   const { data: driver } = useQuery({
     queryKey: ["me-driver", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("drivers").select("id").eq("user_id", user!.id).maybeSingle();
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -48,7 +52,7 @@ function DriverHistory() {
       const { data, error } = await supabase
         .from("deliveries")
         .select(
-          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))"
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))",
         )
         .eq("driver_id", driver!.id)
         .in("status", ["assigned", "en_route_pickup", "picked_up", "en_route_dropoff"])
@@ -65,7 +69,7 @@ function DriverHistory() {
       const { data, error } = await supabase
         .from("deliveries")
         .select(
-          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))"
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))",
         )
         .eq("driver_id", driver!.id)
         .eq("status", "delivered")
@@ -77,7 +81,14 @@ function DriverHistory() {
   });
 
   const advance = useMutation({
-    mutationFn: async ({ id, status }: { id: string; orderId: string; status: "picked_up" | "delivered" }) => {
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      orderId: string;
+      status: "picked_up" | "delivered";
+    }) => {
       const { error } = await supabase.from("deliveries").update({ status }).eq("id", id);
       if (error) throw error;
     },
@@ -101,7 +112,9 @@ function DriverHistory() {
           <h1 className="font-display text-3xl font-extrabold text-ink">Livrezon mwen yo</h1>
           <p className="mt-1 text-ink-soft">Aktyèl ak istwa livrezon ou fè yo.</p>
         </div>
-        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link to="/dashboard/driver" className="text-sm font-bold text-brand-deep hover:underline">
+          ← Dashboard
+        </Link>
       </div>
 
       <section>
@@ -116,10 +129,15 @@ function DriverHistory() {
         )}
         <div className="space-y-3">
           {active.data?.map((d) => (
-            <div key={d.id} className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+            <div
+              key={d.id}
+              className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <div className="font-display text-lg font-extrabold">{d.orders?.order_number}</div>
+                  <div className="font-display text-lg font-extrabold">
+                    {d.orders?.order_number}
+                  </div>
                   <div className="text-xs text-ink-soft">
                     {d.orders?.restaurants?.name} · {d.orders?.delivery_address}
                   </div>
@@ -128,11 +146,15 @@ function DriverHistory() {
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="font-display font-extrabold text-brand-deep">{formatHTG(Number(d.orders?.total ?? 0))}</span>
+                  <span className="font-display font-extrabold text-brand-deep">
+                    {formatHTG(Number(d.orders?.total ?? 0))}
+                  </span>
                   {(d.status === "assigned" || d.status === "en_route_pickup") && (
                     <button
                       disabled={advance.isPending}
-                      onClick={() => advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })}
+                      onClick={() =>
+                        advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })
+                      }
                       className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                     >
                       <Package className="h-3.5 w-3.5" /> Pikap fèt
@@ -141,7 +163,9 @@ function DriverHistory() {
                   {(d.status === "picked_up" || d.status === "en_route_dropoff") && (
                     <button
                       disabled={advance.isPending}
-                      onClick={() => advance.mutate({ id: d.id, orderId: d.order_id, status: "delivered" })}
+                      onClick={() =>
+                        advance.mutate({ id: d.id, orderId: d.order_id, status: "delivered" })
+                      }
                       className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" /> Livre
@@ -179,9 +203,13 @@ function DriverHistory() {
                     <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
                       {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-bold">{d.orders?.order_number}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-bold">
+                      {d.orders?.order_number}
+                    </td>
                     <td className="whitespace-nowrap px-3 py-2">{d.orders?.restaurants?.name}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">{formatHTG(Number(d.fee))}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">
+                      {formatHTG(Number(d.fee))}
+                    </td>
                   </tr>
                 ))}
               </tbody>

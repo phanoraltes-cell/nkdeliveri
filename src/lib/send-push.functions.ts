@@ -29,7 +29,9 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
 
     const { data: payment, error: pErr } = await supabaseAdmin
       .from("payments")
-      .select("id, status, order_id, review_notes, orders(order_number, customer_id, restaurants(owner_id, name))")
+      .select(
+        "id, status, order_id, review_notes, orders(order_number, customer_id, restaurants(owner_id, name))",
+      )
       .eq("id", data.paymentId)
       .single();
     if (pErr || !payment) throw new Error(pErr?.message || "Payment not found");

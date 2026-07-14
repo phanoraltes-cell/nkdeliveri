@@ -92,9 +92,11 @@ export function SiteHeader() {
                 <UserIcon className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link>
-                  </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/profile">Pwofil mwen</Link>
                 </DropdownMenuItem>
@@ -108,20 +110,20 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/auth"
-                  className="hidden rounded-full border-2 border-brand-soft bg-white px-4 py-2 text-sm font-bold text-brand-deep transition hover:bg-brand-soft/50 sm:inline-block"
-                >
-                  Konekte
-                </Link>
-                <Link
-                  to="/auth/register"
-                  className="inline-flex h-11 items-center rounded-full bg-brand px-3.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)] sm:px-5"
-                >
-                  Enskri
-                </Link>
-              </div>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/auth"
+                className="hidden rounded-full border-2 border-brand-soft bg-white px-4 py-2 text-sm font-bold text-brand-deep transition hover:bg-brand-soft/50 sm:inline-block"
+              >
+                Konekte
+              </Link>
+              <Link
+                to="/auth/register"
+                className="inline-flex h-11 items-center rounded-full bg-brand px-3.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)] sm:px-5"
+              >
+                Enskri
+              </Link>
+            </div>
           )}
         </div>
       </div>

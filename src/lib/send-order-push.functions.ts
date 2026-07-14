@@ -4,7 +4,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const OrderIdSchema = z.object({ orderId: z.string().uuid() });
 
-async function pushToUsers(userIds: string[], payload: { title: string; body: string; url: string; tag: string; data?: Record<string, unknown> }) {
+async function pushToUsers(
+  userIds: string[],
+  payload: {
+    title: string;
+    body: string;
+    url: string;
+    tag: string;
+    data?: Record<string, unknown>;
+  },
+) {
   if (userIds.length === 0) return { sent: 0 };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -33,7 +42,11 @@ async function pushToUsers(userIds: string[], payload: { title: string; body: st
         // The web-push package's PushSubscription type carries expirationTime
         // (from the browser API) — the Supabase row never stores it, so it's
         // always null here, which the package treats the same as absent.
-        const subscription = { endpoint: s.endpoint, expirationTime: null, keys: { p256dh: s.p256dh, auth: s.auth } };
+        const subscription = {
+          endpoint: s.endpoint,
+          expirationTime: null,
+          keys: { p256dh: s.p256dh, auth: s.auth },
+        };
         const built = await buildPushPayload(message, subscription, vapid);
         const res = await fetch(s.endpoint, built as unknown as RequestInit);
         if (res.status === 404 || res.status === 410) deadEndpoints.push(s.endpoint);

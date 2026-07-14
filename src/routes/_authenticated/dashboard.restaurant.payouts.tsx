@@ -31,7 +31,9 @@ function MerchantPayouts() {
       if (!rest?.id) return null;
       const { data: pd, error: e2 } = await supabase
         .from("restaurant_payout_details")
-        .select("restaurant_id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_mode, commission_type, commission_rate, monthly_commission_amount")
+        .select(
+          "restaurant_id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_mode, commission_type, commission_rate, monthly_commission_amount",
+        )
         .eq("restaurant_id", rest.id)
         .maybeSingle();
       if (e2) throw e2;
@@ -66,6 +68,11 @@ function MerchantPayouts() {
       natcash_account_name: r.natcash_account_name ?? "",
       payout_mode: r.payout_mode ?? "via_admin",
     });
+    // `r` is intentionally omitted: this seeds the editable form once when
+    // the record first loads (keyed on id), not on every background
+    // refetch — including it would wipe in-progress edits whenever
+    // react-query silently revalidates this query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [r?.id]);
 
   const save = useMutation({
@@ -90,7 +97,10 @@ function MerchantPayouts() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Konfigirasyon anrejistre"); qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] }); },
+    onSuccess: () => {
+      toast.success("Konfigirasyon anrejistre");
+      qc.invalidateQueries({ queryKey: ["me-restaurant-payouts"] });
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -101,17 +111,32 @@ function MerchantPayouts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Peman ak Komisyon</h1>
-          <p className="mt-1 text-ink-soft">Konfigire kote lajan kliyan yo ale ak komisyon platfòm nan.</p>
+          <p className="mt-1 text-ink-soft">
+            Konfigire kote lajan kliyan yo ale ak komisyon platfòm nan.
+          </p>
         </div>
-        <Link to="/dashboard/restaurant" className="text-sm font-bold text-brand-deep hover:underline">← Dashboard</Link>
+        <Link
+          to="/dashboard/restaurant"
+          className="text-sm font-bold text-brand-deep hover:underline"
+        >
+          ← Dashboard
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Kote peman MonCash/NatCash ale</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {[
-            { id: "via_admin", label: "Pase pa admin", desc: "Kliyan peye NK, admin remèt ou apre komisyon retire." },
-            { id: "direct", label: "Dirèkteman sou kont mwen", desc: "Kliyan peye ou dirèkteman; ou peye komisyon platfòm nan." },
+            {
+              id: "via_admin",
+              label: "Pase pa admin",
+              desc: "Kliyan peye NK, admin remèt ou apre komisyon retire.",
+            },
+            {
+              id: "direct",
+              label: "Dirèkteman sou kont mwen",
+              desc: "Kliyan peye ou dirèkteman; ou peye komisyon platfòm nan.",
+            },
           ].map((o) => (
             <button
               key={o.id}
@@ -128,10 +153,28 @@ function MerchantPayouts() {
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Field label="Nimewo MonCash" value={f.moncash_number} onChange={(v) => setF((s) => ({ ...s, moncash_number: v }))} placeholder="+509 …" />
-          <Field label="Non kont MonCash" value={f.moncash_account_name} onChange={(v) => setF((s) => ({ ...s, moncash_account_name: v }))} />
-          <Field label="Nimewo NatCash" value={f.natcash_number} onChange={(v) => setF((s) => ({ ...s, natcash_number: v }))} placeholder="+509 …" />
-          <Field label="Non kont NatCash" value={f.natcash_account_name} onChange={(v) => setF((s) => ({ ...s, natcash_account_name: v }))} />
+          <Field
+            label="Nimewo MonCash"
+            value={f.moncash_number}
+            onChange={(v) => setF((s) => ({ ...s, moncash_number: v }))}
+            placeholder="+509 …"
+          />
+          <Field
+            label="Non kont MonCash"
+            value={f.moncash_account_name}
+            onChange={(v) => setF((s) => ({ ...s, moncash_account_name: v }))}
+          />
+          <Field
+            label="Nimewo NatCash"
+            value={f.natcash_number}
+            onChange={(v) => setF((s) => ({ ...s, natcash_number: v }))}
+            placeholder="+509 …"
+          />
+          <Field
+            label="Non kont NatCash"
+            value={f.natcash_account_name}
+            onChange={(v) => setF((s) => ({ ...s, natcash_account_name: v }))}
+          />
         </div>
       </section>
 
@@ -139,11 +182,17 @@ function MerchantPayouts() {
         <h2 className="font-display text-lg font-bold">Komisyon platfòm</h2>
         <div className="mt-3 rounded-xl bg-brand-soft/40 p-3 text-sm text-ink-soft">
           {r?.commission_type === "monthly" ? (
-            <>Komisyon chak mwa: <b>{formatHTG(Number(r?.monthly_commission_amount ?? 0))}</b></>
+            <>
+              Komisyon chak mwa: <b>{formatHTG(Number(r?.monthly_commission_amount ?? 0))}</b>
+            </>
           ) : (
-            <>Komisyon pa kòmand: <b>{Number(r?.commission_rate ?? 10)}%</b></>
+            <>
+              Komisyon pa kòmand: <b>{Number(r?.commission_rate ?? 10)}%</b>
+            </>
           )}
-          <div className="mt-1 text-xs">Sèl yon administratè NK ka chanje komisyon platfòm nan.</div>
+          <div className="mt-1 text-xs">
+            Sèl yon administratè NK ka chanje komisyon platfòm nan.
+          </div>
         </div>
       </section>
 
@@ -159,8 +208,18 @@ function MerchantPayouts() {
 }
 
 function Field({
-  label, value, onChange, type = "text", placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">{label}</span>

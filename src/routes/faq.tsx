@@ -35,7 +35,8 @@ export const Route = createFileRoute("/faq")({
   head: () => ({
     ...pageMeta({
       title: "Kesyon Moun Poze Souvan (FAQ) — NK Deliveri",
-      description: "Repons pou kesyon ou ka genyen sou kòmand, peman, livrezon ak vin patenè ak NK Deliveri.",
+      description:
+        "Repons pou kesyon ou ka genyen sou kòmand, peman, livrezon ak vin patenè ak NK Deliveri.",
       path: "/faq",
     }),
     scripts: [
@@ -58,10 +59,15 @@ function Faq() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-[720px] px-5 py-12">
-        <h1 className="mb-6 font-display text-3xl font-extrabold text-ink">Kesyon Moun Poze Souvan</h1>
+        <h1 className="mb-6 font-display text-3xl font-extrabold text-ink">
+          Kesyon Moun Poze Souvan
+        </h1>
         <div className="space-y-3">
           {FAQS.map((f) => (
-            <details key={f.q} className="group rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+            <details
+              key={f.q}
+              className="group rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]"
+            >
               <summary className="cursor-pointer font-display font-bold text-ink marker:content-none">
                 {f.q}
               </summary>

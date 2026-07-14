@@ -65,7 +65,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name)"
+          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name)",
         )
         .eq("id", id)
         .maybeSingle();
@@ -170,8 +170,8 @@ function OrderDetail() {
       ? { lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng) }
       : undefined
     : delivery?.order?.delivery_lat != null && delivery?.order?.delivery_lng != null
-    ? { lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng) }
-    : undefined;
+      ? { lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng) }
+      : undefined;
   // Also unconditional and before the early returns below, for the same
   // Rules-of-Hooks reason as `delivery` above.
   const trackingRoute = useRoute(driverPoint, nextStopPoint);
@@ -212,7 +212,9 @@ function OrderDetail() {
         <div className="mx-auto max-w-[720px] px-5 py-12 text-center text-ink-soft">
           Kòmand la pa jwenn.
           <div className="mt-3">
-            <Link to="/orders" className="font-bold text-brand-deep">← Kòmand mwen</Link>
+            <Link to="/orders" className="font-bold text-brand-deep">
+              ← Kòmand mwen
+            </Link>
           </div>
         </div>
       </div>
@@ -225,13 +227,31 @@ function OrderDetail() {
     if (!delivery) return [];
     const arr: MapMarker[] = [];
     if (delivery.driver_lat != null && delivery.driver_lng != null) {
-      arr.push({ id: "drv", lat: Number(delivery.driver_lat), lng: Number(delivery.driver_lng), type: "driver", label: "Livrè" });
+      arr.push({
+        id: "drv",
+        lat: Number(delivery.driver_lat),
+        lng: Number(delivery.driver_lng),
+        type: "driver",
+        label: "Livrè",
+      });
     }
     if (delivery.order?.restaurants?.lat != null && delivery.order?.restaurants?.lng != null) {
-      arr.push({ id: "rst", lat: Number(delivery.order.restaurants.lat), lng: Number(delivery.order.restaurants.lng), type: "restaurant", label: delivery.order.restaurants.name ?? "Restoran" });
+      arr.push({
+        id: "rst",
+        lat: Number(delivery.order.restaurants.lat),
+        lng: Number(delivery.order.restaurants.lng),
+        type: "restaurant",
+        label: delivery.order.restaurants.name ?? "Restoran",
+      });
     }
     if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
-      arr.push({ id: "dst", lat: Number(delivery.order.delivery_lat), lng: Number(delivery.order.delivery_lng), type: "client", label: "Adrès ou" });
+      arr.push({
+        id: "dst",
+        lat: Number(delivery.order.delivery_lat),
+        lng: Number(delivery.order.delivery_lng),
+        type: "client",
+        label: "Adrès ou",
+      });
     }
     return arr;
   })();
@@ -273,7 +293,9 @@ function OrderDetail() {
             <div className="mt-1 flex items-center gap-2 font-display text-lg font-extrabold">
               {payment?.status === "paid" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
               {payment?.status === "under_review" && <Clock className="h-5 w-5 text-amber-600" />}
-              {payment?.status === "awaiting_proof" && <AlertCircle className="h-5 w-5 text-orange-600" />}
+              {payment?.status === "awaiting_proof" && (
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+              )}
               {payment ? PAY_STATUS_LABEL[payment.status] || payment.status : "—"}
             </div>
             <div className="mt-0.5 text-xs text-ink-soft capitalize">{payment?.method}</div>
@@ -316,22 +338,42 @@ function OrderDetail() {
         <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
           <div className="mb-3 font-display text-base font-bold">Detay</div>
           {o.order_items?.map((it, i) => (
-            <div key={i} className="flex justify-between border-b border-dashed border-brand-soft py-2 text-sm">
-              <span>{it.quantity}× {it.product_name}</span>
+            <div
+              key={i}
+              className="flex justify-between border-b border-dashed border-brand-soft py-2 text-sm"
+            >
+              <span>
+                {it.quantity}× {it.product_name}
+              </span>
               <span>{formatHTG(it.line_total)}</span>
             </div>
           ))}
           <div className="mt-3 space-y-1 text-sm">
-            <div className="flex justify-between text-ink-soft"><span>Sou-total</span><span>{formatHTG(o.subtotal)}</span></div>
-            <div className="flex justify-between text-ink-soft"><span>Frè livrezon</span><span>{formatHTG(o.delivery_fee)}</span></div>
+            <div className="flex justify-between text-ink-soft">
+              <span>Sou-total</span>
+              <span>{formatHTG(o.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-ink-soft">
+              <span>Frè livrezon</span>
+              <span>{formatHTG(o.delivery_fee)}</span>
+            </div>
             <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-2 font-display text-lg font-extrabold">
-              <span>Total</span><span>{formatHTG(o.total)}</span>
+              <span>Total</span>
+              <span>{formatHTG(o.total)}</span>
             </div>
           </div>
           <div className="mt-3 text-xs text-ink-soft">
-            <div><b>Livrezon:</b> {o.delivery_address}</div>
-            <div><b>Telefòn:</b> {o.contact_phone}</div>
-            {o.delivery_notes && <div><b>Nòt:</b> {o.delivery_notes}</div>}
+            <div>
+              <b>Livrezon:</b> {o.delivery_address}
+            </div>
+            <div>
+              <b>Telefòn:</b> {o.contact_phone}
+            </div>
+            {o.delivery_notes && (
+              <div>
+                <b>Nòt:</b> {o.delivery_notes}
+              </div>
+            )}
           </div>
         </div>
 
@@ -346,7 +388,9 @@ function OrderDetail() {
             {needsProof ? (
               <form onSubmit={submitProof} className="mt-4 space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">Prèv (foto/kaptè)</label>
+                  <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Prèv (foto/kaptè)
+                  </label>
                   <input
                     type="file"
                     accept="image/*,application/pdf"
@@ -394,11 +438,22 @@ function OrderDetail() {
                 <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv voye</div>
                 <ul className="space-y-2 text-sm">
                   {proofs.data.map((p) => (
-                    <li key={p.id} className="flex items-center gap-3 rounded-lg bg-cream px-3 py-2">
+                    <li
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-lg bg-cream px-3 py-2"
+                    >
                       <ProofThumb path={p.file_url} />
                       <div>
-                        {p.transaction_ref && <div>Tx: <b>{p.transaction_ref}</b></div>}
-                        {p.sender_phone && <div>Soti: <b>{p.sender_phone}</b></div>}
+                        {p.transaction_ref && (
+                          <div>
+                            Tx: <b>{p.transaction_ref}</b>
+                          </div>
+                        )}
+                        {p.sender_phone && (
+                          <div>
+                            Soti: <b>{p.sender_phone}</b>
+                          </div>
+                        )}
                         <div className="text-xs text-ink-soft">
                           {new Date(p.created_at).toLocaleString("fr-HT")}
                         </div>
@@ -441,12 +496,16 @@ function OrderDetail() {
             ) : (
               <div className="mt-3 space-y-3">
                 <div>
-                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Nòt restoran</span>
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Nòt restoran
+                  </span>
                   <StarPicker value={restaurantRating} onChange={setRestaurantRating} />
                 </div>
                 {delivery?.driver_id && (
                   <div>
-                    <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Nòt livrè</span>
+                    <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                      Nòt livrè
+                    </span>
                     <StarPicker value={driverRating} onChange={setDriverRating} />
                   </div>
                 )}
@@ -460,7 +519,10 @@ function OrderDetail() {
                 <button
                   disabled={submitReview.isPending}
                   onClick={() =>
-                    submitReview.mutate({ restaurantId: o.restaurant_id, driverId: delivery?.driver_id ?? null })
+                    submitReview.mutate({
+                      restaurantId: o.restaurant_id,
+                      driverId: delivery?.driver_id ?? null,
+                    })
                   }
                   className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
                 >
@@ -480,7 +542,10 @@ function StarRow({ value }: { value: number }) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`h-4 w-4 ${n <= value ? "fill-brand text-brand" : "text-brand-soft"}`} />
+        <Star
+          key={n}
+          className={`h-4 w-4 ${n <= value ? "fill-brand text-brand" : "text-brand-soft"}`}
+        />
       ))}
     </div>
   );

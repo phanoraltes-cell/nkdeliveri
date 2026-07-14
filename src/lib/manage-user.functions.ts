@@ -11,7 +11,10 @@ export const suspendUserAccount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    const { data: isSuperAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    const { data: isSuperAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "super_admin",
+    });
     if (!isAdmin && !isSuperAdmin) throw new Error("Forbidden");
     if (data.userId === userId) throw new Error("Ou pa ka sispann pwòp kont ou");
 
@@ -24,12 +27,16 @@ export const suspendUserAccount = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("role")
       .eq("user_id", data.userId);
-    const targetHasElevatedRole = (targetRoles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
+    const targetHasElevatedRole = (targetRoles ?? []).some(
+      (r) => r.role === "admin" || r.role === "super_admin",
+    );
     if (targetHasElevatedRole && !isSuperAdmin) {
       throw new Error("Sèl yon super_admin ka sispann yon lòt kont admin");
     }
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "876000h" });
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      ban_duration: "876000h",
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -40,11 +47,16 @@ export const reactivateUserAccount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    const { data: isSuperAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    const { data: isSuperAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "super_admin",
+    });
     if (!isAdmin && !isSuperAdmin) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      ban_duration: "none",
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
