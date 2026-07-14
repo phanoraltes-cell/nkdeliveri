@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
 import {
@@ -14,7 +14,6 @@ import {
   ChefHat,
   Flame,
   Inbox,
-  type LucideIcon,
 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +23,10 @@ import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import {
+  DashboardShortcutGrid,
+  type DashboardShortcutItem,
+} from "@/components/dashboard/dashboard-shortcut-grid";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/")({
   component: RestaurantDashboard,
 });
 
-type Tile = { icon: LucideIcon; title: string; desc: string; to: string | null };
+type Tile = DashboardShortcutItem;
 type RecentOrder = {
   id: string;
   order_number: string;
@@ -319,33 +322,7 @@ function RestaurantDashboard() {
         </section>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {tiles.map((c) => {
-          const Icon = c.icon;
-          const body = (
-            <div
-              key={c.title}
-              className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm"
-            >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="font-display text-base font-bold text-ink">{c.title}</div>
-              <div className="mt-1 text-sm text-ink-soft">{c.desc}</div>
-              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">
-                {c.to ? "Ouvri →" : "Byento"}
-              </div>
-            </div>
-          );
-          return c.to ? (
-            <Link key={c.title} to={c.to} className="block">
-              {body}
-            </Link>
-          ) : (
-            body
-          );
-        })}
-      </div>
+      <DashboardShortcutGrid items={tiles} />
     </div>
   );
 }

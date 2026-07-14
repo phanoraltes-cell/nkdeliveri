@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { DashboardShortcutGrid } from "@/components/dashboard/dashboard-shortcut-grid";
 import { formatHTG } from "@/lib/format";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
@@ -601,65 +602,41 @@ function AdminDashboard() {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[
+      <DashboardShortcutGrid
+        items={[
           {
             icon: CreditCard,
             title: "Peman manyèl",
             desc: "Valide prèv MonCash/NatCash",
-            to: "/dashboard/admin/payments" as const,
+            to: "/dashboard/admin/payments",
           },
           {
             icon: Users,
             title: "Kliyan & Newsletter",
             desc: "Swiv kliyan, ekspòte, voye imèl an mas",
-            to: "/dashboard/admin/customers" as const,
+            to: "/dashboard/admin/customers",
           },
           {
             icon: Users,
             title: "Jere itilizatè",
             desc: "Tout kont yo, kèlkeswa wòl",
-            to: "/dashboard/admin/users" as const,
+            to: "/dashboard/admin/users",
           },
           {
             icon: Wallet,
             title: "Peman platfòm",
             desc: "Nimewo MonCash/NatCash fallback",
-            to: "/dashboard/admin/payout-settings" as const,
+            to: "/dashboard/admin/payout-settings",
           },
           {
             icon: Percent,
             title: "Restoran & Komisyon",
             desc: "Chwazi pousantaj/montan chak restoran peye",
-            to: "/dashboard/admin/restaurants" as const,
+            to: "/dashboard/admin/restaurants",
           },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
-        ].map((c) => {
-          const Icon = c.icon;
-          const body = (
-            <div
-              key={c.title}
-              className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm"
-            >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="font-display text-base font-bold text-ink">{c.title}</div>
-              <div className="mt-1 text-sm text-ink-soft">{c.desc}</div>
-              <div className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-deep">
-                {c.to ? "Ouvri →" : "Byento"}
-              </div>
-            </div>
-          );
-          return c.to ? (
-            <Link key={c.title} to={c.to} className="block">
-              {body}
-            </Link>
-          ) : (
-            body
-          );
-        })}
-      </div>
+        ]}
+      />
     </div>
   );
 }
