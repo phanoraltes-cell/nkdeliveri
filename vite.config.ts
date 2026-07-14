@@ -14,6 +14,36 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          // Keep slow-changing vendor code in its own long-term-cacheable
+          // chunks, separate from app code that changes on every deploy —
+          // a redeploy that only touches routes/components shouldn't force
+          // every returning visitor to re-download React/the router/map/
+          // charting libraries they already have cached. Names are
+          // intentionally coarse (a handful of stable chunks, not one per
+          // package) to avoid the opposite problem of hundreds of tiny
+          // chunks adding request overhead.
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return undefined;
+            if (/[\\/]leaflet[\\/]|[\\/]react-leaflet[\\/]/.test(id)) return "vendor-leaflet";
+            if (/[\\/]recharts[\\/]|[\\/]victory-vendor[\\/]|[\\/]d3-[a-z-]+[\\/]/.test(id))
+              return "vendor-charts";
+            if (
+              /[\\/]jspdf[\\/]|[\\/]html2canvas[\\/]|[\\/]canvg[\\/]|[\\/]dompurify[\\/]/.test(id)
+            )
+              return "vendor-pdf";
+            if (/[\\/]framer-motion[\\/]/.test(id)) return "vendor-motion";
+            if (/[\\/]react[\\/]|[\\/]react-dom[\\/]|[\\/]scheduler[\\/]/.test(id))
+              return "vendor-react";
+            if (/[\\/]@tanstack[\\/]/.test(id)) return "vendor-tanstack";
+            if (/[\\/]@supabase[\\/]/.test(id)) return "vendor-supabase";
+            return undefined;
+          },
+        },
+      },
+    },
     plugins: [
       VitePWA({
         registerType: "autoUpdate",
