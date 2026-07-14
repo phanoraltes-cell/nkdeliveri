@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import {
   Store,
   ClipboardList,
@@ -20,8 +21,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
-import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { DataTable } from "@/components/dashboard/tables/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
+// only needed once this page has mounted.
+const RevenueChart = lazy(() =>
+  import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
+);
 
 const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 
@@ -277,7 +284,9 @@ function RestaurantDashboard() {
           {weeklyRevenue.isLoading ? (
             <div className="text-sm text-ink-soft">Chajman…</div>
           ) : (
-            <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+            <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
+              <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+            </Suspense>
           )}
         </section>
       )}

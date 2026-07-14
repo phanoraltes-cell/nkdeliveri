@@ -5,15 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, Clock, AlertCircle, Star, Navigation } from "lucide-react";
-import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useOrderDelivery } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
 import { ProofThumb } from "@/components/proof-thumb";
 import { noIndexMeta } from "@/lib/seo";
 import { assertValidUploadFile } from "@/lib/file-validation";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// See dashboard.admin.index.tsx for why this is lazy: leaflet (~150KB) is
+// only needed once this page has mounted.
+const LeafletMap = lazy(() =>
+  import("@/components/maps/LeafletMap").then((m) => ({ default: m.LeafletMap })),
+);
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -314,11 +321,13 @@ function OrderDetail() {
                 {delivery.status}
               </span>
             </div>
-            <LeafletMap
-              markers={trackingMarkers}
-              route={trackingRoute.data?.path}
-              className="h-[320px] w-full rounded-xl"
-            />
+            <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-xl" />}>
+              <LeafletMap
+                markers={trackingMarkers}
+                route={trackingRoute.data?.path}
+                className="h-[320px] w-full rounded-xl"
+              />
+            </Suspense>
             {trackingRoute.data && (
               <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand-deep">
                 <Navigation className="h-3.5 w-3.5" />

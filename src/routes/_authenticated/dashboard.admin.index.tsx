@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -16,14 +16,24 @@ import {
   Inbox,
 } from "lucide-react";
 import { toast } from "sonner";
-import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
 import { ProofThumb } from "@/components/proof-thumb";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
-import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { DataTable } from "@/components/dashboard/tables/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatHTG } from "@/lib/format";
+
+// Leaflet (~150KB) and recharts (~350KB) are only needed once this page has
+// mounted — loading them as part of the main route chunk would delay every
+// dashboard visit for the sake of a map/chart below the fold.
+const LeafletMap = lazy(() =>
+  import("@/components/maps/LeafletMap").then((m) => ({ default: m.LeafletMap })),
+);
+const RevenueChart = lazy(() =>
+  import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
+);
 
 const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 
@@ -330,10 +340,14 @@ function AdminDashboard() {
           />
         </div>
 
-        <LeafletMap
-          markers={markers}
-          className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl"
-        />
+        <Suspense
+          fallback={<Skeleton className="h-[260px] w-full rounded-xl sm:h-[340px] lg:h-[420px]" />}
+        >
+          <LeafletMap
+            markers={markers}
+            className="h-[260px] sm:h-[340px] lg:h-[420px] w-full rounded-xl"
+          />
+        </Suspense>
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-soft">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-orange-500" /> Restoran
@@ -419,7 +433,9 @@ function AdminDashboard() {
         {weeklyRevenue.isLoading ? (
           <div className="text-sm text-ink-soft">Chajman…</div>
         ) : (
-          <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+          <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
+            <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+          </Suspense>
         )}
       </section>
 

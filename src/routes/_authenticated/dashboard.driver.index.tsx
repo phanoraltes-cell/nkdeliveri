@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -17,15 +17,24 @@ import {
   MessageSquareText,
 } from "lucide-react";
 import { toast } from "sonner";
-import { LeafletMap, type MapMarker } from "@/components/maps/LeafletMap";
+import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
 import { DriverLocationReporter } from "@/components/driver-location-reporter";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
-import { RevenueChart } from "@/components/dashboard/charts/revenue-chart";
 import { DataTable } from "@/components/dashboard/tables/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// See dashboard.admin.index.tsx for why these are lazy: leaflet/recharts
+// are only needed once this page has mounted.
+const LeafletMap = lazy(() =>
+  import("@/components/maps/LeafletMap").then((m) => ({ default: m.LeafletMap })),
+);
+const RevenueChart = lazy(() =>
+  import("@/components/dashboard/charts/revenue-chart").then((m) => ({ default: m.RevenueChart })),
+);
 
 const CREOLE_DAY = ["Dim", "Lin", "Mad", "Mèk", "Jed", "Van", "Sam"];
 type ReviewRow = {
@@ -328,7 +337,9 @@ function DriverDashboard() {
           {weeklyEarnings.isLoading ? (
             <div className="text-sm text-ink-soft">Chajman…</div>
           ) : (
-            <RevenueChart data={weeklyEarnings.data ?? []} formatValue={formatHTG} />
+            <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
+              <RevenueChart data={weeklyEarnings.data ?? []} formatValue={formatHTG} />
+            </Suspense>
           )}
         </section>
       )}
@@ -342,11 +353,17 @@ function DriverDashboard() {
                 {active.length}
               </span>
             </div>
-            <LeafletMap
-              markers={markers}
-              route={routePath ?? undefined}
-              className="h-[240px] sm:h-[320px] lg:h-[380px] w-full rounded-xl"
-            />
+            <Suspense
+              fallback={
+                <Skeleton className="h-[240px] w-full rounded-xl sm:h-[320px] lg:h-[380px]" />
+              }
+            >
+              <LeafletMap
+                markers={markers}
+                route={routePath ?? undefined}
+                className="h-[240px] sm:h-[320px] lg:h-[380px] w-full rounded-xl"
+              />
+            </Suspense>
           </section>
           <div className="space-y-4">
             <DriverLocationReporter driverId={driver.id} />
