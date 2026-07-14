@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
-import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
-import { NavigationRoute, registerRoute } from "workbox-routing";
+import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from "workbox-precaching";
+import { NavigationRoute, registerRoute, setCatchHandler } from "workbox-routing";
 import { NetworkFirst, CacheFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 
@@ -27,6 +27,23 @@ registerRoute(
     plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 })],
   }),
 );
+
+// A navigation that isn't in the precache list (a route not visited before
+// this SW install) and can't reach the network — NetworkFirst above has no
+// cache entry to fall back to and would otherwise surface the browser's own
+// "no internet" interstitial. offline.html is a plain static page (no JS
+// bundle dependency, unlike every actual app route) precached alongside
+// everything else, so it's always available offline.
+setCatchHandler(async ({ event }) => {
+  // Workbox's own types are imprecise here — a catch handler triggered by a
+  // failed fetch always receives a FetchEvent (which has `.request`), but
+  // its declared type is the base ExtendableEvent.
+  const request = (event as FetchEvent).request;
+  if (request?.mode === "navigate") {
+    return (await matchPrecache("/offline.html")) ?? Response.error();
+  }
+  return Response.error();
+});
 
 // --- Skip-waiting bridge for update prompt -------------------------------
 self.addEventListener("message", (event) => {
