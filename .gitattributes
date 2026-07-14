@@ -1,0 +1,15 @@
+# Force LF line endings for all text files, regardless of the checkout
+# platform's core.autocrlf setting. Without this, a Windows checkout with
+# autocrlf=true silently converts every tracked text file to CRLF, which
+# then makes `npm run lint` report thousands of prettier/prettier "Delete \r"
+# errors that drown out real issues (see Phase 1/2 audit reports).
+* text=auto eol=lf
+
+# Binary assets — never touch line endings, never run text diff on them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
