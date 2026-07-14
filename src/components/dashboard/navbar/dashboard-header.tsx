@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, User } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileDrawer } from "@/components/dashboard/drawer/mobile-drawer";
 import { PROFILE_LINK_BY_ROLE } from "@/components/dashboard/sidebar/nav-items";
@@ -13,10 +14,12 @@ type DashboardHeaderProps = {
 };
 
 export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps) {
+  const qc = useQueryClient();
+  const unreadQueryKey = ["notif-unread", user?.id] as const;
+
   const { data: unread = 0 } = useQuery({
-    queryKey: ["notif-unread", user?.id],
+    queryKey: unreadQueryKey,
     enabled: !!user,
-    refetchInterval: 30000,
     queryFn: async () => {
       const { count, error } = await supabase
         .from("notifications")
@@ -26,6 +29,26 @@ export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps)
       return count ?? 0;
     },
   });
+
+  // Was a 30s poll (constant DB load on every dashboard tab, every user, all
+  // the time) — every other live-updating piece of this app already uses
+  // Realtime (see useLiveOrders), so this badge follows the same pattern:
+  // refetch only when this user's own notifications actually change.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`notif-unread-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: unreadQueryKey }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const { data: avatarUrl } = useQuery({
     queryKey: ["header-avatar", user?.id],

@@ -46,7 +46,12 @@ function RestaurantPromotions() {
         .from("promotions")
         .select("*")
         .eq("restaurant_id", restaurant!.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        // A single restaurant's own promotions are never going to number in
+        // the hundreds in practice — this is a safety cap against a
+        // pathological case, not full pagination (which this list doesn't
+        // need at its actual scale).
+        .limit(100);
       if (error) throw error;
       return data;
     },
