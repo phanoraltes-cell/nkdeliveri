@@ -11,6 +11,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { inputCls } from "@/lib/utils";
 import { AddressManager } from "@/components/address-manager";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import { assertValidUploadFile } from "@/lib/file-validation";
 
 export const Route = createFileRoute("/profile")({
   head: () => noIndexMeta("Pwofil mwen — NK Deliveri"),
@@ -50,6 +51,7 @@ function Profile() {
       if (!user) throw new Error("Ou dwe konekte");
       let avatarUrl = profile?.avatar_url ?? null;
       if (avatar) {
+        assertValidUploadFile(avatar, "avatars");
         const path = `${user.id}/avatar-${Date.now()}-${avatar.name}`;
         const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatar, { upsert: false });
         if (upErr) throw upErr;

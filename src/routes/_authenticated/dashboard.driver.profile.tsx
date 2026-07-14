@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { inputCls } from "@/lib/utils";
+import { assertValidUploadFile } from "@/lib/file-validation";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/profile")({
   component: DriverProfile,
@@ -51,6 +52,7 @@ function DriverProfile() {
       if (!user || !data?.driver) throw new Error("Ou dwe konekte");
       let avatarUrl = data.avatarUrl;
       if (avatar) {
+        assertValidUploadFile(avatar, "avatars");
         const path = `${user.id}/avatar-${Date.now()}-${avatar.name}`;
         const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatar, { upsert: false });
         if (upErr) throw upErr;

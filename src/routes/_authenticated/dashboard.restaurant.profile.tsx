@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
+import { assertValidUploadFile } from "@/lib/file-validation";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profile")({
   beforeLoad: ({ context }) => {
@@ -27,6 +28,7 @@ const DAYS: { key: string; label: string }[] = [
 ];
 
 async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: File) {
+  assertValidUploadFile(file, "restaurant-assets");
   const path = `${restaurantId}/${kind}-${Date.now()}-${file.name}`;
   const { error } = await supabase.storage.from("restaurant-assets").upload(path, file, { upsert: false });
   if (error) throw error;

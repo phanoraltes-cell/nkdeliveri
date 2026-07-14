@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
+import { assertValidUploadFile } from "@/lib/file-validation";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
@@ -35,6 +36,7 @@ const DISH_TYPES = [
 ];
 
 async function uploadDishPhoto(restaurantId: string, file: File) {
+  assertValidUploadFile(file, "menu-photos");
   const path = `${restaurantId}/${Date.now()}-${file.name}`;
   const { error } = await supabase.storage.from("menu-photos").upload(path, file, { upsert: false });
   if (error) throw error;

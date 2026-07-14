@@ -13,6 +13,7 @@ import { useOrderDelivery } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
 import { ProofThumb } from "@/components/proof-thumb";
 import { noIndexMeta } from "@/lib/seo";
+import { assertValidUploadFile } from "@/lib/file-validation";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -91,6 +92,7 @@ function OrderDetail() {
   const uploadProof = useMutation({
     mutationFn: async () => {
       if (!file) throw new Error("Chwazi yon foto prèv peman");
+      assertValidUploadFile(file, "payment-proofs");
       if (!order.data?.payments?.[0]) throw new Error("Peman pa jwenn");
       const payment = order.data.payments[0];
       const path = `${order.data.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
