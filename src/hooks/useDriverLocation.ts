@@ -30,13 +30,22 @@ export function useDriverLocation(driverId: string) {
       const now = Date.now();
       if (now - throttleRef.current < PUSH_THROTTLE_MS) return;
       throttleRef.current = now;
+      // This reflects the device's own last GPS fix, not a confirmation that
+      // it reached the server — the two writes below are what actually
+      // persist it, and their errors are surfaced separately.
       setLast({ lat, lng, heading, ts: now });
 
-      await supabase
+      const { error: driverErr } = await supabase
         .from("drivers")
         .update({ current_lat: lat, current_lng: lng })
         .eq("id", driverId);
-      await supabase
+      if (driverErr) {
+        console.error("[useDriverLocation] failed to update drivers.current_lat/lng", driverErr);
+        setError("Pozisyon ou pa t sove. N ap eseye ankò.");
+        return;
+      }
+
+      const { error: deliveryErr } = await supabase
         .from("deliveries")
         .update({
           driver_lat: lat,
@@ -46,6 +55,17 @@ export function useDriverLocation(driverId: string) {
         })
         .eq("driver_id", driverId)
         .in("status", ACTIVE_DELIVERY_STATUSES);
+      if (deliveryErr) {
+        console.error(
+          "[useDriverLocation] failed to update deliveries.driver_lat/lng",
+          deliveryErr,
+        );
+        setError("Pozisyon ou pa t rive jwenn kliyan an. N ap eseye ankò.");
+        return;
+      }
+
+      // Clear any previously surfaced write error now that a push succeeded.
+      setError(null);
     },
     [driverId],
   );
