@@ -174,7 +174,10 @@ function RestaurantOrders() {
                   </button>
                   <button
                     disabled={changeStatus.isPending}
-                    onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
+                    onClick={() =>
+                      confirm(`Refize kòmand ${o.order_number}?`) &&
+                      changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                    }
                     className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                   >
                     <X className="h-3.5 w-3.5" /> Refize
@@ -197,7 +200,10 @@ function RestaurantOrders() {
                 o.status !== "refunded" && (
                   <button
                     disabled={changeStatus.isPending}
-                    onClick={() => changeStatus.mutate({ orderId: o.id, status: "cancelled" })}
+                    onClick={() =>
+                      confirm(`Anile kòmand ${o.order_number}?`) &&
+                      changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                    }
                     className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
                     Anile kòmand

@@ -57,7 +57,6 @@ function OrderDetail() {
   const [senderPhone, setSenderPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   const order = useQuery({
     queryKey: ["order", id],
@@ -126,14 +125,12 @@ function OrderDetail() {
     onError: (e) => toast.error(e.message),
   });
 
-  async function submitProof(e: React.FormEvent) {
+  function submitProof(e: React.FormEvent) {
     e.preventDefault();
-    setUploading(true);
-    try {
-      await uploadProof.mutateAsync();
-    } finally {
-      setUploading(false);
-    }
+    // useMutation already tracks pending/error state (uploadProof.isPending,
+    // onError above) — calling .mutate() instead of awaiting .mutateAsync()
+    // here avoids leaving an unhandled promise rejection on failure.
+    uploadProof.mutate();
   }
 
   const review = useQuery({
@@ -421,10 +418,11 @@ function OrderDetail() {
                 />
                 <button
                   type="submit"
-                  disabled={uploading || !file}
+                  disabled={uploadProof.isPending || !file}
                   className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
                 >
-                  <Upload className="h-4 w-4" /> {uploading ? "Ap voye…" : "Voye prèv la"}
+                  <Upload className="h-4 w-4" />{" "}
+                  {uploadProof.isPending ? "Ap voye…" : "Voye prèv la"}
                 </button>
               </form>
             ) : (

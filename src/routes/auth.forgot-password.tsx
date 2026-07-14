@@ -20,6 +20,7 @@ function ForgotPassword() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!email.trim()) return toast.error("Antre imèl ou");
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {

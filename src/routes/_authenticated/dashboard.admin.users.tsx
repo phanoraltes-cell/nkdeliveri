@@ -234,6 +234,7 @@ function AdminUsers() {
                             {ROLE_LABEL[r] ?? r}
                             <button
                               onClick={() =>
+                                confirm(`Retire wòl ${ROLE_LABEL[r] ?? r} nan men ${u.email}?`) &&
                                 removeRole.mutate({ userId: u.id, role: r as AppRole })
                               }
                               disabled={removeRole.isPending}
