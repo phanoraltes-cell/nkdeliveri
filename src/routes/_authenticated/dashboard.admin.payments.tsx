@@ -7,7 +7,7 @@ import { formatHTG } from "@/lib/format";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { ProofThumb } from "@/components/proof-thumb";
 import { toast } from "sonner";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/payments")({
@@ -475,8 +475,8 @@ function PayoutHistory({
               {filtered.map((p) => {
                 const open = openId === p.id;
                 return (
-                  <>
-                    <tr key={p.id} className="border-t border-brand-soft/40 hover:bg-brand-soft/20">
+                  <Fragment key={p.id}>
+                    <tr className="border-t border-brand-soft/40 hover:bg-brand-soft/20">
                       <td className="px-3 py-2 text-xs text-ink-soft">
                         {new Date(p.reviewed_at || p.created_at).toLocaleString("fr-HT")}
                       </td>
@@ -619,7 +619,7 @@ function PayoutHistory({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
             </tbody>
