@@ -8,6 +8,10 @@ import { suspendUserAccount, reactivateUserAccount } from "@/lib/manage-user.fun
 import { toast } from "sonner";
 import { Download, Search, X, Ban, RotateCcw } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
+
+const PAGE_SIZE = 50;
+const EXPORT_LIMIT = 500;
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/users")({
   beforeLoad: ({ context }) => {
@@ -52,39 +56,75 @@ function AdminUsers() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [addRoleFor, setAddRoleFor] = useState<Record<string, AppRole>>({});
+  const [exporting, setExporting] = useState(false);
   const suspendFn = useServerFn(suspendUserAccount);
   const reactivateFn = useServerFn(reactivateUserAccount);
 
   const users = useQuery({
-    queryKey: ["admin-all-users", search],
+    queryKey: ["admin-all-users", search, roleFilter, page],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_all_users_admin", {
         _search: search.trim() || undefined,
+        _role: roleFilter === "all" ? undefined : (roleFilter as AppRole),
+        _limit: PAGE_SIZE,
+        _offset: (page - 1) * PAGE_SIZE,
       });
       if (error) throw error;
       return data ?? [];
     },
   });
 
-  const filtered = (users.data ?? []).filter(
-    (u) => roleFilter === "all" || (u.roles ?? []).includes(roleFilter as never),
-  );
+  const filtered = users.data ?? [];
+  const totalCount = filtered[0]?.total_count ?? 0;
 
-  function exportUsers() {
-    if (!filtered.length) return;
-    downloadCSV(
-      `itilizate_${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Imèl", "Prenon", "Non", "Telefòn", "Wòl", "Enskri sou"],
-      filtered.map((u) => [
-        u.email,
-        u.first_name ?? "",
-        u.last_name ?? "",
-        u.phone ?? "",
-        (u.roles ?? []).map((r: string) => ROLE_LABEL[r] ?? r).join(", "),
-        new Date(u.created_at).toLocaleDateString("fr-HT"),
-      ]),
-    );
+  function goToPage(p: number) {
+    setPage(Math.max(1, p));
+  }
+
+  function updateSearch(v: string) {
+    setSearch(v);
+    setPage(1);
+  }
+
+  function updateRoleFilter(v: string) {
+    setRoleFilter(v);
+    setPage(1);
+  }
+
+  async function exportUsers() {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.rpc("get_all_users_admin", {
+        _search: search.trim() || undefined,
+        _role: roleFilter === "all" ? undefined : (roleFilter as AppRole),
+        _limit: EXPORT_LIMIT,
+        _offset: 0,
+      });
+      if (error) throw error;
+      const rows = data ?? [];
+      if (!rows.length) return;
+      if ((rows[0]?.total_count ?? 0) > EXPORT_LIMIT) {
+        toast.warning(`Sèlman premye ${EXPORT_LIMIT} itilizatè yo enkli nan ekspò a.`);
+      }
+      downloadCSV(
+        `itilizate_${new Date().toISOString().slice(0, 10)}.csv`,
+        ["Imèl", "Prenon", "Non", "Telefòn", "Wòl", "Enskri sou"],
+        rows.map((u) => [
+          u.email,
+          u.first_name ?? "",
+          u.last_name ?? "",
+          u.phone ?? "",
+          (u.roles ?? []).map((r: string) => ROLE_LABEL[r] ?? r).join(", "),
+          new Date(u.created_at).toLocaleDateString("fr-HT"),
+        ]),
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè pandan ekspòtasyon an");
+    } finally {
+      setExporting(false);
+    }
   }
 
   const addRole = useMutation({
@@ -154,21 +194,21 @@ function AdminUsers() {
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-bold">
-            Itilizatè {users.data ? `(${filtered.length})` : ""}
+            Itilizatè {users.data ? `(${totalCount})` : ""}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
                 className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
               />
             </div>
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => updateRoleFilter(e.target.value)}
               className="rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
             >
               <option value="all">Tout wòl</option>
@@ -180,10 +220,10 @@ function AdminUsers() {
             </select>
             <button
               onClick={exportUsers}
-              disabled={!filtered.length}
+              disabled={!filtered.length || exporting}
               className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
             >
-              <Download className="h-3.5 w-3.5" /> CSV
+              <Download className="h-3.5 w-3.5" /> {exporting ? "…" : "CSV"}
             </button>
           </div>
         </div>
@@ -305,6 +345,13 @@ function AdminUsers() {
             </div>
           )}
         </div>
+        <PaginationControls
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCount}
+          onPageChange={goToPage}
+          className="mt-4"
+        />
       </section>
     </div>
   );

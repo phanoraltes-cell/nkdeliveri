@@ -5,6 +5,9 @@ import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Percent, Store } from "lucide-react";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
+
+const PAGE_SIZE = 50;
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/restaurants")({
   beforeLoad: ({ context }) => {
@@ -26,15 +29,20 @@ const STATUS_LABEL: Record<string, string> = {
 function AdminRestaurants() {
   const qc = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const restaurants = useQuery({
-    queryKey: ["admin-restaurants"],
+    queryKey: ["admin-restaurants", page],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_restaurants_admin");
+      const { data, error } = await supabase.rpc("get_restaurants_admin", {
+        _limit: PAGE_SIZE,
+        _offset: (page - 1) * PAGE_SIZE,
+      });
       if (error) throw error;
       return data ?? [];
     },
   });
+  const totalRestaurants = restaurants.data?.[0]?.total_count ?? 0;
 
   return (
     <div className="space-y-5">
@@ -114,6 +122,12 @@ function AdminRestaurants() {
           ),
         )}
       </div>
+      <PaginationControls
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalCount={totalRestaurants}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

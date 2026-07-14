@@ -8,6 +8,10 @@ import { sendNewsletterBroadcast } from "@/lib/send-newsletter.functions";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Download, Search, Send, Mail } from "lucide-react";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
+
+const PAGE_SIZE = 50;
+const EXPORT_LIMIT = 500;
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/customers")({
   beforeLoad: ({ context }) => {
@@ -21,20 +25,30 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/customers"
 
 function AdminCustomers() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [exporting, setExporting] = useState(false);
   const sendBroadcast = useServerFn(sendNewsletterBroadcast);
 
   const customers = useQuery({
-    queryKey: ["admin-customers", search],
+    queryKey: ["admin-customers", search, page],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_customers_admin", {
         _search: search.trim() || undefined,
+        _limit: PAGE_SIZE,
+        _offset: (page - 1) * PAGE_SIZE,
       });
       if (error) throw error;
       return data ?? [];
     },
   });
+  const totalCustomers = customers.data?.[0]?.total_count ?? 0;
+
+  function updateSearch(v: string) {
+    setSearch(v);
+    setPage(1);
+  }
 
   const subscribers = useQuery({
     queryKey: ["admin-newsletter-subscribers"],
@@ -64,32 +78,49 @@ function AdminCustomers() {
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
-  function exportCustomers() {
-    if (!customers.data?.length) return;
-    downloadCSV(
-      `kliyan_${new Date().toISOString().slice(0, 10)}.csv`,
-      [
-        "Imèl",
-        "Prenon",
-        "Non",
-        "Telefòn",
-        "Adrès",
-        "Enskri sou",
-        "Kòmand total",
-        "Total achte (HTG)",
-      ],
-      customers.data.map((c) => [
-        c.email,
-        c.first_name ?? "",
-        c.last_name ?? "",
-        c.phone ?? "",
-        c.address ?? "",
-        new Date(c.created_at).toLocaleDateString("fr-HT"),
-        c.total_orders,
-        Number(c.total_spent),
-      ]),
-    );
-    toast.success("CSV telechaje");
+  async function exportCustomers() {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.rpc("get_customers_admin", {
+        _search: search.trim() || undefined,
+        _limit: EXPORT_LIMIT,
+        _offset: 0,
+      });
+      if (error) throw error;
+      const rows = data ?? [];
+      if (!rows.length) return;
+      if ((rows[0]?.total_count ?? 0) > EXPORT_LIMIT) {
+        toast.warning(`Sèlman premye ${EXPORT_LIMIT} kliyan yo enkli nan ekspò a.`);
+      }
+      downloadCSV(
+        `kliyan_${new Date().toISOString().slice(0, 10)}.csv`,
+        [
+          "Imèl",
+          "Prenon",
+          "Non",
+          "Telefòn",
+          "Adrès",
+          "Enskri sou",
+          "Kòmand total",
+          "Total achte (HTG)",
+        ],
+        rows.map((c) => [
+          c.email,
+          c.first_name ?? "",
+          c.last_name ?? "",
+          c.phone ?? "",
+          c.address ?? "",
+          new Date(c.created_at).toLocaleDateString("fr-HT"),
+          c.total_orders,
+          Number(c.total_spent),
+        ]),
+      );
+      toast.success("CSV telechaje");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erè pandan ekspòtasyon an");
+    } finally {
+      setExporting(false);
+    }
   }
 
   function exportSubscribers() {
@@ -124,24 +155,24 @@ function AdminCustomers() {
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-bold">
-            Kliyan {customers.data ? `(${customers.data.length})` : ""}
+            Kliyan {customers.data ? `(${totalCustomers})` : ""}
           </h2>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
                 className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
               />
             </div>
             <button
               onClick={exportCustomers}
-              disabled={!customers.data?.length}
+              disabled={!customers.data?.length || exporting}
               className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
             >
-              <Download className="h-3.5 w-3.5" /> CSV
+              <Download className="h-3.5 w-3.5" /> {exporting ? "…" : "CSV"}
             </button>
           </div>
         </div>
@@ -182,6 +213,13 @@ function AdminCustomers() {
             <div className="p-6 text-center text-sm text-ink-soft">Pa gen kliyan ki koresponn.</div>
           )}
         </div>
+        <PaginationControls
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalCount={totalCustomers}
+          onPageChange={setPage}
+          className="mt-4"
+        />
       </section>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">

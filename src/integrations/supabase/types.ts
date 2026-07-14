@@ -1217,7 +1217,12 @@ export type Database = {
         Returns: undefined;
       };
       get_all_users_admin: {
-        Args: { _search?: string };
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _role?: Database["public"]["Enums"]["app_role"] | null;
+          _search?: string;
+        };
         Returns: {
           banned_until: string;
           created_at: string;
@@ -1227,10 +1232,11 @@ export type Database = {
           last_name: string;
           phone: string;
           roles: string[];
+          total_count: number;
         }[];
       };
       get_customers_admin: {
-        Args: { _search?: string };
+        Args: { _limit?: number; _offset?: number; _search?: string };
         Returns: {
           address: string;
           created_at: string;
@@ -1239,6 +1245,7 @@ export type Database = {
           id: string;
           last_name: string;
           phone: string;
+          total_count: number;
           total_orders: number;
           total_spent: number;
         }[];
@@ -1288,7 +1295,7 @@ export type Database = {
         }[];
       };
       get_restaurants_admin: {
-        Args: never;
+        Args: { _limit?: number; _offset?: number };
         Returns: {
           commission_rate: number;
           commission_type: string;
@@ -1298,6 +1305,7 @@ export type Database = {
           monthly_commission_amount: number;
           name: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          total_count: number;
         }[];
       };
       has_role: {
