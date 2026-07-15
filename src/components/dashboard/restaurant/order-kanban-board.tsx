@@ -1,0 +1,204 @@
+import { useState } from "react";
+import { Check, X, ChevronRight } from "lucide-react";
+import { formatHTG } from "@/lib/format";
+
+export type KanbanOrder = {
+  id: string;
+  order_number: string;
+  status: string;
+  total: number;
+  delivery_address: string;
+  delivery_notes: string | null;
+  created_at: string;
+  order_items: { id: string; product_name: string; quantity: number }[] | null;
+};
+
+type Column = { key: string; label: string; statuses: string[] };
+
+const COLUMNS: Column[] = [
+  { key: "pending", label: "Nouvo kòmand", statuses: ["pending"] },
+  { key: "confirmed", label: "Konfime", statuses: ["confirmed"] },
+  { key: "preparing", label: "Ap prepare", statuses: ["preparing"] },
+  { key: "ready", label: "Prè", statuses: ["ready"] },
+  { key: "delivering", label: "An livrezon", statuses: ["assigned", "picked_up"] },
+  { key: "delivered", label: "Livre", statuses: ["delivered"] },
+  { key: "cancelled", label: "Anile", statuses: ["cancelled", "refunded"] },
+];
+
+// Forward moves a restaurant owner/staff may trigger from the current
+// status — same rule update_order_status_secure enforces server-side, kept
+// in sync here so a drag onto an illegal column never even reaches the RPC.
+const NEXT_COLUMN: Record<string, string> = {
+  pending: "confirmed",
+  confirmed: "preparing",
+  preparing: "ready",
+};
+const CANCELLABLE_FROM = new Set(["pending", "confirmed", "preparing", "ready"]);
+
+function isValidDrop(fromStatus: string, toColumnKey: string) {
+  if (toColumnKey === "cancelled") return CANCELLABLE_FROM.has(fromStatus);
+  return NEXT_COLUMN[fromStatus] === toColumnKey;
+}
+
+type OrderKanbanBoardProps = {
+  orders: KanbanOrder[];
+  onChangeStatus: (orderId: string, status: string) => void;
+  isChangingStatus: boolean;
+};
+
+/** Restaurant orders as a 7-column Kanban board, with drag-and-drop between adjacent stages plus the same per-card action buttons as the list view. */
+export function OrderKanbanBoard({
+  orders,
+  onChangeStatus,
+  isChangingStatus,
+}: OrderKanbanBoardProps) {
+  const [dragOrder, setDragOrder] = useState<{ id: string; status: string } | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
+  function handleDrop(columnKey: string) {
+    setDragOverCol(null);
+    if (!dragOrder) return;
+    if (!isValidDrop(dragOrder.status, columnKey)) return;
+    if (columnKey === "cancelled") {
+      if (confirm(`Anile kòmand sa a?`)) onChangeStatus(dragOrder.id, "cancelled");
+    } else {
+      onChangeStatus(dragOrder.id, columnKey);
+    }
+    setDragOrder(null);
+  }
+
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-3">
+      {COLUMNS.map((col) => {
+        const cards = orders.filter((o) => col.statuses.includes(o.status));
+        const isDropTarget = dragOrder != null && isValidDrop(dragOrder.status, col.key);
+        return (
+          <div
+            key={col.key}
+            onDragOver={(e) => {
+              if (isDropTarget) {
+                e.preventDefault();
+                setDragOverCol(col.key);
+              }
+            }}
+            onDragLeave={() => setDragOverCol((c) => (c === col.key ? null : c))}
+            onDrop={() => handleDrop(col.key)}
+            className={`w-[260px] shrink-0 rounded-2xl border-2 bg-brand-soft/10 p-2.5 transition-colors sm:w-[280px] ${
+              dragOverCol === col.key
+                ? "border-brand bg-brand-soft/30"
+                : isDropTarget
+                  ? "border-dashed border-brand-soft"
+                  : "border-transparent"
+            }`}
+          >
+            <div className="mb-2 flex items-center justify-between px-1">
+              <h3 className="font-display text-sm font-extrabold text-ink">{col.label}</h3>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-ink-soft">
+                {cards.length}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {cards.map((o) => (
+                <KanbanCard
+                  key={o.id}
+                  order={o}
+                  draggable={NEXT_COLUMN[o.status] !== undefined}
+                  onDragStart={() => setDragOrder({ id: o.id, status: o.status })}
+                  onDragEnd={() => {
+                    setDragOrder(null);
+                    setDragOverCol(null);
+                  }}
+                  onChangeStatus={onChangeStatus}
+                  isChangingStatus={isChangingStatus}
+                />
+              ))}
+              {cards.length === 0 && (
+                <div className="rounded-xl border border-dashed border-brand-soft/50 p-3 text-center text-[11px] text-ink-soft">
+                  Vid
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function KanbanCard({
+  order: o,
+  draggable,
+  onDragStart,
+  onDragEnd,
+  onChangeStatus,
+  isChangingStatus,
+}: {
+  order: KanbanOrder;
+  draggable: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onChangeStatus: (orderId: string, status: string) => void;
+  isChangingStatus: boolean;
+}) {
+  const itemCount = o.order_items?.reduce((s, it) => s + it.quantity, 0) ?? 0;
+  const nextCol = NEXT_COLUMN[o.status];
+
+  return (
+    <div
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className={`rounded-xl border border-brand-soft/50 bg-white p-3 shadow-sm ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-display text-sm font-extrabold text-ink">{o.order_number}</span>
+        <span className="font-display text-sm font-extrabold text-brand-deep">
+          {formatHTG(Number(o.total))}
+        </span>
+      </div>
+      <div className="mt-0.5 text-[11px] text-ink-soft">
+        {new Date(o.created_at).toLocaleTimeString("fr-HT", { hour: "2-digit", minute: "2-digit" })}{" "}
+        · {itemCount} atik
+      </div>
+      <div className="mt-1 truncate text-[11px] text-ink-soft">{o.delivery_address}</div>
+      {o.delivery_notes && (
+        <div className="mt-1 truncate text-[11px] italic text-ink-soft">{o.delivery_notes}</div>
+      )}
+
+      {(o.status === "pending" || nextCol) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {o.status === "pending" && (
+            <>
+              <button
+                disabled={isChangingStatus}
+                onClick={() => onChangeStatus(o.id, "confirmed")}
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <Check className="h-3 w-3" /> Konfime
+              </button>
+              <button
+                disabled={isChangingStatus}
+                onClick={() =>
+                  confirm(`Refize kòmand ${o.order_number}?`) && onChangeStatus(o.id, "cancelled")
+                }
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                <X className="h-3 w-3" /> Refize
+              </button>
+            </>
+          )}
+          {nextCol && o.status !== "pending" && (
+            <button
+              disabled={isChangingStatus}
+              onClick={() => onChangeStatus(o.id, nextCol)}
+              className="inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+            >
+              Avanse <ChevronRight className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

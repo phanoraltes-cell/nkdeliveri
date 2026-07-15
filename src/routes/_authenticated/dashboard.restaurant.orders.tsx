@@ -5,9 +5,10 @@ import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, X, ChevronRight } from "lucide-react";
+import { Check, X, ChevronRight, LayoutGrid, List } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban-board";
 
 const PAGE_SIZE = 30;
 
@@ -48,10 +49,31 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
 function RestaurantOrders() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const [view, setView] = useState<"kanban" | "list">("kanban");
   const [filter, setFilter] = useState<"all" | "pending">("all");
   const [page, setPage] = useState(1);
 
   const { data: restaurant } = useMyRestaurant(user?.id);
+
+  // The Kanban board is a live operational snapshot, not a history browser —
+  // it shows the 100 most recent orders across every status. Full history
+  // with proper pagination stays in the "Lis" view below.
+  const kanbanOrders = useQuery({
+    queryKey: ["restaurant-orders-kanban", restaurant?.id],
+    enabled: !!restaurant?.id && view === "kanban",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          "id, order_number, status, total, delivery_address, delivery_notes, created_at, order_items(id, product_name, quantity)",
+        )
+        .eq("restaurant_id", restaurant!.id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // "An atant" (pending) is the actionable queue staff work off of, live —
   // it must never be silently truncated by pagination, but it's also
@@ -110,6 +132,7 @@ function RestaurantOrders() {
     onSuccess: () => {
       toast.success("Estati kòmand mizajou");
       qc.invalidateQueries({ queryKey: ["restaurant-orders"] });
+      qc.invalidateQueries({ queryKey: ["restaurant-orders-kanban"] });
       qc.invalidateQueries({ queryKey: ["restaurant-orders-pending-count"] });
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
@@ -139,127 +162,164 @@ function RestaurantOrders() {
         </Link>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-1 rounded-full bg-brand-soft/40 p-1">
         <button
-          onClick={() => updateFilter("all")}
-          className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+          onClick={() => setView("kanban")}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${view === "kanban" ? "bg-white text-brand-deep shadow-sm" : "text-ink-soft"}`}
         >
-          Tout
+          <LayoutGrid className="h-3.5 w-3.5" /> Kanban
         </button>
         <button
-          onClick={() => updateFilter("pending")}
-          className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+          onClick={() => setView("list")}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${view === "list" ? "bg-white text-brand-deep shadow-sm" : "text-ink-soft"}`}
         >
-          An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
+          <List className="h-3.5 w-3.5" /> Lis
         </button>
       </div>
 
-      {orders.isLoading && <div className="text-ink-soft">Chajman…</div>}
-      {!orders.isLoading && rows.length === 0 && (
-        <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
-          Pa gen kòmand pou filtè sa a.
-        </div>
+      {view === "kanban" && (
+        <>
+          {kanbanOrders.isLoading && <div className="text-ink-soft">Chajman…</div>}
+          {!kanbanOrders.isLoading && (kanbanOrders.data?.length ?? 0) === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
+              Pa gen kòmand pou kounye a.
+            </div>
+          )}
+          {(kanbanOrders.data?.length ?? 0) > 0 && (
+            <OrderKanbanBoard
+              orders={kanbanOrders.data!}
+              onChangeStatus={(orderId, status) => changeStatus.mutate({ orderId, status })}
+              isChangingStatus={changeStatus.isPending}
+            />
+          )}
+        </>
       )}
 
-      <div className="space-y-3">
-        {rows.map((o) => (
-          <div
-            key={o.id}
-            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="font-display text-lg font-extrabold">
-                  {o.order_number}
-                  <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
-                    {STATUS_LABEL[o.status] || o.status}
-                  </span>
-                </div>
-                <div className="text-xs text-ink-soft">
-                  {new Date(o.created_at).toLocaleString("fr-HT")} · {o.contact_phone}
-                </div>
-                <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
-              </div>
-              <div className="text-right font-display text-xl font-extrabold text-brand-deep">
-                {formatHTG(Number(o.total))}
-              </div>
-            </div>
-
-            <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
-              {o.order_items?.map((it) => (
-                <li key={it.id} className="flex justify-between px-3 py-1.5">
-                  <span>
-                    {it.quantity}× {it.product_name}
-                  </span>
-                  <span className="font-bold">
-                    {formatHTG(Number(it.unit_price) * it.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {o.delivery_notes && (
-              <div className="mt-2 text-xs italic text-ink-soft">Nòt: {o.delivery_notes}</div>
-            )}
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              {o.status === "pending" && (
-                <>
-                  <button
-                    disabled={changeStatus.isPending}
-                    onClick={() => changeStatus.mutate({ orderId: o.id, status: "confirmed" })}
-                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    <Check className="h-3.5 w-3.5" /> Konfime
-                  </button>
-                  <button
-                    disabled={changeStatus.isPending}
-                    onClick={() =>
-                      confirm(`Refize kòmand ${o.order_number}?`) &&
-                      changeStatus.mutate({ orderId: o.id, status: "cancelled" })
-                    }
-                    className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
-                  >
-                    <X className="h-3.5 w-3.5" /> Refize
-                  </button>
-                </>
-              )}
-              {NEXT_STATUS[o.status]?.map((n) => (
-                <button
-                  key={n.to}
-                  disabled={changeStatus.isPending}
-                  onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
-                  className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-                >
-                  {n.label} <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              ))}
-              {o.status !== "pending" &&
-                o.status !== "cancelled" &&
-                o.status !== "delivered" &&
-                o.status !== "refunded" && (
-                  <button
-                    disabled={changeStatus.isPending}
-                    onClick={() =>
-                      confirm(`Anile kòmand ${o.order_number}?`) &&
-                      changeStatus.mutate({ orderId: o.id, status: "cancelled" })
-                    }
-                    className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                  >
-                    Anile kòmand
-                  </button>
-                )}
-            </div>
+      {view === "list" && (
+        <>
+          <div className="flex gap-2">
+            <button
+              onClick={() => updateFilter("all")}
+              className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+            >
+              Tout
+            </button>
+            <button
+              onClick={() => updateFilter("pending")}
+              className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+            >
+              An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
+            </button>
           </div>
-        ))}
-      </div>
-      {filter === "all" && (
-        <PaginationControls
-          page={page}
-          pageSize={PAGE_SIZE}
-          totalCount={totalCount}
-          onPageChange={setPage}
-        />
+
+          {orders.isLoading && <div className="text-ink-soft">Chajman…</div>}
+          {!orders.isLoading && rows.length === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
+              Pa gen kòmand pou filtè sa a.
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {rows.map((o) => (
+              <div
+                key={o.id}
+                className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="font-display text-lg font-extrabold">
+                      {o.order_number}
+                      <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
+                        {STATUS_LABEL[o.status] || o.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-ink-soft">
+                      {new Date(o.created_at).toLocaleString("fr-HT")} · {o.contact_phone}
+                    </div>
+                    <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
+                  </div>
+                  <div className="text-right font-display text-xl font-extrabold text-brand-deep">
+                    {formatHTG(Number(o.total))}
+                  </div>
+                </div>
+
+                <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
+                  {o.order_items?.map((it) => (
+                    <li key={it.id} className="flex justify-between px-3 py-1.5">
+                      <span>
+                        {it.quantity}× {it.product_name}
+                      </span>
+                      <span className="font-bold">
+                        {formatHTG(Number(it.unit_price) * it.quantity)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {o.delivery_notes && (
+                  <div className="mt-2 text-xs italic text-ink-soft">Nòt: {o.delivery_notes}</div>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {o.status === "pending" && (
+                    <>
+                      <button
+                        disabled={changeStatus.isPending}
+                        onClick={() => changeStatus.mutate({ orderId: o.id, status: "confirmed" })}
+                        className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        <Check className="h-3.5 w-3.5" /> Konfime
+                      </button>
+                      <button
+                        disabled={changeStatus.isPending}
+                        onClick={() =>
+                          confirm(`Refize kòmand ${o.order_number}?`) &&
+                          changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                        }
+                        className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" /> Refize
+                      </button>
+                    </>
+                  )}
+                  {NEXT_STATUS[o.status]?.map((n) => (
+                    <button
+                      key={n.to}
+                      disabled={changeStatus.isPending}
+                      onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
+                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+                    >
+                      {n.label} <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                  {o.status !== "pending" &&
+                    o.status !== "cancelled" &&
+                    o.status !== "delivered" &&
+                    o.status !== "refunded" && (
+                      <button
+                        disabled={changeStatus.isPending}
+                        onClick={() =>
+                          confirm(`Anile kòmand ${o.order_number}?`) &&
+                          changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                        }
+                        className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Anile kòmand
+                      </button>
+                    )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {filter === "all" && (
+            <PaginationControls
+              page={page}
+              pageSize={PAGE_SIZE}
+              totalCount={totalCount}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </div>
   );
