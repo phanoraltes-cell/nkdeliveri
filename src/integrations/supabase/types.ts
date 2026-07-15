@@ -144,6 +144,108 @@ export type Database = {
           },
         ];
       };
+      dispute_messages: {
+        Row: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["dispute_author_role"];
+          created_at: string;
+          dispute_id: string;
+          id: string;
+          message: string;
+        };
+        Insert: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["dispute_author_role"];
+          created_at?: string;
+          dispute_id: string;
+          id?: string;
+          message: string;
+        };
+        Update: {
+          author_id?: string;
+          author_role?: Database["public"]["Enums"]["dispute_author_role"];
+          created_at?: string;
+          dispute_id?: string;
+          id?: string;
+          message?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "dispute_messages_dispute_id_fkey";
+            columns: ["dispute_id"];
+            isOneToOne: false;
+            referencedRelation: "disputes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      disputes: {
+        Row: {
+          category: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: Database["public"]["Enums"]["dispute_status"];
+          updated_at: string;
+        };
+        Insert: {
+          category: string;
+          created_at?: string;
+          customer_id: string;
+          driver_id?: string | null;
+          id?: string;
+          order_id: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id: string;
+          status?: Database["public"]["Enums"]["dispute_status"];
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          customer_id?: string;
+          driver_id?: string | null;
+          id?: string;
+          order_id?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id?: string;
+          status?: Database["public"]["Enums"]["dispute_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "disputes_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: true;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "disputes_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "disputes_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       drivers: {
         Row: {
           address: string | null;
@@ -1128,6 +1230,23 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_dispute_message_secure: {
+        Args: { _dispute_id: string; _message: string };
+        Returns: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["dispute_author_role"];
+          created_at: string;
+          dispute_id: string;
+          id: string;
+          message: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "dispute_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       add_restaurant_employee_secure: {
         Args: { _email: string; _restaurant_id: string };
         Returns: {
@@ -1428,6 +1547,29 @@ export type Database = {
           user_id: string;
         }[];
       };
+      open_dispute_secure: {
+        Args: { _category: string; _description: string; _order_id: string };
+        Returns: {
+          category: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: Database["public"]["Enums"]["dispute_status"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "disputes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       remove_restaurant_employee_secure: {
         Args: { _id: string };
         Returns: undefined;
@@ -1461,6 +1603,29 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      resolve_dispute_secure: {
+        Args: { _dispute_id: string; _resolution: string };
+        Returns: {
+          category: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: Database["public"]["Enums"]["dispute_status"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "disputes";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -1913,6 +2078,8 @@ export type Database = {
         | "en_route_dropoff"
         | "delivered"
         | "cancelled";
+      dispute_author_role: "customer" | "restaurant" | "driver" | "admin";
+      dispute_status: "open" | "resolved";
       driver_status: "pending" | "approved" | "suspended" | "rejected" | "offline" | "online";
       order_status:
         | "pending"
@@ -2069,6 +2236,8 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      dispute_author_role: ["customer", "restaurant", "driver", "admin"],
+      dispute_status: ["open", "resolved"],
       driver_status: ["pending", "approved", "suspended", "rejected", "offline", "online"],
       order_status: [
         "pending",

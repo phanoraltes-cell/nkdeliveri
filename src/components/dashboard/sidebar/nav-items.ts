@@ -12,6 +12,7 @@ import {
   Gauge,
   MapPin,
   RotateCcw,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,6 +44,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/restaurant/menu", label: "Meni", icon: UtensilsCrossed },
     { to: "/dashboard/restaurant/promotions", label: "Pwomosyon", icon: Megaphone },
     { to: "/dashboard/restaurant/employees", label: "Anplwaye", icon: UserCog },
+    { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/restaurant/revenue", label: "Revni", icon: Gauge },
     { to: "/dashboard/restaurant/payouts", label: "Peman", icon: Wallet },
   ],
@@ -51,11 +53,13 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/restaurant/orders", label: "Kòmand", icon: ShoppingBag },
     { to: "/dashboard/restaurant/menu", label: "Meni", icon: UtensilsCrossed },
     { to: "/dashboard/restaurant/promotions", label: "Pwomosyon", icon: Megaphone },
+    { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
   ],
   driver: [
     { to: "/dashboard/driver", label: "Akèy", icon: LayoutDashboard },
     { to: "/dashboard/driver/available", label: "Disponiblite", icon: Gauge },
     { to: "/dashboard/driver/history", label: "Istwa livrezon", icon: History },
+    { to: "/dashboard/driver/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/driver/earnings", label: "Revni", icon: Wallet },
     { to: "/dashboard/driver/payouts", label: "Peman", icon: CreditCard },
   ],
@@ -66,6 +70,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
+    { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
   ],
   super_admin: [
@@ -75,6 +80,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
+    { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
   ],
 };

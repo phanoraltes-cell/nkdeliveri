@@ -14,6 +14,7 @@ import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-se
 import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
+import { DisputeSection } from "@/components/order/dispute-section";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -259,6 +260,8 @@ function OrderDetail() {
         )}
 
         <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
+
+        <DisputeSection orderId={o.id} orderStatus={o.status} />
 
         {o.status === "delivered" && (
           <OrderReviewSection
