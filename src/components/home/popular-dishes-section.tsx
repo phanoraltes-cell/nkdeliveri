@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatHTG } from "@/lib/format";
-import type { CartItem } from "@/hooks/use-cart";
+import type { CartItem } from "@/hooks/useCart";
 import type { HomeProduct } from "@/components/home/home-data";
 
 const DISH_TYPES: { key: string; label: string }[] = [

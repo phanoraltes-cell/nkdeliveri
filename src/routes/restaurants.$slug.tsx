@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import { Plus, ArrowLeft, Star, Heart } from "lucide-react";

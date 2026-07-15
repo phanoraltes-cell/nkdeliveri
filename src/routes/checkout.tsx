@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/hooks/useCart";
 import { formatHTG } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2, MapPin } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { noIndexMeta } from "@/lib/seo";

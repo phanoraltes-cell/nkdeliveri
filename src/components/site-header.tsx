@@ -1,6 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
 import {

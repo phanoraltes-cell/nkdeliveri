@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Store, ShoppingBag, ClipboardList, User as UserIcon } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 
 const HIDDEN_PREFIXES = ["/dashboard", "/auth"];
 
