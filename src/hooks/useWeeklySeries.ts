@@ -4,7 +4,7 @@ import { CREOLE_DAY } from "@/lib/creole";
 export type WeeklySeriesPoint = { label: string; value: number };
 
 /** Midnight, 6 days before today — the start of the trailing 7-day window every weekly chart in this app uses. */
-export function startOfTrailingWeek(): Date {
+function startOfTrailingWeek(): Date {
   const since = new Date();
   since.setDate(since.getDate() - 6);
   since.setHours(0, 0, 0, 0);
@@ -17,7 +17,7 @@ export function startOfTrailingWeek(): Date {
  * dashboard.admin/driver/restaurant.index.tsx, which each hand-rolled this
  * exact bucketing loop around a different Supabase table.
  */
-export function bucketWeeklySeries<T>(
+function bucketWeeklySeries<T>(
   rows: readonly T[],
   since: Date,
   toDateAndValue: (row: T) => { date: string | null | undefined; value: number },
