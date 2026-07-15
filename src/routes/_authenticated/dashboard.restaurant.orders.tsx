@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
@@ -10,6 +11,7 @@ import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban-board";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
+import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 
 const PAGE_SIZE = 30;
 
@@ -122,6 +124,8 @@ function RestaurantOrders() {
     },
   });
 
+  const sendStatusPush = useServerFn(sendOrderStatusPush);
+
   const changeStatus = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
       const { error } = await supabase.rpc("update_order_status_secure", {
@@ -129,6 +133,11 @@ function RestaurantOrders() {
         _new_status: status as Database["public"]["Enums"]["order_status"],
       });
       if (error) throw error;
+      try {
+        await sendStatusPush({ data: { orderId } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: () => {
       toast.success("Estati kòmand mizajou");

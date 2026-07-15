@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { sendNewPromotionPush } from "@/lib/send-promotion-push.functions";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
@@ -222,6 +224,7 @@ function PromoForm({
     ends_at: promo?.ends_at ? promo.ends_at.slice(0, 10) : "",
   });
   const [saving, setSaving] = useState(false);
+  const sendPromotionPush = useServerFn(sendNewPromotionPush);
 
   async function save() {
     if (!f.title.trim()) return toast.error("Tit pwomosyon an obligatwa");
@@ -253,12 +256,17 @@ function PromoForm({
         if (error) throw error;
         toast.success("Pwomosyon mizajou");
       } else {
-        const { error } = await supabase.rpc("create_promotion_secure", {
+        const { data: row, error } = await supabase.rpc("create_promotion_secure", {
           _restaurant_id: restaurantId,
           ...args,
         });
         if (error) throw error;
         toast.success("Pwomosyon kreye");
+        try {
+          await sendPromotionPush({ data: { promotionId: row.id } });
+        } catch (e) {
+          console.warn("push send failed", e);
+        }
       }
       onSaved();
       onClose();

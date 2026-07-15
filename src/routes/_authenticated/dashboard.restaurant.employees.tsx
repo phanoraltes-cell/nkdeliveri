@@ -1,11 +1,13 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Users, UserPlus, Trash2 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { EMPLOYEE_ROLES, EMPLOYEE_ROLE_LABEL, type EmployeeRole } from "@/lib/employee-roles";
+import { sendEmployeeEventPush } from "@/lib/send-employee-push.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/employees")({
   beforeLoad: ({ context }) => {
@@ -36,16 +38,23 @@ function RestaurantEmployees() {
     },
   });
 
+  const sendEmployeePush = useServerFn(sendEmployeeEventPush);
+
   const add = useMutation({
     mutationFn: async () => {
       if (!restaurant?.id) throw new Error("Restoran pa jwenn");
       if (!email.trim()) throw new Error("Antre yon imèl");
-      const { error } = await supabase.rpc("add_restaurant_employee_secure", {
+      const { data: row, error } = await supabase.rpc("add_restaurant_employee_secure", {
         _restaurant_id: restaurant.id,
         _email: email.trim(),
         _role: inviteRole,
       });
       if (error) throw error;
+      try {
+        await sendEmployeePush({ data: { employeeId: row.id } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: () => {
       toast.success("Anplwaye ajoute");
@@ -75,6 +84,11 @@ function RestaurantEmployees() {
         _role: role,
       });
       if (error) throw error;
+      try {
+        await sendEmployeePush({ data: { employeeId: id } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: () => {
       toast.success("Wòl aktyalize");
