@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Check, X, ChevronRight } from "lucide-react";
+import { Check, X, ChevronRight, Printer } from "lucide-react";
 import { formatHTG } from "@/lib/format";
+import { printKitchenTicket } from "@/lib/kitchen-ticket";
 
 export type KanbanOrder = {
   id: string;
@@ -10,7 +11,8 @@ export type KanbanOrder = {
   delivery_address: string;
   delivery_notes: string | null;
   created_at: string;
-  order_items: { id: string; product_name: string; quantity: number }[] | null;
+  order_items:
+    { id: string; product_name: string; quantity: number; notes: string | null }[] | null;
 };
 
 type Column = { key: string; label: string; statuses: string[] };
@@ -42,6 +44,7 @@ function isValidDrop(fromStatus: string, toColumnKey: string) {
 
 type OrderKanbanBoardProps = {
   orders: KanbanOrder[];
+  restaurantName: string;
   onChangeStatus: (orderId: string, status: string) => void;
   isChangingStatus: boolean;
 };
@@ -49,6 +52,7 @@ type OrderKanbanBoardProps = {
 /** Restaurant orders as a 7-column Kanban board, with drag-and-drop between adjacent stages plus the same per-card action buttons as the list view. */
 export function OrderKanbanBoard({
   orders,
+  restaurantName,
   onChangeStatus,
   isChangingStatus,
 }: OrderKanbanBoardProps) {
@@ -103,6 +107,7 @@ export function OrderKanbanBoard({
                 <KanbanCard
                   key={o.id}
                   order={o}
+                  restaurantName={restaurantName}
                   draggable={NEXT_COLUMN[o.status] !== undefined}
                   onDragStart={() => setDragOrder({ id: o.id, status: o.status })}
                   onDragEnd={() => {
@@ -128,6 +133,7 @@ export function OrderKanbanBoard({
 
 function KanbanCard({
   order: o,
+  restaurantName,
   draggable,
   onDragStart,
   onDragEnd,
@@ -135,6 +141,7 @@ function KanbanCard({
   isChangingStatus,
 }: {
   order: KanbanOrder;
+  restaurantName: string;
   draggable: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -153,9 +160,21 @@ function KanbanCard({
     >
       <div className="flex items-start justify-between gap-2">
         <span className="font-display text-sm font-extrabold text-ink">{o.order_number}</span>
-        <span className="font-display text-sm font-extrabold text-brand-deep">
-          {formatHTG(Number(o.total))}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-display text-sm font-extrabold text-brand-deep">
+            {formatHTG(Number(o.total))}
+          </span>
+          <button
+            onClick={() =>
+              printKitchenTicket({ ...o, order_items: o.order_items ?? [] }, restaurantName)
+            }
+            className="text-ink-soft hover:text-brand-deep"
+            aria-label="Enprime bon kizin"
+            title="Enprime bon kizin"
+          >
+            <Printer className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
       <div className="mt-0.5 text-[11px] text-ink-soft">
         {new Date(o.created_at).toLocaleTimeString("fr-HT", { hour: "2-digit", minute: "2-digit" })}{" "}

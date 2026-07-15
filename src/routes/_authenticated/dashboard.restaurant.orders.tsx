@@ -5,10 +5,11 @@ import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, X, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Check, X, ChevronRight, LayoutGrid, List, Printer } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban-board";
+import { printKitchenTicket } from "@/lib/kitchen-ticket";
 
 const PAGE_SIZE = 30;
 
@@ -65,7 +66,7 @@ function RestaurantOrders() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, delivery_address, delivery_notes, created_at, order_items(id, product_name, quantity)",
+          "id, order_number, status, total, delivery_address, delivery_notes, created_at, order_items(id, product_name, quantity, notes)",
         )
         .eq("restaurant_id", restaurant!.id)
         .order("created_at", { ascending: false })
@@ -87,7 +88,7 @@ function RestaurantOrders() {
       let q = supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price), payments(status, method)",
+          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price, notes), payments(status, method)",
           filter === "all" ? { count: "exact" } : undefined,
         )
         .eq("restaurant_id", restaurant!.id)
@@ -188,6 +189,7 @@ function RestaurantOrders() {
           {(kanbanOrders.data?.length ?? 0) > 0 && (
             <OrderKanbanBoard
               orders={kanbanOrders.data!}
+              restaurantName={restaurant?.name ?? ""}
               onChangeStatus={(orderId, status) => changeStatus.mutate({ orderId, status })}
               isChangingStatus={changeStatus.isPending}
             />
@@ -238,8 +240,23 @@ function RestaurantOrders() {
                     </div>
                     <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
                   </div>
-                  <div className="text-right font-display text-xl font-extrabold text-brand-deep">
-                    {formatHTG(Number(o.total))}
+                  <div className="flex items-center gap-2">
+                    <div className="text-right font-display text-xl font-extrabold text-brand-deep">
+                      {formatHTG(Number(o.total))}
+                    </div>
+                    <button
+                      onClick={() =>
+                        printKitchenTicket(
+                          { ...o, order_items: o.order_items ?? [] },
+                          restaurant?.name ?? "",
+                        )
+                      }
+                      className="text-ink-soft hover:text-brand-deep"
+                      aria-label="Enprime bon kizin"
+                      title="Enprime bon kizin"
+                    >
+                      <Printer className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
 
