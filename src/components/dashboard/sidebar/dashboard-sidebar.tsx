@@ -6,6 +6,7 @@ import { getNavItems, PROFILE_LINK_BY_ROLE } from "./nav-items";
 
 type DashboardSidebarProps = {
   role: string;
+  employeeRole?: string | null;
   onSignOut: () => void;
 };
 
@@ -14,8 +15,8 @@ type DashboardSidebarProps = {
  * Renders icon-only with tooltips between md and lg, full labels at lg+ —
  * this is the "sidebar réduite" tablet behavior from the spec.
  */
-export function DashboardSidebar({ role, onSignOut }: DashboardSidebarProps) {
-  const items = getNavItems(role);
+export function DashboardSidebar({ role, employeeRole, onSignOut }: DashboardSidebarProps) {
+  const items = getNavItems(role, employeeRole);
   const profileLink = PROFILE_LINK_BY_ROLE[role];
 
   return (

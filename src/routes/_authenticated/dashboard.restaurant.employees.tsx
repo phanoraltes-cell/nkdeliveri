@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Users, UserPlus, Trash2 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
+import { EMPLOYEE_ROLES, EMPLOYEE_ROLE_LABEL, type EmployeeRole } from "@/lib/employee-roles";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/employees")({
   beforeLoad: ({ context }) => {
@@ -21,6 +22,7 @@ function RestaurantEmployees() {
   const qc = useQueryClient();
   const { data: restaurant } = useMyRestaurant(user?.id);
   const [email, setEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<EmployeeRole>("staff");
 
   const employees = useQuery({
     queryKey: ["restaurant-employees", restaurant?.id],
@@ -41,12 +43,14 @@ function RestaurantEmployees() {
       const { error } = await supabase.rpc("add_restaurant_employee_secure", {
         _restaurant_id: restaurant.id,
         _email: email.trim(),
+        _role: inviteRole,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Anplwaye ajoute");
       setEmail("");
+      setInviteRole("staff");
       qc.invalidateQueries({ queryKey: ["restaurant-employees"] });
     },
     onError: (e) => toast.error(e.message),
@@ -59,6 +63,21 @@ function RestaurantEmployees() {
     },
     onSuccess: () => {
       toast.success("Anplwaye retire");
+      qc.invalidateQueries({ queryKey: ["restaurant-employees"] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const changeRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: EmployeeRole }) => {
+      const { error } = await supabase.rpc("update_restaurant_employee_role_secure", {
+        _id: id,
+        _role: role,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Wòl aktyalize");
       qc.invalidateQueries({ queryKey: ["restaurant-employees"] });
     },
     onError: (e) => toast.error(e.message),
@@ -83,6 +102,7 @@ function RestaurantEmployees() {
         <h2 className="font-display text-lg font-bold">Ajoute yon anplwaye</h2>
         <p className="mt-1 text-xs text-ink-soft">
           Moun sa a dwe gen tan gen yon kont NK Deliveri deja (menm si se yon kont kliyan).
+          Manadjè/Responsab ka jere meni ak pwomosyon; Kizinye/Preparatè/Kesye jere kòmand sèlman.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <input
@@ -92,6 +112,17 @@ function RestaurantEmployees() {
             placeholder="imèl@egzanp.com"
             className="min-w-[220px] flex-1 rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
           />
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value as EmployeeRole)}
+            className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none focus:border-brand"
+          >
+            {EMPLOYEE_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {EMPLOYEE_ROLE_LABEL[r]}
+              </option>
+            ))}
+          </select>
           <button
             disabled={add.isPending}
             onClick={() => add.mutate()}
@@ -116,7 +147,7 @@ function RestaurantEmployees() {
           {employees.data?.map((e) => (
             <li
               key={e.id}
-              className="flex items-center justify-between rounded-xl border border-brand-soft/50 p-3"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-soft/50 p-3"
             >
               <div>
                 <div className="font-bold text-ink">
@@ -124,15 +155,31 @@ function RestaurantEmployees() {
                 </div>
                 <div className="text-xs text-ink-soft">{e.email}</div>
               </div>
-              <button
-                onClick={() => confirm(`Retire ${e.email}?`) && remove.mutate(e.id)}
-                disabled={remove.isPending}
-                aria-label="Retire"
-                title="Retire"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 hover:bg-red-50 disabled:opacity-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <select
+                  value={e.role}
+                  disabled={changeRole.isPending}
+                  onChange={(ev) =>
+                    changeRole.mutate({ id: e.id, role: ev.target.value as EmployeeRole })
+                  }
+                  className="rounded-lg border-2 border-brand-soft bg-white px-2.5 py-2 text-xs font-semibold outline-none focus:border-brand disabled:opacity-50"
+                >
+                  {EMPLOYEE_ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {EMPLOYEE_ROLE_LABEL[r]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => confirm(`Retire ${e.email}?`) && remove.mutate(e.id)}
+                  disabled={remove.isPending}
+                  aria-label="Retire"
+                  title="Retire"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </li>
           ))}
         </ul>

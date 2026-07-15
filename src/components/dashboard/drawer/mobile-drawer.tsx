@@ -6,13 +6,14 @@ import { getNavItems, PROFILE_LINK_BY_ROLE } from "../sidebar/nav-items";
 
 type MobileDrawerProps = {
   role: string;
+  employeeRole?: string | null;
   onSignOut: () => void;
 };
 
 /** Hamburger-triggered off-canvas nav for <md screens — replaces the old horizontal scrollable tab strip. */
-export function MobileDrawer({ role, onSignOut }: MobileDrawerProps) {
+export function MobileDrawer({ role, employeeRole, onSignOut }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
-  const items = getNavItems(role);
+  const items = getNavItems(role, employeeRole);
   const profileLink = PROFILE_LINK_BY_ROLE[role];
 
   function closeAnd(action?: () => void) {

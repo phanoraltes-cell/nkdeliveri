@@ -1,7 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type MyRestaurant = { id: string; name: string; status: string; isOwner: boolean };
+export type MyRestaurant = {
+  id: string;
+  name: string;
+  status: string;
+  isOwner: boolean;
+  /** The specific restaurant_employees.role for staff (staff/manager/cook/prep/cashier/supervisor); null for owners. */
+  employeeRole: string | null;
+};
 
 /**
  * Resolves "which restaurant does this user work at" for both owners and
@@ -19,16 +26,18 @@ export function useMyRestaurant(userId: string | undefined) {
         .eq("owner_id", userId!)
         .maybeSingle();
       if (ownedErr) throw ownedErr;
-      if (owned) return { ...owned, isOwner: true };
+      if (owned) return { ...owned, isOwner: true, employeeRole: null };
 
       const { data: staffRows, error: staffErr } = await supabase
         .from("restaurant_employees")
-        .select("restaurants(id, name, status)")
+        .select("role, restaurants(id, name, status)")
         .eq("user_id", userId!)
         .limit(1);
       if (staffErr) throw staffErr;
-      const staffRestaurant = staffRows?.[0]?.restaurants;
-      if (staffRestaurant) return { ...staffRestaurant, isOwner: false };
+      const staffRow = staffRows?.[0];
+      if (staffRow?.restaurants) {
+        return { ...staffRow.restaurants, isOwner: false, employeeRole: staffRow.role };
+      }
 
       return null;
     },

@@ -10,10 +10,11 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 type DashboardHeaderProps = {
   role: string;
   user: SupabaseUser | null | undefined;
+  employeeRole?: string | null;
   onSignOut: () => void;
 };
 
-export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps) {
+export function DashboardHeader({ role, user, employeeRole, onSignOut }: DashboardHeaderProps) {
   const qc = useQueryClient();
   const unreadQueryKey = ["notif-unread", user?.id] as const;
 
@@ -81,7 +82,7 @@ export function DashboardHeader({ role, user, onSignOut }: DashboardHeaderProps)
 
   return (
     <header className="sticky top-0 z-40 flex min-h-16 items-center gap-2 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] shadow-sm sm:gap-3 sm:pl-[max(1.25rem,var(--sal))] sm:pr-[max(1.25rem,var(--sar))]">
-      <MobileDrawer role={role} onSignOut={onSignOut} />
+      <MobileDrawer role={role} employeeRole={employeeRole} onSignOut={onSignOut} />
 
       <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
         <img

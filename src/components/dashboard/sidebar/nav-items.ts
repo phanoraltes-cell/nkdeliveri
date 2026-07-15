@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
+import { isOperationalRole } from "@/lib/employee-roles";
 
 export type NavItem = {
   to: string;
@@ -85,7 +86,20 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
   ],
 };
 
-export function getNavItems(role: string): NavItem[] {
+// Cook/prep/cashier are "operational" roles: order handling only, no menu
+// or promotion editing — matches private.is_restaurant_staff_or_manager
+// server-side, so this nav never links to a page whose mutations would
+// just come back Forbidden.
+const RESTAURANT_STAFF_OPERATIONAL_NAV: NavItem[] = [
+  { to: "/dashboard/restaurant", label: "Akèy", icon: LayoutDashboard },
+  { to: "/dashboard/restaurant/orders", label: "Kòmand", icon: ShoppingBag },
+  { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
+];
+
+export function getNavItems(role: string, employeeRole?: string | null): NavItem[] {
+  if (role === "restaurant_staff" && isOperationalRole(employeeRole)) {
+    return RESTAURANT_STAFF_OPERATIONAL_NAV;
+  }
   return NAV_BY_ROLE[role as DashboardRole] ?? NAV_BY_ROLE.customer;
 }
 

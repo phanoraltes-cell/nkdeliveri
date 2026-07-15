@@ -1248,7 +1248,7 @@ export type Database = {
         };
       };
       add_restaurant_employee_secure: {
-        Args: { _email: string; _restaurant_id: string };
+        Args: { _email: string; _restaurant_id: string; _role?: string };
         Returns: {
           created_at: string;
           id: string;
@@ -1544,6 +1544,7 @@ export type Database = {
           first_name: string;
           id: string;
           last_name: string;
+          role: string;
           user_id: string;
         }[];
       };
@@ -2027,6 +2028,22 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_restaurant_employee_role_secure: {
+        Args: { _id: string; _role: string };
+        Returns: {
+          created_at: string;
+          id: string;
+          restaurant_id: string;
+          role: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "restaurant_employees";
           isOneToOne: true;
           isSetofReturn: false;
         };
