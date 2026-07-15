@@ -811,6 +811,82 @@ export type Database = {
         };
         Relationships: [];
       };
+      refunds: {
+        Row: {
+          admin_notes: string | null;
+          amount: number;
+          completed_at: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["refund_status"];
+          status_history: Json;
+          updated_at: string;
+        };
+        Insert: {
+          admin_notes?: string | null;
+          amount: number;
+          completed_at?: string | null;
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database["public"]["Enums"]["refund_status"];
+          status_history?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          admin_notes?: string | null;
+          amount?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          order_id?: string;
+          payment_id?: string;
+          reason?: string;
+          restaurant_id?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database["public"]["Enums"]["refund_status"];
+          status_history?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: true;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "refunds_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "refunds_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       restaurant_employees: {
         Row: {
           created_at: string;
@@ -1110,6 +1186,32 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      complete_refund_secure: {
+        Args: { _refund_id: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          completed_at: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["refund_status"];
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_menu_category_secure: {
         Args: { _name: string; _restaurant_id: string; _sort_order?: number };
         Returns: {
@@ -1336,6 +1438,62 @@ export type Database = {
           _user_id: string;
         };
         Returns: undefined;
+      };
+      request_refund_secure: {
+        Args: { _order_id: string; _reason: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          completed_at: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["refund_status"];
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      review_refund_secure: {
+        Args: {
+          _admin_notes: string;
+          _decision: Database["public"]["Enums"]["refund_status"];
+          _refund_id: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          completed_at: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["refund_status"];
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       submit_payment_proof_secure: {
         Args: {
@@ -1769,6 +1927,7 @@ export type Database = {
       payment_method: "stripe" | "moncash" | "natcash" | "kach";
       payment_status:
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
+      refund_status: "requested" | "approved" | "rejected" | "completed";
       restaurant_status: "pending" | "approved" | "suspended" | "rejected";
     };
     CompositeTypes: {
@@ -1924,6 +2083,7 @@ export const Constants = {
       ],
       payment_method: ["stripe", "moncash", "natcash", "kach"],
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],
+      refund_status: ["requested", "approved", "rejected", "completed"],
       restaurant_status: ["pending", "approved", "suspended", "rejected"],
     },
   },

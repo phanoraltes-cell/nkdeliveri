@@ -12,6 +12,7 @@ import {
   Wallet,
   Percent,
   Inbox,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { MapMarker } from "@/components/maps/LeafletMap";
@@ -431,6 +432,12 @@ function AdminDashboard() {
             title: "Peman manyèl",
             desc: "Valide prèv MonCash/NatCash",
             to: "/dashboard/admin/payments",
+          },
+          {
+            icon: RotateCcw,
+            title: "Ranbousman",
+            desc: "Revize demann ranbousman kliyan yo",
+            to: "/dashboard/admin/refunds",
           },
           {
             icon: Users,

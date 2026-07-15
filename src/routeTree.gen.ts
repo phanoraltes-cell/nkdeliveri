@@ -52,6 +52,7 @@ import { Route as AuthenticatedDashboardDriverEarningsRouteImport } from './rout
 import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './routes/_authenticated/dashboard.driver.available'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
+import { Route as AuthenticatedDashboardAdminRefundsRouteImport } from './routes/_authenticated/dashboard.admin.refunds'
 import { Route as AuthenticatedDashboardAdminPayoutSettingsRouteImport } from './routes/_authenticated/dashboard.admin.payout-settings'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
@@ -293,6 +294,12 @@ const AuthenticatedDashboardAdminRestaurantsRoute =
     path: '/restaurants',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminRefundsRoute =
+  AuthenticatedDashboardAdminRefundsRouteImport.update({
+    id: '/refunds',
+    path: '/refunds',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminPayoutSettingsRoute =
   AuthenticatedDashboardAdminPayoutSettingsRouteImport.update({
     id: '/payout-settings',
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
+  '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -384,6 +392,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
+  '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -433,6 +442,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/_authenticated/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
+  '/_authenticated/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/_authenticated/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -482,6 +492,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/customers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-settings'
+    | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/users'
     | '/dashboard/driver/available'
@@ -525,6 +536,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/customers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-settings'
+    | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/users'
     | '/dashboard/driver/available'
@@ -573,6 +585,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/customers'
     | '/_authenticated/dashboard/admin/payments'
     | '/_authenticated/dashboard/admin/payout-settings'
+    | '/_authenticated/dashboard/admin/refunds'
     | '/_authenticated/dashboard/admin/restaurants'
     | '/_authenticated/dashboard/admin/users'
     | '/_authenticated/dashboard/driver/available'
@@ -916,6 +929,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRestaurantsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/refunds': {
+      id: '/_authenticated/dashboard/admin/refunds'
+      path: '/refunds'
+      fullPath: '/dashboard/admin/refunds'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRefundsRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/payout-settings': {
       id: '/_authenticated/dashboard/admin/payout-settings'
       path: '/payout-settings'
@@ -944,6 +964,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminCustomersRoute: typeof AuthenticatedDashboardAdminCustomersRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
   AuthenticatedDashboardAdminPayoutSettingsRoute: typeof AuthenticatedDashboardAdminPayoutSettingsRoute
+  AuthenticatedDashboardAdminRefundsRoute: typeof AuthenticatedDashboardAdminRefundsRoute
   AuthenticatedDashboardAdminRestaurantsRoute: typeof AuthenticatedDashboardAdminRestaurantsRoute
   AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
   AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
@@ -957,6 +978,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminPaymentsRoute,
     AuthenticatedDashboardAdminPayoutSettingsRoute:
       AuthenticatedDashboardAdminPayoutSettingsRoute,
+    AuthenticatedDashboardAdminRefundsRoute:
+      AuthenticatedDashboardAdminRefundsRoute,
     AuthenticatedDashboardAdminRestaurantsRoute:
       AuthenticatedDashboardAdminRestaurantsRoute,
     AuthenticatedDashboardAdminUsersRoute:

@@ -13,6 +13,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-section";
 import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
+import { RefundSection } from "@/components/order/refund-section";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -256,6 +257,8 @@ function OrderDetail() {
             reviewNotes={payment.review_notes}
           />
         )}
+
+        <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
 
         {o.status === "delivered" && (
           <OrderReviewSection

@@ -11,6 +11,7 @@ import {
   History,
   Gauge,
   MapPin,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +65,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/customers", label: "Kliyan", icon: UserCog },
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
+    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
   ],
   super_admin: [
@@ -72,6 +74,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/customers", label: "Kliyan", icon: UserCog },
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
+    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
   ],
 };
