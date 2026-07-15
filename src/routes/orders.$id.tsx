@@ -3,24 +3,16 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
-import { lazy, Suspense, useState } from "react";
-import { toast } from "sonner";
-import { Upload, CheckCircle2, Clock, AlertCircle, Star, Navigation } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useOrderDelivery } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
-import { ProofThumb } from "@/components/proof-thumb";
 import { noIndexMeta } from "@/lib/seo";
-import { assertValidUploadFile } from "@/lib/file-validation";
-import { Skeleton } from "@/components/ui/skeleton";
-
-// See dashboard.admin.index.tsx for why this is lazy: leaflet (~150KB) is
-// only needed once this page has mounted.
-const LeafletMap = lazy(() =>
-  import("@/components/maps/LeafletMap").then((m) => ({ default: m.LeafletMap })),
-);
+import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-section";
+import { PaymentProofSection } from "@/components/order/payment-proof-section";
+import { OrderReviewSection } from "@/components/order/order-review-section";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -59,11 +51,6 @@ const PAY_STATUS_LABEL: Record<string, string> = {
 function OrderDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
-  const qc = useQueryClient();
-  const [txRef, setTxRef] = useState("");
-  const [senderPhone, setSenderPhone] = useState("");
-  const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
 
   const order = useQuery({
     queryKey: ["order", id],
@@ -80,84 +67,6 @@ function OrderDetail() {
     },
   });
 
-  const proofs = useQuery({
-    queryKey: ["proofs", id],
-    enabled: !!order.data?.payments?.[0]?.id,
-    queryFn: async () => {
-      const pid = order.data!.payments[0].id;
-      const { data, error } = await supabase
-        .from("payment_proofs")
-        .select("id, file_url, transaction_ref, sender_phone, notes, created_at")
-        .eq("payment_id", pid)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const uploadProof = useMutation({
-    mutationFn: async () => {
-      if (!file) throw new Error("Chwazi yon foto prèv peman");
-      assertValidUploadFile(file, "payment-proofs");
-      if (!order.data?.payments?.[0]) throw new Error("Peman pa jwenn");
-      const payment = order.data.payments[0];
-      const path = `${order.data.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const { error: upErr } = await supabase.storage
-        .from("payment-proofs")
-        .upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
-
-      // The generator types these args as non-nullable `string` because the
-      // SQL params lack a `DEFAULT NULL` marker it recognizes — Postgres
-      // accepts NULL for a plain `text` param regardless, so this cast just
-      // corrects an overly-strict generated type, no behavior change.
-      const { error: rpcErr } = await supabase.rpc("submit_payment_proof_secure", {
-        _payment_id: payment.id,
-        _file_url: path,
-        _transaction_ref: (txRef || null) as string,
-        _sender_phone: (senderPhone || null) as string,
-        _notes: (notes || null) as string,
-      });
-      if (rpcErr) throw rpcErr;
-    },
-    onSuccess: () => {
-      toast.success("Prèv peman voye. Yon administratè ap verifye li.");
-      setFile(null);
-      setTxRef("");
-      setSenderPhone("");
-      setNotes("");
-      qc.invalidateQueries({ queryKey: ["order", id] });
-      qc.invalidateQueries({ queryKey: ["proofs", id] });
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  function submitProof(e: React.FormEvent) {
-    e.preventDefault();
-    // useMutation already tracks pending/error state (uploadProof.isPending,
-    // onError above) — calling .mutate() instead of awaiting .mutateAsync()
-    // here avoids leaving an unhandled promise rejection on failure.
-    uploadProof.mutate();
-  }
-
-  const review = useQuery({
-    queryKey: ["review", id, user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("*")
-        .eq("order_id", id)
-        .eq("customer_id", user!.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const [restaurantRating, setRestaurantRating] = useState(0);
-  const [driverRating, setDriverRating] = useState(0);
-  const [reviewComment, setReviewComment] = useState("");
   // Must run unconditionally, before the loading/not-found early returns
   // below — calling it after them would change the hook order between
   // renders and violate the Rules of Hooks (React would throw or silently
@@ -179,27 +88,6 @@ function OrderDetail() {
   // Also unconditional and before the early returns below, for the same
   // Rules-of-Hooks reason as `delivery` above.
   const trackingRoute = useRoute(driverPoint, nextStopPoint);
-
-  const submitReview = useMutation({
-    mutationFn: async (args: { restaurantId: string; driverId: string | null }) => {
-      if (!restaurantRating) throw new Error("Bay yon nòt pou restoran an");
-      const { error } = await supabase.from("reviews").insert({
-        order_id: id,
-        customer_id: user!.id,
-        restaurant_id: args.restaurantId,
-        driver_id: args.driverId,
-        restaurant_rating: restaurantRating,
-        driver_rating: args.driverId ? driverRating || null : null,
-        comment: reviewComment || null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Mèsi pou avi w!");
-      qc.invalidateQueries({ queryKey: ["review", id] });
-    },
-    onError: (e) => toast.error(e.message ?? "Erè"),
-  });
 
   if (order.isLoading) {
     return (
@@ -307,38 +195,12 @@ function OrderDetail() {
         </div>
 
         {delivery && trackingMarkers.length > 0 && (
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <div className="font-display text-base font-bold">Swiv livrezon w</div>
-                {delivery.location_updated_at && (
-                  <div className="text-xs text-ink-soft">
-                    Dènye mizajou: {new Date(delivery.location_updated_at).toLocaleTimeString()}
-                  </div>
-                )}
-              </div>
-              <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
-                {delivery.status}
-              </span>
-            </div>
-            <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-xl" />}>
-              <LeafletMap
-                markers={trackingMarkers}
-                route={trackingRoute.data?.path}
-                className="h-[320px] w-full rounded-xl"
-              />
-            </Suspense>
-            {trackingRoute.data && (
-              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand-deep">
-                <Navigation className="h-3.5 w-3.5" />
-                {(trackingRoute.data.distanceMeters / 1000).toFixed(1)} km ·{" "}
-                {Math.round(trackingRoute.data.durationSeconds / 60)} min{" "}
-                <span className="font-normal text-ink-soft">
-                  {headingToPickup ? "jiska restoran" : "jiska ou"}
-                </span>
-              </div>
-            )}
-          </div>
+          <DeliveryTrackingSection
+            delivery={delivery}
+            markers={trackingMarkers}
+            route={trackingRoute}
+            headingToPickup={headingToPickup}
+          />
         )}
 
         <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
@@ -383,189 +245,28 @@ function OrderDetail() {
           </div>
         </div>
 
-        {isManual && (
-          <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
-            <div className="font-display text-base font-bold">Enstriksyon peman</div>
-            <div className="mt-2 rounded-xl bg-brand-soft/60 p-3 text-sm">
-              Voye <b>{formatHTG(o.total)}</b> sou <b>{payLabel}</b>, epi telechaje kaptè/foto prèv
-              la anba a. <span className="block text-xs text-ink-soft mt-1">{payRoutingNote}</span>
-            </div>
-
-            {needsProof ? (
-              <form onSubmit={submitProof} className="mt-4 space-y-3">
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                    Prèv (foto/kaptè)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
-                    required
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <input
-                    value={txRef}
-                    onChange={(e) => setTxRef(e.target.value)}
-                    placeholder="Nimewo transaksyon"
-                    className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={senderPhone}
-                    onChange={(e) => setSenderPhone(e.target.value)}
-                    placeholder="Nimewo ki voye lajan an"
-                    className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
-                  />
-                </div>
-                <input
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Nòt (opsyonèl)"
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={uploadProof.isPending || !file}
-                  className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
-                >
-                  <Upload className="h-4 w-4" />{" "}
-                  {uploadProof.isPending ? "Ap voye…" : "Voye prèv la"}
-                </button>
-              </form>
-            ) : (
-              <div className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
-                Prèv peman resevwa. Yon administratè ap verifye li.
-              </div>
-            )}
-
-            {proofs.data && proofs.data.length > 0 && (
-              <div className="mt-4">
-                <div className="mb-2 text-xs font-bold uppercase text-ink-soft">Prèv voye</div>
-                <ul className="space-y-2 text-sm">
-                  {proofs.data.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-3 rounded-lg bg-cream px-3 py-2"
-                    >
-                      <ProofThumb path={p.file_url} />
-                      <div>
-                        {p.transaction_ref && (
-                          <div>
-                            Tx: <b>{p.transaction_ref}</b>
-                          </div>
-                        )}
-                        {p.sender_phone && (
-                          <div>
-                            Soti: <b>{p.sender_phone}</b>
-                          </div>
-                        )}
-                        <div className="text-xs text-ink-soft">
-                          {new Date(p.created_at).toLocaleString("fr-HT")}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {payment?.review_notes && (
-              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-                <b>Nòt administratè:</b> {payment.review_notes}
-              </div>
-            )}
-          </div>
+        {isManual && payment && (
+          <PaymentProofSection
+            orderId={o.id}
+            paymentId={payment.id}
+            total={o.total}
+            payLabel={payLabel}
+            payRoutingNote={payRoutingNote}
+            needsProof={needsProof}
+            reviewNotes={payment.review_notes}
+          />
         )}
 
         {o.status === "delivered" && (
-          <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
-            <div className="font-display text-base font-bold">Bay avi w</div>
-            {review.isLoading ? (
-              <div className="mt-2 text-sm text-ink-soft">Chajman…</div>
-            ) : review.data ? (
-              <div className="mt-3 space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-ink-soft">Restoran:</span>
-                  <StarRow value={review.data.restaurant_rating ?? 0} />
-                </div>
-                {review.data.driver_rating != null && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-ink-soft">Livrè:</span>
-                    <StarRow value={review.data.driver_rating} />
-                  </div>
-                )}
-                {review.data.comment && (
-                  <p className="rounded-xl bg-cream p-3 text-ink-soft">{review.data.comment}</p>
-                )}
-              </div>
-            ) : (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                    Nòt restoran
-                  </span>
-                  <StarPicker value={restaurantRating} onChange={setRestaurantRating} />
-                </div>
-                {delivery?.driver_id && (
-                  <div>
-                    <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                      Nòt livrè
-                    </span>
-                    <StarPicker value={driverRating} onChange={setDriverRating} />
-                  </div>
-                )}
-                <textarea
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Kòmantè (opsyonèl)…"
-                  rows={3}
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
-                />
-                <button
-                  disabled={submitReview.isPending}
-                  onClick={() =>
-                    submitReview.mutate({
-                      restaurantId: o.restaurant_id,
-                      driverId: delivery?.driver_id ?? null,
-                    })
-                  }
-                  className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
-                >
-                  {submitReview.isPending ? "Ap voye…" : "Voye avi"}
-                </button>
-              </div>
-            )}
-          </div>
+          <OrderReviewSection
+            orderId={o.id}
+            customerId={user?.id}
+            restaurantId={o.restaurant_id}
+            driverId={delivery?.driver_id ?? null}
+          />
         )}
       </div>
       <SiteFooter />
-    </div>
-  );
-}
-
-function StarRow({ value }: { value: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star
-          key={n}
-          className={`h-4 w-4 ${n <= value ? "fill-brand text-brand" : "text-brand-soft"}`}
-        />
-      ))}
-    </div>
-  );
-}
-
-function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
-  return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" onClick={() => onChange(n)} className="p-0.5">
-          <Star className={`h-6 w-6 ${n <= value ? "fill-brand text-brand" : "text-brand-soft"}`} />
-        </button>
-      ))}
     </div>
   );
 }
