@@ -288,6 +288,7 @@ function AdminDashboard() {
 
       <LiveMapSection
         markers={markers}
+        activeDeliveries={filteredActive}
         onlineDriverCount={onlineDrivers.data?.length ?? 0}
         activeDeliveryCount={filteredActive.length}
         statusFilter={statusFilter}

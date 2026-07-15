@@ -98,19 +98,28 @@ function ScrollWheelToggle() {
   return null;
 }
 
+export type MapRoute = {
+  id: string;
+  path: [number, number][];
+  color?: string;
+};
+
 export function LeafletMap({
   markers,
   center,
   zoom = 13,
   className,
   route,
+  routes,
 }: {
   markers: MapMarker[];
   center?: { lat: number; lng: number };
   zoom?: number;
   className?: string;
-  /** Optional driving route polyline (as returned by useRoute/services/routing). */
+  /** Optional single driving route polyline (as returned by useRoute/services/routing). */
   route?: [number, number][];
+  /** Optional multiple named routes (e.g. one per active delivery on the admin map). */
+  routes?: MapRoute[];
 }) {
   const [tilesLoaded, setTilesLoaded] = useState(false);
   const [tilesError, setTilesError] = useState(false);
@@ -150,6 +159,16 @@ export function LeafletMap({
             pathOptions={{ color: "#F97316", weight: 4, opacity: 0.85 }}
           />
         )}
+        {routes?.map(
+          (r) =>
+            r.path.length > 1 && (
+              <Polyline
+                key={r.id}
+                positions={r.path}
+                pathOptions={{ color: r.color ?? "#F97316", weight: 3, opacity: 0.7 }}
+              />
+            ),
+        )}
         {markers.map((m) => (
           <Marker key={m.id} position={[m.lat, m.lng]} icon={getIcon(m.type)}>
             {(m.info || m.label) && (
@@ -178,7 +197,7 @@ export function LeafletMap({
           <WifiOff className="h-3.5 w-3.5 shrink-0" /> Koneksyon fèb — kat la ka pa parèt konplè.
         </div>
       )}
-      {markers.length === 0 && !route && (
+      {markers.length === 0 && !route && !routes?.length && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-ink-soft shadow">
           <AlertTriangle className="h-3.5 w-3.5" /> Pa gen pozisyon pou montre kounye a
         </div>
