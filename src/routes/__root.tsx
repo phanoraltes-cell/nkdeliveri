@@ -17,6 +17,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { SITE_URL, SITE_NAME, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { jsonLdScript } from "@/lib/seo";
+import { initSentryClient, captureExceptionClient } from "@/lib/sentry-browser";
 
 function NotFoundComponent() {
   // The route match here never resolves to a real route, so there's no
@@ -51,6 +52,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  captureExceptionClient(error);
   const router = useRouter();
   useEffect(() => {
     document.title = "Yon erè rive — NK Deliveri";
@@ -194,6 +196,12 @@ function RootComponent() {
 
   useEffect(() => {
     void registerPWA();
+  }, []);
+
+  useEffect(() => {
+    // useEffect never runs during SSR, so this is inherently client-only —
+    // no extra `typeof window` guard needed on top of it.
+    initSentryClient();
   }, []);
 
   return (
