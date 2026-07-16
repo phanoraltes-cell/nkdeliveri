@@ -57,7 +57,7 @@ authentifié.
 - **Commandes** : `create_order_secure` recalcule le prix côté serveur à
   partir des données `products` en base — les prix envoyés par le client
   ne sont jamais approuvés tels quels (voir
-  [DATABASE.md § RPC](./DATABASE.md#3-rpc-functions-final-form)).
+  [API.md § Fonctions RPC Postgres](./API.md#1-fonctions-rpc-postgres)).
 
 ## Rate limiting
 
@@ -111,7 +111,7 @@ est actif :
 
 ## En-têtes de sécurité HTTP et CSP
 
-Voir [SECURITY_INFRASTRUCTURE.md § En-têtes HTTP](./SECURITY_INFRASTRUCTURE.md#en-têtes-http--vérifié)
+Voir [SECURITY_INFRASTRUCTURE.md § En-têtes HTTP](./SECURITY_INFRASTRUCTURE.md#en-têtes-http---vérifié)
 pour la Content-Security-Policy complète (`vercel.json`) — note connue et
 acceptée : `'unsafe-inline'` reste nécessaire pour `script-src`/`style-src`
 tant que les dépendances (Radix UI, Leaflet) injectent du style inline.

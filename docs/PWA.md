@@ -64,7 +64,7 @@ Cycle de vie côté navigateur dans `src/lib/push.ts`
 (`isPushSupported`/`subscribeToPush`/`unsubscribeFromPush`), abonnement
 persisté dans la table `push_subscriptions`. Bascule utilisateur :
 `src/components/push-toggle.tsx` sur `/notifications`. Émission côté
-serveur : voir [SERVICES.md § Notifications push](./SERVICES.md#notifications-push-send--push-functionsts).
+serveur : voir [SERVICES.md § Notifications push](./SERVICES.md#notifications-push-send--pushfunctionsts).
 
 ## Build : chemin de sortie du precache
 

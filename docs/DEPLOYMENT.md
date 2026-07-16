@@ -181,7 +181,7 @@ actuel (à adapter selon la charge réelle de l'équipe) :
   [BACKUP_RESTORE.md](./BACKUP_RESTORE.md).
 - **Rôles admin** — revue périodique de la liste réelle des comptes
   `admin`/`super_admin` en base (voir
-  [SECURITY_INFRASTRUCTURE.md § Rôles administrateurs](./SECURITY_INFRASTRUCTURE.md#rôles-administrateurs--vérifié-mécanisme-⚠️-liste-réelle-à-vérifier)),
+  [SECURITY_INFRASTRUCTURE.md § Rôles administrateurs](./SECURITY_INFRASTRUCTURE.md#rôles-administrateurs---vérifié-mécanisme--liste-réelle-à-vérifier)),
   pour confirmer qu'elle correspond toujours aux personnes qui doivent
   l'avoir.
 - **Rotation des secrets** — `SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_JWK`,

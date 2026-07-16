@@ -111,7 +111,7 @@ Détail complet dans [SUPABASE.md](./SUPABASE.md).
    `beforeLoad`, avant même de monter le composant. C'est une protection
    d'expérience utilisateur, pas la ligne de défense réelle — RLS/RPC sont
    la véritable barrière de sécurité. Voir
-   [ROUTING.md](./ROUTING.md#️-écart-connu--garde-de-rôle-manquante-sur-dashboarddriver-et-dashboarddriverprofile)
+   [ROUTING.md](./ROUTING.md#écart-connu--garde-de-rôle-manquante-sur-dashboarddriver-et-dashboarddriverprofile)
    pour un écart connu où cette garde manque sur deux routes livreur (sans
    impact sécurité réel, car les requêtes sous-jacentes restent protégées
    par RLS).

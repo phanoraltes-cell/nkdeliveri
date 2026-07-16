@@ -67,7 +67,7 @@ faire échouer en local coûte moins cher qu'un aller-retour CI.
 | Ajouter/modifier une table, une policy RLS, un RPC | [DATABASE.md](./DATABASE.md), puis [MIGRATIONS.md](./MIGRATIONS.md) pour la procédure |
 | Ajouter un composant | [COMPONENTS.md](./COMPONENTS.md) pour la convention de dossier |
 | Ajouter un hook | [HOOKS.md](./HOOKS.md) pour la convention camelCase |
-| Ajouter une notification push | [SERVICES.md § Notifications push](./SERVICES.md#notifications-push-send--push-functionsts) |
+| Ajouter une notification push | [SERVICES.md § Notifications push](./SERVICES.md#notifications-push-send--pushfunctionsts) |
 | Comprendre un parcours métier complet | [WORKFLOWS.md](./WORKFLOWS.md) |
 | Comprendre l'architecture générale | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 
