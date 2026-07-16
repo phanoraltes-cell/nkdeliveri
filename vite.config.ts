@@ -13,6 +13,22 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Hard-pin the deploy target: this project is linked to Vercel (see
+  // .vercel/project.json and the security headers in vercel.json), but
+  // without an explicit preset here, Nitro's zero-config `defaultPreset`
+  // falls back to `cloudflare-module` for any build that isn't literally
+  // running inside Vercel's own build environment (i.e. every local build
+  // and any CI runner that isn't Vercel itself) — producing a
+  // wrangler.json/Cloudflare Worker instead of a Vercel-compatible
+  // function, so "does the production build work" couldn't be verified
+  // outside of Vercel's own infra. Pinning it here makes every build
+  // (local, CI, Vercel) produce the exact same Vercel Build Output API
+  // artifact. Ignored inside Lovable's own editor/preview pipeline, which
+  // always forces Cloudflare regardless — see the `nitro` option's doc
+  // comment in @lovable.dev/vite-tanstack-config's type declarations.
+  nitro: {
+    preset: "vercel",
+  },
   vite: {
     build: {
       rollupOptions: {
@@ -53,16 +69,20 @@ export default defineConfig({
         filename: "sw.js",
         devOptions: { enabled: false },
         manifest: false,
-        // Nitro's client build is assembled into .output/public regardless of
-        // deploy target (Cloudflare, Vercel, etc.) — Vite's own build.outDir
-        // ("dist") is just an intermediate per-environment path in this
-        // multi-environment TanStack Start setup and is never actually
-        // served. Without this override, vite-plugin-pwa wrote sw.js into
-        // dist/ (never deployed, unreachable at /sw.js) and precached 0
-        // files (it globbed the wrong, empty directory).
-        outDir: ".output/public",
+        // Vite's own build.outDir ("dist") is just an intermediate
+        // per-environment path in this multi-environment TanStack Start
+        // setup and is never actually served — the real static output
+        // location depends on the active Nitro preset (see the `nitro`
+        // option above). With `preset: "vercel"` pinned, Nitro assembles
+        // the client bundle straight into .vercel/output/static (Vercel's
+        // Build Output API layout), not .output/public. Without this
+        // override, vite-plugin-pwa wrote sw.js into dist/ (never deployed,
+        // unreachable at /sw.js) and precached 0 files (it globbed the
+        // wrong, empty directory) — if the preset above ever changes, this
+        // path needs updating to match.
+        outDir: ".vercel/output/static",
         injectManifest: {
-          globDirectory: ".output/public",
+          globDirectory: ".vercel/output/static",
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
         },
       }),
