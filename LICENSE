@@ -1,0 +1,14 @@
+Copyright (c) 2026 NK Deliveri. All rights reserved.
+
+This software and associated documentation files (the "Software") are the
+proprietary property of NK Deliveri. The Software is private
+(see `package.json`, `"private": true`) and is not licensed for open-source
+distribution, reuse, modification, or resale.
+
+No part of this repository may be copied, distributed, sublicensed, or used
+outside of work explicitly authorized by NK Deliveri, without prior written
+permission from the copyright holder.
+
+If NK Deliveri intends to release parts of this codebase under an
+open-source license in the future, this file should be replaced with the
+chosen license text (e.g. MIT, Apache-2.0) at that time.

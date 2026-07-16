@@ -32,26 +32,24 @@ Scan automatisé de `supabase/migrations/*.sql` : chacune des **24 tables**
 créées (schémas `public` et `private`) a une instruction `ALTER TABLE ...
 ENABLE ROW LEVEL SECURITY` correspondante. Aucune table sans RLS trouvée.
 
-### Point d'attention trouvé : `profiles`
+### Correction (relecture Phase 7) : `profiles` — déjà corrigé, pas un point ouvert
 
-`public.profiles` (colonnes `first_name, last_name, phone, address,
-avatar_url`) a une politique `FOR SELECT TO authenticated USING (true)` —
-n'importe quel utilisateur connecté (client, restaurant, livreur) peut lire
-le numéro de téléphone et l'adresse de **n'importe quel autre** utilisateur
-via une requête directe à l'API REST Supabase (`GET /rest/v1/profiles`),
-pas seulement les siens. La lecture anonyme est déjà bloquée (`REVOKE
-SELECT ... FROM anon`, migration `20260703063224`), donc ce n'est pas
-exploitable sans compte, mais reste une fuite de PII entre utilisateurs
-authentifiés sans lien métier entre eux.
-
-**Non corrigé dans cette phase** (Phase 6 = infrastructure/DevOps, pas
-remédiation de sécurité applicative — voir Phase 1 pour ce type de
-changement). Recommandation pour un futur correctif : restreindre la
-politique à `auth.uid() = id`, et exposer une vue publique limitée
-(`first_name`, `avatar_url` uniquement) pour les cas légitimes où un autre
-utilisateur a besoin d'un affichage minimal — même schéma que
-`restaurant_payout_public` (vue dérivée limitant les colonnes exposées),
-déjà utilisé ailleurs dans ce projet pour un besoin similaire.
+Cette section affirmait, au moment de l'audit Phase 6, que
+`public.profiles` exposait `FOR SELECT TO authenticated USING (true)` à
+tout utilisateur connecté. En relisant l'historique complet des migrations
+pour la Phase 7 (documentation), ce constat s'est révélé **obsolète au
+moment même où il a été écrit** : la migration `20260703063224` a bien
+introduit cette politique permissive (`"Profiles viewable by authenticated
+users"`), mais la migration suivante, `20260703070152`, l'a remplacée le
+même jour par `"Users view own profile"` — `auth.uid() = id OR
+has_role(...,'admin') OR has_role(...,'super_admin')`. Aucune migration
+ultérieure n'a rouvert cette politique. L'état final (et l'état au moment
+de l'audit Phase 6, puisque cette migration date de juillet 2026 également)
+est donc déjà correct : un utilisateur authentifié ne peut lire que son
+propre profil (ou tout profil, s'il est admin). Voir
+[DATABASE.md § RLS](./DATABASE.md#3-row-level-security-rls) pour l'état
+vérifié. Ce point est conservé ici, corrigé, pour la traçabilité de
+l'audit original plutôt que supprimé silencieusement.
 
 ## Fonctions RPC — ✅ vérifié
 
