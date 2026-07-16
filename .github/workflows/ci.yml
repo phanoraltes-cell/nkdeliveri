@@ -1,0 +1,92 @@
+name: CI
+
+# Runs on every PR into main (the merge gate — see docs/DEVOPS.md for the
+# exact branch protection settings this is meant to back) and again on
+# every push to main (so a bad merge or a direct push is caught the same
+# way, and the badge on main always reflects the real state of HEAD).
+#
+# This workflow does NOT deploy anything. NK Deliveri is deployed via
+# Vercel's own native GitHub integration, which builds and deploys
+# independently on every push (production on main, a preview per PR) using
+# the exact same `npm run build` this workflow also runs — duplicating
+# that here would just be two systems racing to deploy the same commit.
+# This workflow's job is the quality gate Vercel's deploy doesn't provide:
+# lint/typecheck/format/migration-safety, required to pass before a PR can
+# merge.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, typecheck, format, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Format check (Prettier)
+        run: npm run format:check
+
+      - name: Typecheck (tsc)
+        run: npm run typecheck
+
+      - name: Migration overload-hazard check
+        run: npm run check:migrations
+
+      - name: Production build
+        run: npm run build
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### CI — quality gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Lint | ${{ job.status }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build target | Vercel (Nitro \`preset: vercel\`, pinned in vite.config.ts) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${{ github.sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+
+  migrations-db:
+    name: Validate Supabase migrations (local replay)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # `supabase start` boots a full local stack (Postgres + Auth +
+      # PostgREST + Realtime + Storage) via Docker and applies every file
+      # under supabase/migrations/ in order against a fresh database —
+      # the most realistic validation possible without live project
+      # credentials. Any migration that fails to apply (bad ordering,
+      # missing dependency, syntax error) fails this step.
+      - name: Apply every migration to a fresh local database
+        run: supabase start
+
+      - name: Stop local stack
+        if: always()
+        run: supabase stop --no-backup

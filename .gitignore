@@ -37,3 +37,7 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# Local database dumps produced by scripts/backup-database.sh — never
+# committed, may contain customer data.
+backups/

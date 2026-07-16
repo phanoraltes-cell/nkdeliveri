@@ -1,8 +1,14 @@
 node_modules
 dist
 .output
+.vercel
 .vinxi
 pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+
+# Tool-managed config/state, not app source.
+.claude
+supabase/.temp
+backups
