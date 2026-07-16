@@ -6,7 +6,15 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    // supabase/functions/ is a separate Deno-runtime project (Supabase Edge
+    // Functions) — different globals, different module resolution than the
+    // Vite/Node app this config targets. It's also untracked in this repo
+    // (see .gitignore) so it never reaches CI, but a developer who has it
+    // checked out locally shouldn't have `npm run lint`/`verify` fail on a
+    // project this config was never meant to lint.
+    ignores: ["dist", ".output", ".vercel", ".vinxi", "supabase/functions"],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
