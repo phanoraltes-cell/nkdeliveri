@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck } from "lucide-react";
+import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck, Banknote } from "lucide-react";
 
 const heroLivreur = "/hero-livreur.jpg";
 
@@ -98,17 +98,23 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-white/95 px-5 py-3 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur md:absolute md:right-8 md:bottom-8 md:mt-0"
+          className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur sm:gap-x-3 sm:px-5 sm:py-3 md:absolute md:right-8 md:bottom-8 md:mt-0 md:flex-nowrap"
         >
-          <span className="text-sm font-semibold text-ink">Peman disponib</span>
-          <div className="flex h-8 w-24 items-center justify-center">
+          <span className="text-xs font-semibold whitespace-nowrap text-ink sm:text-sm">
+            Peman disponib
+          </span>
+          <div className="flex h-8 w-16 shrink-0 items-center justify-center sm:w-24">
             <img
               src="/moncash-logo-hero.png"
               alt="MonCash"
               className="max-h-full max-w-full rounded object-contain"
             />
           </div>
-          <div className="flex h-8 w-24 items-center justify-center">
+          <div className="flex h-8 w-16 shrink-0 items-center justify-center gap-1 rounded border border-brand-soft/60 bg-white sm:w-24 sm:gap-1.5">
+            <Banknote className="h-3.5 w-3.5 shrink-0 text-brand-deep sm:h-4 sm:w-4" aria-hidden="true" />
+            <span className="text-[0.7rem] font-bold text-ink sm:text-xs">Kach</span>
+          </div>
+          <div className="flex h-8 w-16 shrink-0 items-center justify-center sm:w-24">
             <img
               src="/natcash-logo-new.png"
               alt="NatCash"
