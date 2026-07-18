@@ -75,6 +75,18 @@
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
+
+  /* Brand shadow scale — the one true source for the "soft colored depth"
+     look used across the app. Always the vivid brand hue; never the dull
+     rgba(194,90,5,...) that crept into some screens before this token
+     existed. Registering these under --shadow-* exposes them as Tailwind
+     utilities: shadow-brand-xs, shadow-brand-sm, shadow-brand-md,
+     shadow-brand-lg, shadow-ink-sm. */
+  --shadow-brand-xs: 0 2px 8px rgba(249, 115, 22, 0.1);
+  --shadow-brand-sm: 0 6px 16px rgba(249, 115, 22, 0.12);
+  --shadow-brand-md: 0 12px 28px rgba(249, 115, 22, 0.16);
+  --shadow-brand-lg: 0 20px 44px rgba(249, 115, 22, 0.22);
+  --shadow-ink-sm: 0 4px 14px rgba(31, 31, 31, 0.06);
 }
 
 :root {
@@ -178,5 +190,21 @@
        elements (header, dashboard nav) so full-bleed backgrounds don't gap
        in landscape. */
     padding-bottom: var(--sab);
+  }
+
+  /* Respect the OS-level motion preference across every hover-lift,
+     Framer Motion entrance, and ambient float in the app. Framer Motion
+     reads this itself for its own animations on modern browsers, but this
+     catch-all also covers the plain-CSS transition/transform utilities
+     (hover:-translate-y, hover:scale, etc.) that don't go through it. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
