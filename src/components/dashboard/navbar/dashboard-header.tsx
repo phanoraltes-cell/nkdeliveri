@@ -81,7 +81,7 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
   );
 
   return (
-    <header className="sticky top-0 z-40 flex min-h-16 items-center gap-2 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] shadow-sm sm:gap-3 sm:pl-[max(1.25rem,var(--sal))] sm:pr-[max(1.25rem,var(--sar))]">
+    <header className="sticky top-0 z-40 flex min-h-16 items-center gap-2 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] shadow-brand-xs sm:gap-3 sm:pl-[max(1.25rem,var(--sal))] sm:pr-[max(1.25rem,var(--sar))]">
       <MobileDrawer role={role} employeeRole={employeeRole} onSignOut={onSignOut} />
 
       <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
@@ -104,12 +104,12 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
         <Link
           to="/notifications"
-          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep hover:bg-brand-soft/40"
+          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep transition hover:border-brand hover:bg-brand-soft/40 hover:shadow-brand-xs"
           aria-label="Notifikasyon"
         >
           <Bell className="h-4 w-4" aria-hidden="true" />
           {unread > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white shadow-brand-xs">
               {unread > 9 ? "9+" : unread}
             </span>
           )}

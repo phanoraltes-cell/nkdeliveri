@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { sendRefundStatusPush } from "@/lib/send-refund-push.functions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/refunds")({
   beforeLoad: ({ context }) => {
@@ -130,7 +131,12 @@ function AdminRefunds() {
         </button>
       </div>
 
-      {refunds.isLoading && <div className="text-ink-soft">Chajman…</div>}
+      {refunds.isLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-24 w-full rounded-2xl" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
+        </div>
+      )}
       {!refunds.isLoading && visible.length === 0 && (
         <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
           Pa gen demann ranbousman pou kounye a.

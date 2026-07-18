@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
 
@@ -13,11 +14,15 @@ type ProductGridProps = {
 
 /** Restaurant menu's product card grid, filtered to the active category by the caller. */
 export function ProductGrid({ products, onEdit, onDelete }: ProductGridProps) {
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   return (
     <>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((p) => (
-          <div key={p.id} className="overflow-hidden rounded-xl border border-brand-soft/50">
+          <div
+            key={p.id}
+            className="overflow-hidden rounded-xl border border-brand-soft/50 bg-card shadow-brand-xs transition hover:shadow-brand-sm"
+          >
             {p.image_url && (
               <img
                 src={p.image_url}
@@ -54,10 +59,10 @@ export function ProductGrid({ products, onEdit, onDelete }: ProductGridProps) {
                   Modifye
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm(`Retire "${p.name}" nan meni an?`)) onDelete(p.id);
-                  }}
-                  className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 hover:bg-red-50"
+                  onClick={() =>
+                    requestConfirm(`Retire "${p.name}" nan meni an?`, () => onDelete(p.id))
+                  }
+                  className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -71,6 +76,7 @@ export function ProductGrid({ products, onEdit, onDelete }: ProductGridProps) {
           Pa gen plat pou kategori sa a.
         </div>
       )}
+      {ConfirmDialog}
     </>
   );
 }

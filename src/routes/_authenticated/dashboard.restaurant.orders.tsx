@@ -12,6 +12,7 @@ import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban-board";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 const PAGE_SIZE = 30;
 
@@ -52,6 +53,7 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
 function RestaurantOrders() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [filter, setFilter] = useState<"all" | "pending">("all");
   const [page, setPage] = useState(1);
@@ -299,8 +301,9 @@ function RestaurantOrders() {
                       <button
                         disabled={changeStatus.isPending}
                         onClick={() =>
-                          confirm(`Refize kòmand ${o.order_number}?`) &&
-                          changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                          requestConfirm(`Refize kòmand ${o.order_number}?`, () =>
+                            changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
+                          )
                         }
                         className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                       >
@@ -325,8 +328,9 @@ function RestaurantOrders() {
                       <button
                         disabled={changeStatus.isPending}
                         onClick={() =>
-                          confirm(`Anile kòmand ${o.order_number}?`) &&
-                          changeStatus.mutate({ orderId: o.id, status: "cancelled" })
+                          requestConfirm(`Anile kòmand ${o.order_number}?`, () =>
+                            changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
+                          )
                         }
                         className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
                       >
@@ -347,6 +351,7 @@ function RestaurantOrders() {
           )}
         </>
       )}
+      {ConfirmDialog}
     </div>
   );
 }

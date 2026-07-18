@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Download, Search, Send, Mail } from "lucide-react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
@@ -178,7 +179,13 @@ function AdminCustomers() {
           </div>
         </div>
 
-        {customers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+        {customers.isLoading && (
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">
@@ -237,7 +244,7 @@ function AdminCustomers() {
           </button>
         </div>
 
-        {subscribers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+        {subscribers.isLoading && <Skeleton className="h-12 w-full rounded-xl" />}
         <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-xl border border-brand-soft/40">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">

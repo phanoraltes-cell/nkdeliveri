@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MapPin, Plus, Pencil, Trash2, Star, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Address = {
   id: string;
@@ -19,6 +21,7 @@ export function AddressManager({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Address | null>(null);
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   const addresses = useQuery({
     queryKey: ["my-addresses", userId],
@@ -89,7 +92,12 @@ export function AddressManager({ userId }: { userId: string }) {
         </button>
       </div>
 
-      {addresses.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+      {addresses.isLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </div>
+      )}
       {addresses.data?.length === 0 && !showForm && (
         <div className="rounded-xl border border-dashed border-brand-soft/60 p-4 text-center text-sm text-ink-soft">
           Ou poko gen okenn adrès anrejistre.
@@ -142,11 +150,11 @@ export function AddressManager({ userId }: { userId: string }) {
               </button>
               <button
                 onClick={() =>
-                  confirm(`Efase "${a.label || a.address_line}"?`) && remove.mutate(a.id)
+                  requestConfirm(`Efase "${a.label || a.address_line}"?`, () => remove.mutate(a.id))
                 }
                 aria-label="Efase"
                 title="Efase"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 hover:bg-red-50"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 transition hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -164,6 +172,7 @@ export function AddressManager({ userId }: { userId: string }) {
           onSaved={invalidate}
         />
       )}
+      {ConfirmDialog}
     </div>
   );
 }

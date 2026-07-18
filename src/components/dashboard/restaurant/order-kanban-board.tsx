@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, X, ChevronRight, Printer } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 export type KanbanOrder = {
   id: string;
@@ -58,76 +59,87 @@ export function OrderKanbanBoard({
 }: OrderKanbanBoardProps) {
   const [dragOrder, setDragOrder] = useState<{ id: string; status: string } | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   function handleDrop(columnKey: string) {
     setDragOverCol(null);
     if (!dragOrder) return;
     if (!isValidDrop(dragOrder.status, columnKey)) return;
+    const { id } = dragOrder;
     if (columnKey === "cancelled") {
-      if (confirm(`Anile kòmand sa a?`)) onChangeStatus(dragOrder.id, "cancelled");
+      requestConfirm("Anile kòmand sa a?", () => onChangeStatus(id, "cancelled"));
     } else {
-      onChangeStatus(dragOrder.id, columnKey);
+      onChangeStatus(id, columnKey);
     }
     setDragOrder(null);
   }
 
-  return (
-    <div className="flex gap-3 overflow-x-auto pb-3">
-      {COLUMNS.map((col) => {
-        const cards = orders.filter((o) => col.statuses.includes(o.status));
-        const isDropTarget = dragOrder != null && isValidDrop(dragOrder.status, col.key);
-        return (
-          <div
-            key={col.key}
-            onDragOver={(e) => {
-              if (isDropTarget) {
-                e.preventDefault();
-                setDragOverCol(col.key);
-              }
-            }}
-            onDragLeave={() => setDragOverCol((c) => (c === col.key ? null : c))}
-            onDrop={() => handleDrop(col.key)}
-            className={`w-[260px] shrink-0 rounded-2xl border-2 bg-brand-soft/10 p-2.5 transition-colors sm:w-[280px] ${
-              dragOverCol === col.key
-                ? "border-brand bg-brand-soft/30"
-                : isDropTarget
-                  ? "border-dashed border-brand-soft"
-                  : "border-transparent"
-            }`}
-          >
-            <div className="mb-2 flex items-center justify-between px-1">
-              <h3 className="font-display text-sm font-extrabold text-ink">{col.label}</h3>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-ink-soft">
-                {cards.length}
-              </span>
-            </div>
+  function requestReject(orderId: string, orderNumber: string) {
+    requestConfirm(`Refize kòmand ${orderNumber}?`, () => onChangeStatus(orderId, "cancelled"));
+  }
 
-            <div className="space-y-2">
-              {cards.map((o) => (
-                <KanbanCard
-                  key={o.id}
-                  order={o}
-                  restaurantName={restaurantName}
-                  draggable={NEXT_COLUMN[o.status] !== undefined}
-                  onDragStart={() => setDragOrder({ id: o.id, status: o.status })}
-                  onDragEnd={() => {
-                    setDragOrder(null);
-                    setDragOverCol(null);
-                  }}
-                  onChangeStatus={onChangeStatus}
-                  isChangingStatus={isChangingStatus}
-                />
-              ))}
-              {cards.length === 0 && (
-                <div className="rounded-xl border border-dashed border-brand-soft/50 p-3 text-center text-[11px] text-ink-soft">
-                  Vid
-                </div>
-              )}
+  return (
+    <>
+      <div className="flex gap-3 overflow-x-auto pb-3">
+        {COLUMNS.map((col) => {
+          const cards = orders.filter((o) => col.statuses.includes(o.status));
+          const isDropTarget = dragOrder != null && isValidDrop(dragOrder.status, col.key);
+          return (
+            <div
+              key={col.key}
+              onDragOver={(e) => {
+                if (isDropTarget) {
+                  e.preventDefault();
+                  setDragOverCol(col.key);
+                }
+              }}
+              onDragLeave={() => setDragOverCol((c) => (c === col.key ? null : c))}
+              onDrop={() => handleDrop(col.key)}
+              className={`w-[260px] shrink-0 rounded-2xl border-2 bg-brand-soft/10 p-2.5 transition-colors sm:w-[280px] ${
+                dragOverCol === col.key
+                  ? "border-brand bg-brand-soft/30"
+                  : isDropTarget
+                    ? "border-dashed border-brand-soft"
+                    : "border-transparent"
+              }`}
+            >
+              <div className="mb-2 flex items-center justify-between px-1">
+                <h3 className="font-display text-sm font-extrabold text-ink">{col.label}</h3>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-ink-soft">
+                  {cards.length}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {cards.map((o) => (
+                  <KanbanCard
+                    key={o.id}
+                    order={o}
+                    restaurantName={restaurantName}
+                    draggable={NEXT_COLUMN[o.status] !== undefined}
+                    onDragStart={() => setDragOrder({ id: o.id, status: o.status })}
+                    onDragEnd={() => {
+                      setDragOrder(null);
+                      setDragOverCol(null);
+                    }}
+                    onChangeStatus={onChangeStatus}
+                    onRequestReject={requestReject}
+                    isChangingStatus={isChangingStatus}
+                  />
+                ))}
+                {cards.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-brand-soft/50 p-3 text-center text-[11px] text-ink-soft">
+                    Vid
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {ConfirmDialog}
+    </>
   );
 }
 
@@ -138,6 +150,7 @@ function KanbanCard({
   onDragStart,
   onDragEnd,
   onChangeStatus,
+  onRequestReject,
   isChangingStatus,
 }: {
   order: KanbanOrder;
@@ -146,6 +159,7 @@ function KanbanCard({
   onDragStart: () => void;
   onDragEnd: () => void;
   onChangeStatus: (orderId: string, status: string) => void;
+  onRequestReject: (orderId: string, orderNumber: string) => void;
   isChangingStatus: boolean;
 }) {
   const itemCount = o.order_items?.reduce((s, it) => s + it.quantity, 0) ?? 0;
@@ -156,7 +170,7 @@ function KanbanCard({
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`rounded-xl border border-brand-soft/50 bg-white p-3 shadow-sm ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`rounded-xl border border-brand-soft/50 bg-white p-3 shadow-brand-xs transition hover:shadow-brand-sm ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="font-display text-sm font-extrabold text-ink">{o.order_number}</span>
@@ -168,7 +182,7 @@ function KanbanCard({
             onClick={() =>
               printKitchenTicket({ ...o, order_items: o.order_items ?? [] }, restaurantName)
             }
-            className="text-ink-soft hover:text-brand-deep"
+            className="rounded-full p-1 text-ink-soft transition hover:bg-brand-soft/40 hover:text-brand-deep"
             aria-label="Enprime bon kizin"
             title="Enprime bon kizin"
           >
@@ -192,16 +206,14 @@ function KanbanCard({
               <button
                 disabled={isChangingStatus}
                 onClick={() => onChangeStatus(o.id, "confirmed")}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700 disabled:pointer-events-none disabled:opacity-50"
               >
                 <Check className="h-3 w-3" /> Konfime
               </button>
               <button
                 disabled={isChangingStatus}
-                onClick={() =>
-                  confirm(`Refize kòmand ${o.order_number}?`) && onChangeStatus(o.id, "cancelled")
-                }
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                onClick={() => onRequestReject(o.id, o.order_number)}
+                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-red-700 disabled:pointer-events-none disabled:opacity-50"
               >
                 <X className="h-3 w-3" /> Refize
               </button>
@@ -211,7 +223,7 @@ function KanbanCard({
             <button
               disabled={isChangingStatus}
               onClick={() => onChangeStatus(o.id, nextCol)}
-              className="inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-brand-deep disabled:pointer-events-none disabled:opacity-50"
             >
               Avanse <ChevronRight className="h-3 w-3" />
             </button>

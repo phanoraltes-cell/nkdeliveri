@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Download, Search, X, Ban, RotateCcw } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
@@ -61,6 +62,7 @@ function AdminUsers() {
   const [exporting, setExporting] = useState(false);
   const suspendFn = useServerFn(suspendUserAccount);
   const reactivateFn = useServerFn(reactivateUserAccount);
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   const users = useQuery({
     queryKey: ["admin-all-users", search, roleFilter, page],
@@ -274,8 +276,10 @@ function AdminUsers() {
                             {ROLE_LABEL[r] ?? r}
                             <button
                               onClick={() =>
-                                confirm(`Retire wòl ${ROLE_LABEL[r] ?? r} nan men ${u.email}?`) &&
-                                removeRole.mutate({ userId: u.id, role: r as AppRole })
+                                requestConfirm(
+                                  `Retire wòl ${ROLE_LABEL[r] ?? r} nan men ${u.email}?`,
+                                  () => removeRole.mutate({ userId: u.id, role: r as AppRole }),
+                                )
                               }
                               disabled={removeRole.isPending}
                               aria-label={`Retire wòl ${ROLE_LABEL[r] ?? r}`}
@@ -324,7 +328,7 @@ function AdminUsers() {
                       ) : (
                         <button
                           onClick={() =>
-                            confirm(`Sispann kont ${u.email}?`) && suspend.mutate(u.id)
+                            requestConfirm(`Sispann kont ${u.email}?`, () => suspend.mutate(u.id))
                           }
                           disabled={suspend.isPending || isSelf}
                           title={isSelf ? "Ou pa ka sispann pwòp kont ou" : undefined}
@@ -353,6 +357,7 @@ function AdminUsers() {
           className="mt-4"
         />
       </section>
+      {ConfirmDialog}
     </div>
   );
 }

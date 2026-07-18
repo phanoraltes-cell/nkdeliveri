@@ -15,7 +15,7 @@ export function KpiCard({ label, value, icon: Icon, delta, hint }: KpiCardProps)
   const deltaNegative = delta?.startsWith("-");
 
   return (
-    <div className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs transition hover:shadow-brand-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-ink-soft">{label}</div>

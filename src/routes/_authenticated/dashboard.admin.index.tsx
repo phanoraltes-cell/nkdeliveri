@@ -301,12 +301,12 @@ function AdminDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <Bike className="h-5 w-5 text-emerald-600" /> Livrè disponib (
             {onlineDrivers.data?.length ?? 0})
           </h2>
-          {onlineDrivers.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {onlineDrivers.isLoading && <Skeleton className="h-16 w-full rounded-xl" />}
           {!onlineDrivers.isLoading && !onlineDrivers.data?.length && (
             <div className="text-sm text-ink-soft">Pa gen livrè an liy kounye a.</div>
           )}
@@ -330,12 +330,12 @@ function AdminDashboard() {
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <Store className="h-5 w-5 text-orange-600" /> Restoran ouvè (
             {approvedRestaurants.data?.length ?? 0})
           </h2>
-          {approvedRestaurants.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {approvedRestaurants.isLoading && <Skeleton className="h-16 w-full rounded-xl" />}
           {!approvedRestaurants.isLoading && !approvedRestaurants.data?.length && (
             <div className="text-sm text-ink-soft">Pa gen restoran apwouve kounye a.</div>
           )}
@@ -365,10 +365,10 @@ function AdminDashboard() {
         <KpiCard label="Livrè an atant" value={s?.pendingDrivers ?? "—"} icon={ClipboardList} />
       </div>
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
         <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
         {weeklyRevenue.isLoading ? (
-          <div className="text-sm text-ink-soft">Chajman…</div>
+          <Skeleton className="h-[240px] w-full rounded-xl" />
         ) : (
           <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
             <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />

@@ -119,7 +119,7 @@ export function ProductForm({
   }
 
   return (
-    <div className="mt-4 rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4">
+    <div className="mt-4 rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4 shadow-brand-xs">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display font-bold">{product ? "Modifye plat" : "Nouvo plat"}</h3>
         <button onClick={onClose} className="text-ink-soft hover:text-ink">
@@ -202,7 +202,7 @@ export function ProductForm({
       <button
         disabled={saving}
         onClick={save}
-        className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+        className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
       >
         {saving ? "Ap sove…" : "Sove plat la"}
       </button>

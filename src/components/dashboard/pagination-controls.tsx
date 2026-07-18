@@ -25,7 +25,7 @@ export function PaginationControls({
         type="button"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-2 text-xs font-bold text-brand-deep hover:bg-brand-soft/40 disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-2 text-xs font-bold text-brand-deep transition hover:border-brand hover:bg-brand-soft/40 hover:shadow-brand-xs disabled:pointer-events-none disabled:opacity-40"
       >
         <ChevronLeft className="h-3.5 w-3.5" /> Anvan
       </button>
@@ -36,7 +36,7 @@ export function PaginationControls({
         type="button"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= pageCount}
-        className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-2 text-xs font-bold text-brand-deep hover:bg-brand-soft/40 disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-full border border-brand-soft bg-white px-3 py-2 text-xs font-bold text-brand-deep transition hover:border-brand hover:bg-brand-soft/40 hover:shadow-brand-xs disabled:pointer-events-none disabled:opacity-40"
       >
         Apre <ChevronRight className="h-3.5 w-3.5" />
       </button>

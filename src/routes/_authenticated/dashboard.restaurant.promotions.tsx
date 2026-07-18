@@ -9,6 +9,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { sendNewPromotionPush } from "@/lib/send-promotion-push.functions";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
@@ -27,6 +28,7 @@ function RestaurantPromotions() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Promotion | null>(null);
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   const { data: restaurant } = useQuery({
     queryKey: ["me-restaurant-id", user?.id],
@@ -182,10 +184,8 @@ function RestaurantPromotions() {
                   Modifye
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm(`Efase "${p.title}"?`)) remove.mutate(p.id);
-                  }}
-                  className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 hover:bg-red-50"
+                  onClick={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p.id))}
+                  className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -199,6 +199,7 @@ function RestaurantPromotions() {
           </div>
         )}
       </div>
+      {ConfirmDialog}
     </div>
   );
 }

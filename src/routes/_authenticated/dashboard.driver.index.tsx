@@ -248,10 +248,10 @@ function DriverDashboard() {
       )}
 
       {!pending && driver && (
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
           {weeklyEarnings.isLoading ? (
-            <div className="text-sm text-ink-soft">Chajman…</div>
+            <Skeleton className="h-[240px] w-full rounded-xl" />
           ) : (
             <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
               <RevenueChart data={weeklyEarnings.data ?? []} formatValue={formatHTG} />

@@ -1,6 +1,7 @@
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { inputClsCompact as inputCls } from "@/lib/utils";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 
@@ -38,13 +39,14 @@ export function CategoryManager({
   onUpdateCategory,
   onDeleteCategory,
 }: CategoryManagerProps) {
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   return (
-    <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
       <h2 className="font-display text-lg font-bold">Kategori</h2>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => onSelectCat("all")}
-          className={`rounded-full px-3 py-2.5 text-sm font-bold ${activeCat === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+          className={`rounded-full px-3 py-2.5 text-sm font-bold transition ${activeCat === "all" ? "bg-brand-deep text-white shadow-brand-xs" : "bg-brand-soft/60 text-brand-deep hover:bg-brand-soft"}`}
         >
           Tout ({totalProductCount})
         </button>
@@ -85,7 +87,7 @@ export function CategoryManager({
                   role="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm(`Efase kategori "${c.name}"?`)) onDeleteCategory(c.id);
+                    requestConfirm(`Efase kategori "${c.name}"?`, () => onDeleteCategory(c.id));
                   }}
                   className="opacity-60 hover:opacity-100"
                 >
@@ -111,6 +113,7 @@ export function CategoryManager({
           <Plus className="h-4 w-4" /> Ajoute
         </button>
       </div>
+      {ConfirmDialog}
     </section>
   );
 }

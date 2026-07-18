@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Package, CheckCircle2 } from "lucide-react";
 import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/history")({
   beforeLoad: ({ context }) => {
@@ -113,7 +114,7 @@ function DriverHistory() {
         <h2 className="mb-3 font-display text-lg font-bold text-ink">
           Aktyèl {active.data?.length ? `(${active.data.length})` : ""}
         </h2>
-        {active.isLoading && <div className="text-ink-soft">Chajman…</div>}
+        {active.isLoading && <Skeleton className="h-24 w-full rounded-2xl" />}
         {!active.isLoading && (active.data?.length ?? 0) === 0 && (
           <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
             Ou pa gen okenn livrezon an kou pou kounye a.
@@ -172,7 +173,13 @@ function DriverHistory() {
 
       <section>
         <h2 className="mb-3 font-display text-lg font-bold text-ink">Istwa</h2>
-        {history.isLoading && <div className="text-ink-soft">Chajman…</div>}
+        {history.isLoading && (
+          <div className="space-y-2">
+            <Skeleton className="h-20 w-full rounded-2xl" />
+            <Skeleton className="h-20 w-full rounded-2xl" />
+            <Skeleton className="h-20 w-full rounded-2xl" />
+          </div>
+        )}
         {!history.isLoading && (history.data?.length ?? 0) === 0 && (
           <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
             Ou poko livre okenn kòmand.

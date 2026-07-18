@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell, Check, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { PushToggle } from "@/components/push-toggle";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -73,7 +74,13 @@ function NotificationsPage() {
         )}
       </div>
 
-      {isLoading && <div className="text-ink-soft">Chajman…</div>}
+      {isLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </div>
+      )}
       {data?.length === 0 && (
         <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
           Pa gen notifikasyon toujou.

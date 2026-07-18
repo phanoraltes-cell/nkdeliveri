@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export type DataTableColumn<T> = {
@@ -25,7 +26,11 @@ type DataTableProps<T> = {
   /** Column used as the mobile card's title. Defaults to the first column. */
   mobileTitleKey?: string;
   emptyState?: ReactNode;
+  /** True while the underlying query is still in flight — renders skeleton rows instead of the empty state, so a loading list is never mistaken for a genuinely empty one. */
+  loading?: boolean;
 };
+
+const SKELETON_ROW_COUNT = 4;
 
 /**
  * Renders a proper <table> at md+ and falls back to stacked cards on mobile,
@@ -37,14 +42,34 @@ export function DataTable<T>({
   getRowKey,
   mobileTitleKey,
   emptyState,
+  loading = false,
 }: DataTableProps<T>) {
+  if (loading) {
+    return (
+      <>
+        <div className="hidden overflow-hidden rounded-2xl border border-brand-soft/60 bg-card shadow-brand-xs md:block">
+          <div className="space-y-3 p-4">
+            {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 md:hidden">
+          {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+          ))}
+        </div>
+      </>
+    );
+  }
+
   if (rows.length === 0 && emptyState) return <>{emptyState}</>;
 
   const titleKey = mobileTitleKey ?? columns[0]?.key;
 
   return (
     <>
-      <div className="hidden overflow-hidden rounded-2xl border border-brand-soft/60 bg-white shadow-sm md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-brand-soft/60 bg-card shadow-brand-xs md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-brand-soft/50 hover:bg-transparent">
@@ -73,7 +98,7 @@ export function DataTable<T>({
         {rows.map((row) => (
           <div
             key={getRowKey(row)}
-            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+            className="rounded-2xl border border-brand-soft/60 bg-card p-4 shadow-brand-xs"
           >
             {columns
               .filter((col) => col.key === titleKey)

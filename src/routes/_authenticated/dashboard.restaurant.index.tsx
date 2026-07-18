@@ -261,10 +261,10 @@ function RestaurantDashboard() {
       </div>
 
       {isOwner && (
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
           {weeklyRevenue.isLoading ? (
-            <div className="text-sm text-ink-soft">Chajman…</div>
+            <Skeleton className="h-[240px] w-full rounded-xl" />
           ) : (
             <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
               <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
@@ -274,7 +274,7 @@ function RestaurantDashboard() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <Flame className="h-5 w-5 text-brand-deep" /> Plat popilè (30 jou)
           </h2>

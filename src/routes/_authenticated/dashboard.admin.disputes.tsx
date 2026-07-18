@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { DisputeThread } from "@/components/disputes/dispute-thread";
 import { sendDisputeUpdatePush } from "@/lib/send-dispute-push.functions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/disputes")({
   beforeLoad: ({ context }) => {
@@ -91,7 +92,12 @@ function AdminDisputes() {
         </button>
       </div>
 
-      {disputes.isLoading && <div className="text-ink-soft">Chajman…</div>}
+      {disputes.isLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-24 w-full rounded-2xl" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
+        </div>
+      )}
       {!disputes.isLoading && visible.length === 0 && (
         <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
           Pa gen litij pou kounye a.

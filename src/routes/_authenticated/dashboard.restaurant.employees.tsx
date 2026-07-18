@@ -8,6 +8,9 @@ import { Users, UserPlus, Trash2 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { EMPLOYEE_ROLES, EMPLOYEE_ROLE_LABEL, type EmployeeRole } from "@/lib/employee-roles";
 import { sendEmployeeEventPush } from "@/lib/send-employee-push.functions";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { inputCls } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/employees")({
   beforeLoad: ({ context }) => {
@@ -25,6 +28,7 @@ function RestaurantEmployees() {
   const { data: restaurant } = useMyRestaurant(user?.id);
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<EmployeeRole>("staff");
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   const employees = useQuery({
     queryKey: ["restaurant-employees", restaurant?.id],
@@ -112,7 +116,7 @@ function RestaurantEmployees() {
         </Link>
       </div>
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
         <h2 className="font-display text-lg font-bold">Ajoute yon anplwaye</h2>
         <p className="mt-1 text-xs text-ink-soft">
           Moun sa a dwe gen tan gen yon kont NK Deliveri deja (menm si se yon kont kliyan).
@@ -124,12 +128,12 @@ function RestaurantEmployees() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="imèl@egzanp.com"
-            className="min-w-[220px] flex-1 rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+            className={`min-w-[220px] flex-1 ${inputCls()}`}
           />
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value as EmployeeRole)}
-            className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none focus:border-brand"
+            className={inputCls()}
           >
             {EMPLOYEE_ROLES.map((r) => (
               <option key={r} value={r}>
@@ -140,18 +144,23 @@ function RestaurantEmployees() {
           <button
             disabled={add.isPending}
             onClick={() => add.mutate()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
           >
             <UserPlus className="h-4 w-4" /> {add.isPending ? "Ap ajoute…" : "Ajoute"}
           </button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
         <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
           <Users className="h-5 w-5 text-brand-deep" /> Ekip la ({employees.data?.length ?? 0})
         </h2>
-        {employees.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+        {employees.isLoading && (
+          <div className="space-y-2">
+            <Skeleton className="h-14 w-full rounded-xl" />
+            <Skeleton className="h-14 w-full rounded-xl" />
+          </div>
+        )}
         {!employees.isLoading && employees.data?.length === 0 && (
           <div className="rounded-xl border border-dashed border-brand-soft/60 p-4 text-center text-sm text-ink-soft">
             Ou poko gen okenn anplwaye.
@@ -176,7 +185,7 @@ function RestaurantEmployees() {
                   onChange={(ev) =>
                     changeRole.mutate({ id: e.id, role: ev.target.value as EmployeeRole })
                   }
-                  className="rounded-lg border-2 border-brand-soft bg-white px-2.5 py-2 text-xs font-semibold outline-none focus:border-brand disabled:opacity-50"
+                  className="rounded-lg border-2 border-brand-soft bg-white px-2.5 py-2 text-xs font-semibold outline-none transition-[border-color,box-shadow] focus:border-brand focus:shadow-brand-xs disabled:opacity-50"
                 >
                   {EMPLOYEE_ROLES.map((r) => (
                     <option key={r} value={r}>
@@ -185,11 +194,11 @@ function RestaurantEmployees() {
                   ))}
                 </select>
                 <button
-                  onClick={() => confirm(`Retire ${e.email}?`) && remove.mutate(e.id)}
+                  onClick={() => requestConfirm(`Retire ${e.email}?`, () => remove.mutate(e.id))}
                   disabled={remove.isPending}
                   aria-label="Retire"
                   title="Retire"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-red-600 transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -198,6 +207,7 @@ function RestaurantEmployees() {
           ))}
         </ul>
       </section>
+      {ConfirmDialog}
     </div>
   );
 }
