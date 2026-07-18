@@ -4,7 +4,17 @@
 // 20260713120000_secure_storage_buckets.sql migration) — this module only
 // lets the UI fail fast with a clear message instead of a raw storage error.
 
-export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+// HEIC/HEIF included because it's the default camera format on iPhones —
+// without it, a customer/driver photographing a payment proof or ID
+// document straight from their camera roll had every upload silently
+// rejected by the file-type check.
+export const IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+] as const;
 export const DOCUMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, "application/pdf"] as const;
 
 export const UPLOAD_LIMITS = {

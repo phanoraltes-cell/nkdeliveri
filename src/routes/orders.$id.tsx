@@ -201,6 +201,14 @@ function OrderDetail() {
               {payment ? PAY_STATUS_LABEL[payment.status] || payment.status : "—"}
             </div>
             <div className="mt-0.5 text-xs text-ink-soft capitalize">{payment?.method}</div>
+            {needsProof && (
+              <a
+                href="#payment-proof"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline"
+              >
+                ↓ Voye prèv peman an
+              </a>
+            )}
           </div>
         </div>
 

@@ -24,6 +24,10 @@ export function ProofThumb({
   const [url, setUrl] = useState<string | null>(isAlreadyUrl ? path : null);
   const [open, setOpen] = useState(false);
   const isPdf = /\.pdf$/i.test(path);
+  // Browsers don't render HEIC/HEIF in an <img> tag (unlike JPEG/PNG/WebP) —
+  // fall back to the same "open the original" tile as PDF instead of a
+  // broken-image icon.
+  const isHeic = /\.hei[cf]$/i.test(path);
 
   useEffect(() => {
     if (isAlreadyUrl) {
@@ -42,7 +46,7 @@ export function ProofThumb({
     };
   }, [path, bucket, isAlreadyUrl]);
 
-  if (isPdf) {
+  if (isPdf || isHeic) {
     return (
       <a
         href={url ?? "#"}
@@ -51,7 +55,7 @@ export function ProofThumb({
         className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-brand-soft bg-cream text-xs font-bold text-brand-deep hover:bg-brand-soft/60"
       >
         <FileText className="h-6 w-6" />
-        PDF
+        {isPdf ? "PDF" : "Foto"}
       </a>
     );
   }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { formatHTG } from "@/lib/format";
@@ -91,8 +91,18 @@ export function PaymentProofSection({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
-      <div className="font-display text-base font-bold">Enstriksyon peman</div>
+    <div
+      id="payment-proof"
+      className={
+        needsProof
+          ? "scroll-mt-20 rounded-2xl border-2 border-amber-400 bg-white p-5 shadow-[0_0_0_4px_rgba(251,191,36,0.15)]"
+          : "scroll-mt-20 rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40"
+      }
+    >
+      <div className="flex items-center gap-2 font-display text-base font-bold">
+        {needsProof && <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />}
+        {needsProof ? "Voye prèv peman ou a" : "Enstriksyon peman"}
+      </div>
       <div className="mt-2 rounded-xl bg-brand-soft/60 p-3 text-sm">
         Voye <b>{formatHTG(total)}</b> sou <b>{payLabel}</b>, epi telechaje kaptè/foto prèv la anba
         a. <span className="block text-xs text-ink-soft mt-1">{payRoutingNote}</span>
