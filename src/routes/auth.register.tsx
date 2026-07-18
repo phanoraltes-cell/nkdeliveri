@@ -83,7 +83,7 @@ function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
           <button
             key={o.type}
             onClick={() => onSelect(o.type)}
-            className="group flex flex-col items-start rounded-2xl border-2 border-brand-soft/60 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+            className="group flex flex-col items-start rounded-2xl border-2 border-brand-soft/60 bg-white p-5 text-left shadow-brand-xs transition hover:-translate-y-1 hover:border-brand hover:shadow-brand-lg"
           >
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep group-hover:bg-brand group-hover:text-white">
               <Icon className="h-6 w-6" />
@@ -149,7 +149,7 @@ function useSubmit(onDone: () => void) {
 
 function FormCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)] sm:p-8">
+    <div className="rounded-3xl bg-white p-6 shadow-brand-md ring-1 ring-brand-soft/40 sm:p-8">
       {children}
     </div>
   );
@@ -259,7 +259,7 @@ function CustomerForm() {
         </label>
         <button
           disabled={loading}
-          className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
+          className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
         >
           {loading ? "..." : "Kreye kont kliyan"}
         </button>
@@ -425,7 +425,7 @@ function RestaurantForm() {
         </label>
         <button
           disabled={loading}
-          className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
+          className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
         >
           {loading ? "..." : "Kreye kont restoran"}
         </button>
@@ -597,7 +597,7 @@ function DriverForm() {
         </label>
         <button
           disabled={loading}
-          className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
+          className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
         >
           {loading ? "..." : "Kreye kont livrè"}
         </button>

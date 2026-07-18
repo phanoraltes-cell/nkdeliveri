@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError } from "@/lib/auth-errors";
 import { Mail } from "lucide-react";
+import { inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => noIndexMeta("Reyinisyalize modpas — NK Deliveri"),
@@ -39,7 +40,7 @@ function ForgotPassword() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-md px-5 py-12">
-        <div className="rounded-[18px] bg-white p-8 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-3xl bg-white p-8 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Bliye modpas ou?</h1>
 
           {sent ? (
@@ -60,11 +61,11 @@ function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                  className={inputCls()}
                 />
                 <button
                   disabled={loading}
-                  className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
+                  className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
                 >
                   {loading ? "Ap voye…" : "Voye lyen an"}
                 </button>

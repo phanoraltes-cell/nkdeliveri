@@ -115,7 +115,7 @@ export function SiteFooter() {
               {payments.map((p) => (
                 <span
                   key={p.name}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-white px-3 shadow-sm"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 shadow-brand-xs"
                   title={p.name}
                 >
                   {p.kind === "image" && (

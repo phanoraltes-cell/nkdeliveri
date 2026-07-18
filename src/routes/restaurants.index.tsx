@@ -116,7 +116,7 @@ function RestaurantsPage() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Chèche pa non…"
-          className="mb-6 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm outline-none focus:border-brand"
+          className="mb-6 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-brand focus:shadow-brand-xs"
         />
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           {rows.map((r) => (
@@ -124,16 +124,16 @@ function RestaurantsPage() {
               key={r.id}
               to="/restaurants/$slug"
               params={{ slug: r.slug }}
-              className="overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)] transition hover:-translate-y-1"
+              className="group overflow-hidden rounded-3xl bg-white shadow-brand-xs ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-brand-md"
             >
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <img
                   src={r.cover_url || ""}
                   alt={r.name}
                   loading="lazy"
                   width={240}
                   height={144}
-                  className="h-36 w-full object-cover"
+                  className="h-36 w-full object-cover transition duration-500 group-hover:scale-110"
                 />
                 <button
                   aria-label={isFavorite(r.id) ? "Retire nan favori" : "Mete an favori"}
@@ -162,7 +162,7 @@ function RestaurantsPage() {
           ))}
         </div>
         {rows.length === 0 && (
-          <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center text-ink-soft">
+          <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center text-ink-soft shadow-brand-xs">
             Pa gen restoran ki koresponn.
           </div>
         )}

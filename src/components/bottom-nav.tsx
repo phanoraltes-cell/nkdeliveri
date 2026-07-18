@@ -46,13 +46,13 @@ export function BottomNav() {
                 key={it.to}
                 to={it.to}
                 activeOptions={"exact" in it ? { exact: it.exact } : undefined}
-                activeProps={{ className: "!text-brand" }}
-                className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-ink-soft transition-colors"
+                activeProps={{ className: "!text-brand [&_svg]:scale-110" }}
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-ink-soft transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2"
               >
                 <span className="relative flex h-7 w-7 items-center justify-center">
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-6 w-6 transition-transform duration-200" />
                   {badge > 0 && (
-                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white">
+                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white shadow-brand-xs">
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}

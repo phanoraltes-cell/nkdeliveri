@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StarPicker, StarRow } from "@/components/order/star-rating";
+import { inputClsCompact } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type OrderReviewSectionProps = {
   orderId: string;
@@ -61,10 +63,10 @@ export function OrderReviewSection({
   });
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+    <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
       <div className="font-display text-base font-bold">Bay avi w</div>
       {review.isLoading ? (
-        <div className="mt-2 text-sm text-ink-soft">Chajman…</div>
+        <Skeleton className="mt-3 h-16 w-full rounded-xl" />
       ) : review.data ? (
         <div className="mt-3 space-y-2 text-sm">
           <div className="flex items-center gap-2">
@@ -102,12 +104,12 @@ export function OrderReviewSection({
             onChange={(e) => setReviewComment(e.target.value)}
             placeholder="Kòmantè (opsyonèl)…"
             rows={3}
-            className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className={inputClsCompact()}
           />
           <button
             disabled={submitReview.isPending}
             onClick={() => submitReview.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
+            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             {submitReview.isPending ? "Ap voye…" : "Voye avi"}
           </button>

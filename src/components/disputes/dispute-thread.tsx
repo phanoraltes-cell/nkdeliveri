@@ -36,9 +36,14 @@ export function DisputeThread({
   return (
     <div className="mt-3 space-y-3">
       <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl bg-cream p-3">
-        {messages.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+        {messages.isLoading && (
+          <div className="space-y-2">
+            <div className="h-14 animate-pulse rounded-lg bg-white/70" />
+            <div className="h-14 animate-pulse rounded-lg bg-white/70" />
+          </div>
+        )}
         {messages.data?.map((m) => (
-          <div key={m.id} className="rounded-lg bg-white p-2.5 text-sm shadow-sm">
+          <div key={m.id} className="rounded-lg bg-white p-2.5 text-sm shadow-brand-xs">
             <div className="mb-1 flex items-center justify-between gap-2">
               <span className="text-xs font-bold uppercase tracking-wide text-brand-deep">
                 {AUTHOR_ROLE_LABEL[m.author_role] ?? m.author_role}
@@ -64,7 +69,7 @@ export function DisputeThread({
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder="Ekri yon repons…"
-              className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none focus:border-brand"
+              className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-brand-xs"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && reply.trim()) {
                   send.mutate(reply.trim());
@@ -78,7 +83,7 @@ export function DisputeThread({
                 send.mutate(reply.trim());
                 setReply("");
               }}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-deep disabled:opacity-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-brand-xs transition hover:scale-110 hover:bg-brand-deep disabled:pointer-events-none disabled:opacity-50"
               aria-label="Voye"
             >
               <Send className="h-4 w-4" />

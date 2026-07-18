@@ -12,6 +12,8 @@ import { useState } from "react";
 import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { Chip } from "@/components/ui/chip";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const restQuery = (slug: string) =>
   queryOptions({
@@ -204,7 +206,7 @@ function RestaurantPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Tout restoran
         </Link>
-        <div className="relative mt-4 overflow-hidden rounded-[18px]">
+        <div className="relative mt-4 overflow-hidden rounded-3xl shadow-brand-md">
           <img
             src={r.cover_url || ""}
             alt={r.name}
@@ -257,15 +259,7 @@ function RestaurantPage() {
             const count = catCounts[c.id] ?? 0;
             if (c.id !== "all" && count === 0) return null;
             return (
-              <button
-                key={c.id}
-                onClick={() => setActiveCat(c.id)}
-                className={`flex items-center gap-1.5 rounded-full border-[1.5px] px-4 py-2.5 text-sm font-semibold transition ${
-                  active
-                    ? "border-brand bg-brand text-white"
-                    : "border-brand-soft bg-white text-ink-soft hover:bg-brand-soft hover:text-brand-deep"
-                }`}
-              >
+              <Chip key={c.id} selected={active} onClick={() => setActiveCat(c.id)}>
                 {c.name}
                 <span
                   className={`rounded-full px-1.5 text-[0.7rem] ${
@@ -274,7 +268,7 @@ function RestaurantPage() {
                 >
                   {count}
                 </span>
-              </button>
+              </Chip>
             );
           })}
         </div>
@@ -292,17 +286,19 @@ function RestaurantPage() {
                 {items.map((p) => (
                   <div
                     key={p.id}
-                    className="flex flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_8px_24px_rgba(194,90,5,0.10)]"
+                    className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-brand-xs ring-1 ring-brand-soft/40 transition hover:-translate-y-1 hover:shadow-brand-md"
                   >
                     {p.image_url && (
-                      <img
-                        src={p.image_url}
-                        alt={p.name}
-                        loading="lazy"
-                        width={230}
-                        height={150}
-                        className="h-[150px] w-full object-cover"
-                      />
+                      <div className="overflow-hidden">
+                        <img
+                          src={p.image_url}
+                          alt={p.name}
+                          loading="lazy"
+                          width={230}
+                          height={150}
+                          className="h-[150px] w-full object-cover transition duration-500 group-hover:scale-110"
+                        />
+                      </div>
                     )}
                     <div className="flex flex-1 flex-col p-4">
                       <h3 className="font-display text-base font-extrabold">{p.name}</h3>
@@ -331,7 +327,7 @@ function RestaurantPage() {
                               if (res === "replaced") toast.info("Panye w a ranplase");
                               else toast.success(`${p.name} ajoute`);
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white transition hover:scale-110 hover:bg-brand-deep"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white shadow-brand-sm transition hover:scale-110 hover:bg-brand-deep hover:shadow-brand-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
@@ -352,18 +348,20 @@ function RestaurantPage() {
               <Star className="h-4 w-4 fill-brand-deep" /> {Number(r.rating ?? 0).toFixed(1)}
             </span>
           </h2>
-          {reviews.isLoading && <div className="text-sm text-ink-soft">Chajman…</div>}
+          {reviews.isLoading && (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full rounded-2xl" />
+              <Skeleton className="h-20 w-full rounded-2xl" />
+            </div>
+          )}
           {!reviews.isLoading && (reviews.data?.length ?? 0) === 0 && (
-            <div className="rounded-2xl bg-white p-6 text-center text-sm text-ink-soft shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+            <div className="rounded-2xl bg-white p-6 text-center text-sm text-ink-soft shadow-brand-xs">
               Pa gen avi pou restoran sa a ankò.
             </div>
           )}
           <div className="space-y-3">
             {reviews.data?.map((rv, i) => (
-              <div
-                key={i}
-                className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]"
-              >
+              <div key={i} className="rounded-2xl bg-white p-4 shadow-brand-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((n) => (

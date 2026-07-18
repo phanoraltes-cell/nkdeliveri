@@ -26,7 +26,7 @@ export function DeliveryTrackingSection({
   headingToPickup,
 }: DeliveryTrackingSectionProps) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+    <div className="rounded-2xl bg-white p-4 shadow-brand-xs ring-1 ring-brand-soft/40">
       <div className="mb-3 flex items-center justify-between">
         <div>
           <div className="font-display text-base font-bold">Swiv livrezon w</div>

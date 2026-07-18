@@ -12,6 +12,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { sendNewOrderPush } from "@/lib/send-order-push.functions";
+import { inputCls } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -170,7 +171,7 @@ function Checkout() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-[640px] px-5 py-10">
-        <div className="rounded-[18px] bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-3xl bg-white p-6 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-5 font-display text-2xl font-extrabold">Panye w</h1>
 
           {count === 0 ? (
@@ -206,20 +207,20 @@ function Checkout() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setQty(it.productId, it.qty - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep"
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{it.qty}</span>
                     <button
                       onClick={() => setQty(it.productId, it.qty + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep"
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => remove(it.productId)}
-                      className="ml-1 text-ink-soft hover:text-destructive"
+                      className="ml-1 rounded-full p-1.5 text-ink-soft transition hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -262,14 +263,14 @@ function Checkout() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Kote pou nou livre a…"
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                  className={inputCls()}
                 />
                 <label className="mt-3 mb-2 block text-sm font-bold">Telefòn kontak</label>
                 <input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+509 …"
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                  className={inputCls()}
                 />
                 <label className="mt-3 mb-2 block text-sm font-bold">
                   Nòt pou livrezon (opsyonèl)
@@ -278,7 +279,7 @@ function Checkout() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Enstriksyon espesyal…"
-                  className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                  className={inputCls()}
                 />
               </div>
 
@@ -291,8 +292,8 @@ function Checkout() {
                       onClick={() => setMethod(m.id)}
                       className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
                         method === m.id
-                          ? "border-brand bg-brand-soft"
-                          : "border-brand-soft bg-white hover:border-brand"
+                          ? "border-brand bg-brand-soft shadow-brand-xs"
+                          : "border-brand-soft bg-white hover:-translate-y-0.5 hover:border-brand hover:shadow-brand-xs"
                       }`}
                     >
                       {m.logo && (
@@ -343,7 +344,7 @@ function Checkout() {
               <button
                 onClick={submit}
                 disabled={submitting}
-                className="mt-6 w-full rounded-full bg-brand py-4 font-display font-extrabold text-white transition hover:bg-brand-deep"
+                className="mt-6 w-full rounded-full bg-brand py-4 font-display font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
               >
                 {submitting ? "Ap kreye…" : `Konfime kòmand la · ${formatHTG(total)}`}
               </button>

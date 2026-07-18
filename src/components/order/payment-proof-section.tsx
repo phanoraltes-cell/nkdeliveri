@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { formatHTG } from "@/lib/format";
 import { ProofThumb } from "@/components/proof-thumb";
+import { inputClsCompact } from "@/lib/utils";
 
 type PaymentProofSectionProps = {
   orderId: string;
@@ -90,7 +91,7 @@ export function PaymentProofSection({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+    <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
       <div className="font-display text-base font-bold">Enstriksyon peman</div>
       <div className="mt-2 rounded-xl bg-brand-soft/60 p-3 text-sm">
         Voye <b>{formatHTG(total)}</b> sou <b>{payLabel}</b>, epi telechaje kaptè/foto prèv la anba
@@ -107,7 +108,7 @@ export function PaymentProofSection({
               type="file"
               accept="image/*,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
+              className={inputClsCompact()}
               required
             />
           </div>
@@ -116,25 +117,25 @@ export function PaymentProofSection({
               value={txRef}
               onChange={(e) => setTxRef(e.target.value)}
               placeholder="Nimewo transaksyon"
-              className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
+              className={inputClsCompact()}
             />
             <input
               value={senderPhone}
               onChange={(e) => setSenderPhone(e.target.value)}
               placeholder="Nimewo ki voye lajan an"
-              className="rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
+              className={inputClsCompact()}
             />
           </div>
           <input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Nòt (opsyonèl)"
-            className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm"
+            className={inputClsCompact()}
           />
           <button
             type="submit"
             disabled={uploadProof.isPending || !file}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             <Upload className="h-4 w-4" /> {uploadProof.isPending ? "Ap voye…" : "Voye prèv la"}
           </button>

@@ -15,6 +15,7 @@ import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
 import { DisputeSection } from "@/components/order/dispute-section";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -95,7 +96,14 @@ function OrderDetail() {
     return (
       <div className="min-h-screen bg-cream">
         <SiteHeader />
-        <div className="mx-auto max-w-[720px] px-5 py-12 text-ink-soft">Chajman…</div>
+        <div className="mx-auto max-w-[720px] space-y-4 px-5 py-8">
+          <Skeleton className="h-8 w-48 rounded-lg" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+          </div>
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -176,13 +184,13 @@ function OrderDetail() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+          <div className="rounded-2xl bg-white p-4 shadow-brand-xs ring-1 ring-brand-soft/40">
             <div className="text-xs uppercase tracking-wider text-ink-soft">Estati kòmand</div>
             <div className="mt-1 font-display text-lg font-extrabold text-brand-deep">
               {ORDER_STATUS_LABEL[o.status] || o.status}
             </div>
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+          <div className="rounded-2xl bg-white p-4 shadow-brand-xs ring-1 ring-brand-soft/40">
             <div className="text-xs uppercase tracking-wider text-ink-soft">Estati peman</div>
             <div className="mt-1 flex items-center gap-2 font-display text-lg font-extrabold">
               {payment?.status === "paid" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
@@ -205,7 +213,7 @@ function OrderDetail() {
           />
         )}
 
-        <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+        <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
           <div className="mb-3 font-display text-base font-bold">Detay</div>
           {o.order_items?.map((it, i) => (
             <div

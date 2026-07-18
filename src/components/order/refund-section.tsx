@@ -5,6 +5,7 @@ import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { formatHTG } from "@/lib/format";
+import { inputClsCompact } from "@/lib/utils";
 
 const REFUND_STATUS_LABEL: Record<string, string> = {
   requested: "An atant revizyon",
@@ -68,7 +69,7 @@ export function RefundSection({ orderId, orderStatus, paymentStatus }: RefundSec
   if (!eligible && !refund.data) return null;
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+    <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2 font-display text-base font-bold">
           <RotateCcw className="h-4 w-4 text-brand-deep" /> Ranbousman
@@ -106,12 +107,12 @@ export function RefundSection({ orderId, orderStatus, paymentStatus }: RefundSec
             onChange={(e) => setReason(e.target.value)}
             placeholder="Eksplike poukisa ou mande yon ranbousman…"
             rows={3}
-            className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className={inputClsCompact()}
           />
           <button
             disabled={request.isPending || reason.trim().length < 5}
             onClick={() => request.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
+            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             {request.isPending ? "Ap voye…" : "Mande yon ranbousman"}
           </button>

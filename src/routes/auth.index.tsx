@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { toast } from "sonner";
 import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
+import { inputCls } from "@/lib/utils";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -107,7 +108,7 @@ function LoginPage() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <div className="mx-auto max-w-md px-5 py-12">
-        <div className="rounded-[18px] bg-white p-8 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-3xl bg-white p-8 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Konekte</h1>
           <p className="mb-6 text-sm text-ink-soft">
             Antre nan kont ou pou kòmande oswa aksede dashboard w.
@@ -116,7 +117,7 @@ function LoginPage() {
           <button
             onClick={signInGoogle}
             disabled={googleLoading}
-            className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-brand-soft bg-white px-5 py-3 font-semibold transition hover:bg-brand-soft disabled:opacity-50"
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-brand-soft bg-white px-5 py-3 font-semibold transition hover:-translate-y-0.5 hover:border-brand hover:shadow-brand-xs disabled:pointer-events-none disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path
@@ -151,7 +152,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+              className={inputCls()}
             />
             <div>
               <input
@@ -161,7 +162,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Modpas"
-                className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+                className={inputCls()}
               />
               <div className="mt-1.5 text-right">
                 <Link
@@ -174,7 +175,7 @@ function LoginPage() {
             </div>
             <button
               disabled={loading}
-              className="w-full rounded-full bg-brand py-3 font-bold text-white transition hover:bg-brand-deep disabled:opacity-50"
+              className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
             >
               {loading ? "..." : "Konekte"}
             </button>

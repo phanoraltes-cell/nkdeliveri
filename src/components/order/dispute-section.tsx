@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DisputeThread } from "@/components/disputes/dispute-thread";
 import { sendDisputeUpdatePush } from "@/lib/send-dispute-push.functions";
+import { inputClsCompact } from "@/lib/utils";
 
 const CATEGORIES = ["Manje ki manke", "Kalite manje", "Livrezon an reta", "Konpòtman livrè", "Lòt"];
 
@@ -66,7 +67,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
   if (!eligible && !dispute.data) return null;
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]">
+    <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
       <div className="flex items-center gap-2 font-display text-base font-bold">
         <AlertTriangle className="h-4 w-4 text-brand-deep" /> Yon pwoblèm ak kòmand la?
       </div>
@@ -94,7 +95,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className={inputClsCompact()}
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -107,12 +108,12 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Eksplike pwoblèm nan…"
             rows={3}
-            className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+            className={inputClsCompact()}
           />
           <button
             disabled={open.isPending || description.trim().length < 5}
             onClick={() => open.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
+            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             {open.isPending ? "Ap voye…" : "Siyale pwoblèm nan"}
           </button>
