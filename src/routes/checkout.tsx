@@ -34,15 +34,6 @@ function Checkout() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [restaurant, setRestaurant] = useState<{
-    id: string;
-    name: string;
-    moncash_account_name?: string;
-    moncash_number?: string;
-    natcash_account_name?: string;
-    natcash_number?: string;
-    payout_mode?: string;
-  } | null>(null);
   const nav = useNavigate();
   const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
 
@@ -85,42 +76,17 @@ function Checkout() {
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
-  const restaurantId = items[0]?.restaurantId;
-  useEffect(() => {
-    if (!restaurantId) {
-      setRestaurant(null);
-      return;
-    }
-    (async () => {
-      const [{ data: r }, { data: p }] = await Promise.all([
-        supabase.from("restaurants").select("id, name").eq("id", restaurantId).maybeSingle(),
-        supabase.rpc("get_restaurant_payout_public", { _restaurant_id: restaurantId }),
-      ]);
-      const pd = Array.isArray(p) ? p[0] : p;
-      setRestaurant(r ? { ...r, ...(pd ?? {}) } : null);
-    })();
-  }, [restaurantId]);
-
-  const merchantDirect = restaurant?.payout_mode === "direct";
   const payNumber =
     method === "moncash"
-      ? merchantDirect
-        ? restaurant?.moncash_number
-        : platformPayout.data?.moncash_number
+      ? platformPayout.data?.moncash_number
       : method === "natcash"
-        ? merchantDirect
-          ? restaurant?.natcash_number
-          : platformPayout.data?.natcash_number
+        ? platformPayout.data?.natcash_number
         : null;
   const payName =
     method === "moncash"
-      ? merchantDirect
-        ? restaurant?.moncash_account_name
-        : platformPayout.data?.moncash_account_name
+      ? platformPayout.data?.moncash_account_name
       : method === "natcash"
-        ? merchantDirect
-          ? restaurant?.natcash_account_name
-          : platformPayout.data?.natcash_account_name
+        ? platformPayout.data?.natcash_account_name
         : null;
 
   async function submit() {
@@ -137,10 +103,6 @@ function Checkout() {
       return;
     }
     if (items.length === 0) return;
-    if ((method === "moncash" || method === "natcash") && merchantDirect && !payNumber) {
-      toast.error("Restoran an poko konfigire nimewo peman li. Chwazi yon lòt metòd.");
-      return;
-    }
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
@@ -334,10 +296,7 @@ function Checkout() {
                         {payNumber ?? "(pa konfigire)"}
                       </b>
                       {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj
-                      kòmand la.{" "}
-                      {merchantDirect
-                        ? "Peman an ale dirèkteman sou kont restoran an."
-                        : "Yon administratè ap verifye epi konfime kòmand la."}
+                      kòmand la. Yon administratè ap verifye epi konfime kòmand la.
                     </div>
                   </div>
                 )}

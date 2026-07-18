@@ -1031,7 +1031,6 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
-          payout_mode: string;
           restaurant_id: string;
           updated_at: string;
         };
@@ -1044,7 +1043,6 @@ export type Database = {
           monthly_commission_amount?: number | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
-          payout_mode?: string;
           restaurant_id: string;
           updated_at?: string;
         };
@@ -1057,7 +1055,6 @@ export type Database = {
           monthly_commission_amount?: number | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
-          payout_mode?: string;
           restaurant_id?: string;
           updated_at?: string;
         };
@@ -1497,7 +1494,6 @@ export type Database = {
           moncash_number: string;
           natcash_account_name: string;
           natcash_number: string;
-          payout_mode: string;
           restaurant_id: string;
         }[];
       };
@@ -1917,7 +1913,6 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
-          payout_mode: string;
           restaurant_id: string;
           updated_at: string;
         };
@@ -1967,7 +1962,6 @@ export type Database = {
           _moncash_number: string;
           _natcash_account_name: string;
           _natcash_number: string;
-          _payout_mode: string;
           _restaurant_id: string;
         };
         Returns: {
@@ -1979,7 +1973,6 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
-          payout_mode: string;
           restaurant_id: string;
           updated_at: string;
         };

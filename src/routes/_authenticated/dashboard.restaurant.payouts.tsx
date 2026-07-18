@@ -32,7 +32,7 @@ function MerchantPayouts() {
       const { data: pd, error: e2 } = await supabase
         .from("restaurant_payout_details")
         .select(
-          "restaurant_id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_mode, commission_type, commission_rate, monthly_commission_amount",
+          "restaurant_id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, commission_type, commission_rate, monthly_commission_amount",
         )
         .eq("restaurant_id", rest.id)
         .maybeSingle();
@@ -43,7 +43,6 @@ function MerchantPayouts() {
         moncash_account_name: pd?.moncash_account_name ?? null,
         natcash_number: pd?.natcash_number ?? null,
         natcash_account_name: pd?.natcash_account_name ?? null,
-        payout_mode: pd?.payout_mode ?? "via_admin",
         commission_type: pd?.commission_type ?? "per_order",
         commission_rate: pd?.commission_rate ?? 10,
         monthly_commission_amount: pd?.monthly_commission_amount ?? 0,
@@ -56,7 +55,6 @@ function MerchantPayouts() {
     moncash_account_name: "",
     natcash_number: "",
     natcash_account_name: "",
-    payout_mode: "via_admin",
   });
 
   useEffect(() => {
@@ -66,7 +64,6 @@ function MerchantPayouts() {
       moncash_account_name: r.moncash_account_name ?? "",
       natcash_number: r.natcash_number ?? "",
       natcash_account_name: r.natcash_account_name ?? "",
-      payout_mode: r.payout_mode ?? "via_admin",
     });
     // `r` is intentionally omitted: this seeds the editable form once when
     // the record first loads (keyed on id), not on every background
@@ -78,9 +75,6 @@ function MerchantPayouts() {
   const save = useMutation({
     mutationFn: async () => {
       if (!r?.id) throw new Error("Restoran pa jwenn");
-      if (f.payout_mode === "direct" && !f.moncash_number && !f.natcash_number) {
-        throw new Error("Antre omwen yon nimewo MonCash oswa NatCash.");
-      }
       // Postgres text params happily accept NULL despite the generated
       // types marking them non-nullable (codegen can't infer per-arg
       // nullability from a plpgsql signature) — cast to keep passing null
@@ -89,7 +83,6 @@ function MerchantPayouts() {
       // specifically for null/undefined.
       const { error } = await supabase.rpc("update_restaurant_payout_secure", {
         _restaurant_id: r.id,
-        _payout_mode: f.payout_mode,
         _moncash_number: (f.moncash_number || null) as string,
         _moncash_account_name: (f.moncash_account_name || null) as string,
         _natcash_number: (f.natcash_number || null) as string,
@@ -112,7 +105,8 @@ function MerchantPayouts() {
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Peman ak Komisyon</h1>
           <p className="mt-1 text-ink-soft">
-            Konfigire kote lajan kliyan yo ale ak komisyon platfòm nan.
+            Kliyan yo toujou peye NK Deliveri; ou resevwa lajan w apre komisyon sou nimewo ki anba
+            a.
           </p>
         </div>
         <Link
@@ -124,33 +118,11 @@ function MerchantPayouts() {
       </div>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <h2 className="font-display text-lg font-bold">Kote peman MonCash/NatCash ale</h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {[
-            {
-              id: "via_admin",
-              label: "Pase pa admin",
-              desc: "Kliyan peye NK, admin remèt ou apre komisyon retire.",
-            },
-            {
-              id: "direct",
-              label: "Dirèkteman sou kont mwen",
-              desc: "Kliyan peye ou dirèkteman; ou peye komisyon platfòm nan.",
-            },
-          ].map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => setF((s) => ({ ...s, payout_mode: o.id }))}
-              className={`rounded-2xl border-2 p-3 text-left ${
-                f.payout_mode === o.id ? "border-brand bg-brand-soft" : "border-brand-soft bg-white"
-              }`}
-            >
-              <div className="font-bold">{o.label}</div>
-              <div className="text-xs text-ink-soft">{o.desc}</div>
-            </button>
-          ))}
-        </div>
+        <h2 className="font-display text-lg font-bold">Nimewo peman ou</h2>
+        <p className="mt-1 text-xs text-ink-soft">
+          Tout peman kliyan yo ale sou kont NK Deliveri. Admin peye w komisyon w sou nimewo
+          MonCash/NatCash ou antre anba a — menm jan ak livrè yo.
+        </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Field
