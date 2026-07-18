@@ -24,8 +24,8 @@ export function SiteFooter() {
   ] as const;
 
   const payments = [
-    { name: "MonCash", kind: "image", src: "/moncash-logo.webp" },
-    { name: "NatCash", kind: "image", src: "/natcash-logo.png" },
+    { name: "MonCash", kind: "image", src: "/moncash-logo-hero.png" },
+    { name: "NatCash", kind: "image", src: "/natcash-logo-new.png" },
     { name: "Kach", kind: "icon" },
   ] as const;
 

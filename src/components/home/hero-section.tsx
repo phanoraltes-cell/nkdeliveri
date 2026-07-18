@@ -110,7 +110,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           </div>
           <div className="flex h-8 w-24 items-center justify-center">
             <img
-              src="/natcash-logo.png"
+              src="/natcash-logo-new.png"
               alt="NatCash"
               className="max-h-full max-w-full rounded object-contain"
             />
