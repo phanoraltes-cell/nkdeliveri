@@ -111,7 +111,10 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             />
           </div>
           <div className="flex h-8 w-16 shrink-0 items-center justify-center gap-1 rounded border border-brand-soft/60 bg-white sm:w-24 sm:gap-1.5">
-            <Banknote className="h-3.5 w-3.5 shrink-0 text-brand-deep sm:h-4 sm:w-4" aria-hidden="true" />
+            <Banknote
+              className="h-3.5 w-3.5 shrink-0 text-brand-deep sm:h-4 sm:w-4"
+              aria-hidden="true"
+            />
             <span className="text-[0.7rem] font-bold text-ink sm:text-xs">Kach</span>
           </div>
           <div className="flex h-8 w-16 shrink-0 items-center justify-center sm:w-24">

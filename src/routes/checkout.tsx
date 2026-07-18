@@ -318,7 +318,9 @@ function Checkout() {
                 {(method === "moncash" || method === "natcash") && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
                     <img
-                      src={method === "moncash" ? "/moncash-logo-hero.png" : "/natcash-logo-new.png"}
+                      src={
+                        method === "moncash" ? "/moncash-logo-hero.png" : "/natcash-logo-new.png"
+                      }
                       alt=""
                       width={40}
                       height={28}

@@ -100,7 +100,9 @@ export function PaymentProofSection({
       }
     >
       <div className="flex items-center gap-2 font-display text-base font-bold">
-        {needsProof && <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />}
+        {needsProof && (
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+        )}
         {needsProof ? "Voye prèv peman ou a" : "Enstriksyon peman"}
       </div>
       <div className="mt-2 rounded-xl bg-brand-soft/60 p-3 text-sm">
