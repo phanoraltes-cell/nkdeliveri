@@ -103,7 +103,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           <span className="text-sm font-semibold text-ink">Peman disponib</span>
           <div className="flex h-8 w-24 items-center justify-center">
             <img
-              src="/moncash-logo.webp"
+              src="/moncash-logo-hero.png"
               alt="MonCash"
               className="max-h-full max-w-full rounded object-contain"
             />
