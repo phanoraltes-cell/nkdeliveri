@@ -116,7 +116,11 @@ function Checkout() {
       });
       if (rpcErr) throw rpcErr;
       clear();
-      toast.success("Kòmand kreye ak siksè");
+      toast.success(
+        method === "moncash" || method === "natcash"
+          ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
+          : "Kòmand kreye ak siksè",
+      );
       // Best-effort — a failed push send must never block order creation.
       sendNewOrderPushFn({ data: { orderId: orderId as string } }).catch((e) =>
         console.warn("[push] new-order notify failed", e),
