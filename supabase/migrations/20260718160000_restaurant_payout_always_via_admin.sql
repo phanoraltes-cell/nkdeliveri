@@ -182,6 +182,13 @@ BEGIN
   IF _method IN ('moncash', 'natcash') THEN
     SELECT moncash_number, moncash_account_name, natcash_number, natcash_account_name
       INTO v_platform FROM public.platform_payout_settings WHERE id = true;
+    -- SELECT INTO a record leaves it as NULL fields on zero rows rather than
+    -- raising, which would otherwise silently insert a NULL receiver_number
+    -- for every manual-payment order — fail loudly instead so an admin
+    -- notices immediately rather than customers seeing "(pa konfigire)".
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Platform payout settings not configured';
+    END IF;
     IF _method = 'moncash' THEN
       v_receiver_number := v_platform.moncash_number;
       v_receiver_account := v_platform.moncash_account_name;

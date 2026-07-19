@@ -47,6 +47,22 @@ function Checkout() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const restaurantId = items[0]?.restaurantId;
+  const restaurantFee = useQuery({
+    queryKey: ["restaurant-delivery-fee", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("delivery_fee")
+        .eq("id", restaurantId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.delivery_fee ?? null;
+    },
+    staleTime: 60 * 1000,
+  });
+
   const savedAddresses = useQuery({
     queryKey: ["my-addresses", user?.id],
     enabled: !!user,
@@ -72,7 +88,10 @@ function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedAddresses.data]);
 
-  const deliveryFee = items.length > 0 ? 150 : 0;
+  // 150 mirrors create_order_secure's own COALESCE(v_restaurant.delivery_fee, 150)
+  // fallback — kept in sync so the total shown here always matches what the
+  // order is actually created with server-side.
+  const deliveryFee = items.length > 0 ? (restaurantFee.data ?? 150) : 0;
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
