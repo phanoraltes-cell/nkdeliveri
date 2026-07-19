@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
@@ -28,6 +29,7 @@ import {
   type DashboardShortcutItem,
 } from "@/components/dashboard/dashboard-shortcut-grid";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
+import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
 // See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
 // only needed once this page has mounted.
@@ -40,25 +42,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/")({
 });
 
 type Tile = DashboardShortcutItem;
-type RecentOrder = {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number;
-  created_at: string;
-};
-
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "An atant peman",
-  confirmed: "Konfime",
-  preparing: "Ap prepare",
-  ready: "Prè",
-  assigned: "Livrè asiyen",
-  picked_up: "An wout",
-  delivered: "Livre",
-  cancelled: "Anile",
-  refunded: "Ranbouse",
-};
+type RecentOrder = Pick<
+  Database["public"]["Tables"]["orders"]["Row"],
+  "id" | "order_number" | "status" | "total" | "created_at"
+>;
 
 function RestaurantDashboard() {
   const { user } = Route.useRouteContext();
@@ -144,7 +131,7 @@ function RestaurantDashboard() {
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
-      return data as RecentOrder[];
+      return data;
     },
   });
 

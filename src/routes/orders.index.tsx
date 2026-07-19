@@ -6,23 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
 import { noIndexMeta } from "@/lib/seo";
+import { ORDER_STATUS_LABEL as STATUS } from "@/lib/order-status";
 
 export const Route = createFileRoute("/orders/")({
   head: () => noIndexMeta("Kòmand mwen — NK Deliveri"),
   component: Orders,
 });
-
-const STATUS: Record<string, string> = {
-  pending: "An atant peman",
-  confirmed: "Konfime",
-  preparing: "Ap prepare",
-  ready: "Prè",
-  assigned: "Livrè asiyen",
-  picked_up: "An wout",
-  delivered: "Livre",
-  cancelled: "Anile",
-  refunded: "Ranbouse",
-};
 
 function Orders() {
   const { user, loading } = useAuth();

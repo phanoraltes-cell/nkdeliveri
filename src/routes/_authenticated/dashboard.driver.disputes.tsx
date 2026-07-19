@@ -2,8 +2,12 @@ import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DisputeThread } from "@/components/disputes/dispute-thread";
+import {
+  DISPUTE_STATUS_LABEL as STATUS_LABEL,
+  DISPUTE_STATUS_TONE as STATUS_TONE,
+} from "@/lib/dispute-status";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/disputes")({
   beforeLoad: ({ context }) => {
@@ -14,9 +18,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/disputes"
   },
   component: DriverDisputes,
 });
-
-const STATUS_LABEL: Record<string, string> = { open: "Louvri", resolved: "Rezoud" };
-const STATUS_TONE: Record<string, StatusTone> = { open: "warn", resolved: "good" };
 
 function DriverDisputes() {
   const { user } = Route.useRouteContext();

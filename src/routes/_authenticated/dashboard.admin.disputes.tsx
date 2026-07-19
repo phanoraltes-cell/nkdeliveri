@@ -4,10 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
+import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DisputeThread } from "@/components/disputes/dispute-thread";
 import { sendDisputeUpdatePush } from "@/lib/send-dispute-push.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DISPUTE_STATUS_LABEL as STATUS_LABEL,
+  DISPUTE_STATUS_TONE as STATUS_TONE,
+} from "@/lib/dispute-status";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/disputes")({
   beforeLoad: ({ context }) => {
@@ -18,9 +22,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/disputes")
   },
   component: AdminDisputes,
 });
-
-const STATUS_LABEL: Record<string, string> = { open: "Louvri", resolved: "Rezoud" };
-const STATUS_TONE: Record<string, StatusTone> = { open: "warn", resolved: "good" };
 
 async function fetchDisputes() {
   const { data, error } = await supabase

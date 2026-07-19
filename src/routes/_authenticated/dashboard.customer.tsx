@@ -12,45 +12,30 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { useFavorites } from "@/hooks/useFavorites";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
+import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
 export const Route = createFileRoute("/_authenticated/dashboard/customer")({
   component: CustomerDashboard,
 });
 
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "An atant peman",
-  confirmed: "Konfime",
-  preparing: "Ap prepare",
-  ready: "Prè",
-  assigned: "Livrè asiyen",
-  picked_up: "An wout",
-  delivered: "Livre",
-  cancelled: "Anile",
-  refunded: "Ranbouse",
-};
 const TERMINAL_STATUSES = ["delivered", "cancelled", "refunded"];
 
-type RecentOrder = {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number;
-  created_at: string;
-  restaurants: { name: string; slug: string } | null;
+type RecentOrder = Pick<
+  Database["public"]["Tables"]["orders"]["Row"],
+  "id" | "order_number" | "status" | "total" | "created_at"
+> & {
+  restaurants: Pick<Database["public"]["Tables"]["restaurants"]["Row"], "name" | "slug"> | null;
 };
 
-type RestaurantCard = {
-  id: string;
-  slug: string;
-  name: string;
-  cuisine: string | null;
-  logo_url: string | null;
-  rating: number | null;
-};
+type RestaurantCard = Pick<
+  Database["public"]["Tables"]["restaurants"]["Row"],
+  "id" | "slug" | "name" | "cuisine" | "logo_url" | "rating"
+>;
 
 function CustomerDashboard() {
   const { user } = Route.useRouteContext();
@@ -81,7 +66,7 @@ function CustomerDashboard() {
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
-      return data as RecentOrder[];
+      return data;
     },
   });
 
@@ -98,7 +83,7 @@ function CustomerDashboard() {
         .in("id", favoriteIds!)
         .limit(4);
       if (error) throw error;
-      return data as RestaurantCard[];
+      return data;
     },
   });
 
@@ -112,7 +97,7 @@ function CustomerDashboard() {
         .order("rating", { ascending: false })
         .limit(4);
       if (error) throw error;
-      return data as RestaurantCard[];
+      return data;
     },
   });
 

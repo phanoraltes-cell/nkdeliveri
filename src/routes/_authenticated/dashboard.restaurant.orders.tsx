@@ -13,6 +13,7 @@ import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ORDER_STATUS_LABEL as STATUS_LABEL } from "@/lib/order-status";
 
 const PAGE_SIZE = 30;
 
@@ -30,18 +31,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/order
   },
   component: RestaurantOrders,
 });
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: "An atant peman",
-  confirmed: "Konfime",
-  preparing: "Ap prepare",
-  ready: "Prè",
-  assigned: "Livrè asiyen",
-  picked_up: "An wout",
-  delivered: "Livre",
-  cancelled: "Anile",
-  refunded: "Ranbouse",
-};
 
 // Forward moves a restaurant owner may trigger from the current status.
 const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {

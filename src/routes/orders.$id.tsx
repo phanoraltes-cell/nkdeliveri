@@ -16,6 +16,7 @@ import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
 import { DisputeSection } from "@/components/order/dispute-section";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -29,18 +30,6 @@ export const Route = createFileRoute("/orders/$id")({
   },
   component: OrderDetail,
 });
-
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "An atant peman",
-  confirmed: "Konfime",
-  preparing: "Ap prepare",
-  ready: "Prè",
-  assigned: "Livrè asiyen",
-  picked_up: "An wout",
-  delivered: "Livre",
-  cancelled: "Anile",
-  refunded: "Ranbouse",
-};
 
 const PAY_STATUS_LABEL: Record<string, string> = {
   pending: "An atant",
