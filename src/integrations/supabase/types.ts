@@ -1267,6 +1267,15 @@ export type Database = {
         };
         Returns: undefined;
       };
+      check_auth_rate_limit_secure: {
+        Args: {
+          _action: string;
+          _email: string;
+          _max_hits: number;
+          _window_seconds: number;
+        };
+        Returns: boolean;
+      };
       check_rate_limit_secure: {
         Args: {
           _action: string;

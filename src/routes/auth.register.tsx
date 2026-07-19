@@ -98,6 +98,15 @@ function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
 }
 
 async function baseSignUp(email: string, password: string, data: Record<string, string>) {
+  const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
+    _email: email.trim(),
+    _action: "sign_up",
+    _max_hits: 5,
+    _window_seconds: 3600,
+  });
+  if (rlErr) throw rlErr;
+  if (!allowed) throw new Error("Too many sign-up attempts — rate limit exceeded");
+
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,

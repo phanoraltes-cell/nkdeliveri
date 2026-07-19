@@ -75,6 +75,15 @@ function LoginPage() {
     setLoading(true);
     setNeedsConfirmation(false);
     try {
+      const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
+        _email: email.trim(),
+        _action: "sign_in",
+        _max_hits: 8,
+        _window_seconds: 600,
+      });
+      if (rlErr) throw rlErr;
+      if (!allowed) throw new Error("Too many sign-in attempts — rate limit exceeded");
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Byenveni!");
@@ -94,6 +103,15 @@ function LoginPage() {
     }
     setResending(true);
     try {
+      const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
+        _email: email.trim(),
+        _action: "resend_confirmation",
+        _max_hits: 3,
+        _window_seconds: 600,
+      });
+      if (rlErr) throw rlErr;
+      if (!allowed) throw new Error("Too many confirmation resend requests — rate limit exceeded");
+
       const { error } = await supabase.auth.resend({ type: "signup", email: email.trim() });
       if (error) throw error;
       toast.success("Nou voye yon nouvo imèl konfimasyon. Tcheke bwat ou (ak spam).");

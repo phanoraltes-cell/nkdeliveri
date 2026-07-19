@@ -24,6 +24,15 @@ function ForgotPassword() {
     if (!email.trim()) return toast.error("Antre imèl ou");
     setLoading(true);
     try {
+      const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
+        _email: email.trim(),
+        _action: "reset_password_request",
+        _max_hits: 3,
+        _window_seconds: 600,
+      });
+      if (rlErr) throw rlErr;
+      if (!allowed) throw new Error("Too many password reset requests — rate limit exceeded");
+
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: window.location.origin + "/auth/reset-password",
       });
