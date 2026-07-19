@@ -6,15 +6,20 @@ import { AlertTriangle, WifiOff } from "lucide-react";
 
 export type MarkerType = "client" | "restaurant" | "driver" | "order";
 
+/** Popup content shown when a marker is clicked — plain text only (no HTML
+ * parsing), so callers never need to think about escaping untrusted text. */
+export type MapPopupInfo = {
+  title?: string;
+  lines?: string[];
+};
+
 export type MapMarker = {
   id: string;
   lat: number;
   lng: number;
   type: MarkerType;
   label?: string;
-  /** Pre-escaped HTML shown in a popup when the marker is clicked — callers
-   * must escape any untrusted (user-entered) text before interpolating it. */
-  info?: string;
+  info?: MapPopupInfo;
 };
 
 const TYPE_COLOR: Record<MarkerType, string> = {
@@ -174,10 +179,15 @@ export function LeafletMap({
             {(m.info || m.label) && (
               <Popup>
                 {m.info ? (
-                  <div
-                    style={{ fontSize: 13, lineHeight: 1.5 }}
-                    dangerouslySetInnerHTML={{ __html: m.info }}
-                  />
+                  <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+                    {m.info.title && <b>{m.info.title}</b>}
+                    {m.info.lines?.map((line, i) => (
+                      <span key={i}>
+                        <br />
+                        {line}
+                      </span>
+                    ))}
+                  </div>
                 ) : (
                   m.label
                 )}
