@@ -7,13 +7,14 @@ import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Star, Heart } from "lucide-react";
+import { Plus, ArrowLeft, Star, Heart, Store } from "lucide-react";
 import { useState } from "react";
 import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageWithFallback } from "@/components/image-with-fallback";
 
 const restQuery = (slug: string) =>
   queryOptions({
@@ -207,9 +208,10 @@ function RestaurantPage() {
           <ArrowLeft className="h-4 w-4" /> Tout restoran
         </Link>
         <div className="relative mt-4 overflow-hidden rounded-3xl shadow-brand-md">
-          <img
-            src={r.cover_url || ""}
+          <ImageWithFallback
+            src={r.cover_url}
             alt={r.name}
+            icon={Store}
             width={1100}
             height={240}
             className="h-60 w-full object-cover"
@@ -227,7 +229,7 @@ function RestaurantPage() {
             {r.logo_url && (
               <img
                 src={r.logo_url}
-                alt=""
+                alt={`Logo ${r.name}`}
                 width={64}
                 height={64}
                 className="h-16 w-16 shrink-0 rounded-full border-2 border-white object-cover shadow-lg"

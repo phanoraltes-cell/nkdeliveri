@@ -1,8 +1,9 @@
-import { Plus } from "lucide-react";
+import { Plus, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import { formatHTG } from "@/lib/format";
 import type { CartItem } from "@/hooks/useCart";
 import type { HomeProduct } from "@/components/home/home-data";
+import { ImageWithFallback } from "@/components/image-with-fallback";
 
 const DISH_TYPES: { key: string; label: string }[] = [
   { key: "all", label: "Tout" },
@@ -78,9 +79,10 @@ export function PopularDishesSection({
             className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"
           >
             <div className="overflow-hidden">
-              <img
-                src={p.image_url || ""}
+              <ImageWithFallback
+                src={p.image_url}
                 alt={p.name}
+                icon={UtensilsCrossed}
                 loading="lazy"
                 width={280}
                 height={160}
@@ -88,8 +90,12 @@ export function PopularDishesSection({
               />
             </div>
             <div className="flex flex-1 flex-col p-4">
-              <h3 className="font-display text-[0.98rem] font-extrabold text-ink">{p.name}</h3>
-              <p className="mt-1 mb-3 flex-1 text-xs text-ink-soft">{p.restaurants?.name}</p>
+              <h3 className="truncate font-display text-[0.98rem] font-extrabold text-ink">
+                {p.name}
+              </h3>
+              <p className="mt-1 mb-3 flex-1 truncate text-xs text-ink-soft">
+                {p.restaurants?.name}
+              </p>
               <div className="flex items-center justify-between">
                 <span className="font-display text-base font-extrabold text-brand-deep">
                   {formatHTG(Number(p.price))}

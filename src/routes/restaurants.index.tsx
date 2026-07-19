@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { pageMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { ImageWithFallback } from "@/components/image-with-fallback";
 
 const PAGE_SIZE = 24;
 
@@ -127,9 +128,10 @@ function RestaurantsPage() {
               className="group overflow-hidden rounded-3xl bg-white shadow-brand-xs ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-brand-md"
             >
               <div className="relative overflow-hidden">
-                <img
-                  src={r.cover_url || ""}
+                <ImageWithFallback
+                  src={r.cover_url}
                   alt={r.name}
+                  icon={Store}
                   loading="lazy"
                   width={240}
                   height={144}

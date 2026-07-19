@@ -27,13 +27,17 @@
       "name": "Wè restoran yo",
       "short_name": "Restoran",
       "url": "/restaurants",
-      "icons": [{ "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        { "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+      ]
     },
     {
       "name": "Kòmand mwen",
       "short_name": "Kòmand",
       "url": "/orders",
-      "icons": [{ "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        { "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+      ]
     }
   ]
 }

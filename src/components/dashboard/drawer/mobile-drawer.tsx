@@ -43,6 +43,7 @@ export function MobileDrawer({ role, employeeRole, onSignOut }: MobileDrawerProp
                 alt="NK"
                 width={32}
                 height={32}
+                loading="lazy"
                 className="h-8 w-8 rounded-full"
               />
               <span className="font-display text-base font-extrabold text-ink">

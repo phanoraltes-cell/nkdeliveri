@@ -39,6 +39,7 @@ export function SiteFooter() {
               alt="NK Deliveri"
               width={36}
               height={36}
+              loading="lazy"
               className="h-9 w-9 rounded-full bg-white object-contain p-0.5"
             />
             <div className="font-display text-xl font-extrabold text-white">
@@ -124,6 +125,7 @@ export function SiteFooter() {
                       alt={p.name}
                       width={64}
                       height={28}
+                      loading="lazy"
                       className="h-7 w-16 object-contain"
                     />
                   )}

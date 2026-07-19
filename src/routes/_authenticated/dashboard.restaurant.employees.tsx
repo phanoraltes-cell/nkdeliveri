@@ -128,7 +128,7 @@ function RestaurantEmployees() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="imèl@egzanp.com"
-            className={`min-w-[220px] flex-1 ${inputCls()}`}
+            className={`min-w-0 flex-1 ${inputCls()}`}
           />
           <select
             value={inviteRole}

@@ -9,6 +9,7 @@ import {
   Bell,
   Star,
   Inbox,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -326,14 +327,20 @@ function RestaurantSection({
               className="rounded-2xl border border-brand-soft/60 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-brand hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <img
-                  src={r.logo_url || ""}
-                  alt=""
-                  width={48}
-                  height={48}
-                  loading="lazy"
-                  className="h-12 w-12 shrink-0 rounded-xl bg-brand-soft/40 object-cover"
-                />
+                {r.logo_url ? (
+                  <img
+                    src={r.logo_url}
+                    alt={`Logo ${r.name}`}
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    className="h-12 w-12 shrink-0 rounded-xl bg-brand-soft/40 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-soft/40 text-ink-soft">
+                    <Store className="h-5 w-5" />
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="truncate font-display text-sm font-bold text-ink">{r.name}</div>
                   <div className="truncate text-xs text-ink-soft">{r.cuisine}</div>

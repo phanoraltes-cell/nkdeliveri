@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Heart, Star } from "lucide-react";
+import { ArrowRight, Heart, Star, Store } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import type { HomeRestaurant } from "@/components/home/home-data";
+import { ImageWithFallback } from "@/components/image-with-fallback";
 
 const CUISINES = ["Tout", "Manje Kreyòl", "Soup Joumou", "Ragou", "Lalo", "Fritay"];
 
@@ -60,9 +61,10 @@ export function PopularRestaurantsSection({
             className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"
           >
             <div className="relative overflow-hidden">
-              <img
-                src={r.cover_url || r.logo_url || ""}
+              <ImageWithFallback
+                src={r.cover_url || r.logo_url}
                 alt={r.name}
+                icon={Store}
                 loading="lazy"
                 width={280}
                 height={160}

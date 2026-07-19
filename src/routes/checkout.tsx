@@ -179,33 +179,36 @@ function Checkout() {
                       width={56}
                       height={56}
                       loading="lazy"
-                      className="h-14 w-14 rounded-xl object-cover"
-                      alt=""
+                      className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                      alt={it.name}
                     />
                   )}
-                  <div className="flex-1">
-                    <b className="block text-sm">{it.name}</b>
+                  {/* min-w-0 lets this column shrink below its text's natural
+                      width on narrow screens instead of pushing the qty/remove
+                      controls out of view — same fix as the hero search bar. */}
+                  <div className="min-w-0 flex-1">
+                    <b className="block truncate text-sm">{it.name}</b>
                     <span className="text-xs text-ink-soft">
                       {formatHTG(it.price)} · {it.restaurantName}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={() => setQty(it.productId, it.qty - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{it.qty}</span>
                     <button
                       onClick={() => setQty(it.productId, it.qty + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => remove(it.productId)}
-                      className="ml-1 rounded-full p-1.5 text-ink-soft transition hover:bg-destructive/10 hover:text-destructive"
+                      className="ml-1 flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

@@ -106,7 +106,7 @@ export function LiveMapSection({
           value={zoneQuery}
           onChange={(e) => onZoneQueryChange(e.target.value)}
           placeholder="Chèche yon zòn/adrès…"
-          className="min-w-[160px] flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand"
+          className="min-w-0 flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand"
         />
       </div>
 

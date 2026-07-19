@@ -53,11 +53,11 @@ export function NewsletterSection() {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Antre imèl ou"
-              className="flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft"
+              className="min-w-0 flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft"
             />
             <button
               disabled={subscribing}
-              className="rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink disabled:opacity-60"
+              className="shrink-0 rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink disabled:opacity-60"
             >
               {subscribing ? "…" : "Enskri"}
             </button>

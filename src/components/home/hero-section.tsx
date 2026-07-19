@@ -67,11 +67,15 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               value={q}
               onChange={(e) => onQChange(e.target.value)}
               placeholder="Chèche yon restoran oswa yon plat…"
-              className="flex-1 rounded-full bg-transparent px-2 py-3 text-sm outline-none placeholder:text-ink-soft"
+              // min-w-0 overrides the browser's default intrinsic min-width
+              // on text inputs — without it, a flex-1 input refuses to
+              // shrink below its content width on narrow screens and pushes
+              // the submit button out past the pill's right edge.
+              className="min-w-0 flex-1 rounded-full bg-transparent px-2 py-3 text-sm outline-none placeholder:text-ink-soft"
             />
             <button
               type="submit"
-              className="flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)]"
+              className="flex shrink-0 items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)]"
             >
               <Search className="h-4 w-4" /> Chèche
             </button>
@@ -107,6 +111,8 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             <img
               src="/moncash-logo-hero.png"
               alt="MonCash"
+              width={64}
+              height={32}
               className="max-h-full max-w-full rounded object-contain"
             />
           </div>
@@ -121,6 +127,8 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             <img
               src="/natcash-logo-new.png"
               alt="NatCash"
+              width={64}
+              height={32}
               className="max-h-full max-w-full rounded object-contain"
             />
           </div>

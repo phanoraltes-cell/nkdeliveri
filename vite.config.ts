@@ -62,7 +62,10 @@ export default defineConfig({
     },
     plugins: [
       VitePWA({
-        registerType: "autoUpdate",
+        // `registerType` only affects the registration script the plugin
+        // itself generates — moot with `injectRegister: null`, since SW
+        // registration and the "new version available" reload prompt are
+        // both hand-rolled in src/lib/pwa-register.ts instead.
         injectRegister: null,
         strategies: "injectManifest",
         srcDir: "src",

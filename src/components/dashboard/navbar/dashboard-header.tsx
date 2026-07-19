@@ -69,7 +69,7 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
   const avatarNode = avatarUrl ? (
     <img
       src={avatarUrl}
-      alt=""
+      alt="Foto pwofil ou"
       width={36}
       height={36}
       className="h-9 w-9 shrink-0 rounded-full border border-brand-soft object-cover"

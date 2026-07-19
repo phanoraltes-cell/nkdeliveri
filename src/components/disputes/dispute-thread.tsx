@@ -69,7 +69,7 @@ export function DisputeThread({
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder="Ekri yon repons…"
-              className="flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-brand-xs"
+              className="min-w-0 flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-brand-xs"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && reply.trim()) {
                   send.mutate(reply.trim());
