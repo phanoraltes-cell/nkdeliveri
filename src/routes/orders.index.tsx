@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
 import { noIndexMeta } from "@/lib/seo";
 
-export const Route = createFileRoute("/orders")({
+export const Route = createFileRoute("/orders/")({
   head: () => noIndexMeta("Kòmand mwen — NK Deliveri"),
   component: Orders,
 });
