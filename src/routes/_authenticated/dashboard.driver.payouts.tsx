@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { formatHTG } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/payouts")({
   beforeLoad: ({ context }) => {
@@ -147,7 +146,7 @@ function DriverPayouts() {
           ))}
         </div>
         <div className="mt-4 rounded-xl bg-brand-soft/40 p-3 text-xs text-ink-soft">
-          Komisyon pa livrezon an: <b>{formatHTG(Number(d?.commission_rate ?? 100))}</b>. Sèl yon
+          Komisyon pa livrezon an: <b>{Number(d?.commission_rate ?? 10).toFixed(2)}%</b>. Sèl yon
           administratè NK ka chanje montan sa a.
         </div>
       </section>

@@ -166,6 +166,7 @@ function AdminCustomers() {
                 value={search}
                 onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
+                aria-label="Chèche non, imèl, telefòn…"
                 className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
               />
             </div>
@@ -284,12 +285,14 @@ function AdminCustomers() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Sijè imèl la"
+              aria-label="Sijè imèl la"
               className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
             />
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Kontni mesaj la…"
+              aria-label="Kontni mesaj la…"
               rows={5}
               className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
             />

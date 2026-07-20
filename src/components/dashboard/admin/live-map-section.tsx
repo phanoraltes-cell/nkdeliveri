@@ -81,6 +81,7 @@ export function LiveMapSection({
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
+          aria-label="Filtre pa estati"
           className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
         >
           <option value="all">Tout estati</option>
@@ -93,6 +94,7 @@ export function LiveMapSection({
         <select
           value={restaurantFilter}
           onChange={(e) => onRestaurantFilterChange(e.target.value)}
+          aria-label="Filtre pa restoran"
           className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
         >
           <option value="all">Tout restoran</option>
@@ -106,6 +108,7 @@ export function LiveMapSection({
           value={zoneQuery}
           onChange={(e) => onZoneQueryChange(e.target.value)}
           placeholder="Chèche yon zòn/adrès…"
+          aria-label="Chèche yon zòn/adrès…"
           className="min-w-0 flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand"
         />
       </div>

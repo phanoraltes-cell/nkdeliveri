@@ -54,14 +54,11 @@ function AdminPayments() {
       decision: "paid" | "failed";
       note?: string;
     }) => {
-      const { error } = await supabase
-        .from("payments")
-        .update({
-          status: decision,
-          review_notes: note || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", id);
+      const { error } = await supabase.rpc("review_manual_payment_secure", {
+        _payment_id: id,
+        _decision: decision,
+        _note: note || null,
+      });
       if (error) throw error;
       // Fire-and-log web push to customer + merchant
       try {

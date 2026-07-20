@@ -48,7 +48,7 @@ function ForgotPassword() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-md px-5 py-12">
+      <main className="mx-auto max-w-md px-5 py-12">
         <div className="rounded-3xl bg-white p-8 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Bliye modpas ou?</h1>
 
@@ -70,6 +70,7 @@ function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
+                  aria-label="Email"
                   className={inputCls()}
                 />
                 <button
@@ -88,7 +89,7 @@ function ForgotPassword() {
             </Link>
           </div>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

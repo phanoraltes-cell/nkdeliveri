@@ -103,6 +103,7 @@ export function OrderReviewSection({
             value={reviewComment}
             onChange={(e) => setReviewComment(e.target.value)}
             placeholder="Kòmantè (opsyonèl)…"
+            aria-label="Kòmantè (opsyonèl)"
             rows={3}
             className={inputClsCompact()}
           />

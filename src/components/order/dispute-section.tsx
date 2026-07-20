@@ -95,6 +95,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            aria-label="Kategori pwoblèm nan"
             className={inputClsCompact()}
           >
             {CATEGORIES.map((c) => (
@@ -107,6 +108,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Eksplike pwoblèm nan…"
+            aria-label="Eksplike pwoblèm nan…"
             rows={3}
             className={inputClsCompact()}
           />

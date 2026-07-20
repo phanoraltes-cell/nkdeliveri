@@ -25,6 +25,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
         src={heroLivreur}
         alt=""
         aria-hidden="true"
+        fetchPriority="high"
         className="absolute inset-0 h-full w-full object-cover object-[70%_15%]"
       />
       {/* Dark gradient overlay for text readability */}
@@ -67,6 +68,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               value={q}
               onChange={(e) => onQChange(e.target.value)}
               placeholder="Chèche yon restoran oswa yon plat…"
+              aria-label="Chèche yon restoran oswa yon plat…"
               // min-w-0 overrides the browser's default intrinsic min-width
               // on text inputs — without it, a flex-1 input refuses to
               // shrink below its content width on narrow screens and pushes

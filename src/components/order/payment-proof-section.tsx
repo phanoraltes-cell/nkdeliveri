@@ -120,6 +120,7 @@ export function PaymentProofSection({
               type="file"
               accept="image/*,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
+              aria-label="Prèv (foto/kaptè)"
               className={inputClsCompact()}
               required
             />
@@ -129,12 +130,14 @@ export function PaymentProofSection({
               value={txRef}
               onChange={(e) => setTxRef(e.target.value)}
               placeholder="Nimewo transaksyon"
+              aria-label="Nimewo transaksyon"
               className={inputClsCompact()}
             />
             <input
               value={senderPhone}
               onChange={(e) => setSenderPhone(e.target.value)}
               placeholder="Nimewo ki voye lajan an"
+              aria-label="Nimewo ki voye lajan an"
               className={inputClsCompact()}
             />
           </div>
@@ -142,6 +145,7 @@ export function PaymentProofSection({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Nòt (opsyonèl)"
+            aria-label="Nòt (opsyonèl)"
             className={inputClsCompact()}
           />
           <button

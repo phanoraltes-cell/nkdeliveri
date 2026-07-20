@@ -122,19 +122,21 @@ export function ProductForm({
     <div className="mt-4 rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4 shadow-brand-xs">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display font-bold">{product ? "Modifye plat" : "Nouvo plat"}</h3>
-        <button onClick={onClose} className="text-ink-soft hover:text-ink">
+        <button onClick={onClose} aria-label="Fèmen" className="text-ink-soft hover:text-ink">
           <X className="h-4 w-4" />
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           placeholder="Non plat la"
+          aria-label="Non plat la"
           className={inputCls()}
           value={f.name}
           onChange={(e) => setF({ ...f, name: e.target.value })}
         />
         <input
           placeholder="Pri (HTG)"
+          aria-label="Pri (HTG)"
           type="number"
           min="0"
           step="1"
@@ -143,6 +145,7 @@ export function ProductForm({
           onChange={(e) => setF({ ...f, price: e.target.value })}
         />
         <select
+          aria-label="Kategori"
           className={inputCls()}
           value={f.category_id}
           onChange={(e) => setF({ ...f, category_id: e.target.value })}
@@ -155,6 +158,7 @@ export function ProductForm({
           ))}
         </select>
         <select
+          aria-label="Tip plat"
           className={inputCls()}
           value={f.dish_type}
           onChange={(e) => setF({ ...f, dish_type: e.target.value })}
@@ -167,6 +171,7 @@ export function ProductForm({
         </select>
         <textarea
           placeholder="Deskripsyon (opsyonèl)"
+          aria-label="Deskripsyon (opsyonèl)"
           rows={2}
           className={inputCls() + " sm:col-span-2"}
           value={f.description}
@@ -174,6 +179,7 @@ export function ProductForm({
         />
         <input
           placeholder="Kantite stock (kite vid = ilimite)"
+          aria-label="Kantite stock (kite vid = ilimite)"
           type="number"
           min="0"
           step="1"

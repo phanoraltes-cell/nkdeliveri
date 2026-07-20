@@ -69,6 +69,7 @@ export function DisputeThread({
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder="Ekri yon repons…"
+              aria-label="Ekri yon repons…"
               className="min-w-0 flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-brand-xs"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && reply.trim()) {
@@ -92,10 +93,14 @@ export function DisputeThread({
 
           {canResolve && (
             <div className="rounded-xl border-2 border-dashed border-brand-soft p-3">
-              <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              <label
+                htmlFor="dispute-resolution"
+                className="mb-1 block text-xs font-bold uppercase text-ink-soft"
+              >
                 Rezolisyon final (admin)
               </label>
               <textarea
+                id="dispute-resolution"
                 value={resolutionText}
                 onChange={(e) => setResolutionText(e.target.value)}
                 rows={2}

@@ -41,6 +41,7 @@ export function ChangePasswordForm() {
           required
           minLength={6}
           placeholder="Nouvo modpas"
+          aria-label="Nouvo modpas"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
@@ -50,6 +51,7 @@ export function ChangePasswordForm() {
           required
           minLength={6}
           placeholder="Konfime nouvo modpas"
+          aria-label="Konfime nouvo modpas"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"

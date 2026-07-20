@@ -239,31 +239,35 @@ function AddressForm({
     <div className="mt-3 rounded-2xl border-2 border-brand-soft bg-brand-soft/10 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display font-bold">{address ? "Modifye adrès" : "Nouvo adrès"}</h3>
-        <button onClick={onClose} className="text-ink-soft hover:text-ink">
+        <button onClick={onClose} aria-label="Fèmen" className="text-ink-soft hover:text-ink">
           <X className="h-4 w-4" />
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           placeholder="Non (ex: Lakay, Travay)"
+          aria-label="Non (ex: Lakay, Travay)"
           className={inputCls()}
           value={f.label}
           onChange={(e) => setF({ ...f, label: e.target.value })}
         />
         <input
           placeholder="Vil"
+          aria-label="Vil"
           className={inputCls()}
           value={f.city}
           onChange={(e) => setF({ ...f, city: e.target.value })}
         />
         <input
           placeholder="Adrès konplè"
+          aria-label="Adrès konplè"
           className={inputCls() + " sm:col-span-2"}
           value={f.address_line}
           onChange={(e) => setF({ ...f, address_line: e.target.value })}
         />
         <input
           placeholder="Nòt pou livrè a (opsyonèl)"
+          aria-label="Nòt pou livrè a (opsyonèl)"
           className={inputCls() + " sm:col-span-2"}
           value={f.notes}
           onChange={(e) => setF({ ...f, notes: e.target.value })}

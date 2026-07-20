@@ -64,6 +64,7 @@ export function RestaurantForm() {
         <input
           required
           placeholder="Non pwopriyetè"
+          aria-label="Non pwopriyetè"
           className={inputCls()}
           value={f.ownerName}
           onChange={(e) => setF({ ...f, ownerName: e.target.value })}
@@ -71,12 +72,14 @@ export function RestaurantForm() {
         <input
           required
           placeholder="Non restoran"
+          aria-label="Non restoran"
           className={inputCls()}
           value={f.restaurantName}
           onChange={(e) => setF({ ...f, restaurantName: e.target.value })}
         />
         <textarea
           placeholder="Deskripsyon"
+          aria-label="Deskripsyon"
           rows={3}
           className={inputCls()}
           value={f.description}
@@ -86,6 +89,7 @@ export function RestaurantForm() {
           <input
             required
             placeholder="Kategori (ex: Kreyòl, Fritay)"
+            aria-label="Kategori (ex: Kreyòl, Fritay)"
             className={inputCls()}
             value={f.cuisine}
             onChange={(e) => setF({ ...f, cuisine: e.target.value })}
@@ -94,6 +98,7 @@ export function RestaurantForm() {
             required
             type="tel"
             placeholder="Telefòn"
+            aria-label="Telefòn"
             className={inputCls()}
             value={f.phone}
             onChange={(e) => setF({ ...f, phone: e.target.value })}
@@ -103,6 +108,7 @@ export function RestaurantForm() {
           required
           type="email"
           placeholder="Email"
+          aria-label="Email"
           className={inputCls()}
           value={f.email}
           onChange={(e) => setF({ ...f, email: e.target.value })}
@@ -110,12 +116,14 @@ export function RestaurantForm() {
         <input
           required
           placeholder="Adrès konplè"
+          aria-label="Adrès konplè"
           className={inputCls()}
           value={f.address}
           onChange={(e) => setF({ ...f, address: e.target.value })}
         />
         <input
           placeholder="Orè ouvèti (ex: Lendi-Sam 10h-22h)"
+          aria-label="Orè ouvèti (ex: Lendi-Sam 10h-22h)"
           className={inputCls()}
           value={f.hours}
           onChange={(e) => setF({ ...f, hours: e.target.value })}
@@ -132,6 +140,7 @@ export function RestaurantForm() {
             type="password"
             minLength={6}
             placeholder="Modpas"
+            aria-label="Modpas"
             className={inputCls()}
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
@@ -141,6 +150,7 @@ export function RestaurantForm() {
             type="password"
             minLength={6}
             placeholder="Konfime modpas"
+            aria-label="Konfime modpas"
             className={inputCls()}
             value={f.confirm}
             onChange={(e) => setF({ ...f, confirm: e.target.value })}

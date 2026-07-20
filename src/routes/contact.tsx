@@ -20,7 +20,7 @@ function Contact() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[640px] px-5 py-12">
+      <main className="mx-auto max-w-[640px] px-5 py-12">
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">Kontakte nou</h1>
         <p className="mb-6 text-ink-soft">
           Yon kesyon sou yon kòmand, yon restoran ki enterese vin patenè, oswa yon lòt bagay? Ekri
@@ -41,7 +41,7 @@ function Contact() {
             nou an oswa itilize paj "Kòmand mwen" apre ou konekte.
           </p>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

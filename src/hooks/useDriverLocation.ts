@@ -82,28 +82,42 @@ export function useDriverLocation(driverId: string) {
     [driverId],
   );
 
+  const stop = useCallback(() => {
+    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+    watchId.current = null;
+    setActive(false);
+  }, []);
+
   const start = useCallback(() => {
     if (!navigator.geolocation) {
       setError("GPS pa disponib nan navigatè sa a");
       return;
     }
     watchId.current = navigator.geolocation.watchPosition(
-      (pos) => push(pos.coords.latitude, pos.coords.longitude, pos.coords.heading),
-      () => {
-        setError("Pèmisyon GPS refize");
-        setActive(false);
+      (pos) => {
+        setError(null);
+        push(pos.coords.latitude, pos.coords.longitude, pos.coords.heading);
+      },
+      (err) => {
+        // Only PERMISSION_DENIED means the user actually revoked access —
+        // that's the one case where continuing to watch is pointless.
+        // POSITION_UNAVAILABLE/TIMEOUT are transient (common outdoors or
+        // moving in/out of signal) and the browser keeps retrying the same
+        // watch on its own, so treating them the same as a permission
+        // refusal was stopping tracking — and telling the driver permission
+        // was denied — on ordinary GPS hiccups.
+        if (err.code === err.PERMISSION_DENIED) {
+          setError("Pèmisyon GPS refize");
+          stop();
+          return;
+        }
+        setError("GPS pa reponn kounye a. N ap kontinye eseye…");
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
     setError(null);
     setActive(true);
-  }, [push]);
-
-  const stop = useCallback(() => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    watchId.current = null;
-    setActive(false);
-  }, []);
+  }, [push, stop]);
 
   useEffect(() => () => stop(), [stop]);
 

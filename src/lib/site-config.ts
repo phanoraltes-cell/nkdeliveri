@@ -5,7 +5,10 @@
  * update the canonical domain later without hunting through every file.
  */
 
-export const SITE_URL = "https://nkdeliveri.com";
+// Apex domain 308-redirects to www in production (confirmed via curl) — SEO
+// metadata/canonicals/sitemap must point at the URL that's actually served,
+// not the one that immediately redirects away.
+export const SITE_URL = "https://www.nkdeliveri.com";
 export const SITE_NAME = "NK Deliveri";
 
 /**

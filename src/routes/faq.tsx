@@ -58,7 +58,7 @@ function Faq() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] px-5 py-12">
+      <main className="mx-auto max-w-[720px] px-5 py-12">
         <h1 className="mb-6 font-display text-3xl font-extrabold text-ink">
           Kesyon Moun Poze Souvan
         </h1>
@@ -75,7 +75,7 @@ function Faq() {
             </details>
           ))}
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

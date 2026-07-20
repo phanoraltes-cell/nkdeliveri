@@ -1636,6 +1636,41 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      review_manual_payment_secure: {
+        Args: {
+          _decision: Database["public"]["Enums"]["payment_status"];
+          _note?: string | null;
+          _payment_id: string;
+        };
+        Returns: {
+          amount: number;
+          created_at: string;
+          currency: string;
+          id: string;
+          method: Database["public"]["Enums"]["payment_method"];
+          order_id: string;
+          receiver_account_name: string | null;
+          receiver_number: string | null;
+          receiver_restaurant_id: string | null;
+          receiver_type: string;
+          review_notes: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          sender_name: string | null;
+          sender_phone: string | null;
+          status: Database["public"]["Enums"]["payment_status"];
+          stripe_payment_intent_id: string | null;
+          stripe_session_id: string | null;
+          transaction_ref: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       review_refund_secure: {
         Args: {
           _admin_notes: string;

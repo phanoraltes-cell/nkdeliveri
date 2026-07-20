@@ -205,12 +205,14 @@ function AdminUsers() {
                 value={search}
                 onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
+                aria-label="Chèche non, imèl, telefòn…"
                 className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
               />
             </div>
             <select
               value={roleFilter}
               onChange={(e) => updateRoleFilter(e.target.value)}
+              aria-label="Filtre pa wòl"
               className="rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
             >
               <option value="all">Tout wòl</option>
@@ -296,6 +298,7 @@ function AdminUsers() {
                           onChange={(e) =>
                             setAddRoleFor((s) => ({ ...s, [u.id]: e.target.value as AppRole }))
                           }
+                          aria-label={`Nouvo wòl pou ${u.email}`}
                           className="rounded-md border border-brand-soft bg-white px-1.5 py-1 text-[10px]"
                         >
                           {ASSIGNABLE_ROLES.map((r) => (

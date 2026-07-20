@@ -109,7 +109,7 @@ function RestaurantsPage() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[1100px] px-5 py-10">
+      <main className="mx-auto max-w-[1100px] px-5 py-10">
         <Breadcrumb items={[{ label: "Akèy", to: "/" }, { label: "Restoran" }]} />
         <h1 className="mb-2 font-display text-3xl font-extrabold">Tout restoran</h1>
         <p className="mb-6 text-ink-soft">Chwazi kote w vle kòmande jodi a.</p>
@@ -117,6 +117,7 @@ function RestaurantsPage() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Chèche pa non…"
+          aria-label="Chèche pa non…"
           className="mb-6 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-brand focus:shadow-brand-xs"
         />
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
@@ -175,7 +176,7 @@ function RestaurantsPage() {
           onPageChange={(p) => updateSearch({ page: p })}
           className="mt-6"
         />
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

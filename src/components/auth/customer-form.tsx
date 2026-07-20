@@ -38,6 +38,7 @@ export function CustomerForm() {
           <input
             required
             placeholder="Prenon"
+            aria-label="Prenon"
             className={inputCls()}
             value={f.firstName}
             onChange={(e) => setF({ ...f, firstName: e.target.value })}
@@ -45,6 +46,7 @@ export function CustomerForm() {
           <input
             required
             placeholder="Non"
+            aria-label="Non"
             className={inputCls()}
             value={f.lastName}
             onChange={(e) => setF({ ...f, lastName: e.target.value })}
@@ -54,6 +56,7 @@ export function CustomerForm() {
           required
           type="email"
           placeholder="Email"
+          aria-label="Email"
           className={inputCls()}
           value={f.email}
           onChange={(e) => setF({ ...f, email: e.target.value })}
@@ -62,12 +65,14 @@ export function CustomerForm() {
           required
           type="tel"
           placeholder="Telefòn (+509...)"
+          aria-label="Telefòn (+509...)"
           className={inputCls()}
           value={f.phone}
           onChange={(e) => setF({ ...f, phone: e.target.value })}
         />
         <input
           placeholder="Adrès prensipal (opsyonèl)"
+          aria-label="Adrès prensipal (opsyonèl)"
           className={inputCls()}
           value={f.address}
           onChange={(e) => setF({ ...f, address: e.target.value })}
@@ -78,6 +83,7 @@ export function CustomerForm() {
             type="password"
             minLength={6}
             placeholder="Modpas"
+            aria-label="Modpas"
             className={inputCls()}
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
@@ -87,6 +93,7 @@ export function CustomerForm() {
             type="password"
             minLength={6}
             placeholder="Konfime modpas"
+            aria-label="Konfime modpas"
             className={inputCls()}
             value={f.confirm}
             onChange={(e) => setF({ ...f, confirm: e.target.value })}

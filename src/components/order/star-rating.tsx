@@ -19,7 +19,13 @@ export function StarPicker({ value, onChange }: { value: number; onChange: (n: n
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} type="button" onClick={() => onChange(n)} className="p-0.5">
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          aria-label={`${n} zetwal sou 5`}
+          className="p-0.5"
+        >
           <Star className={`h-6 w-6 ${n <= value ? "fill-brand text-brand" : "text-brand-soft"}`} />
         </button>
       ))}

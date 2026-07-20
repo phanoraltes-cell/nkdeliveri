@@ -125,7 +125,7 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-md px-5 py-12">
+      <main className="mx-auto max-w-md px-5 py-12">
         <div className="rounded-3xl bg-white p-8 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Konekte</h1>
           <p className="mb-6 text-sm text-ink-soft">
@@ -170,6 +170,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
+              aria-label="Email"
               className={inputCls()}
             />
             <div>
@@ -180,6 +181,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Modpas"
+                aria-label="Modpas"
                 className={inputCls()}
               />
               <div className="mt-1.5 text-right">
@@ -219,7 +221,7 @@ function LoginPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

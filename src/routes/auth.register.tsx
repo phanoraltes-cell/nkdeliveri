@@ -21,7 +21,7 @@ function RegisterPage() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-2xl px-5 py-10">
+      <main className="mx-auto max-w-2xl px-5 py-10">
         <div className="mb-6 flex items-center gap-3">
           {type && (
             <button
@@ -50,7 +50,7 @@ function RegisterPage() {
             Konekte
           </Link>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

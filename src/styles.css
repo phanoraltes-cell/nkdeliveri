@@ -100,9 +100,16 @@
 
   --radius: 1.125rem;
   /* NK Delivery brand palette (spec) */
-  --brand: oklch(0.706 0.185 45); /* #F97316 */
+  /* --brand and --brand-deep are darkened from the original spec
+     (#F97316 / #EA580C, ≈2.8:1 and ≈3.6:1 contrast with white) because
+     white text on --brand is the site's primary CTA style (buttons,
+     badges, pills) everywhere — the original shades failed WCAG AA
+     4.5:1. #C2410C/#9A3412 keep the same hue/identity while passing AA
+     with margin (≈5.2:1 / ≈7.2:1). --brand-light/--brand-soft are
+     untouched since they're only ever paired with dark text. */
+  --brand: #c2410c; /* exact hex, not oklch — contrast math needs the precise sRGB value, not an eyeballed oklch conversion */
   --brand-light: oklch(0.755 0.16 50); /* #FB923C */
-  --brand-deep: oklch(0.62 0.19 40); /* #EA580C */
+  --brand-deep: #9a3412; /* exact hex, see --brand comment */
   --brand-soft: oklch(0.9 0.075 65); /* #FED7AA */
   --cream: oklch(0.985 0.008 70); /* #FFF9F5 */
   --ink: oklch(0.23 0.005 0); /* #1F1F1F */
@@ -190,6 +197,23 @@
        elements (header, dashboard nav) so full-bleed backgrounds don't gap
        in landscape. */
     padding-bottom: var(--sab);
+  }
+
+  /* Fallback focus ring for any interactive element that doesn't already
+     carry its own focus-visible: ring utility (plain <a> tags in prose,
+     native <select>/<option>, anything a future component forgets to
+     style explicitly). Lives in @layer base, so Tailwind's utilities
+     layer — where every component's own focus-visible: ring class
+     compiles to — always wins when a component sets one; this only
+     fills the gap when nothing else does. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
   }
 
   /* Respect the OS-level motion preference across every hover-lift,

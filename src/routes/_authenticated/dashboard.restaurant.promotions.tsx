@@ -185,6 +185,7 @@ function RestaurantPromotions() {
                 </button>
                 <button
                   onClick={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p.id))}
+                  aria-label={`Efase pwomosyon "${p.title}"`}
                   className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -284,18 +285,20 @@ function PromoForm({
         <h3 className="font-display font-bold">
           {promo ? "Modifye pwomosyon" : "Nouvo pwomosyon"}
         </h3>
-        <button onClick={onClose} className="text-ink-soft hover:text-ink">
+        <button onClick={onClose} aria-label="Fèmen" className="text-ink-soft hover:text-ink">
           <X className="h-4 w-4" />
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           placeholder="Tit (ex: 20% sou premye kòmand)"
+          aria-label="Tit pwomosyon an"
           className={inputCls() + " sm:col-span-2"}
           value={f.title}
           onChange={(e) => setF({ ...f, title: e.target.value })}
         />
         <select
+          aria-label="Tip rabè"
           className={inputCls()}
           value={f.discount_type}
           onChange={(e) => setF({ ...f, discount_type: e.target.value })}
@@ -305,6 +308,7 @@ function PromoForm({
         </select>
         <input
           placeholder={f.discount_type === "percentage" ? "Valè (ex: 15)" : "Valè (ex: 100)"}
+          aria-label="Valè rabè a"
           type="number"
           min="0"
           className={inputCls()}
@@ -313,6 +317,7 @@ function PromoForm({
         />
         <input
           placeholder="Kòd pwomo (opsyonèl)"
+          aria-label="Kòd pwomo (opsyonèl)"
           className={inputCls()}
           value={f.code}
           onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })}
@@ -338,6 +343,7 @@ function PromoForm({
         </label>
         <textarea
           placeholder="Deskripsyon (opsyonèl)"
+          aria-label="Deskripsyon (opsyonèl)"
           rows={2}
           className={inputCls() + " sm:col-span-2"}
           value={f.description}

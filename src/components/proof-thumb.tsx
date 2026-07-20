@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Eye, X, Download } from "lucide-react";
 
@@ -23,6 +23,41 @@ export function ProofThumb({
   const isAlreadyUrl = /^https?:\/\//i.test(path);
   const [url, setUrl] = useState<string | null>(isAlreadyUrl ? path : null);
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+
+  function closeLightbox() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeLightbox();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusables = [downloadRef.current, closeRef.current].filter(
+        (el): el is HTMLButtonElement | HTMLAnchorElement => el !== null,
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
   const isPdf = /\.pdf$/i.test(path);
   // Browsers don't render HEIC/HEIF in an <img> tag (unlike JPEG/PNG/WebP) —
   // fall back to the same "open the original" tile as PDF instead of a
@@ -63,11 +98,13 @@ export function ProofThumb({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => url && setOpen(true)}
         disabled={!url}
         className="group relative block h-24 w-24 overflow-hidden rounded-lg border border-brand-soft bg-cream disabled:cursor-wait"
         title="Klike pou agrandi"
+        aria-label={`Agrandi: ${alt}`}
       >
         {url ? (
           <img src={url} alt={alt} width={96} height={96} className="h-full w-full object-cover" />
@@ -83,8 +120,11 @@ export function ProofThumb({
 
       {open && url && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={alt}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
-          onClick={() => setOpen(false)}
+          onClick={closeLightbox}
         >
           <img
             src={url}
@@ -94,6 +134,7 @@ export function ProofThumb({
           />
           <div className="absolute right-4 top-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
             <a
+              ref={downloadRef}
               href={url}
               download
               className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-ink hover:bg-white"
@@ -103,7 +144,8 @@ export function ProofThumb({
               <Download className="h-5 w-5" />
             </a>
             <button
-              onClick={() => setOpen(false)}
+              ref={closeRef}
+              onClick={closeLightbox}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-ink hover:bg-white"
               aria-label="Fèmen"
               title="Fèmen"

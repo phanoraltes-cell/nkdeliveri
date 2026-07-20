@@ -65,6 +65,7 @@ export function DriverForm() {
           <input
             required
             placeholder="Prenon"
+            aria-label="Prenon"
             className={inputCls()}
             value={f.firstName}
             onChange={(e) => setF({ ...f, firstName: e.target.value })}
@@ -72,6 +73,7 @@ export function DriverForm() {
           <input
             required
             placeholder="Non"
+            aria-label="Non"
             className={inputCls()}
             value={f.lastName}
             onChange={(e) => setF({ ...f, lastName: e.target.value })}
@@ -82,6 +84,7 @@ export function DriverForm() {
             required
             type="tel"
             placeholder="Telefòn"
+            aria-label="Telefòn"
             className={inputCls()}
             value={f.phone}
             onChange={(e) => setF({ ...f, phone: e.target.value })}
@@ -90,6 +93,7 @@ export function DriverForm() {
             required
             type="email"
             placeholder="Email"
+            aria-label="Email"
             className={inputCls()}
             value={f.email}
             onChange={(e) => setF({ ...f, email: e.target.value })}
@@ -98,6 +102,7 @@ export function DriverForm() {
         <input
           required
           placeholder="Adrès"
+          aria-label="Adrès"
           className={inputCls()}
           value={f.address}
           onChange={(e) => setF({ ...f, address: e.target.value })}
@@ -105,6 +110,7 @@ export function DriverForm() {
         <div className="grid gap-3 sm:grid-cols-2">
           <select
             required
+            aria-label="Tip veyikil"
             className={inputCls()}
             value={f.vehicleType}
             onChange={(e) => setF({ ...f, vehicleType: e.target.value })}
@@ -117,6 +123,7 @@ export function DriverForm() {
           </select>
           <input
             placeholder="Nimewo plak (si li aplikab)"
+            aria-label="Nimewo plak (si li aplikab)"
             className={inputCls()}
             value={f.licensePlate}
             onChange={(e) => setF({ ...f, licensePlate: e.target.value })}
@@ -139,6 +146,7 @@ export function DriverForm() {
             type="password"
             minLength={6}
             placeholder="Modpas"
+            aria-label="Modpas"
             className={inputCls()}
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
@@ -148,6 +156,7 @@ export function DriverForm() {
             type="password"
             minLength={6}
             placeholder="Konfime modpas"
+            aria-label="Konfime modpas"
             className={inputCls()}
             value={f.confirm}
             onChange={(e) => setF({ ...f, confirm: e.target.value })}

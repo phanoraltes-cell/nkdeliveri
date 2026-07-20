@@ -18,7 +18,7 @@ function Terms() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] px-5 py-12">
+      <main className="mx-auto max-w-[720px] px-5 py-12">
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">
           Kondisyon Itilizasyon
         </h1>
@@ -42,7 +42,7 @@ function Terms() {
             nou an.
           </p>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

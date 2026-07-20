@@ -155,7 +155,7 @@ function Checkout() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[640px] px-5 py-10">
+      <main className="mx-auto max-w-[640px] px-5 py-10">
         <div className="rounded-3xl bg-white p-6 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-5 font-display text-2xl font-extrabold">Panye w</h1>
 
@@ -195,6 +195,7 @@ function Checkout() {
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={() => setQty(it.productId, it.qty - 1)}
+                      aria-label={`Diminye kantite ${it.name}`}
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Minus className="h-3 w-3" />
@@ -202,12 +203,14 @@ function Checkout() {
                     <span className="w-6 text-center text-sm font-bold">{it.qty}</span>
                     <button
                       onClick={() => setQty(it.productId, it.qty + 1)}
+                      aria-label={`Ogmante kantite ${it.name}`}
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => remove(it.productId)}
+                      aria-label={`Retire ${it.name} nan panye`}
                       className="ml-1 flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -232,7 +235,9 @@ function Checkout() {
               </div>
 
               <div className="mt-6">
-                <label className="mb-2 block text-sm font-bold">Adrès livrezon</label>
+                <label htmlFor="checkout-address" className="mb-2 block text-sm font-bold">
+                  Adrès livrezon
+                </label>
                 {!!savedAddresses.data?.length && (
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {savedAddresses.data.map((a) => (
@@ -248,22 +253,27 @@ function Checkout() {
                   </div>
                 )}
                 <input
+                  id="checkout-address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Kote pou nou livre a…"
                   className={inputCls()}
                 />
-                <label className="mt-3 mb-2 block text-sm font-bold">Telefòn kontak</label>
+                <label htmlFor="checkout-phone" className="mt-3 mb-2 block text-sm font-bold">
+                  Telefòn kontak
+                </label>
                 <input
+                  id="checkout-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+509 …"
                   className={inputCls()}
                 />
-                <label className="mt-3 mb-2 block text-sm font-bold">
+                <label htmlFor="checkout-notes" className="mt-3 mb-2 block text-sm font-bold">
                   Nòt pou livrezon (opsyonèl)
                 </label>
                 <input
+                  id="checkout-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Enstriksyon espesyal…"
@@ -338,7 +348,7 @@ function Checkout() {
             </>
           )}
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

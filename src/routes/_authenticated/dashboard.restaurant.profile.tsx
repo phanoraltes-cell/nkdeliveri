@@ -153,30 +153,35 @@ function RestaurantProfile() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <input
             placeholder="Non restoran"
+            aria-label="Non restoran"
             className={inputCls()}
             value={f.name}
             onChange={(e) => setF({ ...f, name: e.target.value })}
           />
           <input
             placeholder="Kategori (ex: Kreyòl, Fritay)"
+            aria-label="Kategori (ex: Kreyòl, Fritay)"
             className={inputCls()}
             value={f.cuisine}
             onChange={(e) => setF({ ...f, cuisine: e.target.value })}
           />
           <input
             placeholder="Telefòn"
+            aria-label="Telefòn"
             className={inputCls()}
             value={f.phone}
             onChange={(e) => setF({ ...f, phone: e.target.value })}
           />
           <input
             placeholder="Adrès"
+            aria-label="Adrès"
             className={inputCls()}
             value={f.address}
             onChange={(e) => setF({ ...f, address: e.target.value })}
           />
           <textarea
             placeholder="Deskripsyon"
+            aria-label="Deskripsyon"
             rows={3}
             className={inputCls() + " sm:col-span-2"}
             value={f.description}
@@ -243,6 +248,7 @@ function RestaurantProfile() {
                       onChange={(e) =>
                         setHours((s) => ({ ...s, [d.key]: { ...v, open: e.target.value } }))
                       }
+                      aria-label={`Lè ouvèti ${d.label}`}
                       className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
                     />
                     <span className="text-xs text-ink-soft">jiska</span>
@@ -252,6 +258,7 @@ function RestaurantProfile() {
                       onChange={(e) =>
                         setHours((s) => ({ ...s, [d.key]: { ...v, close: e.target.value } }))
                       }
+                      aria-label={`Lè fèmti ${d.label}`}
                       className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
                     />
                   </>

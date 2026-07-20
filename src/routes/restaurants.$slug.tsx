@@ -193,7 +193,7 @@ function RestaurantPage() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[1100px] px-5 py-6">
+      <main className="mx-auto max-w-[1100px] px-5 py-6">
         <Breadcrumb
           items={[
             { label: "Akèy", to: "/" },
@@ -383,7 +383,7 @@ function RestaurantPage() {
             ))}
           </div>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

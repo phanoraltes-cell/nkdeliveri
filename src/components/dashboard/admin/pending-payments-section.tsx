@@ -114,6 +114,7 @@ export function PendingPaymentsSection({
                 value={notes[p.id] || ""}
                 onChange={(e) => onNoteChange(p.id, e.target.value)}
                 placeholder="Nòt (opsyonèl)"
+                aria-label="Nòt (opsyonèl)"
                 className="min-w-0 flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm"
               />
               <button

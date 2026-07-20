@@ -24,7 +24,8 @@ function Orders() {
         .select(
           "id, order_number, status, total, currency, created_at, restaurants(name), payments(status, method)",
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
       return data;
     },
@@ -33,7 +34,7 @@ function Orders() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] px-5 py-12">
+      <main className="mx-auto max-w-[720px] px-5 py-12">
         <h1 className="mb-3 font-display text-2xl font-extrabold">Kòmand mwen</h1>
         {loading || isLoading ? (
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft">Chajman…</div>
@@ -76,7 +77,7 @@ function Orders() {
             ))}
           </div>
         )}
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

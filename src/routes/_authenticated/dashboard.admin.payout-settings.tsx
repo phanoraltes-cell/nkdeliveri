@@ -94,17 +94,27 @@ function AdminPayoutSettings() {
               <h2 className="mb-2 flex items-center gap-1.5 font-display text-sm font-bold">
                 <Wallet className="h-4 w-4" /> MonCash
               </h2>
-              <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">Nimewo</label>
+              <label
+                htmlFor="moncash-number"
+                className="mb-1 block text-xs font-bold uppercase text-ink-soft"
+              >
+                Nimewo
+              </label>
               <input
+                id="moncash-number"
                 value={form.moncash_number}
                 onChange={(e) => setForm({ ...form, moncash_number: e.target.value })}
                 placeholder="+509 ...."
                 className={inputCls()}
               />
-              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">
+              <label
+                htmlFor="moncash-account-name"
+                className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft"
+              >
                 Non kont lan
               </label>
               <input
+                id="moncash-account-name"
                 value={form.moncash_account_name}
                 onChange={(e) => setForm({ ...form, moncash_account_name: e.target.value })}
                 className={inputCls()}
@@ -114,17 +124,27 @@ function AdminPayoutSettings() {
               <h2 className="mb-2 flex items-center gap-1.5 font-display text-sm font-bold">
                 <Wallet className="h-4 w-4" /> NatCash
               </h2>
-              <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">Nimewo</label>
+              <label
+                htmlFor="natcash-number"
+                className="mb-1 block text-xs font-bold uppercase text-ink-soft"
+              >
+                Nimewo
+              </label>
               <input
+                id="natcash-number"
                 value={form.natcash_number}
                 onChange={(e) => setForm({ ...form, natcash_number: e.target.value })}
                 placeholder="+509 ...."
                 className={inputCls()}
               />
-              <label className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft">
+              <label
+                htmlFor="natcash-account-name"
+                className="mb-1 mt-3 block text-xs font-bold uppercase text-ink-soft"
+              >
                 Non kont lan
               </label>
               <input
+                id="natcash-account-name"
                 value={form.natcash_account_name}
                 onChange={(e) => setForm({ ...form, natcash_account_name: e.target.value })}
                 className={inputCls()}

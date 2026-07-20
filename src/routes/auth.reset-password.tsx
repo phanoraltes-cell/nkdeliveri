@@ -71,7 +71,7 @@ function ResetPassword() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-md px-5 py-12">
+      <main className="mx-auto max-w-md px-5 py-12">
         <div className="rounded-3xl bg-white p-8 shadow-brand-md ring-1 ring-brand-soft/40">
           <h1 className="mb-2 font-display text-2xl font-extrabold">Chwazi nouvo modpas</h1>
 
@@ -100,6 +100,7 @@ function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Nouvo modpas"
+                aria-label="Nouvo modpas"
                 className={inputCls()}
               />
               <input
@@ -109,6 +110,7 @@ function ResetPassword() {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Konfime nouvo modpas"
+                aria-label="Konfime nouvo modpas"
                 className={inputCls()}
               />
               <button
@@ -126,7 +128,7 @@ function ResetPassword() {
             </div>
           )}
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

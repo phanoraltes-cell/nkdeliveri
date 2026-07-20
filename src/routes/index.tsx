@@ -56,37 +56,39 @@ function Index() {
     <div className="min-h-screen bg-cream">
       <SiteHeader />
 
-      <HeroSection
-        q={q}
-        onQChange={setQ}
-        onSearch={(e) => {
-          e.preventDefault();
-          nav({ to: "/restaurants", search: { q } });
-        }}
-      />
+      <main>
+        <HeroSection
+          q={q}
+          onQChange={setQ}
+          onSearch={(e) => {
+            e.preventDefault();
+            nav({ to: "/restaurants", search: { q } });
+          }}
+        />
 
-      <HowItWorksSection />
+        <HowItWorksSection />
 
-      <RestaurantCtaBanner />
+        <RestaurantCtaBanner />
 
-      <PopularRestaurantsSection
-        restaurants={restaurants}
-        cuisine={cuisine}
-        onCuisineChange={setCuisine}
-        isFavorite={isFavorite}
-        onToggleFavorite={onToggleFavorite}
-      />
+        <PopularRestaurantsSection
+          restaurants={restaurants}
+          cuisine={cuisine}
+          onCuisineChange={setCuisine}
+          isFavorite={isFavorite}
+          onToggleFavorite={onToggleFavorite}
+        />
 
-      <AppBenefitsSection />
+        <AppBenefitsSection />
 
-      <PopularDishesSection
-        products={data.products}
-        dishType={dishType}
-        onDishTypeChange={setDishType}
-        add={add}
-      />
+        <PopularDishesSection
+          products={data.products}
+          dishType={dishType}
+          onDishTypeChange={setDishType}
+          add={add}
+        />
 
-      <NewsletterSection />
+        <NewsletterSection />
+      </main>
 
       <SiteFooter />
     </div>

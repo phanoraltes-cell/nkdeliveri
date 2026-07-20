@@ -106,6 +106,7 @@ export function RefundSection({ orderId, orderStatus, paymentStatus }: RefundSec
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Eksplike poukisa ou mande yon ranbousman…"
+            aria-label="Eksplike poukisa ou mande yon ranbousman…"
             rows={3}
             className={inputClsCompact()}
           />

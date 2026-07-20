@@ -148,7 +148,10 @@ function OrderDetail() {
   })();
   const isManual = payment?.method === "moncash" || payment?.method === "natcash";
   const needsProof =
-    isManual && (payment?.status === "awaiting_proof" || payment?.status === "pending");
+    isManual &&
+    (payment?.status === "awaiting_proof" ||
+      payment?.status === "pending" ||
+      payment?.status === "failed");
 
   const payLabel = payment
     ? `${payment.method === "moncash" ? "MonCash" : "NatCash"} · ${payment.receiver_number ?? "(pa konfigire)"}${payment.receiver_account_name ? " (" + payment.receiver_account_name + ")" : ""}`
@@ -161,7 +164,7 @@ function OrderDetail() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] space-y-4 px-5 py-8">
+      <main className="mx-auto max-w-[720px] space-y-4 px-5 py-8">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs uppercase tracking-wider text-ink-soft">Kòmand</div>
@@ -276,7 +279,7 @@ function OrderDetail() {
             driverId={delivery?.driver_id ?? null}
           />
         )}
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

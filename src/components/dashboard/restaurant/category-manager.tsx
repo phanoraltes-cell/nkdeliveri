@@ -58,23 +58,48 @@ export function CategoryManager({
                   autoFocus
                   value={editingCat.name}
                   onChange={(e) => onEditingCatChange({ id: c.id, name: e.target.value })}
+                  aria-label="Non kategori a"
                   className="w-28 bg-transparent text-sm outline-none"
                 />
-                <button onClick={() => onUpdateCategory(editingCat)} className="text-emerald-600">
+                <button
+                  onClick={() => onUpdateCategory(editingCat)}
+                  aria-label="Konfime chanjman non kategori a"
+                  className="text-emerald-600"
+                >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => onEditingCatChange(null)} className="text-ink-soft">
+                <button
+                  onClick={() => onEditingCatChange(null)}
+                  aria-label="Anile chanjman"
+                  className="text-ink-soft"
+                >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             ) : (
-              <button
+              // A native <button> can't contain other interactive elements
+              // (invalid HTML), which is why the edit/delete actions used to
+              // be <span role="button"> — but a span has no native keyboard
+              // support, so those were unreachable by keyboard. Using a div
+              // for the outer clickable chip (with its own tabIndex/onKeyDown)
+              // lets the edit/delete actions be real, keyboard-operable
+              // <button>s instead.
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelectCat(c.id)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-bold ${activeCat === c.id ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectCat(c.id);
+                  }
+                }}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-bold ${activeCat === c.id ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
               >
                 {c.name} ({productCountByCategory(c.id)})
-                <span
-                  role="button"
+                <button
+                  type="button"
+                  aria-label={`Modifye kategori "${c.name}"`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEditingCatChange({ id: c.id, name: c.name });
@@ -82,9 +107,10 @@ export function CategoryManager({
                   className="opacity-60 hover:opacity-100"
                 >
                   <Pencil className="h-3 w-3" />
-                </span>
-                <span
-                  role="button"
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Efase kategori "${c.name}"`}
                   onClick={(e) => {
                     e.stopPropagation();
                     requestConfirm(`Efase kategori "${c.name}"?`, () => onDeleteCategory(c.id));
@@ -92,8 +118,8 @@ export function CategoryManager({
                   className="opacity-60 hover:opacity-100"
                 >
                   <Trash2 className="h-3 w-3" />
-                </span>
-              </button>
+                </button>
+              </div>
             )}
           </div>
         ))}
@@ -103,6 +129,7 @@ export function CategoryManager({
           value={newCatName}
           onChange={(e) => onNewCatNameChange(e.target.value)}
           placeholder="Non nouvo kategori a…"
+          aria-label="Non nouvo kategori a…"
           className={inputCls() + " max-w-xs"}
         />
         <button

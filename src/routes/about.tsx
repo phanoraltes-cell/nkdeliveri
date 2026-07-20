@@ -20,7 +20,7 @@ function About() {
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] px-5 py-12">
+      <main className="mx-auto max-w-[720px] px-5 py-12">
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">Apwopo NK Deliveri</h1>
         <p className="text-ink-soft">
           NK Deliveri se yon platfòm livrezon manje ki konekte restoran lokal yo ak kliyan nan{" "}
@@ -62,7 +62,7 @@ function About() {
             .
           </p>
         </div>
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

@@ -128,11 +128,13 @@ function RestaurantEmployees() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="imèl@egzanp.com"
+            aria-label="Imèl anplwaye a"
             className={`min-w-0 flex-1 ${inputCls()}`}
           />
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value as EmployeeRole)}
+            aria-label="Wòl anplwaye a"
             className={inputCls()}
           >
             {EMPLOYEE_ROLES.map((r) => (
@@ -185,6 +187,7 @@ function RestaurantEmployees() {
                   onChange={(ev) =>
                     changeRole.mutate({ id: e.id, role: ev.target.value as EmployeeRole })
                   }
+                  aria-label={`Wòl pou ${e.email}`}
                   className="rounded-lg border-2 border-brand-soft bg-white px-2.5 py-2 text-xs font-semibold outline-none transition-[border-color,box-shadow] focus:border-brand focus:shadow-brand-xs disabled:opacity-50"
                 >
                   {EMPLOYEE_ROLES.map((r) => (

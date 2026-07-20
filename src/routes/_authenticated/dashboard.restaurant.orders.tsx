@@ -280,13 +280,30 @@ function RestaurantOrders() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {o.status === "pending" && (
                     <>
-                      <button
-                        disabled={changeStatus.isPending}
-                        onClick={() => changeStatus.mutate({ orderId: o.id, status: "confirmed" })}
-                        className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                      >
-                        <Check className="h-3.5 w-3.5" /> Konfime
-                      </button>
+                      {(() => {
+                        const payment = o.payments?.[0];
+                        const paymentUnverified =
+                          payment &&
+                          (payment.method === "moncash" || payment.method === "natcash") &&
+                          payment.status !== "paid";
+                        return (
+                          <button
+                            disabled={changeStatus.isPending || paymentUnverified}
+                            title={
+                              paymentUnverified
+                                ? "Tann yon admin konfime prèv peman an anvan w konfime kòmand la"
+                                : undefined
+                            }
+                            onClick={() =>
+                              changeStatus.mutate({ orderId: o.id, status: "confirmed" })
+                            }
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            {paymentUnverified ? "Tann verifikasyon peman" : "Konfime"}
+                          </button>
+                        );
+                      })()}
                       <button
                         disabled={changeStatus.isPending}
                         onClick={() =>
