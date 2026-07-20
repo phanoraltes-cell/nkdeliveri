@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
 
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
@@ -206,15 +207,26 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <BottomNav />
-      <Toaster
-        position="bottom-center"
-        richColors
-        offset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
-        mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
-      />
-      <InstallPrompt />
+      {/* Framer Motion never checks the OS "reduce motion" preference on its
+          own — the CSS rule in styles.css only shortens real CSS
+          transitions/animations, not Framer Motion's JS-driven opacity/
+          transform animations. Without this, every `initial={{opacity:0}}`
+          section (hero, "Kijan li travay", etc.) starts invisible and stays
+          that way for anyone with reduce-motion enabled unless Framer
+          Motion's own animation actually runs it to completion. `"user"`
+          makes every motion component here respect that OS setting by
+          applying the end state instantly instead of animating. */}
+      <MotionConfig reducedMotion="user">
+        <Outlet />
+        <BottomNav />
+        <Toaster
+          position="bottom-center"
+          richColors
+          offset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+          mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+        />
+        <InstallPrompt />
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
