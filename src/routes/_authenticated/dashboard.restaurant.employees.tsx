@@ -1,4 +1,5 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,12 +13,13 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { inputCls } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Owner-only: intentionally narrower than the parent layout's owner+staff
+// guard — restaurant_staff can manage day-to-day operations but not who
+// else is staffed, so this guard is NOT redundant with the layout's, do
+// not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/employees")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantEmployees,
 });

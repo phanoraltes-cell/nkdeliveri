@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -13,13 +13,9 @@ import {
   DISPUTE_STATUS_TONE as STATUS_TONE,
 } from "@/lib/dispute-status";
 
+// Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
+// repeat the same check locally, which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/admin/disputes")({
-  beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: AdminDisputes,
 });
 

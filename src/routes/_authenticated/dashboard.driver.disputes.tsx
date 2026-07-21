@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,13 +9,9 @@ import {
   DISPUTE_STATUS_TONE as STATUS_TONE,
 } from "@/lib/dispute-status";
 
+// Role guard lives on the parent layout (dashboard.driver.tsx) — this used
+// to repeat the same check locally, which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/driver/disputes")({
-  beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "driver" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: DriverDisputes,
 });
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -12,18 +12,10 @@ import { ProductForm } from "@/components/dashboard/restaurant/product-form";
 
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
 
+// Role guard lives on the parent layout (dashboard.restaurant.tsx, same
+// owner+staff+admin set) — this used to repeat the same check locally,
+// which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/menu")({
-  beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (
-      role !== "restaurant_owner" &&
-      role !== "restaurant_staff" &&
-      role !== "admin" &&
-      role !== "super_admin"
-    ) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: RestaurantMenu,
 });
 

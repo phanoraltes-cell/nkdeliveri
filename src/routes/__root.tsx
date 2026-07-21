@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { registerPWA } from "@/lib/pwa-register";
+import { AuthProvider } from "@/hooks/useAuth";
 import { InstallPrompt } from "@/components/install-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { SITE_URL, SITE_NAME, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
@@ -206,27 +207,37 @@ function RootComponent() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Framer Motion never checks the OS "reduce motion" preference on its
-          own — the CSS rule in styles.css only shortens real CSS
-          transitions/animations, not Framer Motion's JS-driven opacity/
-          transform animations. Without this, every `initial={{opacity:0}}`
-          section (hero, "Kijan li travay", etc.) starts invisible and stays
-          that way for anyone with reduce-motion enabled unless Framer
-          Motion's own animation actually runs it to completion. `"user"`
-          makes every motion component here respect that OS setting by
-          applying the end state instantly instead of animating. */}
-      <MotionConfig reducedMotion="user">
-        <Outlet />
-        <BottomNav />
-        <Toaster
-          position="bottom-center"
-          richColors
-          offset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
-          mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
-        />
-        <InstallPrompt />
-      </MotionConfig>
-    </QueryClientProvider>
+    // AuthProvider wraps QueryClientProvider: user identity is the more
+    // "global" of the two, and every useAuth() consumer (site-header,
+    // bottom-nav, checkout, orders, profile, useFavorites) now reads from
+    // this single subscription instead of each mounting its own. The
+    // invalidation effect above stays a separate subscription for now —
+    // merging it into AuthProvider's own onAuthStateChange callback is a
+    // deliberate follow-up, not done here, to keep this change isolated
+    // and easy to verify on its own.
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* Framer Motion never checks the OS "reduce motion" preference on its
+            own — the CSS rule in styles.css only shortens real CSS
+            transitions/animations, not Framer Motion's JS-driven opacity/
+            transform animations. Without this, every `initial={{opacity:0}}`
+            section (hero, "Kijan li travay", etc.) starts invisible and stays
+            that way for anyone with reduce-motion enabled unless Framer
+            Motion's own animation actually runs it to completion. `"user"`
+            makes every motion component here respect that OS setting by
+            applying the end state instantly instead of animating. */}
+        <MotionConfig reducedMotion="user">
+          <Outlet />
+          <BottomNav />
+          <Toaster
+            position="bottom-center"
+            richColors
+            offset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+            mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
+          />
+          <InstallPrompt />
+        </MotionConfig>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }

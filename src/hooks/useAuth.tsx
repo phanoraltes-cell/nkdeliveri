@@ -1,8 +1,26 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
-export function useAuth() {
+type AuthState = {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  role: string | null;
+};
+
+const AuthContext = createContext<AuthState | undefined>(undefined);
+
+/**
+ * Single app-wide subscription to Supabase auth state, mounted once in
+ * __root.tsx. Previously this logic lived directly in useAuth() and ran
+ * independently in every component that called it (site-header, bottom-nav,
+ * checkout, orders, profile, useFavorites) — each mount meant its own
+ * onAuthStateChange subscription, getSession() call, and get_primary_role
+ * RPC. Centralizing it here means exactly one of each for the whole app;
+ * consumers still call useAuth() with the same return shape as before.
+ */
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,5 +77,13 @@ export function useAuth() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  return { session, user, loading, role };
+  return (
+    <AuthContext.Provider value={{ session, user, loading, role }}>{children}</AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthState {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 
 // Pure layout: dashboard.restaurant.menu.tsx, .orders.tsx, .profile.tsx, etc.
 // are all registered as children of this route by TanStack Router's flat
@@ -8,17 +9,15 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 // moved to dashboard.restaurant.index.tsx) had no slot to show the matched
 // child in. The role check lives here so it guards the whole subtree once,
 // instead of only the pages that happened to repeat it themselves.
+//
+// This is the WIDER of the two guards used across the restaurant family —
+// it admits restaurant_staff. Five children (employees/payouts/profile/
+// promotions/revenue) intentionally apply a NARROWER guard of their own
+// that excludes restaurant_staff (owner-only financial/management pages) —
+// those are not redundant with this one, do not remove them.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (
-      role !== "restaurant_owner" &&
-      role !== "restaurant_staff" &&
-      role !== "admin" &&
-      role !== "super_admin"
-    ) {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["restaurant_owner", "restaurant_staff", "admin", "super_admin"]);
   },
   component: () => <Outlet />,
 });

@@ -1,4 +1,5 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,12 +14,12 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
+// Owner-only: intentionally narrower than the parent layout's owner+staff
+// guard — promotions affect pricing/marketing, reserved for the owner. Not
+// redundant with the layout's guard, do not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/promotions")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantPromotions,
 });

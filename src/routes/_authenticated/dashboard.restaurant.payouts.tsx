@@ -1,16 +1,17 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatHTG } from "@/lib/format";
 
+// Owner-only: intentionally narrower than the parent layout's owner+staff
+// guard — payouts are financial, not operational, so restaurant_staff is
+// excluded. Not redundant with the layout's guard, do not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/payouts")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: MerchantPayouts,
 });

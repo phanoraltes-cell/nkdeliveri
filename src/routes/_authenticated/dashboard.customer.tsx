@@ -20,6 +20,11 @@ import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
+// Intentionally no role guard: any authenticated role may view the customer
+// dashboard (own orders/favorites/notifications), unlike the other three
+// families which restrict to their own role + admin/super_admin. Nothing
+// sensitive to another role is exposed here — every query below is already
+// scoped to the signed-in user's own id via RLS.
 export const Route = createFileRoute("/_authenticated/dashboard/customer")({
   component: CustomerDashboard,
 });

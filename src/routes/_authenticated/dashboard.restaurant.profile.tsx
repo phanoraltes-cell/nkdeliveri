@@ -1,4 +1,5 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,12 +8,12 @@ import { Upload } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
 
+// Owner-only: intentionally narrower than the parent layout's owner+staff
+// guard — restaurant identity/settings shouldn't be editable by staff. Not
+// redundant with the layout's guard, do not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profile")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "restaurant_owner" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantProfile,
 });

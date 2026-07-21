@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
@@ -10,13 +10,9 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 
 const PAGE_SIZE = 50;
 
+// Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
+// repeat the same check locally, which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/admin/restaurants")({
-  beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: AdminRestaurants,
 });
 

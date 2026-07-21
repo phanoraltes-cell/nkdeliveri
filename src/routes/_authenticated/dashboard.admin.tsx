@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { requireRole } from "@/lib/auth-guard";
 
 // Pure layout — see dashboard.restaurant.tsx for why this Outlet is required:
 // dashboard.admin.users.tsx, .payments.tsx, etc. are children of this route
@@ -7,10 +8,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 // admin dashboard's own content on screen.
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
+    requireRole(context.role, ["admin", "super_admin"]);
   },
   component: () => <Outlet />,
 });

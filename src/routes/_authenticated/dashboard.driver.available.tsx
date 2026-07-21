@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
@@ -8,13 +8,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Store, Package } from "lucide-react";
 import { sendDeliveryAssignedPush } from "@/lib/send-order-push.functions";
 
+// Role guard lives on the parent layout (dashboard.driver.tsx) — this used
+// to repeat the same check locally, which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/driver/available")({
-  beforeLoad: ({ context }) => {
-    const { role } = context;
-    if (role !== "driver" && role !== "admin" && role !== "super_admin") {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: AvailableDeliveries,
 });
 
