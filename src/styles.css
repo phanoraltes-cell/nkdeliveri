@@ -100,16 +100,15 @@
 
   --radius: 1.125rem;
   /* NK Delivery brand palette (spec) */
-  /* --brand and --brand-deep are darkened from the original spec
-     (#F97316 / #EA580C, ≈2.8:1 and ≈3.6:1 contrast with white) because
-     white text on --brand is the site's primary CTA style (buttons,
-     badges, pills) everywhere — the original shades failed WCAG AA
-     4.5:1. #C2410C/#9A3412 keep the same hue/identity while passing AA
-     with margin (≈5.2:1 / ≈7.2:1). --brand-light/--brand-soft are
-     untouched since they're only ever paired with dark text. */
-  --brand: #c2410c; /* exact hex, not oklch — contrast math needs the precise sRGB value, not an eyeballed oklch conversion */
+  /* Reverted to the original vivid spec color at the user's request
+     (2026-07-20) — note this brings back a known WCAG AA contrast failure
+     for white text on --brand (~2.8:1, below the 4.5:1 threshold) on
+     buttons/badges site-wide. Flagged and accepted knowingly; not a
+     regression anyone should "fix" again without checking with the user
+     first. */
+  --brand: oklch(0.706 0.185 45); /* #F97316 */
   --brand-light: oklch(0.755 0.16 50); /* #FB923C */
-  --brand-deep: #9a3412; /* exact hex, see --brand comment */
+  --brand-deep: oklch(0.62 0.19 40); /* #EA580C */
   --brand-soft: oklch(0.9 0.075 65); /* #FED7AA */
   --cream: oklch(0.985 0.008 70); /* #FFF9F5 */
   --ink: oklch(0.23 0.005 0); /* #1F1F1F */
