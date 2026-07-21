@@ -4,6 +4,7 @@ import { formatHTG } from "@/lib/format";
 import type { CartItem } from "@/hooks/useCart";
 import type { HomeProduct } from "@/components/home/home-data";
 import { ImageWithFallback } from "@/components/image-with-fallback";
+import { Button } from "@/components/ui/button";
 
 const DISH_TYPES: { key: string; label: string }[] = [
   { key: "all", label: "Tout" },
@@ -100,7 +101,9 @@ export function PopularDishesSection({
                 <span className="font-display text-base font-extrabold text-brand-deep">
                   {formatHTG(Number(p.price))}
                 </span>
-                <button
+                <Button
+                  size="icon-sm"
+                  className="hover:scale-110"
                   onClick={() => {
                     const res = add({
                       productId: p.id,
@@ -113,11 +116,10 @@ export function PopularDishesSection({
                     if (res === "replaced") toast.info("Panye w a ranplase — restoran diferan");
                     else toast.success(`${p.name} ajoute nan panye`);
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white shadow-[0_6px_16px_rgba(249,115,22,0.35)] transition hover:scale-110 hover:bg-brand-deep"
                   aria-label="Ajoute nan panye"
                 >
                   <Plus className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>

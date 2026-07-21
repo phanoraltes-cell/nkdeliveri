@@ -54,7 +54,7 @@ export function NewsletterSection() {
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Antre imèl ou"
               aria-label="Antre imèl ou"
-              className="min-w-0 flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft"
+              className="min-w-0 flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft focus-visible:ring-2 focus-visible:ring-brand/40"
             />
             <button
               disabled={subscribing}

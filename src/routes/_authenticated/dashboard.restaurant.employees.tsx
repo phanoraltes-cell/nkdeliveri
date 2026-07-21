@@ -12,6 +12,7 @@ import { sendEmployeeEventPush } from "@/lib/send-employee-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { inputCls } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant_staff can manage day-to-day operations but not who
@@ -145,13 +146,9 @@ function RestaurantEmployees() {
               </option>
             ))}
           </select>
-          <button
-            disabled={add.isPending}
-            onClick={() => add.mutate()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
-          >
+          <Button disabled={add.isPending} onClick={() => add.mutate()}>
             <UserPlus className="h-4 w-4" /> {add.isPending ? "Ap ajoute…" : "Ajoute"}
-          </button>
+          </Button>
         </div>
       </section>
 

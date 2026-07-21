@@ -19,6 +19,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
+import { Button } from "@/components/ui/button";
 
 // Intentionally no role guard: any authenticated role may view the customer
 // dashboard (own orders/favorites/notifications), unlike the other three
@@ -159,24 +160,21 @@ function CustomerDashboard() {
                 {ORDER_STATUS_LABEL[currentOrder.status] ?? currentOrder.status}
               </div>
             </div>
-            <Link
-              to="/orders/$id"
-              params={{ id: currentOrder.id }}
-              className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 font-bold text-white shadow-md hover:bg-brand-deep"
-            >
-              <Navigation className="h-4 w-4" /> Swiv livrezon
-            </Link>
+            <Button asChild>
+              <Link to="/orders/$id" params={{ id: currentOrder.id }}>
+                <Navigation className="h-4 w-4" /> Swiv livrezon
+              </Link>
+            </Button>
           </div>
         </section>
       )}
 
       <div className="flex flex-wrap gap-3">
-        <Link
-          to="/restaurants"
-          className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 font-bold text-white shadow-md hover:bg-brand-deep"
-        >
-          <ShoppingBag className="h-4 w-4" /> Nouvo kòmand
-        </Link>
+        <Button asChild>
+          <Link to="/restaurants">
+            <ShoppingBag className="h-4 w-4" /> Nouvo kòmand
+          </Link>
+        </Button>
         {lastDeliveredOrder?.restaurants?.slug && (
           <Link
             to="/restaurants/$slug"

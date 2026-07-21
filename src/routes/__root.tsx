@@ -11,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 
 import appCss from "../styles.css?url";
-import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { registerPWA } from "@/lib/pwa-register";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -185,16 +184,6 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
 
   useEffect(() => {
     void registerPWA();
@@ -207,16 +196,14 @@ function RootComponent() {
   }, []);
 
   return (
-    // AuthProvider wraps QueryClientProvider: user identity is the more
-    // "global" of the two, and every useAuth() consumer (site-header,
-    // bottom-nav, checkout, orders, profile, useFavorites) now reads from
-    // this single subscription instead of each mounting its own. The
-    // invalidation effect above stays a separate subscription for now —
-    // merging it into AuthProvider's own onAuthStateChange callback is a
-    // deliberate follow-up, not done here, to keep this change isolated
-    // and easy to verify on its own.
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
+    // AuthProvider lives inside QueryClientProvider (not outside) because it
+    // now needs useQueryClient()/useRouter() itself to invalidate the
+    // router/query cache on sign-in/out — that used to be a second, separate
+    // onAuthStateChange subscription here in RootComponent; it's folded into
+    // AuthProvider's own listener now, so there is exactly one for the
+    // whole app.
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         {/* Framer Motion never checks the OS "reduce motion" preference on its
             own — the CSS rule in styles.css only shortens real CSS
             transitions/animations, not Framer Motion's JS-driven opacity/
@@ -237,7 +224,7 @@ function RootComponent() {
           />
           <InstallPrompt />
         </MotionConfig>
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

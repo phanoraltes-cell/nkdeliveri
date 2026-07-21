@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
+import { Button } from "@/components/ui/button";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant identity/settings shouldn't be editable by staff. Not
@@ -211,13 +212,13 @@ function RestaurantProfile() {
           </label>
         </div>
 
-        <button
+        <Button
+          className="mt-4"
           disabled={saveProfile.isPending}
           onClick={() => saveProfile.mutate()}
-          className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
         >
           {saveProfile.isPending ? "Ap sove…" : "Sove pwofil la"}
-        </button>
+        </Button>
       </section>
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
@@ -268,13 +269,9 @@ function RestaurantProfile() {
             );
           })}
         </div>
-        <button
-          disabled={saveHours.isPending}
-          onClick={() => saveHours.mutate()}
-          className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-        >
+        <Button className="mt-4" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
           {saveHours.isPending ? "Ap sove…" : "Sove orè yo"}
-        </button>
+        </Button>
       </section>
     </div>
   );

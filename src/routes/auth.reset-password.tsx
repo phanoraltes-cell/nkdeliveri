@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError } from "@/lib/auth-errors";
 import { inputCls } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/auth/reset-password")({
   head: () => noIndexMeta("Chwazi nouvo modpas — NK Deliveri"),
@@ -113,12 +114,9 @@ function ResetPassword() {
                 aria-label="Konfime nouvo modpas"
                 className={inputCls()}
               />
-              <button
-                disabled={loading}
-                className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
-              >
+              <Button className="h-auto w-full py-3" disabled={loading}>
                 {loading ? "..." : "Chanje modpas"}
-              </button>
+              </Button>
             </form>
           )}
 

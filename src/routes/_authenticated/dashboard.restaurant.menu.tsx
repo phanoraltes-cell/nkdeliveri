@@ -9,6 +9,7 @@ import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { CategoryManager } from "@/components/dashboard/restaurant/category-manager";
 import { ProductGrid } from "@/components/dashboard/restaurant/product-grid";
 import { ProductForm } from "@/components/dashboard/restaurant/product-form";
+import { Button } from "@/components/ui/button";
 
 type MenuProduct = Database["public"]["Tables"]["products"]["Row"];
 
@@ -164,12 +165,9 @@ function RestaurantMenu() {
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">Plat</h2>
-          <button
-            onClick={() => setShowAddProduct(true)}
-            className="inline-flex items-center gap-1 rounded-full bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-deep"
-          >
+          <Button onClick={() => setShowAddProduct(true)}>
             <Plus className="h-4 w-4" /> Ajoute yon plat
-          </button>
+          </Button>
         </div>
 
         {(showAddProduct || editingProduct) && restaurant && (

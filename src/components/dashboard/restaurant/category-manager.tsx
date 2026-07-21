@@ -2,6 +2,7 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { Button } from "@/components/ui/button";
 
 type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 
@@ -59,7 +60,7 @@ export function CategoryManager({
                   value={editingCat.name}
                   onChange={(e) => onEditingCatChange({ id: c.id, name: e.target.value })}
                   aria-label="Non kategori a"
-                  className="w-28 bg-transparent text-sm outline-none"
+                  className="w-28 rounded bg-transparent text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                 />
                 <button
                   onClick={() => onUpdateCategory(editingCat)}
@@ -132,13 +133,13 @@ export function CategoryManager({
           aria-label="Non nouvo kategori a…"
           className={inputCls() + " max-w-xs"}
         />
-        <button
+        <Button
+          className="rounded-xl"
           disabled={!newCatName.trim() || isCreating}
           onClick={() => onCreateCategory(newCatName.trim())}
-          className="inline-flex items-center gap-1 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
         >
           <Plus className="h-4 w-4" /> Ajoute
-        </button>
+        </Button>
       </div>
       {ConfirmDialog}
     </section>

@@ -12,6 +12,7 @@ import { inputCls } from "@/lib/utils";
 import { AddressManager } from "@/components/address-manager";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { assertValidUploadFile } from "@/lib/file-validation";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/profile")({
   head: () => noIndexMeta("Pwofil mwen — NK Deliveri"),
@@ -179,13 +180,13 @@ function Profile() {
                 </label>
               </div>
 
-              <button
+              <Button
+                className="font-display font-extrabold"
                 disabled={save.isPending}
                 onClick={() => save.mutate()}
-                className="rounded-full bg-brand px-6 py-2.5 font-display font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
               >
                 {save.isPending ? "Ap sove…" : "Sove pwofil la"}
-              </button>
+              </Button>
             </div>
           )}
         </div>

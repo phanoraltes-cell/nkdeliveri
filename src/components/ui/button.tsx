@@ -24,6 +24,11 @@ const buttonVariants = cva(
         sm: "h-9 rounded-full px-4 text-xs",
         lg: "h-12 rounded-full px-7 text-[0.95rem]",
         icon: "h-11 w-11 rounded-full",
+        // For the smaller circular icon-only buttons scattered across the
+        // app (h-9/h-10, e.g. add-to-cart, header icons) that don't match
+        // the default icon size — added so migrating them to <Button>
+        // doesn't force them to visually grow to h-11.
+        "icon-sm": "h-9 w-9 rounded-full",
       },
     },
     defaultVariants: {

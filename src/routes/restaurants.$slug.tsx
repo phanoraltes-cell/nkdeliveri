@@ -14,6 +14,7 @@ import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 
 const restQuery = (slug: string) =>
@@ -316,7 +317,10 @@ function RestaurantPage() {
                             Fini
                           </span>
                         ) : (
-                          <button
+                          <Button
+                            size="icon-sm"
+                            className="hover:scale-110"
+                            aria-label={`Ajoute ${p.name} nan panye`}
                             onClick={() => {
                               const res = add({
                                 productId: p.id,
@@ -329,10 +333,9 @@ function RestaurantPage() {
                               if (res === "replaced") toast.info("Panye w a ranplase");
                               else toast.success(`${p.name} ajoute`);
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white shadow-brand-sm transition hover:scale-110 hover:bg-brand-deep hover:shadow-brand-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2"
                           >
                             <Plus className="h-4 w-4" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>

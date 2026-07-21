@@ -6,6 +6,7 @@ import { MapPin, Plus, Pencil, Trash2, Star, X } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 type Address = {
   id: string;
@@ -273,13 +274,9 @@ function AddressForm({
           onChange={(e) => setF({ ...f, notes: e.target.value })}
         />
       </div>
-      <button
-        disabled={saving}
-        onClick={save}
-        className="mt-4 rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-      >
+      <Button className="mt-4" disabled={saving} onClick={save}>
         {saving ? "Ap sove…" : "Sove adrès"}
-      </button>
+      </Button>
     </div>
   );
 }

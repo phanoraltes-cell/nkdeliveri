@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { sendNewOrderPush } from "@/lib/send-order-push.functions";
 import { inputCls } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -338,13 +339,13 @@ function Checkout() {
                 )}
               </div>
 
-              <button
+              <Button
+                className="mt-6 h-auto w-full py-4 font-display font-extrabold"
                 onClick={submit}
                 disabled={submitting}
-                className="mt-6 w-full rounded-full bg-brand py-4 font-display font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
               >
                 {submitting ? "Ap kreye…" : `Konfime kòmand la · ${formatHTG(total)}`}
-              </button>
+              </Button>
             </>
           )}
         </div>

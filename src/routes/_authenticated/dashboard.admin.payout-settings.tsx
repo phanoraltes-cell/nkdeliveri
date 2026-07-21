@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { inputCls } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
@@ -148,13 +149,13 @@ function AdminPayoutSettings() {
             </div>
           </div>
         )}
-        <button
+        <Button
+          className="mt-6"
           disabled={save.isPending || settings.isLoading}
           onClick={() => save.mutate()}
-          className="mt-6 rounded-full bg-brand px-6 py-3 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
         >
           {save.isPending ? "Ap sove…" : "Sove paramèt yo"}
-        </button>
+        </Button>
       </section>
     </div>
   );

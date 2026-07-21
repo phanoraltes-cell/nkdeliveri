@@ -73,7 +73,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               // on text inputs — without it, a flex-1 input refuses to
               // shrink below its content width on narrow screens and pushes
               // the submit button out past the pill's right edge.
-              className="min-w-0 flex-1 rounded-full bg-transparent px-2 py-3 text-sm outline-none placeholder:text-ink-soft"
+              className="min-w-0 flex-1 rounded-full bg-transparent px-2 py-3 text-sm outline-none placeholder:text-ink-soft focus-visible:ring-2 focus-visible:ring-brand/40"
             />
             <button
               type="submit"

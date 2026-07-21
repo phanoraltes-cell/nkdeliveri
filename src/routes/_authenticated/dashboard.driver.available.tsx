@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { MapPin, Store, Package } from "lucide-react";
 import { sendDeliveryAssignedPush } from "@/lib/send-order-push.functions";
+import { Button } from "@/components/ui/button";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -129,13 +130,13 @@ function AvailableDeliveries() {
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{o.delivery_address}</span>
             </div>
-            <button
+            <Button
+              className="mt-3 w-full"
               disabled={!online || claim.isPending}
               onClick={() => claim.mutate(o.id)}
-              className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-brand py-2.5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
             >
               <Package className="h-4 w-4" /> Pran livrezon sa a
-            </button>
+            </Button>
           </div>
         ))}
       </div>

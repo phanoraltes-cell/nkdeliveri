@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DisputeThread } from "@/components/disputes/dispute-thread";
 import { sendDisputeUpdatePush } from "@/lib/send-dispute-push.functions";
 import { inputClsCompact } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const CATEGORIES = ["Manje ki manke", "Kalite manje", "Livrezon an reta", "Konpòtman livrè", "Lòt"];
 
@@ -112,13 +113,12 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
             rows={3}
             className={inputClsCompact()}
           />
-          <button
+          <Button
             disabled={open.isPending || description.trim().length < 5}
             onClick={() => open.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             {open.isPending ? "Ap voye…" : "Siyale pwoblèm nan"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { inputCls } from "@/lib/utils";
 import { baseSignUp, toFileInput, useSubmit, FormCard, FileField } from "./register-shared";
+import { Button } from "@/components/ui/button";
 
 export function DriverForm() {
   const [f, setF] = useState({
@@ -171,12 +172,9 @@ export function DriverForm() {
           />
           <span>Mwen aksepte kondisyon livrè NK Deliveri.</span>
         </label>
-        <button
-          disabled={loading}
-          className="w-full rounded-full bg-brand py-3 font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
-        >
+        <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont livrè"}
-        </button>
+        </Button>
         <p className="text-center text-xs text-ink-soft">
           Kont ou ap atann valdasyon yon administratè.
         </p>

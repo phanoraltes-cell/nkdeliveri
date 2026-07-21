@@ -7,6 +7,7 @@ import { assertValidUploadFile } from "@/lib/file-validation";
 import { formatHTG } from "@/lib/format";
 import { ProofThumb } from "@/components/proof-thumb";
 import { inputClsCompact } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type PaymentProofSectionProps = {
   orderId: string;
@@ -148,13 +149,9 @@ export function PaymentProofSection({
             aria-label="Nòt (opsyonèl)"
             className={inputClsCompact()}
           />
-          <button
-            type="submit"
-            disabled={uploadProof.isPending || !file}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
-          >
+          <Button type="submit" disabled={uploadProof.isPending || !file}>
             <Upload className="h-4 w-4" /> {uploadProof.isPending ? "Ap voye…" : "Voye prèv la"}
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">

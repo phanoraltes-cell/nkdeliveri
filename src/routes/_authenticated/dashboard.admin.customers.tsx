@@ -8,6 +8,8 @@ import { sendNewsletterBroadcast } from "@/lib/send-newsletter.functions";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Download, Search, Send, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { inputClsCompact } from "@/lib/utils";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -163,7 +165,7 @@ function AdminCustomers() {
                 onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
                 aria-label="Chèche non, imèl, telefòn…"
-                className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
+                className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
               />
             </div>
             <button
@@ -282,7 +284,7 @@ function AdminCustomers() {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Sijè imèl la"
               aria-label="Sijè imèl la"
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+              className={inputClsCompact()}
             />
             <textarea
               value={body}
@@ -290,16 +292,15 @@ function AdminCustomers() {
               placeholder="Kontni mesaj la…"
               aria-label="Kontni mesaj la…"
               rows={5}
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+              className={inputClsCompact()}
             />
-            <button
+            <Button
               disabled={broadcast.isPending || !activeSubs.length}
               onClick={() => broadcast.mutate()}
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
             >
               <Send className="h-4 w-4" />{" "}
               {broadcast.isPending ? "Ap voye…" : "Voye bay tout abone yo"}
-            </button>
+            </Button>
           </div>
         </div>
       </section>

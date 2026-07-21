@@ -8,6 +8,7 @@ import { Package, CheckCircle2 } from "lucide-react";
 import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -139,15 +140,15 @@ function DriverHistory() {
                     {formatHTG(Number(d.orders?.total ?? 0))}
                   </span>
                   {(d.status === "assigned" || d.status === "en_route_pickup") && (
-                    <button
+                    <Button
+                      size="sm"
                       disabled={advance.isPending}
                       onClick={() =>
                         advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })
                       }
-                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                     >
                       <Package className="h-3.5 w-3.5" /> Pikap fèt
-                    </button>
+                    </Button>
                   )}
                   {(d.status === "picked_up" || d.status === "en_route_dropoff") && (
                     <button

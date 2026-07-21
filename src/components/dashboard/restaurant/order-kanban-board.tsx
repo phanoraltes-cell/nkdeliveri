@@ -3,6 +3,7 @@ import { Check, X, ChevronRight, Printer } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { Button } from "@/components/ui/button";
 
 export type KanbanOrder = {
   id: string;
@@ -220,13 +221,14 @@ function KanbanCard({
             </>
           )}
           {nextCol && o.status !== "pending" && (
-            <button
+            <Button
+              size="sm"
+              className="h-auto gap-1 px-2.5 py-1.5 text-[11px]"
               disabled={isChangingStatus}
               onClick={() => onChangeStatus(o.id, nextCol)}
-              className="inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-brand-deep disabled:pointer-events-none disabled:opacity-50"
             >
               Avanse <ChevronRight className="h-3 w-3" />
-            </button>
+            </Button>
           )}
         </div>
       )}

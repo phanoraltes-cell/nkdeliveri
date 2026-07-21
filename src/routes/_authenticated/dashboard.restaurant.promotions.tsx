@@ -11,6 +11,7 @@ import { inputClsCompact as inputCls } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { sendNewPromotionPush } from "@/lib/send-promotion-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { Button } from "@/components/ui/button";
 
 type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 
@@ -116,15 +117,14 @@ function RestaurantPromotions() {
         </Link>
       </div>
 
-      <button
+      <Button
         onClick={() => {
           setEditing(null);
           setShowForm(true);
         }}
-        className="inline-flex items-center gap-1 rounded-full bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-deep"
       >
         <Plus className="h-4 w-4" /> Nouvo pwomosyon
-      </button>
+      </Button>
 
       {showForm && restaurant && (
         <PromoForm
@@ -351,13 +351,9 @@ function PromoForm({
           onChange={(e) => setF({ ...f, description: e.target.value })}
         />
       </div>
-      <button
-        disabled={saving}
-        onClick={save}
-        className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-      >
+      <Button className="mt-4" disabled={saving} onClick={save}>
         {saving ? "Ap sove…" : "Sove pwomosyon"}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
   const { user } = useAuth();
@@ -85,11 +86,10 @@ export function SiteHeader() {
 
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger
-                aria-label="Meni kont"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-deep"
-              >
-                <UserIcon className="h-4 w-4" />
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" aria-label="Meni kont">
+                  <UserIcon className="h-4 w-4" />
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
@@ -117,12 +117,9 @@ export function SiteHeader() {
               >
                 Konekte
               </Link>
-              <Link
-                to="/auth/register"
-                className="inline-flex h-11 items-center rounded-full bg-brand px-3.5 text-sm font-bold text-white shadow-[0_6px_18px_rgba(249,115,22,0.35)] transition hover:bg-brand-deep hover:shadow-[0_10px_24px_rgba(249,115,22,0.45)] sm:px-5"
-              >
-                Enskri
-              </Link>
+              <Button asChild className="px-3.5 sm:px-5">
+                <Link to="/auth/register">Enskri</Link>
+              </Button>
             </div>
           )}
         </div>

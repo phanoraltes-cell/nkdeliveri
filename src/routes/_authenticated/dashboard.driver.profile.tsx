@@ -7,6 +7,7 @@ import { Upload, User as UserIcon } from "lucide-react";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/dashboard/driver/profile")({
   component: DriverProfile,
@@ -217,13 +218,13 @@ function DriverProfile() {
               </label>
             </div>
 
-            <button
+            <Button
+              className="mt-4 font-display font-extrabold"
               disabled={save.isPending}
               onClick={() => save.mutate()}
-              className="mt-4 rounded-full bg-brand px-6 py-2.5 font-display font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
             >
               {save.isPending ? "Ap sove…" : "Sove pwofil la"}
-            </button>
+            </Button>
           </section>
 
           <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">

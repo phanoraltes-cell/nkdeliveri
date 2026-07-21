@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StarPicker, StarRow } from "@/components/order/star-rating";
 import { inputClsCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 type OrderReviewSectionProps = {
   orderId: string;
@@ -107,13 +108,9 @@ export function OrderReviewSection({
             rows={3}
             className={inputClsCompact()}
           />
-          <button
-            disabled={submitReview.isPending}
-            onClick={() => submitReview.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
-          >
+          <Button disabled={submitReview.isPending} onClick={() => submitReview.mutate()}>
             {submitReview.isPending ? "Ap voye…" : "Voye avi"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

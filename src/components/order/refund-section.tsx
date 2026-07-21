@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { formatHTG } from "@/lib/format";
 import { inputClsCompact } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const REFUND_STATUS_LABEL: Record<string, string> = {
   requested: "An atant revizyon",
@@ -110,13 +111,12 @@ export function RefundSection({ orderId, orderStatus, paymentStatus }: RefundSec
             rows={3}
             className={inputClsCompact()}
           />
-          <button
+          <Button
             disabled={request.isPending || reason.trim().length < 5}
             onClick={() => request.mutate()}
-            className="rounded-full bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-60"
           >
             {request.isPending ? "Ap voye…" : "Mande yon ranbousman"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

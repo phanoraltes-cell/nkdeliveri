@@ -4,7 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { formatHTG } from "@/lib/format";
+import { inputClsCompact } from "@/lib/utils";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — payouts are financial, not operational, so restaurant_staff is
@@ -169,13 +171,13 @@ function MerchantPayouts() {
         </div>
       </section>
 
-      <button
+      <Button
+        className="font-display font-extrabold"
         onClick={() => save.mutate()}
         disabled={save.isPending}
-        className="rounded-full bg-brand px-6 py-2.5 font-display font-extrabold text-white hover:bg-brand-deep disabled:opacity-60"
       >
         {save.isPending ? "Ap sove…" : "Sove chanjman yo"}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -201,7 +203,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+        className={inputClsCompact()}
       />
     </label>
   );

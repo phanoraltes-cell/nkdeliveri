@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Percent, Store } from "lucide-react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Button } from "@/components/ui/button";
+import { inputClsCompact } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
 
@@ -207,7 +209,7 @@ function CommissionForm({
               step="0.1"
               value={rate}
               onChange={(e) => setRate(e.target.value)}
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+              className={inputClsCompact()}
             />
           </label>
         ) : (
@@ -221,20 +223,16 @@ function CommissionForm({
               step="1"
               value={monthly}
               onChange={(e) => setMonthly(e.target.value)}
-              className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+              className={inputClsCompact()}
             />
           </label>
         )}
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button
-          disabled={save.isPending}
-          onClick={() => save.mutate()}
-          className="rounded-full bg-brand px-5 py-2 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-        >
+        <Button disabled={save.isPending} onClick={() => save.mutate()}>
           {save.isPending ? "Ap sove…" : "Sove komisyon"}
-        </button>
+        </Button>
         <button
           onClick={onClose}
           className="rounded-full border-2 border-brand-soft px-5 py-2 text-sm font-bold text-ink-soft hover:bg-brand-soft/30"

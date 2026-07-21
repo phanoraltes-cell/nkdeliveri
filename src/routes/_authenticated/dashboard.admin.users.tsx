@@ -202,14 +202,14 @@ function AdminUsers() {
                 onChange={(e) => updateSearch(e.target.value)}
                 placeholder="Chèche non, imèl, telefòn…"
                 aria-label="Chèche non, imèl, telefòn…"
-                className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand"
+                className="rounded-full border-2 border-brand-soft bg-white py-2.5 pl-8 pr-3 text-xs outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
               />
             </div>
             <select
               value={roleFilter}
               onChange={(e) => updateRoleFilter(e.target.value)}
               aria-label="Filtre pa wòl"
-              className="rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand"
+              className="rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
             >
               <option value="all">Tout wòl</option>
               {Object.entries(ROLE_LABEL).map(([k, v]) => (

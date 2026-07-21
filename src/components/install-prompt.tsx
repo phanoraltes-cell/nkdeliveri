@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
 import { subscribeToPush } from "@/lib/push";
+import { Button } from "@/components/ui/button";
 
 const DISMISS_KEY = "nk-install-dismissed-at";
 const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
@@ -131,12 +132,9 @@ export function InstallPrompt() {
             </p>
           )}
           {!showIOSHelp && (
-            <button
-              onClick={install}
-              className="mt-2.5 inline-flex h-10 items-center rounded-full bg-brand px-4 text-xs font-bold text-white transition hover:bg-brand-deep"
-            >
+            <Button size="sm" className="mt-2.5" onClick={install}>
               Enstale
-            </button>
+            </Button>
           )}
         </div>
         <button

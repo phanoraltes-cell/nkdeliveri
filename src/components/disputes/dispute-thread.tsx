@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { useDisputeMessages } from "@/hooks/useDisputeMessages";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Button } from "@/components/ui/button";
+import { inputClsCompact } from "@/lib/utils";
 
 const AUTHOR_ROLE_LABEL: Record<string, string> = {
   customer: "Kliyan",
@@ -70,7 +72,7 @@ export function DisputeThread({
               onChange={(e) => setReply(e.target.value)}
               placeholder="Ekri yon repons…"
               aria-label="Ekri yon repons…"
-              className="min-w-0 flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-brand-xs"
+              className="min-w-0 flex-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-brand focus:shadow-brand-xs focus-visible:ring-2 focus-visible:ring-brand/30"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && reply.trim()) {
                   send.mutate(reply.trim());
@@ -78,17 +80,18 @@ export function DisputeThread({
                 }
               }}
             />
-            <button
+            <Button
+              size="icon-sm"
+              className="shrink-0 hover:scale-110"
               disabled={send.isPending || !reply.trim()}
               onClick={() => {
                 send.mutate(reply.trim());
                 setReply("");
               }}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-brand-xs transition hover:scale-110 hover:bg-brand-deep disabled:pointer-events-none disabled:opacity-50"
               aria-label="Voye"
             >
               <Send className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
           {canResolve && (
@@ -105,7 +108,7 @@ export function DisputeThread({
                 onChange={(e) => setResolutionText(e.target.value)}
                 rows={2}
                 placeholder="Eksplike desizyon final la…"
-                className="w-full rounded-xl border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+                className={inputClsCompact()}
               />
               <button
                 disabled={isResolving || resolutionText.trim().length < 3}

@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/auth-errors";
 import { KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { inputCls } from "@/lib/utils";
 
 /**
  * Password change for an already-authenticated user. Supabase's updateUser()
@@ -44,7 +46,7 @@ export function ChangePasswordForm() {
           aria-label="Nouvo modpas"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+          className={inputCls()}
         />
         <input
           type="password"
@@ -54,15 +56,12 @@ export function ChangePasswordForm() {
           aria-label="Konfime nouvo modpas"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="w-full rounded-xl border-2 border-brand-soft bg-white px-4 py-2.5 text-sm outline-none focus:border-brand"
+          className={inputCls()}
         />
       </div>
-      <button
-        disabled={loading}
-        className="inline-flex h-11 items-center gap-1.5 rounded-full bg-brand px-5 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-      >
+      <Button disabled={loading}>
         <KeyRound className="h-4 w-4" /> {loading ? "Ap chanje…" : "Chanje modpas"}
-      </button>
+      </Button>
     </form>
   );
 }
