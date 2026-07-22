@@ -8,6 +8,11 @@ export type CartItem = {
   price: number;
   imageUrl?: string | null;
   qty: number;
+  // Customer-entered per-item note (e.g. "no onions") — sent as-is to
+  // create_order_secure's per-item `notes`, which already accepts it; this
+  // is the only piece of the cart model that maps 1:1 to an order_items
+  // column rather than being order-wide like delivery notes.
+  notes?: string;
 };
 
 const KEY = "nk-cart-v1";
@@ -62,6 +67,11 @@ export function useCart() {
     write(cur);
   }, []);
 
+  const setItemNotes = useCallback((productId: string, notes: string) => {
+    const cur = read().map((x) => (x.productId === productId ? { ...x, notes } : x));
+    write(cur);
+  }, []);
+
   const remove = useCallback((productId: string) => {
     write(read().filter((x) => x.productId !== productId));
   }, []);
@@ -71,5 +81,5 @@ export function useCart() {
   const count = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
 
-  return { items, add, setQty, remove, clear, count, subtotal };
+  return { items, add, setQty, setItemNotes, remove, clear, count, subtotal };
 }

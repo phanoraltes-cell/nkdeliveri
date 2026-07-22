@@ -27,7 +27,7 @@ const METHODS = [
 ] as const;
 
 function Checkout() {
-  const { items, setQty, remove, subtotal, count } = useCart();
+  const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
   const { clear } = useCart();
   const { user } = useAuth();
   const [method, setMethod] = useState<"moncash" | "natcash" | "kach">("moncash");
@@ -128,7 +128,11 @@ function Checkout() {
       const rId = items[0].restaurantId;
       const { data: orderId, error: rpcErr } = await supabase.rpc("create_order_secure", {
         _restaurant_id: rId,
-        _items: items.map((it) => ({ product_id: it.productId, quantity: it.qty })),
+        _items: items.map((it) => ({
+          product_id: it.productId,
+          quantity: it.qty,
+          notes: it.notes?.trim() || undefined,
+        })),
         _delivery_address: address,
         _contact_phone: phone,
         _delivery_notes: notes || "",
@@ -192,6 +196,13 @@ function Checkout() {
                     <span className="text-xs text-ink-soft">
                       {formatHTG(it.price)} · {it.restaurantName}
                     </span>
+                    <input
+                      value={it.notes ?? ""}
+                      onChange={(e) => setItemNotes(it.productId, e.target.value)}
+                      placeholder="Nòt pou plat sa a (opsyonèl)…"
+                      aria-label={`Nòt pou ${it.name}`}
+                      className="mt-1 w-full min-w-0 rounded-lg border border-brand-soft bg-cream px-2 py-1 text-xs text-ink outline-none placeholder:text-ink-soft focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
+                    />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <button
