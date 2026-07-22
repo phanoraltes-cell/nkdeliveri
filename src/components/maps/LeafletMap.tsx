@@ -139,7 +139,21 @@ export function LeafletMap({
     className || "h-[400px] w-full rounded-2xl border border-brand-soft/60 bg-brand-soft/20";
 
   return (
-    <div className={`relative overflow-hidden ${boxClassName}`} style={{ touchAction: "pan-y" }}>
+    // isolate: Leaflet's own stylesheet gives its internal panes/controls/
+    // popups z-index up to 1000 (.leaflet-top/.leaflet-bottom). This div has
+    // `relative` but no z-index of its own, so — without isolation — those
+    // values aren't scoped to the map's box; they compare directly against
+    // the rest of the page's stacking contexts. Since the dashboard header
+    // (sticky, z-40) and the public site header/bottom-nav (z-50) are both
+    // well under 1000, whenever the map's box scrolls to overlap them, the
+    // map's internal layers would paint on top of "sticky" chrome instead of
+    // staying beneath it. `isolate` seals all of Leaflet's z-index values
+    // inside this box so they can never escape past its own (unset → 0)
+    // stacking position, regardless of scroll offset or viewport size.
+    <div
+      className={`relative isolate overflow-hidden ${boxClassName}`}
+      style={{ touchAction: "pan-y" }}
+    >
       <MapContainer
         center={initialCenter}
         zoom={zoom}
