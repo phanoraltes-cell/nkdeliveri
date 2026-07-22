@@ -31,6 +31,12 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
   preparing: [{ to: "ready", label: "Mak kòm prè" }],
 };
 
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  moncash: "MonCash",
+  natcash: "NatCash",
+  kach: "Kach nan livrezon",
+};
+
 function RestaurantOrders() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
@@ -51,7 +57,7 @@ function RestaurantOrders() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, delivery_address, delivery_notes, created_at, order_items(id, product_name, quantity, notes)",
+          "id, order_number, status, total, delivery_address, delivery_notes, contact_phone, subtotal, delivery_fee, created_at, order_items(id, product_name, quantity, notes), payments(status, method)",
         )
         .eq("restaurant_id", restaurant!.id)
         .order("created_at", { ascending: false })
@@ -228,13 +234,31 @@ function RestaurantOrders() {
                       </span>
                     </div>
                     <div className="text-xs text-ink-soft">
-                      {new Date(o.created_at).toLocaleString("fr-HT")} · {o.contact_phone}
+                      {new Date(o.created_at).toLocaleString("fr-HT")} ·{" "}
+                      {o.contact_phone ? (
+                        <a href={`tel:${o.contact_phone}`} className="font-bold text-brand-deep">
+                          {o.contact_phone}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
                     </div>
                     <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="text-right font-display text-xl font-extrabold text-brand-deep">
-                      {formatHTG(Number(o.total))}
+                    <div className="text-right">
+                      <div className="font-display text-xl font-extrabold text-brand-deep">
+                        {formatHTG(Number(o.total))}
+                      </div>
+                      <div className="text-[11px] text-ink-soft">
+                        Su-total {formatHTG(Number(o.subtotal))} + Livrezon{" "}
+                        {formatHTG(Number(o.delivery_fee))}
+                      </div>
+                      {o.payments?.[0]?.method && (
+                        <div className="text-[11px] font-bold text-ink-soft">
+                          {PAYMENT_METHOD_LABEL[o.payments[0].method] ?? o.payments[0].method}
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() =>
@@ -254,13 +278,18 @@ function RestaurantOrders() {
 
                 <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
                   {o.order_items?.map((it) => (
-                    <li key={it.id} className="flex justify-between px-3 py-1.5">
-                      <span>
-                        {it.quantity}× {it.product_name}
-                      </span>
-                      <span className="font-bold">
-                        {formatHTG(Number(it.unit_price) * it.quantity)}
-                      </span>
+                    <li key={it.id} className="px-3 py-1.5">
+                      <div className="flex justify-between">
+                        <span>
+                          {it.quantity}× {it.product_name}
+                        </span>
+                        <span className="font-bold">
+                          {formatHTG(Number(it.unit_price) * it.quantity)}
+                        </span>
+                      </div>
+                      {it.notes && (
+                        <div className="mt-0.5 text-xs italic text-brand-deep">↳ {it.notes}</div>
+                      )}
                     </li>
                   ))}
                 </ul>

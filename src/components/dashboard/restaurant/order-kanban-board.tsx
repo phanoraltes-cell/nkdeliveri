@@ -5,16 +5,26 @@ import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  moncash: "MonCash",
+  natcash: "NatCash",
+  kach: "Kach nan livrezon",
+};
+
 export type KanbanOrder = {
   id: string;
   order_number: string;
   status: string;
   total: number;
+  subtotal?: number | null;
+  delivery_fee?: number | null;
   delivery_address: string;
   delivery_notes: string | null;
+  contact_phone?: string | null;
   created_at: string;
   order_items:
     { id: string; product_name: string; quantity: number; notes: string | null }[] | null;
+  payments?: { status: string; method: string }[] | null;
 };
 
 type Column = { key: string; label: string; statuses: string[] };
@@ -164,6 +174,8 @@ function KanbanCard({
   isChangingStatus: boolean;
 }) {
   const itemCount = o.order_items?.reduce((s, it) => s + it.quantity, 0) ?? 0;
+  const itemsWithNotes = o.order_items?.filter((it) => it.notes) ?? [];
+  const paymentMethod = o.payments?.[0]?.method;
   const nextCol = NEXT_COLUMN[o.status];
 
   return (
@@ -194,10 +206,28 @@ function KanbanCard({
       <div className="mt-0.5 text-[11px] text-ink-soft">
         {new Date(o.created_at).toLocaleTimeString("fr-HT", { hour: "2-digit", minute: "2-digit" })}{" "}
         · {itemCount} atik
+        {paymentMethod && ` · ${PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}`}
       </div>
       <div className="mt-1 truncate text-[11px] text-ink-soft">{o.delivery_address}</div>
+      {o.contact_phone && (
+        <a
+          href={`tel:${o.contact_phone}`}
+          className="mt-0.5 block text-[11px] font-bold text-brand-deep"
+        >
+          {o.contact_phone}
+        </a>
+      )}
       {o.delivery_notes && (
         <div className="mt-1 truncate text-[11px] italic text-ink-soft">{o.delivery_notes}</div>
+      )}
+      {itemsWithNotes.length > 0 && (
+        <ul className="mt-1 space-y-0.5">
+          {itemsWithNotes.map((it) => (
+            <li key={it.id} className="truncate text-[11px] italic text-brand-deep">
+              ↳ {it.product_name}: {it.notes}
+            </li>
+          ))}
+        </ul>
       )}
 
       {(o.status === "pending" || nextCol) && (
