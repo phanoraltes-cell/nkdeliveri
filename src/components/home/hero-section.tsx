@@ -109,15 +109,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           <span className="text-xs font-semibold whitespace-nowrap text-ink sm:text-sm">
             Peman disponib
           </span>
-          <div className="flex h-8 w-16 shrink-0 items-center justify-center sm:w-24">
-            <img
-              src="/moncash-logo-hero.png"
-              alt="MonCash"
-              width={64}
-              height={32}
-              className="max-h-full max-w-full rounded object-contain"
-            />
-          </div>
+          <img
+            src="/moncash-logo-hero.png"
+            alt="MonCash"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 rounded object-cover"
+          />
           <div className="flex h-8 w-16 shrink-0 items-center justify-center gap-1 rounded border border-brand-soft/60 bg-white sm:w-24 sm:gap-1.5">
             <Banknote
               className="h-3.5 w-3.5 shrink-0 text-brand-deep sm:h-4 sm:w-4"
@@ -125,15 +123,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             />
             <span className="text-[0.7rem] font-bold text-ink sm:text-xs">Kach</span>
           </div>
-          <div className="flex h-8 w-16 shrink-0 items-center justify-center sm:w-24">
-            <img
-              src="/natcash-logo-new.png"
-              alt="NatCash"
-              width={64}
-              height={32}
-              className="max-h-full max-w-full rounded object-contain"
-            />
-          </div>
+          <img
+            src="/natcash-logo-new.png"
+            alt="NatCash"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 rounded object-cover"
+          />
         </motion.div>
       </div>
     </section>
