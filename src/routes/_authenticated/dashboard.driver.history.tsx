@@ -42,7 +42,7 @@ function DriverHistory() {
       const { data, error } = await supabase
         .from("deliveries")
         .select(
-          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))",
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, delivery_notes, contact_phone, restaurants(name, address, phone), order_items(id, quantity))",
         )
         .eq("driver_id", driver!.id)
         .in("status", ["assigned", "en_route_pickup", "picked_up", "en_route_dropoff"])
@@ -118,53 +118,86 @@ function DriverHistory() {
           </div>
         )}
         <div className="space-y-3">
-          {active.data?.map((d) => (
-            <div
-              key={d.id}
-              className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <div className="font-display text-lg font-extrabold">
-                    {d.orders?.order_number}
+          {active.data?.map((d) => {
+            const itemCount = d.orders?.order_items?.reduce((s, it) => s + it.quantity, 0) ?? 0;
+            return (
+              <div
+                key={d.id}
+                className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-display text-lg font-extrabold">
+                      {d.orders?.order_number}
+                    </div>
+                    <div className="text-xs text-ink-soft">
+                      {d.orders?.restaurants?.name} · {d.orders?.delivery_address}
+                      {d.orders?.restaurants?.phone && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`tel:${d.orders.restaurants.phone}`}
+                            className="font-bold text-brand-deep"
+                          >
+                            {d.orders.restaurants.phone}
+                          </a>
+                        </>
+                      )}
+                    </div>
+                    <div className="text-xs text-ink-soft">
+                      {itemCount} atik
+                      {d.orders?.contact_phone && (
+                        <>
+                          {" · "}
+                          <a
+                            href={`tel:${d.orders.contact_phone}`}
+                            className="font-bold text-brand-deep"
+                          >
+                            {d.orders.contact_phone}
+                          </a>
+                        </>
+                      )}
+                    </div>
+                    {d.orders?.delivery_notes && (
+                      <div className="text-xs italic text-ink-soft">
+                        Nòt: {d.orders.delivery_notes}
+                      </div>
+                    )}
+                    <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
+                      {STATUS_LABEL[d.status] || d.status}
+                    </span>
                   </div>
-                  <div className="text-xs text-ink-soft">
-                    {d.orders?.restaurants?.name} · {d.orders?.delivery_address}
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="font-display font-extrabold text-brand-deep">
+                      {formatHTG(Number(d.orders?.total ?? 0))}
+                    </span>
+                    {(d.status === "assigned" || d.status === "en_route_pickup") && (
+                      <Button
+                        size="sm"
+                        disabled={advance.isPending}
+                        onClick={() =>
+                          advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })
+                        }
+                      >
+                        <Package className="h-3.5 w-3.5" /> Pikap fèt
+                      </Button>
+                    )}
+                    {(d.status === "picked_up" || d.status === "en_route_dropoff") && (
+                      <button
+                        disabled={advance.isPending}
+                        onClick={() =>
+                          advance.mutate({ id: d.id, orderId: d.order_id, status: "delivered" })
+                        }
+                        className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Livre
+                      </button>
+                    )}
                   </div>
-                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
-                    {STATUS_LABEL[d.status] || d.status}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className="font-display font-extrabold text-brand-deep">
-                    {formatHTG(Number(d.orders?.total ?? 0))}
-                  </span>
-                  {(d.status === "assigned" || d.status === "en_route_pickup") && (
-                    <Button
-                      size="sm"
-                      disabled={advance.isPending}
-                      onClick={() =>
-                        advance.mutate({ id: d.id, orderId: d.order_id, status: "picked_up" })
-                      }
-                    >
-                      <Package className="h-3.5 w-3.5" /> Pikap fèt
-                    </Button>
-                  )}
-                  {(d.status === "picked_up" || d.status === "en_route_dropoff") && (
-                    <button
-                      disabled={advance.isPending}
-                      onClick={() =>
-                        advance.mutate({ id: d.id, orderId: d.order_id, status: "delivered" })
-                      }
-                      className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Livre
-                    </button>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

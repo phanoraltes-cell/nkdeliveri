@@ -15,9 +15,18 @@ export type ActiveDelivery = {
     delivery_lat: number | null;
     delivery_lng: number | null;
     delivery_address: string | null;
+    delivery_notes?: string | null;
     contact_phone: string | null;
     status: string;
-    restaurants?: { name: string; lat: number | null; lng: number | null } | null;
+    restaurants?: {
+      name: string;
+      lat: number | null;
+      lng: number | null;
+      address?: string | null;
+      phone?: string | null;
+    } | null;
+    order_items?:
+      { id: string; product_name: string; quantity: number; notes: string | null }[] | null;
   } | null;
   driver?: { first_name: string | null; last_name: string | null } | null;
 };
@@ -30,7 +39,7 @@ async function fetchActiveDeliveries(scope: Scope): Promise<ActiveDelivery[]> {
   let q = supabase
     .from("deliveries")
     .select(
-      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, contact_phone, status, customer_id, restaurants(name, lat, lng))",
+      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, delivery_notes, contact_phone, status, customer_id, restaurants(name, lat, lng, address, phone), order_items(id, product_name, quantity, notes))",
     )
     .in("status", ACTIVE_STATUSES);
   if (scope.driverId) q = q.eq("driver_id", scope.driverId);
@@ -87,7 +96,7 @@ async function fetchOrderDelivery(orderId: string): Promise<ActiveDelivery | nul
   const { data, error } = await supabase
     .from("deliveries")
     .select(
-      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, contact_phone, status, restaurants(name, lat, lng))",
+      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, delivery_notes, contact_phone, status, restaurants(name, lat, lng, address, phone), order_items(id, product_name, quantity, notes))",
     )
     .eq("order_id", orderId)
     .maybeSingle();

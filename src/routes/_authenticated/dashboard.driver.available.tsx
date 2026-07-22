@@ -39,7 +39,7 @@ function AvailableDeliveries() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, total, delivery_address, created_at, restaurants(name, address), deliveries!left(id)",
+          "id, order_number, total, delivery_address, delivery_notes, created_at, restaurants(name, address, phone), order_items(id, quantity), deliveries!left(id)",
         )
         .eq("status", "ready")
         .is("deliveries.id", null)
@@ -109,36 +109,55 @@ function AvailableDeliveries() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {available.data?.map((o) => (
-          <div
-            key={o.id}
-            className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-display text-lg font-extrabold">{o.order_number}</span>
-              <span className="font-display text-lg font-extrabold text-brand-deep">
-                {formatHTG(Number(o.total))}
-              </span>
-            </div>
-            <div className="mt-2 flex items-start gap-2 text-sm text-ink-soft">
-              <Store className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                {o.restaurants?.name} — {o.restaurants?.address}
-              </span>
-            </div>
-            <div className="mt-1 flex items-start gap-2 text-sm text-ink-soft">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{o.delivery_address}</span>
-            </div>
-            <Button
-              className="mt-3 w-full"
-              disabled={!online || claim.isPending}
-              onClick={() => claim.mutate(o.id)}
+        {available.data?.map((o) => {
+          const itemCount = o.order_items?.reduce((s, it) => s + it.quantity, 0) ?? 0;
+          return (
+            <div
+              key={o.id}
+              className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
             >
-              <Package className="h-4 w-4" /> Pran livrezon sa a
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-center justify-between">
+                <span className="font-display text-lg font-extrabold">{o.order_number}</span>
+                <span className="font-display text-lg font-extrabold text-brand-deep">
+                  {formatHTG(Number(o.total))}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-ink-soft">{itemCount} atik</div>
+              <div className="mt-2 flex items-start gap-2 text-sm text-ink-soft">
+                <Store className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  {o.restaurants?.name} — {o.restaurants?.address}
+                  {o.restaurants?.phone && (
+                    <>
+                      {" · "}
+                      <a
+                        href={`tel:${o.restaurants.phone}`}
+                        className="font-bold text-brand-deep"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {o.restaurants.phone}
+                      </a>
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1 flex items-start gap-2 text-sm text-ink-soft">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{o.delivery_address}</span>
+              </div>
+              {o.delivery_notes && (
+                <div className="mt-1 text-xs italic text-ink-soft">Nòt: {o.delivery_notes}</div>
+              )}
+              <Button
+                className="mt-3 w-full"
+                disabled={!online || claim.isPending}
+                onClick={() => claim.mutate(o.id)}
+              >
+                <Package className="h-4 w-4" /> Pran livrezon sa a
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

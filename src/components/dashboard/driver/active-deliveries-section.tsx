@@ -54,6 +54,19 @@ export function ActiveDeliveriesSection({
             <div className="text-xs uppercase tracking-wider text-ink-soft">{d.status}</div>
             <div className="font-bold text-ink">{d.order?.order_number}</div>
             <div className="text-xs text-ink-soft">{d.order?.delivery_address}</div>
+            {d.order?.contact_phone && (
+              <a
+                href={`tel:${d.order.contact_phone}`}
+                className="text-xs font-bold text-brand-deep"
+              >
+                {d.order.contact_phone}
+              </a>
+            )}
+            {d.order?.delivery_notes && (
+              <div className="mt-0.5 text-xs italic text-ink-soft">
+                Nòt: {d.order.delivery_notes}
+              </div>
+            )}
             <div className="mt-2">
               <DeliveryRouteInfo d={d} onRoute={i === 0 ? setRoutePath : undefined} />
             </div>

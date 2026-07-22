@@ -159,21 +159,31 @@ function DriverDashboard() {
       });
     }
     if (d.order?.restaurants?.lat != null && d.order?.restaurants?.lng != null) {
+      const r = d.order.restaurants;
       arr.push({
         id: `rst-${d.id}`,
-        lat: Number(d.order.restaurants.lat),
-        lng: Number(d.order.restaurants.lng),
+        lat: Number(r.lat),
+        lng: Number(r.lng),
         type: "restaurant",
-        label: d.order.restaurants.name ?? "Restoran",
+        label: r.name ?? "Restoran",
+        info: {
+          title: r.name ?? "Restoran",
+          lines: [r.address, r.phone].filter((v): v is string => !!v),
+        },
       });
     }
     if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+      const o = d.order;
       arr.push({
         id: `dst-${d.id}`,
-        lat: Number(d.order.delivery_lat),
-        lng: Number(d.order.delivery_lng),
+        lat: Number(o.delivery_lat),
+        lng: Number(o.delivery_lng),
         type: "client",
-        label: d.order.order_number,
+        label: o.order_number,
+        info: {
+          title: `Kòmand ${o.order_number}`,
+          lines: [o.delivery_address, o.contact_phone].filter((v): v is string => !!v),
+        },
       });
     }
     return arr;
