@@ -113,30 +113,29 @@ export function SiteFooter() {
               Peman
             </span>
             <div className="flex flex-wrap gap-2">
-              {payments.map((p) => (
-                <span
-                  key={p.name}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 shadow-brand-xs"
-                  title={p.name}
-                >
-                  {p.kind === "image" && (
-                    <img
-                      src={p.src}
-                      alt={p.name}
-                      width={64}
-                      height={28}
-                      loading="lazy"
-                      className="h-7 w-16 object-contain"
-                    />
-                  )}
-                  {p.kind === "icon" && (
-                    <>
-                      <Banknote className="h-5 w-5 text-brand-deep" />
-                      <span className="text-sm font-bold text-ink">{p.name}</span>
-                    </>
-                  )}
-                </span>
-              ))}
+              {payments.map((p) =>
+                p.kind === "image" ? (
+                  <img
+                    key={p.name}
+                    src={p.src}
+                    alt={p.name}
+                    title={p.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="h-10 w-10 rounded-xl object-cover shadow-brand-xs"
+                  />
+                ) : (
+                  <span
+                    key={p.name}
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 shadow-brand-xs"
+                    title={p.name}
+                  >
+                    <Banknote className="h-5 w-5 text-brand-deep" />
+                    <span className="text-sm font-bold text-ink">{p.name}</span>
+                  </span>
+                ),
+              )}
             </div>
           </div>
         </div>
