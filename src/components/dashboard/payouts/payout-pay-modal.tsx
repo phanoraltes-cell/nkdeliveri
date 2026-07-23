@@ -1,0 +1,233 @@
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { inputClsCompact } from "@/lib/utils";
+import { formatHTG } from "@/lib/format";
+import { assertValidUploadFile } from "@/lib/file-validation";
+import { sendPayoutUpdatePush } from "@/lib/send-payout-push.functions";
+
+export type PayoutBeneficiary = {
+  type: "restaurant" | "driver";
+  id: string;
+  name: string;
+  availableBalance: number;
+  moncashNumber: string | null;
+  natcashNumber: string | null;
+};
+
+type PayoutPayModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  beneficiary: PayoutBeneficiary | null;
+  /** Query key(s) to invalidate after a successful payout (the admin wallet list). */
+  invalidateKeys: readonly (readonly unknown[])[];
+};
+
+/**
+ * First genuine form modal in this app (the only existing Dialog usage,
+ * useConfirmDialog, is a plain yes/no confirm, not a form) — built directly
+ * from the Dialog primitives, mirroring useConfirmDialog's controlled-open
+ * shape and DialogFooter's outline-Cancel + colored-action-button pattern.
+ * Money has already left the admin's phone by the time this form is
+ * submitted — the reference/proof are evidence of a transfer that already
+ * happened, collected in the same action that creates the payout record
+ * (mirrors payment-proof-section.tsx's own upload-then-RPC shape).
+ */
+export function PayoutPayModal({
+  open,
+  onOpenChange,
+  beneficiary,
+  invalidateKeys,
+}: PayoutPayModalProps) {
+  const qc = useQueryClient();
+  const sendPush = useServerFn(sendPayoutUpdatePush);
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState<"moncash" | "natcash" | "">("");
+  const [transactionReference, setTransactionReference] = useState("");
+  const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!beneficiary) return;
+    setAmount(String(beneficiary.availableBalance));
+    setMethod(beneficiary.moncashNumber ? "moncash" : beneficiary.natcashNumber ? "natcash" : "");
+    setTransactionReference("");
+    setNotes("");
+    setFile(null);
+  }, [beneficiary]);
+
+  const pay = useMutation({
+    mutationFn: async () => {
+      if (!beneficiary) throw new Error("Pa gen benefisyè");
+      const numAmount = Number(amount);
+      if (!numAmount || numAmount <= 0) throw new Error("Montan envalid");
+      if (numAmount > beneficiary.availableBalance) throw new Error("Balans disponib la pa ase");
+      if (!method) throw new Error("Chwazi yon metòd peman");
+      if (!transactionReference.trim()) throw new Error("Referans tranzaksyon obligatwa");
+
+      let proofUrl: string | undefined;
+      if (file) {
+        assertValidUploadFile(file, "payout-proofs");
+        const path = `${beneficiary.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage.from("payout-proofs").upload(path, file, {
+          upsert: false,
+        });
+        if (upErr) throw upErr;
+        proofUrl = path;
+      }
+
+      const { data, error } = await supabase.rpc("initiate_payout_secure", {
+        _restaurant_id: beneficiary.type === "restaurant" ? beneficiary.id : undefined,
+        _driver_id: beneficiary.type === "driver" ? beneficiary.id : undefined,
+        _amount: numAmount,
+        _method: method,
+        _transaction_reference: transactionReference.trim(),
+        _proof_url: proofUrl,
+        _notes: notes.trim() || undefined,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success("Peman voye. Benefisyè a resevwa yon notifikasyon.");
+      for (const key of invalidateKeys) qc.invalidateQueries({ queryKey: key });
+      if (data?.id) {
+        sendPush({ data: { payoutId: data.id, event: "paid" } }).catch((e) =>
+          console.warn("[push] payout paid notify failed", e),
+        );
+      }
+      onOpenChange(false);
+    },
+    onError: (e) => toast.error(e.message ?? "Erè"),
+  });
+
+  const availableMethods: { value: "moncash" | "natcash"; label: string }[] = beneficiary
+    ? [
+        ...(beneficiary.moncashNumber ? [{ value: "moncash" as const, label: "MonCash" }] : []),
+        ...(beneficiary.natcashNumber ? [{ value: "natcash" as const, label: "NatCash" }] : []),
+      ]
+    : [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Voye yon peman</DialogTitle>
+          <DialogDescription>
+            {beneficiary?.name} — Balans disponib: {formatHTG(beneficiary?.availableBalance ?? 0)}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Montan pou peye
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={beneficiary?.availableBalance}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className={inputClsCompact()}
+            />
+          </label>
+
+          {beneficiary && (
+            <div className="text-xs text-ink-soft">
+              Balans ki ap rete apre peman:{" "}
+              <b className="text-ink">
+                {formatHTG(Math.max(0, beneficiary.availableBalance - (Number(amount) || 0)))}
+              </b>
+            </div>
+          )}
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Metòd peman
+            </span>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value as "moncash" | "natcash")}
+              className={inputClsCompact()}
+            >
+              <option value="" disabled>
+                Chwazi yon metòd
+              </option>
+              {availableMethods.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            {availableMethods.length === 0 && (
+              <span className="mt-1 block text-xs text-red-600">
+                Benefisyè a poko konfigire okenn nimewo peman.
+              </span>
+            )}
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Referans tranzaksyon
+            </span>
+            <input
+              value={transactionReference}
+              onChange={(e) => setTransactionReference(e.target.value)}
+              placeholder="Nimewo tranzaksyon MonCash/NatCash"
+              className={inputClsCompact()}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Prèv peman (opsyonèl)
+            </span>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className={inputClsCompact()}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Nòt (opsyonèl)
+            </span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className={inputClsCompact()}
+            />
+          </label>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Anile
+          </Button>
+          <Button
+            disabled={pay.isPending || !method || !amount || !transactionReference.trim()}
+            onClick={() => pay.mutate()}
+          >
+            {pay.isPending ? "Ap voye…" : "Konfime peman"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

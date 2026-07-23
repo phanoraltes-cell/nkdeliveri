@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatHTG } from "@/lib/format";
 import { inputClsCompact } from "@/lib/utils";
+import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
+import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — payouts are financial, not operational, so restaurant_staff is
@@ -27,7 +29,7 @@ function MerchantPayouts() {
     queryFn: async () => {
       const { data: rest, error: e1 } = await supabase
         .from("restaurants")
-        .select("id")
+        .select("id, name")
         .eq("owner_id", user!.id)
         .maybeSingle();
       if (e1) throw e1;
@@ -42,6 +44,7 @@ function MerchantPayouts() {
       if (e2) throw e2;
       return {
         id: rest.id,
+        name: rest.name,
         moncash_number: pd?.moncash_number ?? null,
         moncash_account_name: pd?.moncash_account_name ?? null,
         natcash_number: pd?.natcash_number ?? null,
@@ -50,6 +53,21 @@ function MerchantPayouts() {
         commission_rate: pd?.commission_rate ?? 10,
         monthly_commission_amount: pd?.monthly_commission_amount ?? 0,
       };
+    },
+  });
+
+  const walletQueryKey = ["me-restaurant-wallet", r?.id] as const;
+  const wallet = useQuery({
+    queryKey: walletQueryKey,
+    enabled: !!r?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wallets")
+        .select("available_balance, pending_balance, paid_balance, lifetime_earnings")
+        .eq("restaurant_id", r!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -120,6 +138,8 @@ function MerchantPayouts() {
         </Link>
       </div>
 
+      <WalletSummaryCards wallet={wallet.data ?? null} />
+
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Nimewo peman ou</h2>
         <p className="mt-1 text-xs text-ink-soft">
@@ -178,6 +198,13 @@ function MerchantPayouts() {
       >
         {save.isPending ? "Ap sove…" : "Sove chanjman yo"}
       </Button>
+
+      <WalletPayoutHistorySection
+        beneficiaryType="restaurant"
+        beneficiaryId={r?.id}
+        beneficiaryName={r?.name ?? ""}
+        walletQueryKey={walletQueryKey}
+      />
     </div>
   );
 }

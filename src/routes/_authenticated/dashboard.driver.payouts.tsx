@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
+import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
+import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -22,9 +24,24 @@ function DriverPayouts() {
       const { data, error } = await supabase
         .from("drivers")
         .select(
-          "id, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_frequency, commission_rate",
+          "id, first_name, last_name, moncash_number, moncash_account_name, natcash_number, natcash_account_name, payout_frequency, commission_rate",
         )
         .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const walletQueryKey = ["me-driver-wallet", d?.id] as const;
+  const wallet = useQuery({
+    queryKey: walletQueryKey,
+    enabled: !!d?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wallets")
+        .select("available_balance, pending_balance, paid_balance, lifetime_earnings")
+        .eq("driver_id", d!.id)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -93,6 +110,8 @@ function DriverPayouts() {
         </Link>
       </div>
 
+      <WalletSummaryCards wallet={wallet.data ?? null} />
+
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Nimewo peman</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -156,6 +175,13 @@ function DriverPayouts() {
       >
         {save.isPending ? "Ap sove…" : "Sove chanjman yo"}
       </Button>
+
+      <WalletPayoutHistorySection
+        beneficiaryType="driver"
+        beneficiaryId={d?.id}
+        beneficiaryName={[d?.first_name, d?.last_name].filter(Boolean).join(" ")}
+        walletQueryKey={walletQueryKey}
+      />
     </div>
   );
 }

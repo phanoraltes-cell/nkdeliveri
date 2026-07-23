@@ -1,0 +1,59 @@
+import { formatHTG } from "@/lib/format";
+import { PAYOUT_STATUS_LABEL } from "@/lib/payout-status";
+
+export type PayoutReceiptData = {
+  id: string;
+  amount: number;
+  method: string;
+  receiverNumber: string;
+  receiverAccountName: string | null;
+  transactionReference: string;
+  status: string;
+  beneficiaryName: string;
+  createdAt: string;
+};
+
+/**
+ * One-payout PDF receipt — reused by the admin, restaurant, and driver
+ * payout-history views. jspdf is lazy-imported (same ~1.3MB-of-transitive-
+ * deps rationale as payout-history.tsx's CSV/PDF export), so it never loads
+ * until someone actually clicks "Telechaje resi".
+ */
+export async function generatePayoutReceipt(payout: PayoutReceiptData) {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "pt", format: "a5" });
+
+  doc.setFontSize(16);
+  doc.text("NK Deliveri", 40, 48);
+  doc.setFontSize(11);
+  doc.text("Resi peman", 40, 68);
+
+  doc.setDrawColor(234, 88, 12);
+  doc.line(40, 80, 380, 80);
+
+  const rows: [string, string][] = [
+    ["Benefisyè", payout.beneficiaryName],
+    ["Montan", formatHTG(payout.amount)],
+    ["Metòd", payout.method.toUpperCase()],
+    ["Nimewo resevwa", payout.receiverNumber],
+    ...(payout.receiverAccountName
+      ? ([["Non kont", payout.receiverAccountName]] as [string, string][])
+      : []),
+    ["Referans tranzaksyon", payout.transactionReference],
+    ["Estati", PAYOUT_STATUS_LABEL[payout.status] ?? payout.status],
+    ["Dat", new Date(payout.createdAt).toLocaleString("fr-HT")],
+    ["ID peman", payout.id],
+  ];
+
+  let y = 108;
+  doc.setFontSize(10);
+  for (const [label, value] of rows) {
+    doc.setTextColor(120, 113, 108);
+    doc.text(label, 40, y);
+    doc.setTextColor(28, 25, 23);
+    doc.text(value, 190, y, { maxWidth: 200 });
+    y += 24;
+  }
+
+  doc.save(`resi-peman_${payout.id.slice(0, 8)}.pdf`);
+}

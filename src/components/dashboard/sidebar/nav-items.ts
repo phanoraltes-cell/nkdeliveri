@@ -13,6 +13,7 @@ import {
   MapPin,
   RotateCcw,
   AlertTriangle,
+  Banknote,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -73,6 +74,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
+    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
   ],
   super_admin: [
     { to: "/dashboard/admin", label: "Akèy", icon: LayoutDashboard },
@@ -83,6 +85,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
+    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
   ],
 };
 

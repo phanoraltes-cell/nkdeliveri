@@ -75,6 +75,103 @@ export type Database = {
         };
         Relationships: [];
       };
+      audit_log: {
+        Row: {
+          action: string;
+          created_at: string;
+          id: number;
+          metadata: Json;
+          role: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          id?: number;
+          metadata?: Json;
+          role?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          id?: number;
+          metadata?: Json;
+          role?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      commission_ledger: {
+        Row: {
+          commission_amount: number;
+          commission_rate: number | null;
+          created_at: string;
+          created_by: string | null;
+          driver_id: string | null;
+          entry_type: Database["public"]["Enums"]["commission_entry_type"];
+          gross_amount: number;
+          id: string;
+          net_amount: number;
+          notes: string | null;
+          order_id: string | null;
+          period_month: string | null;
+          restaurant_id: string | null;
+        };
+        Insert: {
+          commission_amount?: number;
+          commission_rate?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          driver_id?: string | null;
+          entry_type: Database["public"]["Enums"]["commission_entry_type"];
+          gross_amount?: number;
+          id?: string;
+          net_amount: number;
+          notes?: string | null;
+          order_id?: string | null;
+          period_month?: string | null;
+          restaurant_id?: string | null;
+        };
+        Update: {
+          commission_amount?: number;
+          commission_rate?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          driver_id?: string | null;
+          entry_type?: Database["public"]["Enums"]["commission_entry_type"];
+          gross_amount?: number;
+          id?: string;
+          net_amount?: number;
+          notes?: string | null;
+          order_id?: string | null;
+          period_month?: string | null;
+          restaurant_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commission_ledger_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commission_ledger_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commission_ledger_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       deliveries: {
         Row: {
           assigned_at: string;
@@ -698,6 +795,134 @@ export type Database = {
           },
         ];
       };
+      payment_methods: {
+        Row: {
+          code: string;
+          created_at: string;
+          is_active: boolean;
+          label: string;
+          sort_order: number;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          is_active?: boolean;
+          label: string;
+          sort_order?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          is_active?: boolean;
+          label?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      payouts: {
+        Row: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          disputed_at: string | null;
+          dispute_reason: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        Insert: {
+          admin_notes?: string | null;
+          amount: number;
+          confirmed_at?: string | null;
+          created_at?: string;
+          disputed_at?: string | null;
+          dispute_reason?: string | null;
+          driver_id?: string | null;
+          id?: string;
+          method: string;
+          paid_by: string;
+          proof_url?: string | null;
+          receiver_account_name?: string | null;
+          receiver_number: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id?: string | null;
+          status?: Database["public"]["Enums"]["payout_status"];
+          status_history?: Json;
+          transaction_reference: string;
+          updated_at?: string;
+          wallet_id: string;
+        };
+        Update: {
+          admin_notes?: string | null;
+          amount?: number;
+          confirmed_at?: string | null;
+          created_at?: string;
+          disputed_at?: string | null;
+          dispute_reason?: string | null;
+          driver_id?: string | null;
+          id?: string;
+          method?: string;
+          paid_by?: string;
+          proof_url?: string | null;
+          receiver_account_name?: string | null;
+          receiver_number?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id?: string | null;
+          status?: Database["public"]["Enums"]["payout_status"];
+          status_history?: Json;
+          transaction_reference?: string;
+          updated_at?: string;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payouts_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payouts_method_fkey";
+            columns: ["method"];
+            isOneToOne: false;
+            referencedRelation: "payment_methods";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "payouts_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payouts_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       platform_payout_settings: {
         Row: {
           id: boolean;
@@ -1222,6 +1447,124 @@ export type Database = {
         };
         Relationships: [];
       };
+      wallet_transactions: {
+        Row: {
+          available_delta: number;
+          commission_ledger_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          lifetime_delta: number;
+          note: string | null;
+          paid_delta: number;
+          payout_id: string | null;
+          pending_delta: number;
+          type: string;
+          wallet_id: string;
+        };
+        Insert: {
+          available_delta?: number;
+          commission_ledger_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          lifetime_delta?: number;
+          note?: string | null;
+          paid_delta?: number;
+          payout_id?: string | null;
+          pending_delta?: number;
+          type: string;
+          wallet_id: string;
+        };
+        Update: {
+          available_delta?: number;
+          commission_ledger_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          lifetime_delta?: number;
+          note?: string | null;
+          paid_delta?: number;
+          payout_id?: string | null;
+          pending_delta?: number;
+          type?: string;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_commission_ledger_id_fkey";
+            columns: ["commission_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "commission_ledger";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wallet_transactions_payout_id_fkey";
+            columns: ["payout_id"];
+            isOneToOne: false;
+            referencedRelation: "payouts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      wallets: {
+        Row: {
+          available_balance: number;
+          created_at: string;
+          driver_id: string | null;
+          id: string;
+          lifetime_earnings: number;
+          paid_balance: number;
+          pending_balance: number;
+          restaurant_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          available_balance?: number;
+          created_at?: string;
+          driver_id?: string | null;
+          id?: string;
+          lifetime_earnings?: number;
+          paid_balance?: number;
+          pending_balance?: number;
+          restaurant_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          available_balance?: number;
+          created_at?: string;
+          driver_id?: string | null;
+          id?: string;
+          lifetime_earnings?: number;
+          paid_balance?: number;
+          pending_balance?: number;
+          restaurant_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wallets_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: true;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wallets_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: true;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1266,6 +1609,30 @@ export type Database = {
           _user_id: string;
         };
         Returns: undefined;
+      };
+      charge_restaurant_monthly_fee_secure: {
+        Args: { _period?: string; _restaurant_id: string };
+        Returns: {
+          commission_amount: number;
+          commission_rate: number | null;
+          created_at: string;
+          created_by: string | null;
+          driver_id: string | null;
+          entry_type: Database["public"]["Enums"]["commission_entry_type"];
+          gross_amount: number;
+          id: string;
+          net_amount: number;
+          notes: string | null;
+          order_id: string | null;
+          period_month: string | null;
+          restaurant_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "commission_ledger";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       check_auth_rate_limit_secure: {
         Args: {
@@ -1333,6 +1700,39 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      confirm_payout_secure: {
+        Args: { _payout_id: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          disputed_at: string | null;
+          dispute_reason: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -1443,6 +1843,51 @@ export type Database = {
         Args: { _promotion_id: string };
         Returns: undefined;
       };
+      dispute_payout_secure: {
+        Args: { _payout_id: string; _reason: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          disputed_at: string | null;
+          dispute_reason: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_admin_payout_kpis: {
+        Args: never;
+        Returns: {
+          commissions_this_month: number;
+          dispute_count: number;
+          owed_drivers: number;
+          owed_restaurants: number;
+          payout_count: number;
+          total_paid: number;
+          total_pending: number;
+        }[];
+      };
       get_all_users_admin: {
         Args: {
           _limit?: number;
@@ -1461,6 +1906,10 @@ export type Database = {
           roles: string[];
           total_count: number;
         }[];
+      };
+      get_commission_monthly_series: {
+        Args: { _from: string; _to: string };
+        Returns: { month: string; total_commission: number }[];
       };
       get_customers_admin: {
         Args: { _limit?: number; _offset?: number; _search?: string };
@@ -1485,6 +1934,35 @@ export type Database = {
           week_earnings: number;
           week_start: string;
         }[];
+      };
+      get_driver_wallets_admin: {
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+        };
+        Returns: {
+          available_balance: number;
+          computed_status: string;
+          driver_id: string;
+          last_payment_date: string | null;
+          lifetime_earnings: number;
+          moncash_account_name: string | null;
+          moncash_number: string | null;
+          name: string;
+          natcash_account_name: string | null;
+          natcash_number: string | null;
+          paid_balance: number;
+          pending_balance: number;
+          total_count: number;
+          total_orders: number;
+        }[];
+      };
+      get_payouts_monthly_series: {
+        Args: { _from: string; _to: string };
+        Returns: { month: string; total_paid: number }[];
       };
       get_platform_payout_public: {
         Args: never;
@@ -1520,6 +1998,31 @@ export type Database = {
           total_orders: number;
         }[];
       };
+      get_restaurant_wallets_admin: {
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+        };
+        Returns: {
+          available_balance: number;
+          computed_status: string;
+          last_payment_date: string | null;
+          lifetime_earnings: number;
+          moncash_account_name: string | null;
+          moncash_number: string | null;
+          name: string;
+          natcash_account_name: string | null;
+          natcash_number: string | null;
+          paid_balance: number;
+          pending_balance: number;
+          restaurant_id: string;
+          total_count: number;
+          total_orders: number;
+        }[];
+      };
       get_restaurants_admin: {
         Args: { _limit?: number; _offset?: number };
         Returns: {
@@ -1534,12 +2037,61 @@ export type Database = {
           total_count: number;
         }[];
       };
+      get_top_drivers_by_commission: {
+        Args: { _from: string; _limit?: number; _to: string };
+        Returns: { driver_id: string; name: string; total_commission: number }[];
+      };
+      get_top_restaurants_by_commission: {
+        Args: { _from: string; _limit?: number; _to: string };
+        Returns: { name: string; restaurant_id: string; total_commission: number }[];
+      };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
           _user_id: string;
         };
         Returns: boolean;
+      };
+      initiate_payout_secure: {
+        Args: {
+          _amount?: number;
+          _driver_id?: string;
+          _method?: string;
+          _notes?: string;
+          _proof_url?: string;
+          _restaurant_id?: string;
+          _transaction_reference?: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          disputed_at: string | null;
+          dispute_reason: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       list_restaurant_employees_secure: {
         Args: { _restaurant_id: string };
@@ -1572,6 +2124,26 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "disputes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      recompute_wallet_secure: {
+        Args: { _driver_id?: string; _restaurant_id?: string };
+        Returns: {
+          available_balance: number;
+          created_at: string;
+          driver_id: string | null;
+          id: string;
+          lifetime_earnings: number;
+          paid_balance: number;
+          pending_balance: number;
+          restaurant_id: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "wallets";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -1632,6 +2204,43 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "disputes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      resolve_payout_dispute_secure: {
+        Args: {
+          _admin_notes?: string;
+          _payout_id: string;
+          _resolution: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          disputed_at: string | null;
+          dispute_reason: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: Database["public"]["Enums"]["payout_status"];
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2125,6 +2734,7 @@ export type Database = {
     Enums: {
       app_role:
         "customer" | "restaurant_owner" | "restaurant_staff" | "driver" | "admin" | "super_admin";
+      commission_entry_type: "order_commission" | "monthly_fee" | "reversal";
       delivery_status:
         | "assigned"
         | "en_route_pickup"
@@ -2148,6 +2758,7 @@ export type Database = {
       payment_method: "stripe" | "moncash" | "natcash" | "kach";
       payment_status:
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
+      payout_status: "paid" | "confirmed" | "disputed" | "resolved";
       refund_status: "requested" | "approved" | "rejected" | "completed";
       restaurant_status: "pending" | "approved" | "suspended" | "rejected";
     };
@@ -2282,6 +2893,7 @@ export const Constants = {
         "admin",
         "super_admin",
       ],
+      commission_entry_type: ["order_commission", "monthly_fee", "reversal"],
       delivery_status: [
         "assigned",
         "en_route_pickup",
@@ -2306,6 +2918,7 @@ export const Constants = {
       ],
       payment_method: ["stripe", "moncash", "natcash", "kach"],
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],
+      payout_status: ["paid", "confirmed", "disputed", "resolved"],
       refund_status: ["requested", "approved", "rejected", "completed"],
       restaurant_status: ["pending", "approved", "suspended", "rejected"],
     },
