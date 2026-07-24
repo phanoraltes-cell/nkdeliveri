@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { ProofThumb } from "@/components/proof-thumb";
+import { Button } from "@/components/ui/button";
 
 export type PendingDriver = {
   id: string;
@@ -18,6 +19,8 @@ export type PendingDriver = {
 type PendingDriversSectionProps = {
   drivers: PendingDriver[] | undefined;
   isLoading: boolean;
+  /** id of the driver currently being approved/rejected, if any — only that row's buttons disable, other rows stay actionable. */
+  pendingId?: string;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
 };
@@ -26,6 +29,7 @@ type PendingDriversSectionProps = {
 export function PendingDriversSection({
   drivers,
   isLoading,
+  pendingId,
   onApprove,
   onReject,
 }: PendingDriversSectionProps) {
@@ -79,18 +83,24 @@ export function PendingDriversSection({
               </div>
             </div>
             <div className="mt-3 flex gap-2">
-              <button
+              <Button
+                size="sm"
+                disabled={pendingId === d.id}
                 onClick={() => onApprove(d.id)}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700"
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Apwouve
-              </button>
-              <button
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {pendingId === d.id ? "Ap trete…" : "Apwouve"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={pendingId === d.id}
                 onClick={() => onReject(d.id)}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700"
               >
-                <XCircle className="h-3.5 w-3.5" /> Refize
-              </button>
+                <XCircle className="h-3.5 w-3.5" />
+                {pendingId === d.id ? "Ap trete…" : "Refize"}
+              </Button>
             </div>
           </div>
         ))}

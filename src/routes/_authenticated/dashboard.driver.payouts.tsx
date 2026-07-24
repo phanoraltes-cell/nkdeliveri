@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
 import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
+import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -47,6 +48,13 @@ function DriverPayouts() {
       return data;
     },
   });
+
+  useRealtimeTableSync(
+    "wallets",
+    d?.id ? `driver_id=eq.${d.id}` : undefined,
+    [walletQueryKey, ["me-payout-history"]],
+    !!d?.id,
+  );
 
   const [f, setF] = useState({
     moncash_number: "",

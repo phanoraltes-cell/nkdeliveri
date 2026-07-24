@@ -102,6 +102,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      backfill_runs: {
+        Row: {
+          completed_at: string | null;
+          created_at: string;
+          error_details: Json;
+          id: string;
+          orders_already_migrated: number;
+          orders_failed: number;
+          orders_migrated: number;
+          orders_scanned: number;
+          orders_skipped: number;
+          run_by: string;
+          started_at: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json;
+          id?: string;
+          orders_already_migrated?: number;
+          orders_failed?: number;
+          orders_migrated?: number;
+          orders_scanned?: number;
+          orders_skipped?: number;
+          run_by: string;
+          started_at?: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json;
+          id?: string;
+          orders_already_migrated?: number;
+          orders_failed?: number;
+          orders_migrated?: number;
+          orders_scanned?: number;
+          orders_skipped?: number;
+          run_by?: string;
+          started_at?: string;
+        };
+        Relationships: [];
+      };
       commission_ledger: {
         Row: {
           commission_amount: number;
@@ -818,6 +860,42 @@ export type Database = {
           sort_order?: number;
         };
         Relationships: [];
+      };
+      payout_commissions: {
+        Row: {
+          commission_ledger_id: string;
+          covered_amount: number;
+          created_at: string;
+          payout_id: string;
+        };
+        Insert: {
+          commission_ledger_id: string;
+          covered_amount?: number;
+          created_at?: string;
+          payout_id: string;
+        };
+        Update: {
+          commission_ledger_id?: string;
+          covered_amount?: number;
+          created_at?: string;
+          payout_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payout_commissions_commission_ledger_id_fkey";
+            columns: ["commission_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "commission_ledger";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payout_commissions_payout_id_fkey";
+            columns: ["payout_id"];
+            isOneToOne: false;
+            referencedRelation: "payouts";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       payouts: {
         Row: {
@@ -1876,14 +1954,31 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      execute_commission_backfill_secure: {
+        Args: { _order_ids?: string[] };
+        Returns: {
+          detail: string | null;
+          order_id: string;
+          order_number: string;
+          outcome: string;
+        }[];
+      };
       get_admin_payout_kpis: {
         Args: never;
         Returns: {
+          avg_payment_delay_hours: number | null;
+          avg_payout_amount: number | null;
           commissions_this_month: number;
           dispute_count: number;
+          drivers_waiting_count: number;
+          largest_unpaid_driver_amount: number | null;
+          largest_unpaid_driver_name: string | null;
+          largest_unpaid_restaurant_amount: number | null;
+          largest_unpaid_restaurant_name: string | null;
           owed_drivers: number;
           owed_restaurants: number;
           payout_count: number;
+          restaurants_waiting_count: number;
           total_paid: number;
           total_pending: number;
         }[];
@@ -1926,6 +2021,35 @@ export type Database = {
           total_spent: number;
         }[];
       };
+      get_driver_commissions_secure: {
+        Args: {
+          _driver_id: string;
+          _from?: string;
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+          _to?: string;
+        };
+        Returns: {
+          commission_amount: number;
+          commission_rate: number | null;
+          commission_status: string;
+          contact_phone: string | null;
+          covered_amount: number;
+          created_at: string;
+          entry_type: string;
+          gross_amount: number;
+          id: string;
+          net_amount: number;
+          order_date: string | null;
+          order_id: string | null;
+          order_number: string | null;
+          payout_id: string | null;
+          total_count: number;
+        }[];
+      };
       get_driver_earnings_summary: {
         Args: { _driver_id: string; _from: string; _to: string };
         Returns: {
@@ -1960,6 +2084,45 @@ export type Database = {
           total_orders: number;
         }[];
       };
+      get_historical_backfill_preview_secure: {
+        Args: {
+          _driver_id?: string;
+          _from?: string;
+          _limit?: number;
+          _offset?: number;
+          _restaurant_id?: string;
+          _search?: string;
+          _sort?: string;
+          _to?: string;
+        };
+        Returns: {
+          delivery_fee: number;
+          driver_commission_amount: number | null;
+          driver_id: string | null;
+          driver_name: string | null;
+          migration_status: string;
+          order_date: string;
+          order_id: string;
+          order_number: string;
+          platform_commission_amount: number;
+          restaurant_commission_amount: number | null;
+          restaurant_id: string;
+          restaurant_name: string | null;
+          subtotal: number;
+          total_count: number;
+        }[];
+      };
+      get_historical_backfill_summary_secure: {
+        Args: never;
+        Returns: {
+          driver_count: number;
+          estimated_driver_earnings: number;
+          estimated_platform_commission: number;
+          estimated_restaurant_earnings: number;
+          restaurant_count: number;
+          total_orders: number;
+        }[];
+      };
       get_payouts_monthly_series: {
         Args: { _from: string; _to: string };
         Returns: { month: string; total_paid: number }[];
@@ -1974,6 +2137,35 @@ export type Database = {
         }[];
       };
       get_primary_role: { Args: { _user_id: string }; Returns: string };
+      get_restaurant_commissions_secure: {
+        Args: {
+          _from?: string;
+          _limit?: number;
+          _offset?: number;
+          _restaurant_id: string;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+          _to?: string;
+        };
+        Returns: {
+          commission_amount: number;
+          commission_rate: number | null;
+          commission_status: string;
+          contact_phone: string | null;
+          covered_amount: number;
+          created_at: string;
+          entry_type: string;
+          gross_amount: number;
+          id: string;
+          net_amount: number;
+          order_date: string | null;
+          order_id: string | null;
+          order_number: string | null;
+          payout_id: string | null;
+          total_count: number;
+        }[];
+      };
       get_restaurant_payout_public: {
         Args: { _restaurant_id: string };
         Returns: {

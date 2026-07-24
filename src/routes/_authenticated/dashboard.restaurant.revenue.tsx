@@ -4,7 +4,35 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { useState } from "react";
+import {
+  ShoppingBag,
+  CheckCircle2,
+  XCircle,
+  Wallet,
+  Percent,
+  HandCoins,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
+import { KpiCard } from "@/components/dashboard/cards/kpi-card";
+import { EmptyState } from "@/components/dashboard/cards/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { CommissionHistoryTable } from "@/components/dashboard/commission/commission-history-table";
+import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/data-table";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+
+type PaymentRow = {
+  id: string;
+  method: string;
+  status: string;
+  amount: number;
+  created_at: string;
+  orders: { order_number: string | null } | null;
+};
+
+const PAYMENTS_PAGE_SIZE = 20;
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — revenue figures are financial, reserved for the owner. Not
@@ -36,6 +64,24 @@ function RestaurantRevenue() {
     },
   });
 
+  // Read directly for display purposes only ("what billing mode am I on
+  // right now") — never used to compute a figure, that's entirely the
+  // server RPC's job below.
+  const { data: payoutDetails } = useQuery({
+    queryKey: ["me-restaurant-commission-type", restaurant?.id],
+    enabled: !!restaurant?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restaurant_payout_details")
+        .select("commission_type")
+        .eq("restaurant_id", restaurant!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const isMonthly = payoutDetails?.commission_type === "monthly";
+
   const summary = useQuery({
     queryKey: ["restaurant-revenue", restaurant?.id, fromDate, toDate],
     enabled: !!restaurant?.id,
@@ -50,24 +96,52 @@ function RestaurantRevenue() {
     },
   });
 
+  const [paymentsPage, setPaymentsPage] = useState(1);
+
   const payments = useQuery({
-    queryKey: ["restaurant-payments", restaurant?.id, fromDate, toDate],
+    queryKey: ["restaurant-payments", restaurant?.id, fromDate, toDate, paymentsPage],
     enabled: !!restaurant?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const offset = (paymentsPage - 1) * PAYMENTS_PAGE_SIZE;
+      const { data, error, count } = await supabase
         .from("payments")
         .select(
           "id, method, status, amount, created_at, orders!inner(order_number, restaurant_id, created_at)",
+          { count: "exact" },
         )
         .eq("orders.restaurant_id", restaurant!.id)
         .gte("orders.created_at", fromDate)
         .lte("orders.created_at", toDate + "T23:59:59")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .range(offset, offset + PAYMENTS_PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { rows: (data ?? []) as PaymentRow[], total: count ?? 0 };
     },
   });
+
+  const paymentColumns: DataTableColumn<PaymentRow>[] = [
+    {
+      key: "created_at",
+      header: "Dat",
+      cell: (p) => new Date(p.created_at).toLocaleDateString("fr-HT"),
+    },
+    { key: "order_number", header: "Kòmand", cell: (p) => p.orders?.order_number ?? "—" },
+    { key: "method", header: "Metòd", cell: (p) => p.method.toUpperCase(), hideOnMobileCard: true },
+    {
+      key: "amount",
+      header: "Montan",
+      cell: (p) => <span className="font-bold text-brand-deep">{formatHTG(Number(p.amount))}</span>,
+    },
+    {
+      key: "status",
+      header: "Estati",
+      cell: (p) => (
+        <StatusBadge tone={p.status === "paid" ? "good" : p.status === "failed" ? "bad" : "warn"}>
+          {p.status}
+        </StatusBadge>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-5">
@@ -75,7 +149,8 @@ function RestaurantRevenue() {
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Revni ak Peman</h1>
           <p className="mt-1 text-ink-soft">
-            Tout chif yo kalkile sèvè-side — pa gen kalkil manyèl.
+            Tout chif yo kalkile sèvè-side, dirèkteman nan Rejis Komisyon an — menm chif ak "Mes
+            Komisyon".
           </p>
         </div>
         <Link
@@ -92,7 +167,10 @@ function RestaurantRevenue() {
           <input
             type="date"
             value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
+            onChange={(e) => {
+              setFromDate(e.target.value);
+              setPaymentsPage(1);
+            }}
             className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
           />
         </label>
@@ -101,95 +179,127 @@ function RestaurantRevenue() {
           <input
             type="date"
             value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
+            onChange={(e) => {
+              setToDate(e.target.value);
+              setPaymentsPage(1);
+            }}
             className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
           />
         </label>
       </div>
 
-      {summary.isLoading && <div className="text-ink-soft">Chajman…</div>}
-
-      {summary.data && (
+      {summary.isLoading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Kòmand total" value={String(summary.data.total_orders)} />
-          <StatCard label="Livre" value={String(summary.data.delivered_orders)} />
-          <StatCard label="Anile" value={String(summary.data.cancelled_orders)} />
-          <StatCard
-            label="Revni brit (livre)"
-            value={formatHTG(Number(summary.data.gross_revenue))}
-            accent
-          />
-          <StatCard
-            label={`Komisyon platfòm (${summary.data.commission_rate}%)`}
-            value={formatHTG(Number(summary.data.commission_amount))}
-          />
-          <StatCard
-            label="Ou dwe resevwa (net)"
-            value={formatHTG(Number(summary.data.net_payout))}
-            accent
-          />
-          <StatCard label="Peman konfime" value={formatHTG(Number(summary.data.paid_amount))} />
-          <StatCard label="Peman an atant" value={formatHTG(Number(summary.data.pending_amount))} />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+          ))}
         </div>
       )}
 
-      <section className="rounded-2xl border border-brand-soft/60 bg-white shadow-sm">
-        <div className="border-b border-brand-soft/40 p-4">
-          <h2 className="font-display text-lg font-bold">Istwa peman</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-brand-soft/30 text-left text-xs uppercase text-ink-soft">
-              <tr>
-                <th className="px-3 py-2">Dat</th>
-                <th className="px-3 py-2">Kòmand</th>
-                <th className="px-3 py-2">Metòd</th>
-                <th className="px-3 py-2 text-right">Mòn</th>
-                <th className="px-3 py-2">Estati</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.data?.map((p) => (
-                <tr key={p.id} className="border-t border-brand-soft/30">
-                  <td className="px-3 py-2 text-xs text-ink-soft">
-                    {new Date(p.created_at).toLocaleDateString("fr-HT")}
-                  </td>
-                  <td className="px-3 py-2 font-bold">{p.orders?.order_number}</td>
-                  <td className="px-3 py-2 uppercase">{p.method}</td>
-                  <td className="px-3 py-2 text-right font-bold text-brand-deep">
-                    {formatHTG(Number(p.amount))}
-                  </td>
-                  <td className="px-3 py-2">
-                    <StatusBadge
-                      tone={p.status === "paid" ? "good" : p.status === "failed" ? "bad" : "warn"}
-                    >
-                      {p.status}
-                    </StatusBadge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {payments.data?.length === 0 && (
-            <div className="p-6 text-center text-sm text-ink-soft">
-              Pa gen peman pou peryòd sa a.
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
-}
+      {summary.isError && (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Pa ka chaje rezime revni an"
+          description="Gen yon pwoblèm rezo oswa sèvè. Tanpri eseye ankò."
+          action={
+            <Button variant="outline" onClick={() => summary.refetch()}>
+              Eseye ankò
+            </Button>
+          }
+        />
+      )}
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
-      <div className="text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</div>
-      <div
-        className={`mt-1 font-display text-xl font-extrabold ${accent ? "text-brand-deep" : "text-ink"}`}
-      >
-        {value}
-      </div>
+      {summary.data && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard
+            label="Kòmand total"
+            value={String(summary.data.total_orders)}
+            icon={ShoppingBag}
+          />
+          <KpiCard
+            label="Livre"
+            value={String(summary.data.delivered_orders)}
+            icon={CheckCircle2}
+          />
+          <KpiCard label="Anile" value={String(summary.data.cancelled_orders)} icon={XCircle} />
+          <KpiCard
+            label="Revni brit (livre)"
+            value={formatHTG(Number(summary.data.gross_revenue))}
+            icon={Wallet}
+          />
+          <KpiCard
+            label={
+              isMonthly
+                ? "Komisyon (fakti chak mwa)"
+                : `Komisyon platfòm (${summary.data.commission_rate}%)`
+            }
+            value={formatHTG(Number(summary.data.commission_amount))}
+            icon={Percent}
+          />
+          <KpiCard
+            label="Ou dwe resevwa (net)"
+            value={formatHTG(Number(summary.data.net_payout))}
+            icon={HandCoins}
+          />
+          <KpiCard
+            label="Peman konfime"
+            value={formatHTG(Number(summary.data.paid_amount))}
+            icon={CheckCircle2}
+          />
+          <KpiCard
+            label="Peman an atant"
+            value={formatHTG(Number(summary.data.pending_amount))}
+            icon={Clock}
+          />
+        </div>
+      )}
+
+      <CommissionHistoryTable beneficiaryType="restaurant" beneficiaryId={restaurant?.id} />
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink">Istwa peman kliyan</h2>
+          <p className="mt-1 text-xs text-ink-soft">
+            Peman kliyan yo resevwa pou peryòd sa a (san rapò ak komisyon).
+          </p>
+        </div>
+
+        {payments.isError ? (
+          <EmptyState
+            icon={AlertTriangle}
+            title="Pa ka chaje istwa peman kliyan"
+            description="Gen yon pwoblèm rezo oswa sèvè. Tanpri eseye ankò."
+            action={
+              <Button variant="outline" onClick={() => payments.refetch()}>
+                Eseye ankò
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <DataTable<PaymentRow>
+              rows={payments.data?.rows ?? []}
+              getRowKey={(p) => p.id}
+              loading={payments.isLoading}
+              mobileTitleKey="order_number"
+              emptyState={
+                <EmptyState
+                  icon={Wallet}
+                  title="Pa gen peman kliyan"
+                  description="Okenn peman kliyan pou peryòd sa a."
+                />
+              }
+              columns={paymentColumns}
+            />
+            <PaginationControls
+              page={paymentsPage}
+              pageSize={PAYMENTS_PAGE_SIZE}
+              totalCount={payments.data?.total ?? 0}
+              onPageChange={setPaymentsPage}
+            />
+          </>
+        )}
+      </section>
     </div>
   );
 }

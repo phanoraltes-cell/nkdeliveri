@@ -8,8 +8,9 @@ import {
   Percent,
   Eye,
   Send,
-  History as HistoryIcon,
   AlertTriangle,
+  Users,
+  Timer,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
@@ -22,17 +23,14 @@ import { WALLET_STATUS_LABEL, WALLET_STATUS_TONE } from "@/lib/payout-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   PayoutPayModal,
   type PayoutBeneficiary,
 } from "@/components/dashboard/payouts/payout-pay-modal";
-import { PayoutHistoryDialog } from "@/components/dashboard/payouts/payout-history-dialog";
+import {
+  BeneficiaryDetailDialog,
+  type BeneficiaryDetail,
+} from "@/components/dashboard/payouts/beneficiary-detail-dialog";
+import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // recharts (~350KB) is only needed once this section has mounted — see
 // dashboard.admin.index.tsx for the same lazy-import + Suspense/Skeleton pattern.
@@ -72,23 +70,21 @@ function bucketMonthly(rows: { month: string; value: number }[]) {
 function AdminPayouts() {
   const [tab, setTab] = useState<"restaurant" | "driver">("restaurant");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [sort, setSort] = useState("balance_desc");
+  // Defaults to "pending" (Feature 3 — auto-detect who's waiting to be
+  // paid; the admin never has to manually search) — the dropdown still
+  // lets them browse every other status.
+  const [status, setStatus] = useState("pending");
+  const [sort, setSort] = useState("priority");
   const [page, setPage] = useState(1);
 
   const [payTarget, setPayTarget] = useState<PayoutBeneficiary | null>(null);
   const [payOpen, setPayOpen] = useState(false);
-  const [historyTarget, setHistoryTarget] = useState<{
-    type: "restaurant" | "driver";
-    id: string;
-    name: string;
-  } | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [viewTarget, setViewTarget] = useState<WalletRow | null>(null);
-  const [viewOpen, setViewOpen] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<BeneficiaryDetail | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
+  const kpisQueryKey = ["admin-payout-kpis"] as const;
   const kpis = useQuery({
-    queryKey: ["admin-payout-kpis"],
+    queryKey: kpisQueryKey,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_payout_kpis");
       if (error) throw error;
@@ -212,6 +208,11 @@ function AdminPayouts() {
     },
   });
 
+  // Feature 9 — no page refresh required: any wallet change (a new
+  // commission credited, a payout sent/confirmed/disputed/resolved)
+  // refreshes the queue and every KPI live.
+  useRealtimeTableSync("wallets", undefined, [walletsQueryKey, kpisQueryKey]);
+
   function switchTab(next: "restaurant" | "driver") {
     setTab(next);
     setSearch("");
@@ -231,14 +232,9 @@ function AdminPayouts() {
     setPayOpen(true);
   }
 
-  function openHistory(row: WalletRow) {
-    setHistoryTarget({ type: tab, id: row.id, name: row.name });
-    setHistoryOpen(true);
-  }
-
-  function openView(row: WalletRow) {
-    setViewTarget(row);
-    setViewOpen(true);
+  function openDetail(row: WalletRow) {
+    setDetailTarget({ type: tab, ...row });
+    setDetailOpen(true);
   }
 
   const columns: DataTableColumn<WalletRow>[] = [
@@ -286,8 +282,8 @@ function AdminPayouts() {
           <Button
             size="icon-sm"
             variant="outline"
-            aria-label="Wè detay"
-            onClick={() => openView(r)}
+            aria-label="Wè pwofil"
+            onClick={() => openDetail(r)}
           >
             <Eye className="h-3.5 w-3.5" />
           </Button>
@@ -299,14 +295,6 @@ function AdminPayouts() {
             onClick={() => openPay(r)}
           >
             <Send className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="icon-sm"
-            variant="outline"
-            aria-label="Istwa"
-            onClick={() => openHistory(r)}
-          >
-            <HistoryIcon className="h-3.5 w-3.5" />
           </Button>
         </div>
       ),
@@ -324,9 +312,17 @@ function AdminPayouts() {
             Peman manyèl bay restoran ak livrè yo, apati komisyon yo fè otomatikman.
           </p>
         </div>
-        <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
-          ← Admin
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/dashboard/admin/payout-migration"
+            className="text-sm font-bold text-brand-deep hover:underline"
+          >
+            Asistan Migrasyon
+          </Link>
+          <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
+            ← Admin
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -364,6 +360,53 @@ function AdminPayouts() {
           label="Litij"
           value={kpis.data ? String(kpis.data.dispute_count) : "—"}
           icon={AlertTriangle}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Restoran k ap tann"
+          value={kpis.data ? String(kpis.data.restaurants_waiting_count) : "—"}
+          icon={Users}
+        />
+        <KpiCard
+          label="Livrè k ap tann"
+          value={kpis.data ? String(kpis.data.drivers_waiting_count) : "—"}
+          icon={Users}
+        />
+        <KpiCard
+          label="Pi gwo restoran san peye"
+          value={
+            kpis.data?.largest_unpaid_restaurant_name
+              ? `${kpis.data.largest_unpaid_restaurant_name} · ${formatHTG(Number(kpis.data.largest_unpaid_restaurant_amount))}`
+              : "—"
+          }
+          icon={Wallet}
+        />
+        <KpiCard
+          label="Pi gwo livrè san peye"
+          value={
+            kpis.data?.largest_unpaid_driver_name
+              ? `${kpis.data.largest_unpaid_driver_name} · ${formatHTG(Number(kpis.data.largest_unpaid_driver_amount))}`
+              : "—"
+          }
+          icon={Wallet}
+        />
+        <KpiCard
+          label="Peman mwayèn"
+          value={
+            kpis.data?.avg_payout_amount ? formatHTG(Number(kpis.data.avg_payout_amount)) : "—"
+          }
+          icon={HandCoins}
+        />
+        <KpiCard
+          label="Delè mwayèn anvan peman"
+          value={
+            kpis.data?.avg_payment_delay_hours != null
+              ? `${Math.round(Number(kpis.data.avg_payment_delay_hours))} è`
+              : "—"
+          }
+          icon={Timer}
         />
       </div>
 
@@ -452,11 +495,13 @@ function AdminPayouts() {
           aria-label="Klase pa"
           className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
         >
+          <option value="priority">Priyorite (defo)</option>
           <option value="balance_desc">Balans (pi wo)</option>
           <option value="balance_asc">Balans (pi ba)</option>
+          <option value="oldest_unpaid_commission">Pi ansyen komisyon san peye</option>
+          <option value="oldest_last_payment">Pi ansyen dènye peman</option>
           <option value="name_asc">Non (A-Z)</option>
           <option value="name_desc">Non (Z-A)</option>
-          <option value="last_payment_desc">Dènye peman</option>
         </select>
       </div>
 
@@ -486,52 +531,14 @@ function AdminPayouts() {
         open={payOpen}
         onOpenChange={setPayOpen}
         beneficiary={payTarget}
-        invalidateKeys={[["admin-wallets"], ["admin-payout-kpis"]]}
-      />
-      <PayoutHistoryDialog
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-        beneficiary={historyTarget}
+        invalidateKeys={[["admin-wallets"], kpisQueryKey]}
       />
 
-      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{viewTarget?.name}</DialogTitle>
-            <DialogDescription>Detay balans ak enfòmasyon peman</DialogDescription>
-          </DialogHeader>
-          {viewTarget && (
-            <div className="space-y-2 text-sm">
-              <Row label="Balans disponib" value={formatHTG(viewTarget.available_balance)} />
-              <Row label="An atant konfimasyon" value={formatHTG(viewTarget.pending_balance)} />
-              <Row label="Total peye" value={formatHTG(viewTarget.paid_balance)} />
-              <Row label="Total antre (lavi)" value={formatHTG(viewTarget.lifetime_earnings)} />
-              <Row label="Kòmand total" value={String(viewTarget.total_orders)} />
-              <Row
-                label="Dènye peman"
-                value={
-                  viewTarget.last_payment_date
-                    ? new Date(viewTarget.last_payment_date).toLocaleString("fr-HT")
-                    : "—"
-                }
-              />
-              <div className="mt-3 border-t border-brand-soft/40 pt-2">
-                <Row label="MonCash" value={viewTarget.moncash_number ?? "Pa konfigire"} />
-                <Row label="NatCash" value={viewTarget.natcash_number ?? "Pa konfigire"} />
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-ink-soft">{label}</span>
-      <span className="font-bold text-ink">{value}</span>
+      <BeneficiaryDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        beneficiary={detailTarget}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Wallet, Clock, HandCoins, TrendingUp } from "lucide-react";
+import { Wallet, Clock, HandCoins, TrendingUp, ShoppingBag } from "lucide-react";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { formatHTG } from "@/lib/format";
 
@@ -9,10 +9,12 @@ type WalletSummaryCardsProps = {
     paid_balance: number;
     lifetime_earnings: number;
   } | null;
+  /** Optional 5th card ("Total Orders") — only the new Mes Komisyon pages pass this; existing callers are unaffected. */
+  totalOrders?: number;
 };
 
-/** Shared "Bous mwen" KPI row for the restaurant/driver My Payments sections — same 4 numbers, same layout, for both roles. */
-export function WalletSummaryCards({ wallet }: WalletSummaryCardsProps) {
+/** Shared "Bous mwen" KPI row for the restaurant/driver My Payments/Commissions sections — same numbers, same layout, for both roles. */
+export function WalletSummaryCards({ wallet, totalOrders }: WalletSummaryCardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
@@ -31,6 +33,9 @@ export function WalletSummaryCards({ wallet }: WalletSummaryCardsProps) {
         value={formatHTG(wallet?.lifetime_earnings ?? 0)}
         icon={TrendingUp}
       />
+      {totalOrders !== undefined && (
+        <KpiCard label="Total kòmand" value={totalOrders} icon={ShoppingBag} />
+      )}
     </div>
   );
 }

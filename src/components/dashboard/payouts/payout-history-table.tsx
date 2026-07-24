@@ -1,13 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Download, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/data-table";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -33,25 +26,36 @@ type PayoutHistoryRow = {
   dispute_reason: string | null;
 };
 
-type PayoutHistoryDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  beneficiary: { type: "restaurant" | "driver"; id: string; name: string } | null;
+type PayoutHistoryTableProps = {
+  beneficiaryType: "restaurant" | "driver";
+  beneficiaryId: string | undefined;
+  beneficiaryName: string;
+  enabled?: boolean;
 };
 
-/** Admin "History" row action: a beneficiary's full payout history, direct RLS-gated select (no RPC needed). */
-export function PayoutHistoryDialog({ open, onOpenChange, beneficiary }: PayoutHistoryDialogProps) {
+/**
+ * A beneficiary's full payout history — direct RLS-gated select (no RPC
+ * needed). Plain table, no Dialog wrapper, so it can be embedded inside the
+ * admin's BeneficiaryDetailDialog as well as the restaurant/driver "My
+ * Payments" pages' own history section.
+ */
+export function PayoutHistoryTable({
+  beneficiaryType,
+  beneficiaryId,
+  beneficiaryName,
+  enabled = true,
+}: PayoutHistoryTableProps) {
   const history = useQuery({
-    queryKey: ["payout-history", beneficiary?.type, beneficiary?.id],
-    enabled: open && !!beneficiary,
+    queryKey: ["payout-history", beneficiaryType, beneficiaryId],
+    enabled: enabled && !!beneficiaryId,
     queryFn: async () => {
-      const column = beneficiary!.type === "restaurant" ? "restaurant_id" : "driver_id";
+      const column = beneficiaryType === "restaurant" ? "restaurant_id" : "driver_id";
       const { data, error } = await supabase
         .from("payouts")
         .select(
           "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason",
         )
-        .eq(column, beneficiary!.id)
+        .eq(column, beneficiaryId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as PayoutHistoryRow[];
@@ -100,7 +104,7 @@ export function PayoutHistoryDialog({ open, onOpenChange, beneficiary }: PayoutH
               receiverAccountName: r.receiver_account_name,
               transactionReference: r.transaction_reference,
               status: r.status,
-              beneficiaryName: beneficiary?.name ?? "",
+              beneficiaryName,
               createdAt: r.created_at,
             })
           }
@@ -108,32 +112,27 @@ export function PayoutHistoryDialog({ open, onOpenChange, beneficiary }: PayoutH
           <Download className="h-3.5 w-3.5" />
         </Button>
       ),
+      hideOnMobileCard: true,
     },
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Istwa peman</DialogTitle>
-          <DialogDescription>{beneficiary?.name}</DialogDescription>
-        </DialogHeader>
-
-        <DataTable<PayoutHistoryRow>
-          rows={history.data ?? []}
-          getRowKey={(r) => r.id}
-          loading={history.isLoading}
-          mobileTitleKey="amount"
-          emptyState={
-            <EmptyState
-              icon={History}
-              title="Poko gen peman"
-              description="Okenn peman pa poko voye bay benefisyè sa a."
-            />
-          }
-          columns={columns}
-        />
-      </DialogContent>
-    </Dialog>
+    <section className="space-y-3">
+      <h2 className="font-display text-lg font-bold text-ink">Istwa peman</h2>
+      <DataTable<PayoutHistoryRow>
+        rows={history.data ?? []}
+        getRowKey={(r) => r.id}
+        loading={history.isLoading}
+        mobileTitleKey="amount"
+        emptyState={
+          <EmptyState
+            icon={History}
+            title="Poko gen peman"
+            description="Okenn peman pa poko voye bay benefisyè sa a."
+          />
+        }
+        columns={columns}
+      />
+    </section>
   );
 }

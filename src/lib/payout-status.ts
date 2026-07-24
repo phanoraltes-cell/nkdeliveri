@@ -20,6 +20,36 @@ export const PAYOUT_RESOLUTION_LABEL: Record<string, string> = {
   reversed: "Ranvèse pa admin",
 };
 
+/**
+ * Kreyòl label/tone for a commission's derived status (never stored —
+ * computed live from whether/how its linked payout has progressed, see
+ * get_restaurant_commissions_secure/get_driver_commissions_secure).
+ * 'paid'/'confirmed'/'disputed'/'resolved' mirror the linked payout's own
+ * status exactly (by construction, not copied), shown only once the
+ * commission is *fully* covered — 'available' means nothing paid yet,
+ * 'partially_paid' means some but not all of it has been paid out (a
+ * commission can now be covered across several payouts), 'reversed' is a
+ * refund clawback entry.
+ */
+export const COMMISSION_STATUS_LABEL: Record<string, string> = {
+  available: "Disponib",
+  partially_paid: "Peye pasyèlman",
+  paid: "Peye",
+  confirmed: "Konfime",
+  disputed: "Kontete",
+  resolved: "Rezoud",
+  reversed: "Ranvèse",
+};
+export const COMMISSION_STATUS_TONE: Record<string, StatusTone> = {
+  available: "warn",
+  partially_paid: "warn",
+  paid: "info",
+  confirmed: "good",
+  disputed: "bad",
+  resolved: "neutral",
+  reversed: "bad",
+};
+
 /** Kreyòl label/tone for a beneficiary's derived list-row status (Phase 4's admin table). */
 export const WALLET_STATUS_LABEL: Record<string, string> = {
   pending: "An atant",

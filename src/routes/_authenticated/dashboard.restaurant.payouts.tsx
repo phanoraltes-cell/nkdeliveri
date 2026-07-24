@@ -9,6 +9,7 @@ import { formatHTG } from "@/lib/format";
 import { inputClsCompact } from "@/lib/utils";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
 import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
+import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — payouts are financial, not operational, so restaurant_staff is
@@ -70,6 +71,13 @@ function MerchantPayouts() {
       return data;
     },
   });
+
+  useRealtimeTableSync(
+    "wallets",
+    r?.id ? `restaurant_id=eq.${r.id}` : undefined,
+    [walletQueryKey, ["me-payout-history"]],
+    !!r?.id,
+  );
 
   const [f, setF] = useState({
     moncash_number: "",

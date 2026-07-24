@@ -420,6 +420,7 @@ function AdminDashboard() {
       <PendingRestaurantsSection
         restaurants={pendingRestaurants.data}
         isLoading={pendingRestaurants.isLoading}
+        pendingId={updateResto.isPending ? updateResto.variables?.id : undefined}
         onApprove={(id) => updateResto.mutate({ id, status: "approved" })}
         onReject={(id) => updateResto.mutate({ id, status: "rejected" })}
       />
@@ -427,6 +428,7 @@ function AdminDashboard() {
       <PendingDriversSection
         drivers={pendingDrivers.data}
         isLoading={pendingDrivers.isLoading}
+        pendingId={updateDriver.isPending ? updateDriver.variables?.id : undefined}
         onApprove={(id) => updateDriver.mutate({ id, status: "approved" })}
         onReject={(id) => updateDriver.mutate({ id, status: "rejected" })}
       />

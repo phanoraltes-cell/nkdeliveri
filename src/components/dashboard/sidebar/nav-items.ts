@@ -14,6 +14,7 @@ import {
   RotateCcw,
   AlertTriangle,
   Banknote,
+  Percent,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -48,6 +49,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/restaurant/employees", label: "Anplwaye", icon: UserCog },
     { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/restaurant/revenue", label: "Revni", icon: Gauge },
+    { to: "/dashboard/restaurant/commissions", label: "Komisyon", icon: Percent },
     { to: "/dashboard/restaurant/payouts", label: "Peman", icon: Wallet },
   ],
   restaurant_staff: [
@@ -63,6 +65,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/driver/history", label: "Istwa livrezon", icon: History },
     { to: "/dashboard/driver/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/driver/earnings", label: "Revni", icon: Wallet },
+    { to: "/dashboard/driver/commissions", label: "Komisyon", icon: Percent },
     { to: "/dashboard/driver/payouts", label: "Peman", icon: CreditCard },
   ],
   admin: [
