@@ -471,6 +471,12 @@ function AdminDashboard() {
             desc: "Chwazi pousantaj/montan chak restoran peye",
             to: "/dashboard/admin/restaurants",
           },
+          {
+            icon: Bike,
+            title: "Jesyon Livrè",
+            desc: "Apwouve, sispann, swiv pèfòmans livrè yo",
+            to: "/dashboard/admin/drivers",
+          },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
         ]}
       />

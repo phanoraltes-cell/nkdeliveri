@@ -2084,6 +2084,37 @@ export type Database = {
           total_orders: number;
         }[];
       };
+      get_drivers_admin: {
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+        };
+        Returns: {
+          available_balance: number;
+          avg_delivery_minutes: number | null;
+          avg_rating: number | null;
+          cancelled_count: number;
+          created_at: string;
+          delivered_count: number;
+          email: string;
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          last_payment_date: string | null;
+          license_plate: string | null;
+          moncash_number: string | null;
+          natcash_number: string | null;
+          phone: string | null;
+          status: Database["public"]["Enums"]["driver_status"];
+          success_rate: number | null;
+          total_count: number;
+          total_deliveries: number;
+          vehicle_type: string | null;
+        }[];
+      };
       get_historical_backfill_preview_secure: {
         Args: {
           _driver_id?: string;
@@ -2582,6 +2613,7 @@ export type Database = {
       update_driver_status_secure: {
         Args: {
           _driver_id: string;
+          _reason?: string;
           _status: Database["public"]["Enums"]["driver_status"];
         };
         Returns: {

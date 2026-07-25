@@ -61,6 +61,7 @@ import { Route as AuthenticatedDashboardAdminPayoutsRouteImport } from './routes
 import { Route as AuthenticatedDashboardAdminPayoutSettingsRouteImport } from './routes/_authenticated/dashboard.admin.payout-settings'
 import { Route as AuthenticatedDashboardAdminPayoutMigrationRouteImport } from './routes/_authenticated/dashboard.admin.payout-migration'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
+import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
 import { Route as AuthenticatedDashboardAdminDisputesRouteImport } from './routes/_authenticated/dashboard.admin.disputes'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
 
@@ -355,6 +356,12 @@ const AuthenticatedDashboardAdminPaymentsRoute =
     path: '/payments',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminDriversRoute =
+  AuthenticatedDashboardAdminDriversRouteImport.update({
+    id: '/drivers',
+    path: '/drivers',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminDisputesRoute =
   AuthenticatedDashboardAdminDisputesRouteImport.update({
     id: '/disputes',
@@ -396,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
+  '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -447,6 +455,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
+  '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -504,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/_authenticated/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
+  '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/_authenticated/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/_authenticated/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
+    | '/dashboard/admin/drivers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
@@ -612,6 +623,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
+    | '/dashboard/admin/drivers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
@@ -668,6 +680,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/customers'
     | '/_authenticated/dashboard/admin/disputes'
+    | '/_authenticated/dashboard/admin/drivers'
     | '/_authenticated/dashboard/admin/payments'
     | '/_authenticated/dashboard/admin/payout-migration'
     | '/_authenticated/dashboard/admin/payout-settings'
@@ -1084,6 +1097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/drivers': {
+      id: '/_authenticated/dashboard/admin/drivers'
+      path: '/drivers'
+      fullPath: '/dashboard/admin/drivers'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminDriversRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/disputes': {
       id: '/_authenticated/dashboard/admin/disputes'
       path: '/disputes'
@@ -1104,6 +1124,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminCustomersRoute: typeof AuthenticatedDashboardAdminCustomersRoute
   AuthenticatedDashboardAdminDisputesRoute: typeof AuthenticatedDashboardAdminDisputesRoute
+  AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
   AuthenticatedDashboardAdminPayoutMigrationRoute: typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   AuthenticatedDashboardAdminPayoutSettingsRoute: typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -1120,6 +1141,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminCustomersRoute,
     AuthenticatedDashboardAdminDisputesRoute:
       AuthenticatedDashboardAdminDisputesRoute,
+    AuthenticatedDashboardAdminDriversRoute:
+      AuthenticatedDashboardAdminDriversRoute,
     AuthenticatedDashboardAdminPaymentsRoute:
       AuthenticatedDashboardAdminPaymentsRoute,
     AuthenticatedDashboardAdminPayoutMigrationRoute:
