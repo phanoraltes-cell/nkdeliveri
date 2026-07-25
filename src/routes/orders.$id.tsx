@@ -15,6 +15,7 @@ import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
 import { DisputeSection } from "@/components/order/dispute-section";
+import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
@@ -50,7 +51,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name)",
+          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at)",
         )
         .eq("id", id)
         .maybeSingle();
@@ -268,6 +269,8 @@ function OrderDetail() {
         )}
 
         <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
+
+        <CashConfirmationSection orderId={o.id} orderStatus={o.status} payment={payment} />
 
         <DisputeSection orderId={o.id} orderStatus={o.status} />
 

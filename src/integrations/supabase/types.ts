@@ -756,8 +756,11 @@ export type Database = {
       payments: {
         Row: {
           amount: number;
+          cash_confirmation_status: Database["public"]["Enums"]["cash_confirmation_status"] | null;
           created_at: string;
           currency: string;
+          customer_confirmed_at: string | null;
+          driver_confirmed_at: string | null;
           id: string;
           method: Database["public"]["Enums"]["payment_method"];
           order_id: string;
@@ -778,8 +781,11 @@ export type Database = {
         };
         Insert: {
           amount: number;
+          cash_confirmation_status?: Database["public"]["Enums"]["cash_confirmation_status"] | null;
           created_at?: string;
           currency?: string;
+          customer_confirmed_at?: string | null;
+          driver_confirmed_at?: string | null;
           id?: string;
           method: Database["public"]["Enums"]["payment_method"];
           order_id: string;
@@ -800,8 +806,11 @@ export type Database = {
         };
         Update: {
           amount?: number;
+          cash_confirmation_status?: Database["public"]["Enums"]["cash_confirmation_status"] | null;
           created_at?: string;
           currency?: string;
+          customer_confirmed_at?: string | null;
+          driver_confirmed_at?: string | null;
           id?: string;
           method?: Database["public"]["Enums"]["payment_method"];
           order_id?: string;
@@ -1813,6 +1822,34 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      confirm_cash_payment_secure: {
+        Args: { _order_id: string };
+        Returns: {
+          amount: number;
+          cash_confirmation_status: Database["public"]["Enums"]["cash_confirmation_status"] | null;
+          created_at: string;
+          currency: string;
+          customer_confirmed_at: string | null;
+          driver_confirmed_at: string | null;
+          id: string;
+          method: Database["public"]["Enums"]["payment_method"];
+          order_id: string;
+          receiver_account_name: string | null;
+          receiver_number: string | null;
+          receiver_restaurant_id: string | null;
+          receiver_type: string;
+          review_notes: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          sender_name: string | null;
+          sender_phone: string | null;
+          status: Database["public"]["Enums"]["payment_status"];
+          stripe_payment_intent_id: string | null;
+          stripe_session_id: string | null;
+          transaction_ref: string | null;
+          updated_at: string;
+        };
+      };
       confirm_payout_secure: {
         Args: { _payout_id: string };
         Returns: {
@@ -1952,6 +1989,23 @@ export type Database = {
       delete_promotion_secure: {
         Args: { _promotion_id: string };
         Returns: undefined;
+      };
+      dispute_cash_payment_secure: {
+        Args: { _description: string; _order_id: string };
+        Returns: {
+          category: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: Database["public"]["Enums"]["dispute_status"];
+          updated_at: string;
+        };
       };
       dispute_payout_secure: {
         Args: { _payout_id: string; _reason: string };
@@ -3014,6 +3068,8 @@ export type Database = {
     Enums: {
       app_role:
         "customer" | "restaurant_owner" | "restaurant_staff" | "driver" | "admin" | "super_admin";
+      cash_confirmation_status:
+        "pending" | "customer_confirmed" | "driver_confirmed" | "validated" | "disputed";
       commission_entry_type: "order_commission" | "monthly_fee" | "reversal";
       delivery_status:
         | "assigned"

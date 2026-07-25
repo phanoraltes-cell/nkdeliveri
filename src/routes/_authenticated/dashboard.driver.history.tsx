@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
@@ -9,6 +10,8 @@ import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { inputClsCompact } from "@/lib/utils";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -59,7 +62,7 @@ function DriverHistory() {
       const { data, error } = await supabase
         .from("deliveries")
         .select(
-          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name))",
+          "id, order_id, status, assigned_at, picked_up_at, delivered_at, fee, orders(order_number, total, delivery_address, restaurants(name), payments(method, cash_confirmation_status, driver_confirmed_at))",
         )
         .eq("driver_id", driver!.id)
         .eq("status", "delivered")
@@ -68,6 +71,48 @@ function DriverHistory() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const [reportingOrderId, setReportingOrderId] = useState<string | null>(null);
+  const [reportDescription, setReportDescription] = useState("");
+
+  // Phase 4 of the admin evolution plan: cash orders need the driver's
+  // side of the double confirmation too — reuses the same 2 RPCs the
+  // customer's order-tracking page calls (confirm_cash_payment_secure
+  // auto-detects the caller is the driver here, dispute_cash_payment_secure
+  // reuses the existing dispute system). Never touches
+  // trg_generate_commission_on_delivery — the commission already credited
+  // when "Livre" was tapped above, this only reconciles the cash itself.
+  const confirmCash = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase.rpc("confirm_cash_payment_secure", { _order_id: orderId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Konfimasyon anrejistre");
+      qc.invalidateQueries({ queryKey: ["me-delivery-history"] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const disputeCash = useMutation({
+    mutationFn: async (orderId: string) => {
+      if (reportDescription.trim().length < 5) {
+        throw new Error("Tanpri eksplike pwoblèm nan pi plis");
+      }
+      const { error } = await supabase.rpc("dispute_cash_payment_secure", {
+        _order_id: orderId,
+        _description: reportDescription.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pwoblèm siyale");
+      setReportingOrderId(null);
+      setReportDescription("");
+      qc.invalidateQueries({ queryKey: ["me-delivery-history"] });
+    },
+    onError: (e) => toast.error(e.message),
   });
 
   const advance = useMutation({
@@ -224,23 +269,88 @@ function DriverHistory() {
                   <th className="px-3 py-2">Kòmand</th>
                   <th className="px-3 py-2">Restoran</th>
                   <th className="px-3 py-2 text-right">Frè livrezon</th>
+                  <th className="px-3 py-2">Peman kach</th>
                 </tr>
               </thead>
               <tbody>
-                {history.data?.map((d) => (
-                  <tr key={d.id} className="border-t border-brand-soft/30">
-                    <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
-                      {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-bold">
-                      {d.orders?.order_number}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2">{d.orders?.restaurants?.name}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">
-                      {formatHTG(Number(d.fee))}
-                    </td>
-                  </tr>
-                ))}
+                {history.data?.map((d) => {
+                  const payment = d.orders?.payments?.[0];
+                  const isCash = payment?.method === "kach";
+                  return (
+                    <tr key={d.id} className="border-t border-brand-soft/30">
+                      <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
+                        {d.delivered_at ? new Date(d.delivered_at).toLocaleString("fr-HT") : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 font-bold">
+                        {d.orders?.order_number}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2">{d.orders?.restaurants?.name}</td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">
+                        {formatHTG(Number(d.fee))}
+                      </td>
+                      <td className="px-3 py-2">
+                        {!isCash ? (
+                          <span className="text-xs text-ink-soft">—</span>
+                        ) : payment.cash_confirmation_status === "validated" ? (
+                          <StatusBadge tone="good">Konfime</StatusBadge>
+                        ) : payment.cash_confirmation_status === "disputed" ? (
+                          <StatusBadge tone="bad">An litij</StatusBadge>
+                        ) : payment.driver_confirmed_at ? (
+                          <span className="text-xs text-emerald-700">
+                            ✓ Ou konfime, ap tann kliyan an
+                          </span>
+                        ) : reportingOrderId === d.order_id ? (
+                          <div className="min-w-[220px] space-y-2">
+                            <textarea
+                              value={reportDescription}
+                              onChange={(e) => setReportDescription(e.target.value)}
+                              placeholder="Eksplike pwoblèm nan…"
+                              aria-label="Eksplike pwoblèm nan…"
+                              rows={2}
+                              className={inputClsCompact()}
+                            />
+                            <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setReportingOrderId(null)}
+                              >
+                                Anile
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={
+                                  disputeCash.isPending || reportDescription.trim().length < 5
+                                }
+                                onClick={() => disputeCash.mutate(d.order_id)}
+                              >
+                                {disputeCash.isPending ? "Ap voye…" : "Konfime pwoblèm"}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            <Button
+                              size="sm"
+                              disabled={confirmCash.isPending}
+                              onClick={() => confirmCash.mutate(d.order_id)}
+                            >
+                              ✓ Mwen resevwa l
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setReportingOrderId(d.order_id)}
+                            >
+                              Sa a pa kòrèk
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
