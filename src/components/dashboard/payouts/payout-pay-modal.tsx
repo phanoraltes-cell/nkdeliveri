@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,14 +54,34 @@ export function PayoutPayModal({
   const sendPush = useServerFn(sendPayoutUpdatePush);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<"moncash" | "natcash" | "">("");
+  const [providerCode, setProviderCode] = useState("manual");
   const [transactionReference, setTransactionReference] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  // Phase 3 of the admin evolution plan: which method (moncash/natcash) is
+  // already selectable; this is the separate "who executes it" axis —
+  // 100% manual today, ready for a real API provider without touching
+  // the manual flow. moncash_api/natcash_api stay is_active=false until a
+  // real integration exists (src/lib/payment-providers/).
+  const providers = useQuery({
+    queryKey: ["payment-providers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_providers")
+        .select("code, label, is_active")
+        .order("code");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (!beneficiary) return;
     setAmount(String(beneficiary.availableBalance));
     setMethod(beneficiary.moncashNumber ? "moncash" : beneficiary.natcashNumber ? "natcash" : "");
+    setProviderCode("manual");
     setTransactionReference("");
     setNotes("");
     setFile(null);
@@ -95,6 +115,7 @@ export function PayoutPayModal({
         _transaction_reference: transactionReference.trim(),
         _proof_url: proofUrl,
         _notes: notes.trim() || undefined,
+        _provider_code: providerCode,
       });
       if (error) throw error;
       return data;
@@ -177,6 +198,27 @@ export function PayoutPayModal({
                 Benefisyè a poko konfigire okenn nimewo peman.
               </span>
             )}
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+              Ki jan peman an egzekite
+            </span>
+            <select
+              value={providerCode}
+              onChange={(e) => setProviderCode(e.target.value)}
+              className={inputClsCompact()}
+            >
+              {(providers.data ?? []).map((p) => (
+                <option key={p.code} value={p.code} disabled={!p.is_active}>
+                  {p.label}
+                  {!p.is_active ? " (byento)" : ""}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-ink-soft">
+              Manyèl = ou voye lajan an ou menm nan telefòn ou, tankou jodi a.
+            </span>
           </label>
 
           <label className="block">

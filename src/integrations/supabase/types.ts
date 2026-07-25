@@ -861,6 +861,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_providers: {
+        Row: {
+          code: string;
+          created_at: string;
+          is_active: boolean;
+          label: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          is_active?: boolean;
+          label: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          is_active?: boolean;
+          label?: string;
+        };
+        Relationships: [];
+      };
       payout_commissions: {
         Row: {
           commission_ledger_id: string;
@@ -910,6 +931,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url: string | null;
+          provider_code: string;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
@@ -934,6 +956,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url?: string | null;
+          provider_code?: string;
           receiver_account_name?: string | null;
           receiver_number: string;
           resolution?: string | null;
@@ -958,6 +981,7 @@ export type Database = {
           method?: string;
           paid_by?: string;
           proof_url?: string | null;
+          provider_code?: string;
           receiver_account_name?: string | null;
           receiver_number?: string;
           resolution?: string | null;
@@ -983,6 +1007,13 @@ export type Database = {
             columns: ["method"];
             isOneToOne: false;
             referencedRelation: "payment_methods";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "payouts_provider_code_fkey";
+            columns: ["provider_code"];
+            isOneToOne: false;
+            referencedRelation: "payment_providers";
             referencedColumns: ["code"];
           },
           {
@@ -1796,6 +1827,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url: string | null;
+          provider_code: string;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
@@ -1935,6 +1967,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url: string | null;
+          provider_code: string;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
@@ -2302,6 +2335,7 @@ export type Database = {
           _method?: string;
           _notes?: string;
           _proof_url?: string;
+          _provider_code?: string;
           _restaurant_id?: string;
           _transaction_reference?: string;
         };
@@ -2317,6 +2351,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url: string | null;
+          provider_code: string;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
@@ -2469,6 +2504,7 @@ export type Database = {
           method: string;
           paid_by: string;
           proof_url: string | null;
+          provider_code: string;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
