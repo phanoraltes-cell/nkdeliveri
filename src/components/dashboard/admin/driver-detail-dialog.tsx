@@ -6,9 +6,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
+import { CommissionHistoryTable } from "@/components/dashboard/commission/commission-history-table";
+import { PayoutHistoryTable } from "@/components/dashboard/payouts/payout-history-table";
 import { formatHTG } from "@/lib/format";
 import { Star, Bike, CheckCircle2, XCircle, Wallet, Clock } from "lucide-react";
 
@@ -64,11 +67,14 @@ type DriverDetailDialogProps = {
 };
 
 /**
- * Full driver profile — general/financial/operational/payout info in one
- * dialog, per Phase 1 of the admin evolution plan. All data is already
- * returned by get_drivers_admin (the row the admin clicked), so opening
- * this never triggers an extra network round-trip — same principle
- * BeneficiaryDetailDialog already uses for financial data.
+ * Full driver profile — mini CRM (Phase 2): "Apèsi" tab keeps the
+ * general/financial-summary/operational info from Phase 1 (all already
+ * returned by get_drivers_admin, no extra round-trip), "Istwa Finansye"
+ * adds the actual commission/payout history — reusing
+ * CommissionHistoryTable/PayoutHistoryTable verbatim, the same
+ * components the restaurant/driver "Mes Komisyon"/"Mes Peman" pages and
+ * BeneficiaryDetailDialog already use. No new history-fetching logic
+ * anywhere — one source of truth for what a driver is owed/has been paid.
  */
 export function DriverDetailDialog({
   open,
@@ -103,7 +109,7 @@ export function DriverDetailDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {name}
@@ -116,156 +122,173 @@ export function DriverDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          <section>
-            <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Enfòmasyon jeneral</h3>
-            <div className="grid gap-2 sm:grid-cols-2 text-sm">
-              <div>
-                <span className="text-ink-soft">Telefòn : </span>
-                {driver.phone ? (
-                  <a href={`tel:${driver.phone}`} className="font-bold text-brand-deep">
-                    {driver.phone}
-                  </a>
-                ) : (
-                  "—"
-                )}
-              </div>
-              <div>
-                <span className="text-ink-soft">Imèl : </span>
-                <span className="font-medium">{driver.email}</span>
-              </div>
-              <div>
-                <span className="text-ink-soft">Machin : </span>
-                <span className="font-medium">{driver.vehicle_type ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-ink-soft">Plak : </span>
-                <span className="font-medium">{driver.license_plate ?? "—"}</span>
-              </div>
-            </div>
-          </section>
+        <Tabs defaultValue="apesi">
+          <TabsList>
+            <TabsTrigger value="apesi">Apèsi</TabsTrigger>
+            <TabsTrigger value="finans">Istwa Finansye</TabsTrigger>
+          </TabsList>
 
-          <section>
-            <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Finans</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <KpiCard
-                label="Balans disponib"
-                value={formatHTG(driver.available_balance)}
-                icon={Wallet}
-              />
-              <KpiCard
-                label="Dènye peman"
-                value={
-                  driver.last_payment_date
-                    ? new Date(driver.last_payment_date).toLocaleDateString("fr-HT")
-                    : "Poko gen"
-                }
-                icon={Clock}
-              />
-            </div>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
-              <div>
-                <span className="text-ink-soft">Nimewo MonCash : </span>
-                <span className="font-medium">{driver.moncash_number ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-ink-soft">Nimewo NatCash : </span>
-                <span className="font-medium">{driver.natcash_number ?? "—"}</span>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Operasyon</h3>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <KpiCard label="Livrezon total" value={String(driver.total_deliveries)} icon={Bike} />
-              <KpiCard
-                label="Tux reyisit"
-                value={
-                  driver.success_rate != null ? `${Math.round(driver.success_rate * 100)}%` : "—"
-                }
-                icon={CheckCircle2}
-              />
-              <KpiCard label="Anile" value={String(driver.cancelled_count)} icon={XCircle} />
-              <KpiCard
-                label="Tan mwayèn livrezon"
-                value={
-                  driver.avg_delivery_minutes != null
-                    ? `${Math.round(driver.avg_delivery_minutes)} min`
-                    : "—"
-                }
-                icon={Clock}
-              />
-              <KpiCard
-                label="Nòt mwayèn"
-                value={driver.avg_rating != null ? driver.avg_rating.toFixed(1) : "—"}
-                icon={Star}
-              />
-            </div>
-          </section>
-
-          <section className="border-t border-brand-soft/40 pt-4">
-            {reasonAction ? (
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-ink-soft">
-                  Rezon ({reasonAction === "rejected" ? "rejè" : "sispansyon"})
-                </label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-lg border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
-                  placeholder="Eksplike poukisa (opsyonèl)…"
-                />
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={closeReasonPrompt} disabled={isPending}>
-                    Anile
-                  </Button>
-                  <Button variant="destructive" onClick={confirmReasonAction} disabled={isPending}>
-                    {isPending ? "Ap sove…" : "Konfime"}
-                  </Button>
+          <TabsContent value="apesi" className="space-y-5">
+            <section>
+              <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Enfòmasyon jeneral</h3>
+              <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                <div>
+                  <span className="text-ink-soft">Telefòn : </span>
+                  {driver.phone ? (
+                    <a href={`tel:${driver.phone}`} className="font-bold text-brand-deep">
+                      {driver.phone}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </div>
+                <div>
+                  <span className="text-ink-soft">Imèl : </span>
+                  <span className="font-medium">{driver.email}</span>
+                </div>
+                <div>
+                  <span className="text-ink-soft">Machin : </span>
+                  <span className="font-medium">{driver.vehicle_type ?? "—"}</span>
+                </div>
+                <div>
+                  <span className="text-ink-soft">Plak : </span>
+                  <span className="font-medium">{driver.license_plate ?? "—"}</span>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {driver.status === "pending" && (
-                  <>
-                    <Button
-                      disabled={isPending}
-                      onClick={() => onStatusChange(driver.id, "approved")}
-                    >
-                      Apwouve
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={isPending}
-                      onClick={() => setReasonAction("rejected")}
-                    >
-                      Rejte
-                    </Button>
-                  </>
-                )}
-                {driver.status === "approved" && (
-                  <Button
-                    variant="destructive"
-                    disabled={isPending}
-                    onClick={() => setReasonAction("suspended")}
-                  >
-                    Sispann
-                  </Button>
-                )}
-                {driver.status === "suspended" && (
+            </section>
+
+            <section>
+              <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Finans</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <KpiCard
+                  label="Balans disponib"
+                  value={formatHTG(driver.available_balance)}
+                  icon={Wallet}
+                />
+                <KpiCard
+                  label="Dènye peman"
+                  value={
+                    driver.last_payment_date
+                      ? new Date(driver.last_payment_date).toLocaleDateString("fr-HT")
+                      : "Poko gen"
+                  }
+                  icon={Clock}
+                />
+              </div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
+                <div>
+                  <span className="text-ink-soft">Nimewo MonCash : </span>
+                  <span className="font-medium">{driver.moncash_number ?? "—"}</span>
+                </div>
+                <div>
+                  <span className="text-ink-soft">Nimewo NatCash : </span>
+                  <span className="font-medium">{driver.natcash_number ?? "—"}</span>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Operasyon</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <KpiCard
+                  label="Livrezon total"
+                  value={String(driver.total_deliveries)}
+                  icon={Bike}
+                />
+                <KpiCard
+                  label="Tux reyisit"
+                  value={
+                    driver.success_rate != null ? `${Math.round(driver.success_rate * 100)}%` : "—"
+                  }
+                  icon={CheckCircle2}
+                />
+                <KpiCard label="Anile" value={String(driver.cancelled_count)} icon={XCircle} />
+                <KpiCard
+                  label="Tan mwayèn livrezon"
+                  value={
+                    driver.avg_delivery_minutes != null
+                      ? `${Math.round(driver.avg_delivery_minutes)} min`
+                      : "—"
+                  }
+                  icon={Clock}
+                />
+                <KpiCard
+                  label="Nòt mwayèn"
+                  value={driver.avg_rating != null ? driver.avg_rating.toFixed(1) : "—"}
+                  icon={Star}
+                />
+              </div>
+            </section>
+          </TabsContent>
+
+          <TabsContent value="finans" className="space-y-6">
+            <CommissionHistoryTable beneficiaryType="driver" beneficiaryId={driver.id} />
+            <PayoutHistoryTable
+              beneficiaryType="driver"
+              beneficiaryId={driver.id}
+              beneficiaryName={name}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <section className="border-t border-brand-soft/40 pt-4">
+          {reasonAction ? (
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase text-ink-soft">
+                Rezon ({reasonAction === "rejected" ? "rejè" : "sispansyon"})
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={2}
+                className="w-full rounded-lg border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+                placeholder="Eksplike poukisa (opsyonèl)…"
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={closeReasonPrompt} disabled={isPending}>
+                  Anile
+                </Button>
+                <Button variant="destructive" onClick={confirmReasonAction} disabled={isPending}>
+                  {isPending ? "Ap sove…" : "Konfime"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {driver.status === "pending" && (
+                <>
                   <Button
                     disabled={isPending}
                     onClick={() => onStatusChange(driver.id, "approved")}
                   >
-                    Reyaktive
+                    Apwouve
                   </Button>
-                )}
-              </div>
-            )}
-          </section>
-        </div>
+                  <Button
+                    variant="destructive"
+                    disabled={isPending}
+                    onClick={() => setReasonAction("rejected")}
+                  >
+                    Rejte
+                  </Button>
+                </>
+              )}
+              {driver.status === "approved" && (
+                <Button
+                  variant="destructive"
+                  disabled={isPending}
+                  onClick={() => setReasonAction("suspended")}
+                >
+                  Sispann
+                </Button>
+              )}
+              {driver.status === "suspended" && (
+                <Button disabled={isPending} onClick={() => onStatusChange(driver.id, "approved")}>
+                  Reyaktive
+                </Button>
+              )}
+            </div>
+          )}
+        </section>
       </DialogContent>
     </Dialog>
   );

@@ -7,12 +7,16 @@ import { downloadCSV } from "@/lib/csv-export";
 import { sendNewsletterBroadcast } from "@/lib/send-newsletter.functions";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Download, Search, Send, Mail } from "lucide-react";
+import { Download, Search, Send, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CustomerDetailDialog,
+  type CustomerAdminDetail,
+} from "@/components/dashboard/admin/customer-detail-dialog";
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
@@ -29,6 +33,8 @@ function AdminCustomers() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<CustomerAdminDetail | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const sendBroadcast = useServerFn(sendNewsletterBroadcast);
 
   const customers = useQuery({
@@ -195,6 +201,7 @@ function AdminCustomers() {
                 <th className="px-3 py-2">Enskri</th>
                 <th className="px-3 py-2 text-right">Kòmand</th>
                 <th className="px-3 py-2 text-right">Total achte</th>
+                <th className="px-3 py-2 text-right">Aksyon</th>
               </tr>
             </thead>
             <tbody>
@@ -211,6 +218,19 @@ function AdminCustomers() {
                   <td className="whitespace-nowrap px-3 py-2 text-right">{c.total_orders}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-right font-bold text-brand-deep">
                     {formatHTG(Number(c.total_spent))}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-right">
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label="Wè pwofil"
+                      onClick={() => {
+                        setDetailTarget(c);
+                        setDetailOpen(true);
+                      }}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -304,6 +324,12 @@ function AdminCustomers() {
           </div>
         </div>
       </section>
+
+      <CustomerDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        customer={detailTarget}
+      />
     </div>
   );
 }

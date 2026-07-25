@@ -2006,6 +2006,14 @@ export type Database = {
         Args: { _from: string; _to: string };
         Returns: { month: string; total_commission: number }[];
       };
+      get_customer_activity_summary: {
+        Args: { _customer_id: string };
+        Returns: {
+          favorite_restaurants: Json;
+          last_order_at: string | null;
+          last_order_number: string | null;
+        }[];
+      };
       get_customers_admin: {
         Args: { _limit?: number; _offset?: number; _search?: string };
         Returns: {
@@ -2086,6 +2094,7 @@ export type Database = {
       };
       get_drivers_admin: {
         Args: {
+          _driver_id?: string;
           _limit?: number;
           _offset?: number;
           _search?: string;
@@ -2168,6 +2177,17 @@ export type Database = {
         }[];
       };
       get_primary_role: { Args: { _user_id: string }; Returns: string };
+      get_restaurant_activity_summary: {
+        Args: { _from: string; _restaurant_id: string; _to: string };
+        Returns: {
+          orders_cancelled: number;
+          orders_completed: number;
+          orders_received: number;
+          peak_hours: Json;
+          revenue: number;
+          top_products: Json;
+        }[];
+      };
       get_restaurant_commissions_secure: {
         Args: {
           _from?: string;
