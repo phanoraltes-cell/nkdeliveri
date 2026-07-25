@@ -285,27 +285,33 @@ export type Database = {
       };
       dispute_messages: {
         Row: {
+          attachment_url: string | null;
           author_id: string;
           author_role: Database["public"]["Enums"]["dispute_author_role"];
           created_at: string;
           dispute_id: string;
           id: string;
+          is_internal: boolean;
           message: string;
         };
         Insert: {
+          attachment_url?: string | null;
           author_id: string;
           author_role: Database["public"]["Enums"]["dispute_author_role"];
           created_at?: string;
           dispute_id: string;
           id?: string;
+          is_internal?: boolean;
           message: string;
         };
         Update: {
+          attachment_url?: string | null;
           author_id?: string;
           author_role?: Database["public"]["Enums"]["dispute_author_role"];
           created_at?: string;
           dispute_id?: string;
           id?: string;
+          is_internal?: boolean;
           message?: string;
         };
         Relationships: [
@@ -320,7 +326,9 @@ export type Database = {
       };
       disputes: {
         Row: {
+          assigned_to: string | null;
           category: string;
+          category_group: string;
           created_at: string;
           customer_id: string;
           driver_id: string | null;
@@ -330,11 +338,14 @@ export type Database = {
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string;
-          status: Database["public"]["Enums"]["dispute_status"];
+          status: string;
+          status_history: Json;
           updated_at: string;
         };
         Insert: {
+          assigned_to?: string | null;
           category: string;
+          category_group?: string;
           created_at?: string;
           customer_id: string;
           driver_id?: string | null;
@@ -344,11 +355,14 @@ export type Database = {
           resolved_at?: string | null;
           resolved_by?: string | null;
           restaurant_id: string;
-          status?: Database["public"]["Enums"]["dispute_status"];
+          status?: string;
+          status_history?: Json;
           updated_at?: string;
         };
         Update: {
+          assigned_to?: string | null;
           category?: string;
+          category_group?: string;
           created_at?: string;
           customer_id?: string;
           driver_id?: string | null;
@@ -358,7 +372,8 @@ export type Database = {
           resolved_at?: string | null;
           resolved_by?: string | null;
           restaurant_id?: string;
-          status?: Database["public"]["Enums"]["dispute_status"];
+          status?: string;
+          status_history?: Json;
           updated_at?: string;
         };
         Relationships: [
@@ -1689,13 +1704,20 @@ export type Database = {
     };
     Functions: {
       add_dispute_message_secure: {
-        Args: { _dispute_id: string; _message: string };
+        Args: {
+          _attachment_url?: string;
+          _dispute_id: string;
+          _is_internal?: boolean;
+          _message: string;
+        };
         Returns: {
+          attachment_url: string | null;
           author_id: string;
           author_role: Database["public"]["Enums"]["dispute_author_role"];
           created_at: string;
           dispute_id: string;
           id: string;
+          is_internal: boolean;
           message: string;
         };
         SetofOptions: {
@@ -1993,7 +2015,9 @@ export type Database = {
       dispute_cash_payment_secure: {
         Args: { _description: string; _order_id: string };
         Returns: {
+          assigned_to: string | null;
           category: string;
+          category_group: string;
           created_at: string;
           customer_id: string;
           driver_id: string | null;
@@ -2003,7 +2027,8 @@ export type Database = {
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string;
-          status: Database["public"]["Enums"]["dispute_status"];
+          status: string;
+          status_history: Json;
           updated_at: string;
         };
       };
@@ -2438,9 +2463,16 @@ export type Database = {
         }[];
       };
       open_dispute_secure: {
-        Args: { _category: string; _description: string; _order_id: string };
+        Args: {
+          _category: string;
+          _category_group?: string;
+          _description: string;
+          _order_id: string;
+        };
         Returns: {
+          assigned_to: string | null;
           category: string;
+          category_group: string;
           created_at: string;
           customer_id: string;
           driver_id: string | null;
@@ -2450,7 +2482,8 @@ export type Database = {
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string;
-          status: Database["public"]["Enums"]["dispute_status"];
+          status: string;
+          status_history: Json;
           updated_at: string;
         };
         SetofOptions: {
@@ -2520,7 +2553,9 @@ export type Database = {
       resolve_dispute_secure: {
         Args: { _dispute_id: string; _resolution: string };
         Returns: {
+          assigned_to: string | null;
           category: string;
+          category_group: string;
           created_at: string;
           customer_id: string;
           driver_id: string | null;
@@ -2530,7 +2565,8 @@ export type Database = {
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string;
-          status: Database["public"]["Enums"]["dispute_status"];
+          status: string;
+          status_history: Json;
           updated_at: string;
         };
         SetofOptions: {
@@ -2539,6 +2575,67 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      update_dispute_status_secure: {
+        Args: {
+          _admin_notes?: string;
+          _assigned_to?: string;
+          _dispute_id: string;
+          _status: string;
+        };
+        Returns: {
+          assigned_to: string | null;
+          category: string;
+          category_group: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: string;
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "disputes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_disputes_admin: {
+        Args: {
+          _category_group?: string;
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+        };
+        Returns: {
+          assigned_email: string | null;
+          assigned_to: string | null;
+          category: string;
+          category_group: string;
+          created_at: string;
+          customer_id: string;
+          driver_first_name: string | null;
+          driver_id: string | null;
+          driver_last_name: string | null;
+          id: string;
+          order_id: string;
+          order_number: string;
+          resolution: string | null;
+          restaurant_id: string;
+          restaurant_name: string;
+          status: string;
+          total_count: number;
+          updated_at: string;
+        }[];
       };
       resolve_payout_dispute_secure: {
         Args: {

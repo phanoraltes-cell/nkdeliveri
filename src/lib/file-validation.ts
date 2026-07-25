@@ -24,6 +24,7 @@ export const UPLOAD_LIMITS = {
   "driver-documents": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payment-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payout-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
+  "dispute-attachments": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
 } as const satisfies Record<string, { maxBytes: number; allowedTypes: readonly string[] }>;
 
 export type UploadBucket = keyof typeof UPLOAD_LIMITS;

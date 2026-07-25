@@ -15,7 +15,7 @@ export function useDisputeMessages(disputeId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("dispute_messages")
-        .select("id, author_id, author_role, message, created_at")
+        .select("id, author_id, author_role, message, created_at, is_internal, attachment_url")
         .eq("dispute_id", disputeId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -24,10 +24,15 @@ export function useDisputeMessages(disputeId: string | undefined) {
   });
 
   const send = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async (
+      input: string | { message: string; isInternal?: boolean; attachmentUrl?: string },
+    ) => {
+      const payload = typeof input === "string" ? { message: input } : input;
       const { error } = await supabase.rpc("add_dispute_message_secure", {
         _dispute_id: disputeId!,
-        _message: message,
+        _message: payload.message,
+        _is_internal: payload.isInternal ?? false,
+        _attachment_url: payload.attachmentUrl,
       });
       if (error) throw error;
       try {

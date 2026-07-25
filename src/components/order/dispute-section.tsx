@@ -8,8 +8,17 @@ import { DisputeThread } from "@/components/disputes/dispute-thread";
 import { sendDisputeUpdatePush } from "@/lib/send-dispute-push.functions";
 import { inputClsCompact } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { DISPUTE_TERMINAL_STATUSES } from "@/lib/dispute-status";
 
 const CATEGORIES = ["Manje ki manke", "Kalite manje", "Livrezon an reta", "Konpòtman livrè", "Lòt"];
+
+const CATEGORY_GROUP: Record<string, string> = {
+  "Manje ki manke": "restaurant",
+  "Kalite manje": "restaurant",
+  "Livrezon an reta": "delivery",
+  "Konpòtman livrè": "driver",
+  Lòt: "delivery",
+};
 
 const NOT_YET_ELIGIBLE_STATUSES = new Set(["pending", "confirmed", "preparing"]);
 
@@ -46,6 +55,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
         _order_id: orderId,
         _category: category,
         _description: description.trim(),
+        _category_group: CATEGORY_GROUP[category] ?? "delivery",
       });
       if (error) throw error;
       try {
@@ -63,7 +73,8 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
   });
 
   const eligible = !NOT_YET_ELIGIBLE_STATUSES.has(orderStatus);
-  const canReport = eligible && (!dispute.data || dispute.data.status === "resolved");
+  const canReport =
+    eligible && (!dispute.data || DISPUTE_TERMINAL_STATUSES.has(dispute.data.status));
 
   if (!eligible && !dispute.data) return null;
 
@@ -88,7 +99,7 @@ export function DisputeSection({ orderId, orderStatus }: DisputeSectionProps) {
 
       {canReport && (
         <div className="mt-4 space-y-3">
-          {dispute.data?.status === "resolved" && (
+          {dispute.data && DISPUTE_TERMINAL_STATUSES.has(dispute.data.status) && (
             <p className="text-xs text-ink-soft">
               Litij anvan ou an rezoud. Ou ka siyale yon nouvo pwoblèm si genyen.
             </p>
