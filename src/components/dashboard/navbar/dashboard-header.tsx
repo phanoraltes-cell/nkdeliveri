@@ -1,20 +1,37 @@
 import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, User } from "lucide-react";
+import { Bell, User, ChevronDown, Check } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileDrawer } from "@/components/dashboard/drawer/mobile-drawer";
 import { PROFILE_LINK_BY_ROLE } from "@/components/dashboard/sidebar/nav-items";
+import { dashboardFamilies } from "@/lib/dashboard-family";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 type DashboardHeaderProps = {
+  /** The role whose nav/header is currently active — may differ from the
+   * user's single highest-priority role if they switched dashboards. */
   role: string;
+  /** Every role the user actually holds — drives the switcher below. */
+  allRoles: string[];
   user: SupabaseUser | null | undefined;
   employeeRole?: string | null;
   onSignOut: () => void;
 };
 
-export function DashboardHeader({ role, user, employeeRole, onSignOut }: DashboardHeaderProps) {
+export function DashboardHeader({
+  role,
+  allRoles,
+  user,
+  employeeRole,
+  onSignOut,
+}: DashboardHeaderProps) {
   const qc = useQueryClient();
   const unreadQueryKey = ["notif-unread", user?.id] as const;
 
@@ -66,6 +83,8 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
   });
 
   const profileLink = PROFILE_LINK_BY_ROLE[role];
+  const families = dashboardFamilies(allRoles);
+  const activeFamilyTo = dashboardFamilies([role])[0]?.to;
   const avatarNode = avatarUrl ? (
     <img
       src={avatarUrl}
@@ -82,7 +101,12 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
 
   return (
     <header className="sticky top-0 z-40 flex min-h-16 items-center gap-2 border-b border-brand-soft/50 bg-white pt-[var(--sat)] pb-2 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))] shadow-brand-xs sm:gap-3 sm:pl-[max(1.25rem,var(--sal))] sm:pr-[max(1.25rem,var(--sar))]">
-      <MobileDrawer role={role} employeeRole={employeeRole} onSignOut={onSignOut} />
+      <MobileDrawer
+        role={role}
+        allRoles={allRoles}
+        employeeRole={employeeRole}
+        onSignOut={onSignOut}
+      />
 
       <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
         <img
@@ -97,9 +121,30 @@ export function DashboardHeader({ role, user, employeeRole, onSignOut }: Dashboa
         </span>
       </Link>
 
-      <span className="hidden shrink-0 truncate rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep sm:ml-2 sm:inline-block">
-        {role.replace("_", " ")}
-      </span>
+      {families.length > 1 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="hidden shrink-0 items-center gap-1 truncate rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep transition hover:bg-brand-soft sm:ml-2 sm:inline-flex">
+              {role.replace("_", " ")}
+              <ChevronDown className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {families.map((f) => (
+              <DropdownMenuItem key={f.to} asChild>
+                <Link to={f.to} className="flex items-center justify-between gap-3">
+                  {f.label}
+                  {f.to === activeFamilyTo && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <span className="hidden shrink-0 truncate rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep sm:ml-2 sm:inline-block">
+          {role.replace("_", " ")}
+        </span>
+      )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
         <Link

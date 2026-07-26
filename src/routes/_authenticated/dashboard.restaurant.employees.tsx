@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 // not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/employees")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
+    requireRole(context.allRoles, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantEmployees,
 });

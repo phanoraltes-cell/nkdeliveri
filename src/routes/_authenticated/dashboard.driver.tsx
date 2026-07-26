@@ -13,7 +13,7 @@ import { requireRole } from "@/lib/auth-guard";
 // subtree once, matching the other families.
 export const Route = createFileRoute("/_authenticated/dashboard/driver")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["driver", "admin", "super_admin"]);
+    requireRole(context.allRoles, ["driver", "admin", "super_admin"]);
   },
   component: () => <Outlet />,
 });

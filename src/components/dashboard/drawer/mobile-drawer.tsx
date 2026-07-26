@@ -3,18 +3,22 @@ import { Link } from "@tanstack/react-router";
 import { Menu, LogOut, User, LayoutGrid } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { getNavItems, PROFILE_LINK_BY_ROLE } from "../sidebar/nav-items";
+import { dashboardFamilies } from "@/lib/dashboard-family";
 
 type MobileDrawerProps = {
   role: string;
+  allRoles?: string[];
   employeeRole?: string | null;
   onSignOut: () => void;
 };
 
 /** Hamburger-triggered off-canvas nav for <md screens — replaces the old horizontal scrollable tab strip. */
-export function MobileDrawer({ role, employeeRole, onSignOut }: MobileDrawerProps) {
+export function MobileDrawer({ role, allRoles, employeeRole, onSignOut }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
   const items = getNavItems(role, employeeRole);
   const profileLink = PROFILE_LINK_BY_ROLE[role];
+  const families = dashboardFamilies(allRoles ?? [role]);
+  const activeFamilyTo = dashboardFamilies([role])[0]?.to;
 
   function closeAnd(action?: () => void) {
     setOpen(false);
@@ -52,6 +56,25 @@ export function MobileDrawer({ role, employeeRole, onSignOut }: MobileDrawerProp
             </Link>
           </SheetTitle>
         </SheetHeader>
+
+        {families.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 border-b border-brand-soft/40 p-3">
+            {families.map((f) => (
+              <Link
+                key={f.to}
+                to={f.to}
+                onClick={() => setOpen(false)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                  f.to === activeFamilyTo
+                    ? "bg-brand text-white"
+                    : "bg-brand-soft/50 text-brand-deep hover:bg-brand-soft"
+                }`}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         <nav
           aria-label="Navigasyon dashboard"

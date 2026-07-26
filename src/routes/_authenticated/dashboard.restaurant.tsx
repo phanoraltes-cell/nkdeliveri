@@ -17,7 +17,7 @@ import { requireRole } from "@/lib/auth-guard";
 // those are not redundant with this one, do not remove them.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["restaurant_owner", "restaurant_staff", "admin", "super_admin"]);
+    requireRole(context.allRoles, ["restaurant_owner", "restaurant_staff", "admin", "super_admin"]);
   },
   component: () => <Outlet />,
 });

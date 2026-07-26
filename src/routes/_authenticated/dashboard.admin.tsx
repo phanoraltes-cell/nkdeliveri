@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/auth-guard";
 // admin dashboard's own content on screen.
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["admin", "super_admin"]);
+    requireRole(context.allRoles, ["admin", "super_admin"]);
   },
   component: () => <Outlet />,
 });

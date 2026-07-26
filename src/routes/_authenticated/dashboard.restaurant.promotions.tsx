@@ -20,7 +20,7 @@ type Promotion = Database["public"]["Tables"]["promotions"]["Row"];
 // redundant with the layout's guard, do not remove it.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/promotions")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
+    requireRole(context.allRoles, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantPromotions,
 });

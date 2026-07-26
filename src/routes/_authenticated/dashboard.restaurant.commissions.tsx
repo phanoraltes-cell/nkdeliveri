@@ -10,7 +10,7 @@ import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 // of restaurant_staff as dashboard.restaurant.payouts.tsx.
 export const Route = createFileRoute("/_authenticated/dashboard/restaurant/commissions")({
   beforeLoad: ({ context }) => {
-    requireRole(context.role, ["restaurant_owner", "admin", "super_admin"]);
+    requireRole(context.allRoles, ["restaurant_owner", "admin", "super_admin"]);
   },
   component: RestaurantCommissions,
 });
