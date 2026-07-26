@@ -25,6 +25,15 @@ export function ChangePasswordForm() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      // Revoke every other session/device now that the password has
+      // changed — `scope: "others"` leaves this current session (the one
+      // that just proved it knows the new password) untouched, native
+      // Supabase Auth mechanism, no custom session bookkeeping needed.
+      // Best-effort: the password change itself already succeeded, so a
+      // failure here shouldn't surface as if the password change failed.
+      await supabase.auth.signOut({ scope: "others" }).catch((e) => {
+        console.error("[auth] signOut(others) after password change failed", e);
+      });
       toast.success("Modpas ou chanje avèk siksè");
       setPassword("");
       setConfirm("");

@@ -59,6 +59,14 @@ function ResetPassword() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      // Revoke every other session/device — this recovery session becomes
+      // the one trusted session; any session that existed before the
+      // password reset (e.g. an attacker's, if that's why the user reset
+      // it) must not survive. `scope: "others"` keeps this session logged
+      // in. Best-effort: the password change itself already succeeded.
+      await supabase.auth.signOut({ scope: "others" }).catch((e) => {
+        console.error("[auth] signOut(others) after password reset failed", e);
+      });
       setDone(true);
       toast.success("Modpas ou chanje avèk siksè!");
       setTimeout(() => nav({ to: "/dashboard" }), 1200);

@@ -58,12 +58,17 @@ export async function subscribeToPush(): Promise<{ ok: true } | { ok: false; err
   const auth = json.keys?.auth;
   if (!endpoint || !p256dh || !auth) return { ok: false, error: "Souskripsyon envalid." };
 
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) return { ok: false, error: "Ou dwe konekte." };
+  // getSession() (not getUser()) — same reasoning as the dashboard route
+  // guard: reads the persisted/auto-refreshed local session instead of
+  // depending on a network round trip to Supabase's Auth API just to
+  // register a push subscription.
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  if (!user) return { ok: false, error: "Ou dwe konekte." };
 
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
-      user_id: user.user.id,
+      user_id: user.id,
       endpoint,
       p256dh,
       auth,
