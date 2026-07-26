@@ -1559,6 +1559,62 @@ export type Database = {
           },
         ];
       };
+      sponsored_placements: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          link_url: string | null;
+          placement: string;
+          restaurant_id: string | null;
+          sort_order: number;
+          starts_at: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          ends_at: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          link_url?: string | null;
+          placement: string;
+          restaurant_id?: string | null;
+          sort_order?: number;
+          starts_at: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          ends_at?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          link_url?: string | null;
+          placement?: string;
+          restaurant_id?: string | null;
+          sort_order?: number;
+          starts_at?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_placements_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_roles: {
         Row: {
           created_at: string;
@@ -1967,6 +2023,96 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      create_sponsored_placement_secure: {
+        Args: {
+          _ends_at: string;
+          _image_url?: string;
+          _link_url?: string;
+          _placement: string;
+          _restaurant_id?: string;
+          _sort_order?: number;
+          _starts_at: string;
+          _title: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          link_url: string | null;
+          placement: string;
+          restaurant_id: string | null;
+          sort_order: number;
+          starts_at: string;
+          title: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "sponsored_placements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_sponsored_placement_secure: {
+        Args: {
+          _ends_at: string;
+          _id: string;
+          _image_url?: string;
+          _is_active: boolean;
+          _link_url?: string;
+          _sort_order?: number;
+          _starts_at: string;
+          _title: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          link_url: string | null;
+          placement: string;
+          restaurant_id: string | null;
+          sort_order: number;
+          starts_at: string;
+          title: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "sponsored_placements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      delete_sponsored_placement_secure: {
+        Args: { _id: string };
+        Returns: undefined;
+      };
+      get_active_placements_secure: {
+        Args: { _limit?: number; _placement: string };
+        Returns: {
+          id: string;
+          image_url: string | null;
+          link_url: string | null;
+          placement: string;
+          restaurant_address: string | null;
+          restaurant_avg_prep_time: number | null;
+          restaurant_cover_url: string | null;
+          restaurant_cuisine: string | null;
+          restaurant_delivery_fee: number | null;
+          restaurant_id: string | null;
+          restaurant_name: string | null;
+          restaurant_rating: number | null;
+          restaurant_slug: string | null;
+          sort_order: number;
+          title: string;
+        }[];
       };
       create_promotion_secure: {
         Args: {

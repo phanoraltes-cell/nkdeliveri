@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { SITE_URL } from "@/lib/site-config";
 import { homeDataQuery } from "@/components/home/home-data";
 import { HeroSection } from "@/components/home/hero-section";
+import { AdBannerSection } from "@/components/home/ad-banner-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { RestaurantCtaBanner } from "@/components/home/restaurant-cta-banner";
 import { PopularRestaurantsSection } from "@/components/home/popular-restaurants-section";
@@ -65,6 +66,8 @@ function Index() {
             nav({ to: "/restaurants", search: { q } });
           }}
         />
+
+        <AdBannerSection />
 
         <HowItWorksSection />
 

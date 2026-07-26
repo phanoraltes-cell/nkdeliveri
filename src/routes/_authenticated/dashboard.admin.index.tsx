@@ -13,6 +13,7 @@ import {
   Percent,
   Inbox,
   RotateCcw,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { MapMarker } from "@/components/maps/LeafletMap";
@@ -476,6 +477,12 @@ function AdminDashboard() {
             title: "Jesyon Livrè",
             desc: "Apwouve, sispann, swiv pèfòmans livrè yo",
             to: "/dashboard/admin/drivers",
+          },
+          {
+            icon: Megaphone,
+            title: "Piblisite",
+            desc: "Jere anons sponsorize yo",
+            to: "/dashboard/admin/ads",
           },
           { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
         ]}

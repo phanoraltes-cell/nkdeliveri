@@ -80,6 +80,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
     { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
+    { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
   ],
   super_admin: [
     { to: "/dashboard/admin", label: "Akèy", icon: LayoutDashboard },
@@ -92,6 +93,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
     { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
+    { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
   ],
 };
 
