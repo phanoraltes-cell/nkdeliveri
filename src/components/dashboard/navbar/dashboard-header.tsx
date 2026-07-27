@@ -42,7 +42,8 @@ export function DashboardHeader({
       const { count, error } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
-        .is("read_at", null);
+        .is("read_at", null)
+        .is("hidden_at", null);
       if (error) throw error;
       return count ?? 0;
     },
