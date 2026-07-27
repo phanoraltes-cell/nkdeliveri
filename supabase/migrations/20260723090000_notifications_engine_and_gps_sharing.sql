@@ -64,6 +64,16 @@ BEGIN
   IF jsonb_typeof(_prefs) <> 'object' THEN
     RAISE EXCEPTION 'Preferences must be a JSON object';
   END IF;
+  -- Every value must be a real boolean -- private.notify_secure below does
+  -- `(...->>_category)::boolean`, an unhandled cast error on any
+  -- non-boolean value there would abort whatever unrelated transaction
+  -- happened to be sending a notification at the time (chat, order
+  -- cancellation, promotions...) for this one user. Reject bad shapes here,
+  -- at the actual trust boundary, instead of defending every downstream
+  -- reader against it.
+  IF EXISTS (SELECT 1 FROM jsonb_each(_prefs) kv WHERE jsonb_typeof(kv.value) <> 'boolean') THEN
+    RAISE EXCEPTION 'Chak valè preferans dwe vrè oswa fo (true/false)';
+  END IF;
 
   INSERT INTO public.notification_preferences (user_id, prefs, updated_at)
   VALUES (v_user, _prefs, now())

@@ -109,6 +109,22 @@ BEGIN
    WHERE id = _order_id
    RETURNING * INTO v_order;
 
+  -- GPS-sharing auto-revocation gap found during the pre-deployment audit:
+  -- private.protect_delivery_status_transition() already wipes
+  -- customer_delivery_locations when *deliveries.status* reaches a
+  -- terminal state, but this function only ever writes *orders.status*
+  -- and never touches deliveries -- an admin force-cancelling an order
+  -- that already has an active delivery (v_is_admin allows 'cancelled'
+  -- from any status) would leave the delivery row, and therefore the
+  -- customer's last shared position, untouched and still visible to the
+  -- driver/admin. Cover every path through this function (not just the
+  -- customer's) so "jamais visible après la fin de la livraison" holds
+  -- regardless of which role ended it or how.
+  IF _new_status IN ('cancelled', 'delivered') THEN
+    DELETE FROM public.customer_delivery_locations
+    WHERE delivery_id IN (SELECT id FROM public.deliveries WHERE order_id = v_order.id);
+  END IF;
+
   IF v_is_customer AND _new_status = 'cancelled' THEN
     PERFORM private.log_audit_event(v_user, 'customer', 'order.cancelled_by_customer',
       jsonb_build_object('order_id', v_order.id, 'order_number', v_order.order_number));

@@ -7,6 +7,15 @@
 -- no user gets more than one promotional notification per configurable
 -- window, regardless of how many campaigns an admin sends.
 
+-- Serves send_promotional_notification_secure's per-recipient cooldown
+-- check below (WHERE user_id=... AND category='promotion' AND
+-- created_at > ...) -- the existing idx_notif_user(user_id, created_at)
+-- index doesn't cover `category`, so without this Postgres would filter
+-- it row-by-row after the user_id lookup instead of using the index
+-- directly for the whole predicate.
+CREATE INDEX IF NOT EXISTS notifications_user_category_created_idx
+  ON public.notifications(user_id, category, created_at DESC);
+
 CREATE TABLE public.promotional_notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
