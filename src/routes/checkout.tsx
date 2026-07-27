@@ -34,6 +34,7 @@ function Checkout() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [wantsLocationSharing, setWantsLocationSharing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
   const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
@@ -137,6 +138,7 @@ function Checkout() {
         _contact_phone: phone,
         _delivery_notes: notes || "",
         _method: method,
+        _wants_location_sharing: wantsLocationSharing,
       });
       if (rpcErr) throw rpcErr;
       clear();
@@ -291,6 +293,19 @@ function Checkout() {
                   placeholder="Enstriksyon espesyal…"
                   className={inputCls()}
                 />
+                <label className="mt-3 flex items-start gap-2 text-sm text-ink-soft">
+                  <input
+                    type="checkbox"
+                    checked={wantsLocationSharing}
+                    onChange={(e) => setWantsLocationSharing(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Mwen dakò pataje pozisyon mwen pandan livrezon an, pou ede livrè a jwenn mwen pi
+                    vit. Ou ka aktive/dezaktive sa lè livrezon an kòmanse — sa a pa yon aktivasyon
+                    otomatik.
+                  </span>
+                </label>
               </div>
 
               <div className="mt-5">

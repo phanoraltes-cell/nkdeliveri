@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState } from "react";
+import { MapPin } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DriverLocationReporter } from "@/components/driver-location-reporter";
@@ -65,6 +66,11 @@ export function ActiveDeliveriesSection({
             {d.order?.delivery_notes && (
               <div className="mt-0.5 text-xs italic text-ink-soft">
                 Nòt: {d.order.delivery_notes}
+              </div>
+            )}
+            {d.customer_location && (
+              <div className="mt-1 flex items-center gap-1 text-xs font-bold text-emerald-700">
+                <MapPin className="h-3 w-3" /> Kliyan an pataje pozisyon li
               </div>
             )}
             <div className="mt-2">

@@ -2,6 +2,13 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export type CustomerLocation = {
+  lat: number;
+  lng: number;
+  accuracy: number | null;
+  updated_at: string;
+};
+
 export type ActiveDelivery = {
   id: string;
   order_id: string;
@@ -10,6 +17,7 @@ export type ActiveDelivery = {
   driver_lat: number | null;
   driver_lng: number | null;
   location_updated_at: string | null;
+  customer_location: CustomerLocation | null;
   order?: {
     order_number: string;
     delivery_lat: number | null;
@@ -31,17 +39,33 @@ export type ActiveDelivery = {
   driver?: { first_name: string | null; last_name: string | null } | null;
 };
 
-const ACTIVE_STATUSES = ["assigned", "picked_up", "en_route_pickup", "en_route_dropoff"] as const;
+export const ACTIVE_DELIVERY_STATUSES = [
+  "assigned",
+  "picked_up",
+  "en_route_pickup",
+  "en_route_dropoff",
+] as const;
 
 type Scope = { driverId?: string; customerId?: string; admin?: boolean };
+
+// customer_delivery_locations is a 1:1 child (its PK is the FK to
+// deliveries.id) but PostgREST's embed shape for that direction isn't
+// worth depending on precisely — normalized defensively below either way.
+function normalizeCustomerLocation(
+  raw: CustomerLocation | CustomerLocation[] | null | undefined,
+): CustomerLocation | null {
+  if (!raw) return null;
+  return Array.isArray(raw) ? (raw[0] ?? null) : raw;
+}
+
+const DELIVERY_SELECT =
+  "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), customer_delivery_locations(lat, lng, accuracy, updated_at), orders(order_number, delivery_lat, delivery_lng, delivery_address, delivery_notes, contact_phone, status, customer_id, restaurants(name, lat, lng, address, phone), order_items(id, product_name, quantity, notes))";
 
 async function fetchActiveDeliveries(scope: Scope): Promise<ActiveDelivery[]> {
   let q = supabase
     .from("deliveries")
-    .select(
-      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, delivery_notes, contact_phone, status, customer_id, restaurants(name, lat, lng, address, phone), order_items(id, product_name, quantity, notes))",
-    )
-    .in("status", ACTIVE_STATUSES);
+    .select(DELIVERY_SELECT)
+    .in("status", ACTIVE_DELIVERY_STATUSES);
   if (scope.driverId) q = q.eq("driver_id", scope.driverId);
   const { data, error } = await q;
   if (error) throw error;
@@ -55,6 +79,7 @@ async function fetchActiveDeliveries(scope: Scope): Promise<ActiveDelivery[]> {
       driver_lat: d.driver_lat,
       driver_lng: d.driver_lng,
       location_updated_at: d.location_updated_at,
+      customer_location: normalizeCustomerLocation(d.customer_delivery_locations),
       driver: d.drivers,
       order: d.orders,
     })) as ActiveDelivery[];
@@ -82,6 +107,15 @@ export function useLiveOrders(scope: Scope): ActiveDelivery[] {
       .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
         qc.invalidateQueries({ queryKey });
       })
+      // Separate table from `deliveries` (see the schema comment in the
+      // migration for why customer GPS isn't just columns on that row) —
+      // needs its own subscription so a shared position update actually
+      // shows up live instead of waiting for an unrelated deliveries change.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "customer_delivery_locations" },
+        () => qc.invalidateQueries({ queryKey }),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -95,9 +129,7 @@ export function useLiveOrders(scope: Scope): ActiveDelivery[] {
 async function fetchOrderDelivery(orderId: string): Promise<ActiveDelivery | null> {
   const { data, error } = await supabase
     .from("deliveries")
-    .select(
-      "id, order_id, driver_id, status, driver_lat, driver_lng, location_updated_at, drivers(first_name, last_name), orders(order_number, delivery_lat, delivery_lng, delivery_address, delivery_notes, contact_phone, status, restaurants(name, lat, lng, address, phone), order_items(id, product_name, quantity, notes))",
-    )
+    .select(DELIVERY_SELECT)
     .eq("order_id", orderId)
     .maybeSingle();
   if (error) throw error;
@@ -110,6 +142,7 @@ async function fetchOrderDelivery(orderId: string): Promise<ActiveDelivery | nul
     driver_lat: data.driver_lat,
     driver_lng: data.driver_lng,
     location_updated_at: data.location_updated_at,
+    customer_location: normalizeCustomerLocation(data.customer_delivery_locations),
     driver: data.drivers,
     order: data.orders,
   };
@@ -134,6 +167,15 @@ export function useOrderDelivery(orderId: string | undefined): ActiveDelivery | 
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "deliveries", filter: `order_id=eq.${orderId}` },
+        () => qc.invalidateQueries({ queryKey }),
+      )
+      // customer_delivery_locations has no order_id column to filter by
+      // server-side (only delivery_id, not known ahead of the fetch above)
+      // -- unfiltered is fine here, this channel only ever invalidates this
+      // one order's query key regardless of which row changed.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "customer_delivery_locations" },
         () => qc.invalidateQueries({ queryKey }),
       )
       .subscribe();

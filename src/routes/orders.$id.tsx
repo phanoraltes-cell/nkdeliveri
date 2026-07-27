@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatHTG } from "@/lib/format";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
-import { useOrderDelivery } from "@/hooks/useLiveOrders";
+import { useOrderDelivery, ACTIVE_DELIVERY_STATUSES } from "@/hooks/useLiveOrders";
 import { useRoute } from "@/hooks/useRoute";
 import { noIndexMeta } from "@/lib/seo";
 import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-section";
@@ -16,6 +16,7 @@ import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
 import { DisputeSection } from "@/components/order/dispute-section";
 import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
+import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
 
@@ -136,7 +137,18 @@ function OrderDetail() {
         label: delivery.order.restaurants.name ?? "Restoran",
       });
     }
-    if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
+    // Prefer the customer's live shared position over their registered
+    // delivery address when they've opted in — more accurate for the
+    // driver, and the whole point of Phase 1 of the GPS-sharing feature.
+    if (delivery.customer_location) {
+      arr.push({
+        id: "dst",
+        lat: Number(delivery.customer_location.lat),
+        lng: Number(delivery.customer_location.lng),
+        type: "client",
+        label: "Pozisyon ou (an tan reyèl)",
+      });
+    } else if (delivery.order?.delivery_lat != null && delivery.order?.delivery_lng != null) {
       arr.push({
         id: "dst",
         lat: Number(delivery.order.delivery_lat),
@@ -212,6 +224,10 @@ function OrderDetail() {
             route={trackingRoute}
             headingToPickup={headingToPickup}
           />
+        )}
+
+        {delivery && (ACTIVE_DELIVERY_STATUSES as readonly string[]).includes(delivery.status) && (
+          <CustomerLocationToggle deliveryId={delivery.id} />
         )}
 
         <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">

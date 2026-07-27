@@ -173,7 +173,23 @@ function DriverDashboard() {
         },
       });
     }
-    if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
+    // Prefer the customer's live shared position (Phase 1 GPS sharing) over
+    // their registered delivery address when they've opted in — same
+    // preference order as the customer's own tracking page.
+    if (d.customer_location) {
+      const o = d.order;
+      arr.push({
+        id: `dst-${d.id}`,
+        lat: Number(d.customer_location.lat),
+        lng: Number(d.customer_location.lng),
+        type: "client",
+        label: o?.order_number ?? "Kliyan",
+        info: {
+          title: `Kòmand ${o?.order_number ?? ""} — pozisyon an tan reyèl`,
+          lines: [o?.contact_phone].filter((v): v is string => !!v),
+        },
+      });
+    } else if (d.order?.delivery_lat != null && d.order?.delivery_lng != null) {
       const o = d.order;
       arr.push({
         id: `dst-${d.id}`,

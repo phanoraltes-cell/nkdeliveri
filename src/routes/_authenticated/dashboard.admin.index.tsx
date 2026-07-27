@@ -145,19 +145,27 @@ function AdminDashboard() {
           };
         }),
       ...filteredActive
-        .filter((d) => d.order?.delivery_lat != null && d.order?.delivery_lng != null)
+        .filter(
+          (d) =>
+            d.customer_location || (d.order?.delivery_lat != null && d.order?.delivery_lng != null),
+        )
         .map((d) => {
           const address = d.order?.delivery_address ?? "—";
           const phone = d.order?.contact_phone ?? "—";
           const orderNumber = d.order?.order_number ?? "";
+          // Prefer the customer's live shared position (Phase 1 GPS
+          // sharing) over their registered delivery address, same
+          // preference order as the customer/driver views.
+          const lat = d.customer_location ? d.customer_location.lat : d.order!.delivery_lat!;
+          const lng = d.customer_location ? d.customer_location.lng : d.order!.delivery_lng!;
           return {
             id: `dst-${d.id}`,
-            lat: Number(d.order!.delivery_lat),
-            lng: Number(d.order!.delivery_lng),
+            lat: Number(lat),
+            lng: Number(lng),
             type: "client" as const,
             label: `Adrès ${d.order?.order_number}`,
             info: {
-              title: `Kòmand ${orderNumber}`,
+              title: `Kòmand ${orderNumber}${d.customer_location ? " — pozisyon an tan reyèl" : ""}`,
               lines: [
                 `Adrès: ${address}`,
                 `Telefòn: ${phone}`,

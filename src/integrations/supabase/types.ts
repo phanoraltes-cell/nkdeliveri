@@ -565,6 +565,7 @@ export type Database = {
       notifications: {
         Row: {
           body: string | null;
+          category: string;
           created_at: string;
           data: Json;
           id: string;
@@ -575,6 +576,7 @@ export type Database = {
         };
         Insert: {
           body?: string | null;
+          category?: string;
           created_at?: string;
           data?: Json;
           id?: string;
@@ -585,6 +587,7 @@ export type Database = {
         };
         Update: {
           body?: string | null;
+          category?: string;
           created_at?: string;
           data?: Json;
           id?: string;
@@ -594,6 +597,56 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      notification_preferences: {
+        Row: {
+          prefs: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          prefs?: Json;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          prefs?: Json;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      customer_delivery_locations: {
+        Row: {
+          accuracy: number | null;
+          delivery_id: string;
+          lat: number;
+          lng: number;
+          updated_at: string;
+        };
+        Insert: {
+          accuracy?: number | null;
+          delivery_id: string;
+          lat: number;
+          lng: number;
+          updated_at?: string;
+        };
+        Update: {
+          accuracy?: number | null;
+          delivery_id?: string;
+          lat?: number;
+          lng?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_delivery_locations_delivery_id_fkey";
+            columns: ["delivery_id"];
+            isOneToOne: true;
+            referencedRelation: "deliveries";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       order_items: {
         Row: {
@@ -667,6 +720,7 @@ export type Database = {
           subtotal: number;
           total: number;
           updated_at: string;
+          wants_location_sharing: boolean;
         };
         Insert: {
           address_id?: string | null;
@@ -688,6 +742,7 @@ export type Database = {
           subtotal?: number;
           total?: number;
           updated_at?: string;
+          wants_location_sharing?: boolean;
         };
         Update: {
           address_id?: string | null;
@@ -709,6 +764,7 @@ export type Database = {
           subtotal?: number;
           total?: number;
           updated_at?: string;
+          wants_location_sharing?: boolean;
         };
         Relationships: [
           {
@@ -1986,8 +2042,30 @@ export type Database = {
           _items: Json;
           _method: Database["public"]["Enums"]["payment_method"];
           _restaurant_id: string;
+          _wants_location_sharing?: boolean;
         };
         Returns: string;
+      };
+      push_customer_location_secure: {
+        Args: {
+          _accuracy?: number;
+          _delivery_id: string;
+          _lat: number;
+          _lng: number;
+        };
+        Returns: undefined;
+      };
+      stop_customer_location_sharing_secure: {
+        Args: { _delivery_id: string };
+        Returns: undefined;
+      };
+      update_notification_preferences_secure: {
+        Args: { _prefs: Json };
+        Returns: {
+          prefs: Json;
+          updated_at: string;
+          user_id: string;
+        };
       };
       create_product_secure: {
         Args: {
