@@ -13,12 +13,14 @@ export function NewsletterSection() {
     e.preventDefault();
     setSubscribing(true);
     try {
-      const { error } = await supabase
-        .from("newsletter_subscribers")
-        .insert({ email: newsletterEmail.trim().toLowerCase() });
+      const { error } = await supabase.rpc("subscribe_newsletter_secure", {
+        _email: newsletterEmail.trim().toLowerCase(),
+      });
       if (error) {
         if (error.code === "23505") {
           toast.info("Ou deja enskri!");
+        } else if (error.code === "42901") {
+          toast.error(error.message);
         } else {
           throw error;
         }

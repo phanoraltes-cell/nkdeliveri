@@ -2034,6 +2034,10 @@ export type Database = {
         };
         Returns: boolean;
       };
+      subscribe_newsletter_secure: {
+        Args: { _email: string; _source?: string };
+        Returns: undefined;
+      };
       claim_delivery_secure: {
         Args: { _order_id: string };
         Returns: {
