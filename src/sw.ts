@@ -70,16 +70,34 @@ self.addEventListener("push", (event) => {
   }
 
   const title = payload.title || "NK Deliveri";
+  const targetUrl = payload.url || "/notifications";
   const options: NotificationOptions = {
     body: payload.body || "",
     icon: "/app-icon-192.png",
     badge: "/app-icon-192.png",
     tag: payload.tag,
-    data: { url: payload.url || "/notifications", ...(payload.data || {}) },
+    data: { url: targetUrl, ...(payload.data || {}) },
     requireInteraction: false,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    (async () => {
+      // If the recipient already has this exact page focused, their screen
+      // already reflects the change via Realtime (chat messages, order
+      // status, etc.) — a system-level popup on top of that would just be a
+      // redundant interruption for something they're already looking at.
+      // WindowClient.focused is well-supported (Chrome/Firefox/Edge); where
+      // it's undefined (older Safari) this simply never matches and falls
+      // back to always showing the notification, the previous behavior.
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const alreadyFocusedHere = clients.some(
+        (c) =>
+          "focused" in c && (c as WindowClient).focused && new URL(c.url).pathname === targetUrl,
+      );
+      if (alreadyFocusedHere) return;
+      await self.registration.showNotification(title, options);
+    })(),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
