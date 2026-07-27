@@ -98,9 +98,19 @@ export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
       }
       setUploading(false);
     }
-    send.mutate({ message: text || undefined, imageUrl });
-    setReply("");
-    setFile(null);
+    // Only clear the composer on success — on failure (dropped connection,
+    // rate limit, chat closed mid-type...) the toast from useOrderChatMessages'
+    // onError already tells the user it failed, so leaving their text in
+    // place means they can just hit send again instead of retyping it.
+    send.mutate(
+      { message: text || undefined, imageUrl },
+      {
+        onSuccess: () => {
+          setReply("");
+          setFile(null);
+        },
+      },
+    );
   }
 
   function sendLocationPin() {
