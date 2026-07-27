@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { sendOrderChatPush } from "@/lib/send-order-chat-push.functions";
 
 type SendChatMessageInput = {
   message?: string;
@@ -18,6 +20,7 @@ type SendChatMessageInput = {
  */
 export function useOrderChatMessages(orderId: string | undefined) {
   const qc = useQueryClient();
+  const sendPush = useServerFn(sendOrderChatPush);
   const queryKey = ["order-chat-messages", orderId] as const;
 
   const messages = useQuery({
@@ -65,6 +68,14 @@ export function useOrderChatMessages(orderId: string | undefined) {
         _lng: input.lng,
       });
       if (error) throw error;
+      // Best-effort — the message itself is already saved above, so a push
+      // failure (e.g. recipient has no subscription) must never surface as
+      // a send failure to the sender.
+      try {
+        await sendPush({ data: { orderId: orderId! } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey }),
     onError: (e) => toast.error(e.message),
