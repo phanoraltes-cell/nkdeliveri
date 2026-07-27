@@ -648,6 +648,76 @@ export type Database = {
           },
         ];
       };
+      order_chat_messages: {
+        Row: {
+          author_id: string;
+          author_role: string;
+          created_at: string;
+          id: string;
+          image_url: string | null;
+          lat: number | null;
+          lng: number | null;
+          message: string | null;
+          order_id: string;
+        };
+        Insert: {
+          author_id: string;
+          author_role: string;
+          created_at?: string;
+          id?: string;
+          image_url?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          message?: string | null;
+          order_id: string;
+        };
+        Update: {
+          author_id?: string;
+          author_role?: string;
+          created_at?: string;
+          id?: string;
+          image_url?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          message?: string | null;
+          order_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_chat_messages_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_chat_reads: {
+        Row: {
+          last_read_at: string;
+          order_id: string;
+          user_id: string;
+        };
+        Insert: {
+          last_read_at?: string;
+          order_id: string;
+          user_id: string;
+        };
+        Update: {
+          last_read_at?: string;
+          order_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_chat_reads_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       order_items: {
         Row: {
           created_at: string;
@@ -2053,6 +2123,30 @@ export type Database = {
           _lat: number;
           _lng: number;
         };
+        Returns: undefined;
+      };
+      send_order_chat_message_secure: {
+        Args: {
+          _image_url?: string;
+          _lat?: number;
+          _lng?: number;
+          _message?: string;
+          _order_id: string;
+        };
+        Returns: {
+          author_id: string;
+          author_role: string;
+          created_at: string;
+          id: string;
+          image_url: string | null;
+          lat: number | null;
+          lng: number | null;
+          message: string | null;
+          order_id: string;
+        };
+      };
+      mark_order_chat_read_secure: {
+        Args: { _order_id: string };
         Returns: undefined;
       };
       stop_customer_location_sharing_secure: {

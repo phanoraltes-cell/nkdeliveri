@@ -17,8 +17,10 @@ import { RefundSection } from "@/components/order/refund-section";
 import { DisputeSection } from "@/components/order/dispute-section";
 import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
 import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
+import { OrderChatThread } from "@/components/order/order-chat-thread";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ORDER_STATUS_LABEL } from "@/lib/order-status";
+import { ORDER_STATUS_LABEL, CHAT_OPEN_STATUSES } from "@/lib/order-status";
+import { MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => noIndexMeta("Kòmand — NK Deliveri"),
@@ -228,6 +230,15 @@ function OrderDetail() {
 
         {delivery && (ACTIVE_DELIVERY_STATUSES as readonly string[]).includes(delivery.status) && (
           <CustomerLocationToggle deliveryId={delivery.id} />
+        )}
+
+        {o.status !== "pending" && (
+          <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
+            <div className="flex items-center gap-2 font-display text-base font-bold">
+              <MessageCircle className="h-4 w-4 text-brand-deep" /> Chat livrezon
+            </div>
+            <OrderChatThread orderId={o.id} isOpen={CHAT_OPEN_STATUSES.has(o.status)} />
+          </div>
         )}
 
         <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
