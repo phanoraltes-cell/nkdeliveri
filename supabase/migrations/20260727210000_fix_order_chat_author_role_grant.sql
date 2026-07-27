@@ -1,0 +1,28 @@
+-- Bug found via live audit (2026-07-27): order_chat_author_role() is called
+-- directly inside the "order_chat_messages read" RLS policy's USING clause
+-- (see 20260723100000_order_chat.sql), which means Postgres evaluates it
+-- with the *querying session's own* privileges, not the table owner's --
+-- unlike a SECURITY DEFINER RPC's internal calls, which always run as the
+-- function owner regardless of the caller's grants.
+--
+-- The order_chat migration revoked EXECUTE on this function from
+-- PUBLIC/anon/authenticated and never re-granted it to authenticated, so
+-- every plain SELECT against order_chat_messages (the frontend's message
+-- list query, and by extension every Realtime postgres_changes subscription
+-- on that table, which is authorized the same way) failed outright with
+-- "permission denied for function order_chat_author_role" for every role
+-- (customer, driver, admin alike). Writes were unaffected because
+-- send_order_chat_message_secure/mark_order_chat_read_secure are
+-- SECURITY DEFINER and call the function internally as its owner — which is
+-- exactly why messages were reaching the database but never coming back.
+--
+-- The established, correct pattern for this exact situation already exists
+-- one migration away: private.dispute_author_role (this function's direct
+-- analog, used identically inside the disputes RLS policies) was never
+-- revoked from PUBLIC and so kept the default execute grant; every other
+-- *_visible() RLS helper in this project that *was* explicitly revoked
+-- (private.payout_beneficiary_visible, private.wallet_owner_visible) got a
+-- matching `GRANT EXECUTE ... TO authenticated` right after — confirmed via
+-- a full grep of every REVOKE ALL ON FUNCTION private.* in this project;
+-- order_chat_author_role is the sole outlier missing it.
+GRANT EXECUTE ON FUNCTION private.order_chat_author_role(uuid) TO authenticated;
