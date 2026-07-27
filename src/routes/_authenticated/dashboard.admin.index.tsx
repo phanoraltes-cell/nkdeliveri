@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -61,8 +61,23 @@ function AdminDashboard() {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 15000,
   });
+
+  // Was a 15s poll — every other live-updating section of this dashboard
+  // already uses Realtime (see useLiveOrders), so this follows the same
+  // pattern: refetch only when a driver's row actually changes (going
+  // online/offline, or their position updating).
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-online-drivers")
+      .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () =>
+        qc.invalidateQueries({ queryKey: ["admin-online-drivers"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   const approvedRestaurants = useQuery({
     queryKey: ["admin-map-restaurants"],

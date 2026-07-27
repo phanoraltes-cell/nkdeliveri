@@ -74,7 +74,7 @@ export function PopularDishesSection({
         })}
       </div>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {filteredProducts.slice(0, 8).map((p) => (
+        {filteredProducts.slice(0, 8).map((p, i) => (
           <div
             key={p.id}
             className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"
@@ -84,7 +84,7 @@ export function PopularDishesSection({
                 src={p.image_url}
                 alt={p.name}
                 icon={UtensilsCrossed}
-                loading="lazy"
+                loading={i < 4 ? "eager" : "lazy"}
                 width={280}
                 height={160}
                 className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"

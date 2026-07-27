@@ -7,6 +7,7 @@ type ImageWithFallbackProps = {
   width?: number;
   height?: number;
   loading?: "lazy" | "eager";
+  fetchPriority?: "high" | "low" | "auto";
   /** Applied to both the <img> and the fallback placeholder, so callers get
    * identical sizing/rounding regardless of which one renders. */
   className: string;
@@ -21,6 +22,7 @@ export function ImageWithFallback({
   width,
   height,
   loading,
+  fetchPriority,
   className,
 }: ImageWithFallbackProps) {
   if (!src) {
@@ -39,6 +41,7 @@ export function ImageWithFallback({
       width={width}
       height={height}
       loading={loading}
+      fetchPriority={fetchPriority}
       className={className}
     />
   );

@@ -53,7 +53,7 @@ export function PopularRestaurantsSection({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {restaurants.slice(0, 8).map((r) => (
+        {restaurants.slice(0, 8).map((r, i) => (
           <Link
             key={r.id}
             to="/restaurants/$slug"
@@ -65,7 +65,12 @@ export function PopularRestaurantsSection({
                 src={r.cover_url || r.logo_url}
                 alt={r.name}
                 icon={Store}
-                loading="lazy"
+                // First row (desktop: 4 cols, mobile: 2 cols) loads eagerly —
+                // one of these is the likely LCP element; lazy-loading it
+                // delayed the largest-contentful-paint measurement for no
+                // reason since it's already above the fold on first render.
+                loading={i < 4 ? "eager" : "lazy"}
+                fetchPriority={i < 4 ? "high" : "auto"}
                 width={280}
                 height={160}
                 className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"
