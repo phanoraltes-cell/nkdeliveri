@@ -14,6 +14,7 @@ import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-se
 import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
+import { CancelOrderSection } from "@/components/order/cancel-order-section";
 import { DisputeSection } from "@/components/order/dispute-section";
 import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
 import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
@@ -294,6 +295,8 @@ function OrderDetail() {
             reviewNotes={payment.review_notes}
           />
         )}
+
+        <CancelOrderSection orderId={o.id} orderStatus={o.status} />
 
         <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
 
