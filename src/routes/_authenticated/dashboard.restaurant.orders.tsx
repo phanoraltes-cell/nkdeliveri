@@ -6,14 +6,15 @@ import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, X, ChevronRight, LayoutGrid, List, Printer } from "lucide-react";
+import { Check, X, ChevronRight, LayoutGrid, List, Printer, Eraser } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
+import { useHiddenHistory } from "@/hooks/useHiddenHistory";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban-board";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { ORDER_STATUS_LABEL as STATUS_LABEL } from "@/lib/order-status";
+import { ORDER_STATUS_LABEL as STATUS_LABEL, TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
 
 const PAGE_SIZE = 30;
 
@@ -41,6 +42,7 @@ function RestaurantOrders() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
+  const { hiddenIds, hide } = useHiddenHistory("order");
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [filter, setFilter] = useState<"all" | "pending">("all");
   const [page, setPage] = useState(1);
@@ -137,13 +139,35 @@ function RestaurantOrders() {
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
-  const rows = orders.data?.rows ?? [];
+  // Hiding never applies to the Kanban (a live operational board, not a
+  // history browser — see the comment above kanbanOrders) or to the
+  // "An atant" filter (an order can never be both pending and hidden, the
+  // trigger only allows hiding terminal statuses) — but filtering rows
+  // here unconditionally is harmless either way and keeps this one line
+  // instead of branching on `filter`.
+  const rows = (orders.data?.rows ?? []).filter((o) => !hiddenIds.has(o.id));
   const totalCount = orders.data?.totalCount ?? 0;
   const pendingCount = pendingBadge.data ?? 0;
+  const hasHideable = filter === "all" && rows.some((o) => TERMINAL_ORDER_STATUSES.has(o.status));
 
   function updateFilter(f: "all" | "pending") {
     setFilter(f);
     setPage(1);
+  }
+
+  function hideOne(orderNumber: string, id: string) {
+    requestConfirm(
+      `Kache kòmand ${orderNumber} nan istorik ou? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.`,
+      () => hide.mutate([id], { onSuccess: () => toast.success("Kòmand kache") }),
+    );
+  }
+
+  function hideAllVisible() {
+    const ids = rows.filter((o) => TERMINAL_ORDER_STATUSES.has(o.status)).map((o) => o.id);
+    requestConfirm(
+      "Netwaye istorik kòmand ki afiche la yo? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hide.mutate(ids, { onSuccess: () => toast.success("Istorik netwaye") }),
+    );
   }
 
   return (
@@ -197,19 +221,29 @@ function RestaurantOrders() {
 
       {view === "list" && (
         <>
-          <div className="flex gap-2">
-            <button
-              onClick={() => updateFilter("all")}
-              className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
-            >
-              Tout
-            </button>
-            <button
-              onClick={() => updateFilter("pending")}
-              className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
-            >
-              An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={() => updateFilter("all")}
+                className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+              >
+                Tout
+              </button>
+              <button
+                onClick={() => updateFilter("pending")}
+                className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+              >
+                An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
+              </button>
+            </div>
+            {hasHideable && (
+              <button
+                onClick={hideAllVisible}
+                className="inline-flex items-center gap-1.5 rounded-full border-2 border-brand-soft bg-white px-3 py-2 text-xs font-bold text-ink-soft hover:border-brand hover:text-brand-deep"
+              >
+                <Eraser className="h-3.5 w-3.5" /> Netwaye istorik
+              </button>
+            )}
           </div>
 
           {orders.isLoading && <div className="text-ink-soft">Chajman…</div>}
@@ -273,6 +307,16 @@ function RestaurantOrders() {
                     >
                       <Printer className="h-4 w-4" />
                     </button>
+                    {TERMINAL_ORDER_STATUSES.has(o.status) && (
+                      <button
+                        onClick={() => hideOne(o.order_number, o.id)}
+                        className="text-ink-soft hover:text-brand-deep"
+                        aria-label="Kache kòmand sa a"
+                        title="Kache kòmand sa a"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

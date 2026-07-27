@@ -5,13 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Package, CheckCircle2 } from "lucide-react";
+import { Package, CheckCircle2, X, Eraser } from "lucide-react";
 import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
 import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { inputClsCompact } from "@/lib/utils";
+import { useHiddenHistory } from "@/hooks/useHiddenHistory";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -22,6 +24,8 @@ export const Route = createFileRoute("/_authenticated/dashboard/driver/history")
 function DriverHistory() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const { hiddenIds, hide } = useHiddenHistory("order");
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   const { data: driver } = useQuery({
     queryKey: ["me-driver", user?.id],
@@ -75,6 +79,23 @@ function DriverHistory() {
 
   const [reportingOrderId, setReportingOrderId] = useState<string | null>(null);
   const [reportDescription, setReportDescription] = useState("");
+
+  const visibleHistory = (history.data ?? []).filter((d) => !hiddenIds.has(d.order_id));
+
+  function hideOne(orderNumber: string, orderId: string) {
+    requestConfirm(
+      `Kache livrezon ${orderNumber} nan istorik ou? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.`,
+      () => hide.mutate([orderId], { onSuccess: () => toast.success("Livrezon kache") }),
+    );
+  }
+
+  function hideAllVisible() {
+    const ids = visibleHistory.map((d) => d.order_id);
+    requestConfirm(
+      "Netwaye tout istwa livrezon ou? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hide.mutate(ids, { onSuccess: () => toast.success("Istwa netwaye") }),
+    );
+  }
 
   // Phase 4 of the admin evolution plan: cash orders need the driver's
   // side of the double confirmation too — reuses the same 2 RPCs the
@@ -247,7 +268,17 @@ function DriverHistory() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-lg font-bold text-ink">Istwa</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-ink">Istwa</h2>
+          {visibleHistory.length > 0 && (
+            <button
+              onClick={hideAllVisible}
+              className="inline-flex items-center gap-1.5 rounded-full border-2 border-brand-soft bg-white px-3 py-2 text-xs font-bold text-ink-soft hover:border-brand hover:text-brand-deep"
+            >
+              <Eraser className="h-3.5 w-3.5" /> Netwaye istwa
+            </button>
+          )}
+        </div>
         {history.isLoading && (
           <div className="space-y-2">
             <Skeleton className="h-20 w-full rounded-2xl" />
@@ -255,7 +286,7 @@ function DriverHistory() {
             <Skeleton className="h-20 w-full rounded-2xl" />
           </div>
         )}
-        {!history.isLoading && (history.data?.length ?? 0) === 0 && (
+        {!history.isLoading && visibleHistory.length === 0 && (
           <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
             Ou poko livre okenn kòmand.
           </div>
@@ -270,10 +301,11 @@ function DriverHistory() {
                   <th className="px-3 py-2">Restoran</th>
                   <th className="px-3 py-2 text-right">Frè livrezon</th>
                   <th className="px-3 py-2">Peman kach</th>
+                  <th className="px-3 py-2" />
                 </tr>
               </thead>
               <tbody>
-                {history.data?.map((d) => {
+                {visibleHistory.map((d) => {
                   const payment = d.orders?.payments?.[0];
                   const isCash = payment?.method === "kach";
                   return (
@@ -348,6 +380,16 @@ function DriverHistory() {
                           </div>
                         )}
                       </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          onClick={() => hideOne(d.orders?.order_number ?? "", d.order_id)}
+                          aria-label="Kache livrezon sa a"
+                          title="Kache livrezon sa a"
+                          className="text-ink-soft hover:text-brand-deep"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -356,6 +398,7 @@ function DriverHistory() {
           </div>
         </div>
       </section>
+      {ConfirmDialog}
     </div>
   );
 }

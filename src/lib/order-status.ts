@@ -22,3 +22,6 @@ export const CHAT_OPEN_STATUSES = new Set([
 
 /** Statuses the customer is still allowed to cancel from — before the restaurant starts preparing. */
 export const CUSTOMER_CANCELLABLE_STATUSES = new Set(["pending", "confirmed"]);
+
+/** Statuses eligible for personal history cleanup — server-enforced identically in the hidden_history_items validation trigger. */
+export const TERMINAL_ORDER_STATUSES = new Set(["delivered", "cancelled", "refunded"]);

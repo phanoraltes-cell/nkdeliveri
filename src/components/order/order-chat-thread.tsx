@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Paperclip, MapPin } from "lucide-react";
+import { Send, Paperclip, MapPin, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { useOrderChatMessages } from "@/hooks/useOrderChatMessages";
+import { useHiddenHistory } from "@/hooks/useHiddenHistory";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ProofThumb } from "@/components/proof-thumb";
 
 const AUTHOR_ROLE_LABEL: Record<string, string> = {
@@ -26,6 +28,8 @@ type OrderChatThreadProps = {
 export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
   const { user } = useAuth();
   const { messages, send, markRead } = useOrderChatMessages(orderId);
+  const { hiddenIds, hide } = useHiddenHistory("chat");
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const [reply, setReply] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -108,6 +112,22 @@ export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
       (pos) => send.mutate({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => toast.error("Nou pa t kapab jwenn pozisyon w"),
       { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
+  function hideConversation() {
+    requestConfirm(
+      "Kache konvèsasyon sa a nan vi pèsonèl ou? Sa a pa efase mesaj yo pou lòt moun, e sa ka irevèsib pou vi pa w.",
+      () => hide.mutate([orderId], { onSuccess: () => toast.success("Konvèsasyon kache") }),
+    );
+  }
+
+  if (hiddenIds.has(orderId)) {
+    return (
+      <div className="mt-3 rounded-xl bg-ink/5 p-3 text-center text-xs text-ink-soft">
+        Ou kache konvèsasyon sa a.
+        {ConfirmDialog}
+      </div>
     );
   }
 
@@ -201,9 +221,16 @@ export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
           </button>
         </div>
       ) : (
-        <p className="rounded-xl bg-ink/5 p-3 text-center text-xs text-ink-soft">
-          Chat la fèmen — li rete disponib kòm istorik.
-        </p>
+        <div className="rounded-xl bg-ink/5 p-3 text-center text-xs text-ink-soft">
+          <p>Chat la fèmen — li rete disponib kòm istorik.</p>
+          <button
+            type="button"
+            onClick={hideConversation}
+            className="mt-2 inline-flex items-center gap-1 font-bold text-brand-deep hover:underline"
+          >
+            <EyeOff className="h-3 w-3" /> Kache konvèsasyon an
+          </button>
+        </div>
       )}
       {file && (
         <div className="flex items-center justify-between text-xs text-ink-soft">
@@ -217,6 +244,7 @@ export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
           </button>
         </div>
       )}
+      {ConfirmDialog}
     </div>
   );
 }

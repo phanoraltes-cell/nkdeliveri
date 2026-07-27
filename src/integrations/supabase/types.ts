@@ -568,6 +568,7 @@ export type Database = {
           category: string;
           created_at: string;
           data: Json;
+          hidden_at: string | null;
           id: string;
           read_at: string | null;
           title: string;
@@ -579,6 +580,7 @@ export type Database = {
           category?: string;
           created_at?: string;
           data?: Json;
+          hidden_at?: string | null;
           id?: string;
           read_at?: string | null;
           title: string;
@@ -590,10 +592,32 @@ export type Database = {
           category?: string;
           created_at?: string;
           data?: Json;
+          hidden_at?: string | null;
           id?: string;
           read_at?: string | null;
           title?: string;
           type?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      hidden_history_items: {
+        Row: {
+          entity_id: string;
+          entity_type: string;
+          hidden_at: string;
+          user_id: string;
+        };
+        Insert: {
+          entity_id: string;
+          entity_type: string;
+          hidden_at?: string;
+          user_id: string;
+        };
+        Update: {
+          entity_id?: string;
+          entity_type?: string;
+          hidden_at?: string;
           user_id?: string;
         };
         Relationships: [];

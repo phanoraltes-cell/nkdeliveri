@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Check, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Bell, Check, CheckCircle2, XCircle, Clock, Trash2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { PushToggle } from "@/components/push-toggle";
 import { NotificationPreferencesPanel } from "@/components/notification-preferences-panel";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
@@ -27,6 +28,7 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
 function NotificationsPage() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const [tab, setTab] = useState("all");
   const { data, isLoading } = useQuery({
     queryKey: ["my-notifications", user?.id],
@@ -40,6 +42,7 @@ function NotificationsPage() {
         .from("notifications")
         .select("id, type, category, title, body, data, read_at, created_at")
         .eq("user_id", user!.id)
+        .is("hidden_at", null)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -59,6 +62,39 @@ function NotificationsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-notifications"] }),
     onError: (e) => toast.error(e.message),
   });
+
+  // Never a real DELETE — this table stays the permanent record of what
+  // was actually sent (useful if a user ever disputes "I was never
+  // notified"). `hidden_at` just removes it from this personal view,
+  // same mechanism as products.archived_at elsewhere in this project.
+  const hideNotifications = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ hidden_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Notifikasyon kache");
+      qc.invalidateQueries({ queryKey: ["my-notifications"] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  function hideOne(id: string) {
+    requestConfirm(
+      "Kache notifikasyon sa a? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hideNotifications.mutate([id]),
+    );
+  }
+
+  function hideAllVisible(ids: string[]) {
+    requestConfirm(
+      "Vide tout notifikasyon ki afiche la yo? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hideNotifications.mutate(ids),
+    );
+  }
 
   const unread = (data ?? []).filter((n) => !n.read_at);
   const visible = (data ?? []).filter((n) => {
@@ -102,14 +138,24 @@ function NotificationsPage() {
             </button>
           ))}
         </div>
-        {unread.length > 0 && (
-          <button
-            onClick={() => markRead.mutate(unread.map((n) => n.id))}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-2.5 text-xs font-bold text-brand-deep hover:bg-brand hover:text-white"
-          >
-            <Check className="h-3.5 w-3.5" /> Make tout kòm li
-          </button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {unread.length > 0 && (
+            <button
+              onClick={() => markRead.mutate(unread.map((n) => n.id))}
+              className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-2.5 text-xs font-bold text-brand-deep hover:bg-brand hover:text-white"
+            >
+              <Check className="h-3.5 w-3.5" /> Make tout kòm li
+            </button>
+          )}
+          {visible.length > 0 && (
+            <button
+              onClick={() => hideAllVisible(visible.map((n) => n.id))}
+              className="inline-flex items-center gap-1 rounded-full border-2 border-brand-soft bg-white px-3 py-2 text-xs font-bold text-ink-soft hover:border-brand hover:text-brand-deep"
+            >
+              <Eraser className="h-3.5 w-3.5" /> Vide {tab === "all" ? "tout" : "sa yo"}
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading && (
@@ -142,18 +188,32 @@ function NotificationsPage() {
                   {new Date(n.created_at).toLocaleString("fr-HT")}
                 </div>
               </div>
-              {!n.read_at && (
+              <div className="flex shrink-0 flex-col items-end gap-1.5 self-start">
+                {!n.read_at && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      markRead.mutate([n.id]);
+                    }}
+                    className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white"
+                  >
+                    Li
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    markRead.mutate([n.id]);
+                    hideOne(n.id);
                   }}
-                  className="self-start rounded-full bg-white px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white"
+                  aria-label="Kache notifikasyon sa a"
+                  title="Kache notifikasyon sa a"
+                  className="text-ink-soft hover:text-red-600"
                 >
-                  Li
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
-              )}
+              </div>
             </div>
           );
           return (
@@ -173,6 +233,7 @@ function NotificationsPage() {
           );
         })}
       </ul>
+      {ConfirmDialog}
     </div>
   );
 }

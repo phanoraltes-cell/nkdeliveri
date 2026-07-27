@@ -3,10 +3,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useHiddenHistory } from "@/hooks/useHiddenHistory";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { X, Eraser } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import { noIndexMeta } from "@/lib/seo";
-import { ORDER_STATUS_LABEL as STATUS } from "@/lib/order-status";
+import { ORDER_STATUS_LABEL as STATUS, TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
 
 export const Route = createFileRoute("/orders/")({
   head: () => noIndexMeta("Kòmand mwen — NK Deliveri"),
@@ -15,6 +19,8 @@ export const Route = createFileRoute("/orders/")({
 
 function Orders() {
   const { user, loading } = useAuth();
+  const { hiddenIds, hide } = useHiddenHistory("order");
+  const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const { data, isLoading } = useQuery({
     queryKey: ["my-orders", user?.id],
     enabled: !!user,
@@ -31,11 +37,39 @@ function Orders() {
     },
   });
 
+  const visible = (data ?? []).filter((o) => !hiddenIds.has(o.id));
+  const hasHideable = visible.some((o) => TERMINAL_ORDER_STATUSES.has(o.status));
+
+  function hideOne(id: string) {
+    requestConfirm(
+      "Kache kòmand sa a nan istorik ou? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hide.mutate([id], { onSuccess: () => toast.success("Kòmand kache") }),
+    );
+  }
+
+  function hideAll() {
+    const ids = visible.filter((o) => TERMINAL_ORDER_STATUSES.has(o.status)).map((o) => o.id);
+    requestConfirm(
+      "Netwaye tout istorik kòmand ou? Sa a pa efase done platfòm nan, e sa ka irevèsib pou vi pèsonèl ou.",
+      () => hide.mutate(ids, { onSuccess: () => toast.success("Istorik netwaye") }),
+    );
+  }
+
   return (
     <div className="min-h-screen bg-cream">
       <SiteHeader />
       <main className="mx-auto max-w-[720px] px-5 py-12">
-        <h1 className="mb-3 font-display text-2xl font-extrabold">Kòmand mwen</h1>
+        <div className="mb-3 flex items-center justify-between">
+          <h1 className="font-display text-2xl font-extrabold">Kòmand mwen</h1>
+          {hasHideable && (
+            <button
+              onClick={hideAll}
+              className="inline-flex items-center gap-1.5 rounded-full border-2 border-brand-soft bg-white px-3 py-2 text-xs font-bold text-ink-soft hover:border-brand hover:text-brand-deep"
+            >
+              <Eraser className="h-3.5 w-3.5" /> Netwaye istorik mwen
+            </button>
+          )}
+        </div>
         {loading || isLoading ? (
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft">Chajman…</div>
         ) : !user ? (
@@ -45,7 +79,7 @@ function Orders() {
             </Link>{" "}
             pou wè kòmand ou yo.
           </div>
-        ) : !data || data.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
             <p>Ou poko gen okenn kòmand.</p>
             <Link to="/" className="mt-3 inline-block font-bold text-brand-deep hover:underline">
@@ -54,12 +88,12 @@ function Orders() {
           </div>
         ) : (
           <div className="space-y-3">
-            {data.map((o) => (
+            {visible.map((o) => (
               <Link
                 key={o.id}
                 to="/orders/$id"
                 params={{ id: o.id }}
-                className="block rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)] hover:shadow-md"
+                className="relative block rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)] hover:shadow-md"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -68,9 +102,25 @@ function Orders() {
                       {o.restaurants?.name} · {new Date(o.created_at).toLocaleString("fr-HT")}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">{formatHTG(o.total)}</div>
-                    <div className="text-xs text-brand-deep">{STATUS[o.status] || o.status}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="font-bold">{formatHTG(o.total)}</div>
+                      <div className="text-xs text-brand-deep">{STATUS[o.status] || o.status}</div>
+                    </div>
+                    {TERMINAL_ORDER_STATUSES.has(o.status) && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          hideOne(o.id);
+                        }}
+                        aria-label="Kache kòmand sa a"
+                        title="Kache kòmand sa a"
+                        className="shrink-0 rounded-full p-1.5 text-ink-soft hover:bg-brand-soft/40 hover:text-brand-deep"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </Link>
@@ -79,6 +129,7 @@ function Orders() {
         )}
       </main>
       <SiteFooter />
+      {ConfirmDialog}
     </div>
   );
 }
