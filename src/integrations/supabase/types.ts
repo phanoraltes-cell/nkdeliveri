@@ -1311,6 +1311,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      promotional_notifications: {
+        Row: {
+          body: string;
+          created_at: string;
+          data: Json;
+          id: string;
+          recipient_count: number;
+          sent_by: string;
+          target_city: string | null;
+          target_role: string;
+          title: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          data?: Json;
+          id?: string;
+          recipient_count?: number;
+          sent_by: string;
+          target_city?: string | null;
+          target_role?: string;
+          title: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          data?: Json;
+          id?: string;
+          recipient_count?: number;
+          sent_by?: string;
+          target_city?: string | null;
+          target_role?: string;
+          title?: string;
+        };
+        Relationships: [];
+      };
       promotions: {
         Row: {
           active: boolean;
@@ -2152,6 +2188,27 @@ export type Database = {
       stop_customer_location_sharing_secure: {
         Args: { _delivery_id: string };
         Returns: undefined;
+      };
+      send_promotional_notification_secure: {
+        Args: {
+          _body: string;
+          _cooldown_hours?: number;
+          _data?: Json;
+          _target_city?: string;
+          _target_role?: string;
+          _title: string;
+        };
+        Returns: {
+          body: string;
+          created_at: string;
+          data: Json;
+          id: string;
+          recipient_count: number;
+          sent_by: string;
+          target_city: string | null;
+          target_role: string;
+          title: string;
+        };
       };
       update_notification_preferences_secure: {
         Args: { _prefs: Json };

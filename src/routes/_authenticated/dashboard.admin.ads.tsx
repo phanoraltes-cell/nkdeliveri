@@ -9,6 +9,7 @@ import { inputClsCompact as inputCls } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { PromotionalNotificationForm } from "@/components/dashboard/admin/promotional-notification-form";
 
 type Placement = Database["public"]["Tables"]["sponsored_placements"]["Row"] & {
   restaurants: { name: string } | null;
@@ -98,6 +99,8 @@ function AdminAds() {
           ← Admin
         </Link>
       </div>
+
+      <PromotionalNotificationForm />
 
       <Button
         onClick={() => {
