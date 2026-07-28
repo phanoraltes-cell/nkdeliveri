@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { lazy, Suspense, useMemo, useState } from "react";
+import type { MapMarker } from "@/components/maps/LeafletMap";
 import {
   Users,
   Store,
@@ -15,9 +14,9 @@ import {
   RotateCcw,
   Megaphone,
 } from "lucide-react";
-import { toast } from "sonner";
-import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
+import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
+import { buildAdminMapMarkers } from "@/lib/admin-map-markers";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
@@ -28,7 +27,6 @@ import { LiveMapSection } from "@/components/dashboard/admin/live-map-section";
 import { PendingRestaurantsSection } from "@/components/dashboard/admin/pending-restaurants-section";
 import { PendingDriversSection } from "@/components/dashboard/admin/pending-drivers-section";
 import { formatHTG } from "@/lib/format";
-import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 import { DELIVERY_STATUS_LABEL } from "@/lib/delivery-status";
 
 // recharts (~350KB) is only needed once this page has mounted — loading it
@@ -44,52 +42,21 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
 });
 
 function AdminDashboard() {
-  const qc = useQueryClient();
   const active = useLiveOrders({ admin: true });
+  const {
+    onlineDrivers,
+    approvedRestaurants,
+    stats,
+    weeklyRevenue,
+    pendingRestaurants,
+    pendingDrivers,
+    updateResto,
+    updateDriver,
+  } = useAdminDashboardData();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [restaurantFilter, setRestaurantFilter] = useState<string>("all");
   const [zoneQuery, setZoneQuery] = useState("");
-
-  const onlineDrivers = useQuery({
-    queryKey: ["admin-online-drivers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("id, first_name, last_name, current_lat, current_lng, status")
-        .eq("status", "online");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Was a 15s poll — every other live-updating section of this dashboard
-  // already uses Realtime (see useLiveOrders), so this follows the same
-  // pattern: refetch only when a driver's row actually changes (going
-  // online/offline, or their position updating).
-  useEffect(() => {
-    const channel = supabase
-      .channel("admin-online-drivers")
-      .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () =>
-        qc.invalidateQueries({ queryKey: ["admin-online-drivers"] }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [qc]);
-
-  const approvedRestaurants = useQuery({
-    queryKey: ["admin-map-restaurants"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("restaurants")
-        .select("id, name, lat, lng, address")
-        .eq("status", "approved");
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const restaurantOptions = useMemo(() => {
     const names = new Set<string>();
@@ -134,177 +101,10 @@ function AdminDashboard() {
   // dashboard, including ones triggered by state that has nothing to do
   // with the map (e.g. the payments/approval mutations below).
   const markers: MapMarker[] = useMemo(
-    () => [
-      ...filteredRestaurants
-        .filter((r) => r.lat != null && r.lng != null)
-        .map((r) => ({
-          id: `rst-${r.id}`,
-          lat: Number(r.lat),
-          lng: Number(r.lng),
-          type: "restaurant" as const,
-          label: r.name ?? "Restoran",
-          info: { title: r.name ?? "Restoran", lines: [r.address ?? ""] },
-        })),
-      ...(onlineDrivers.data ?? [])
-        .filter((d) => d.current_lat != null && d.current_lng != null)
-        .map((d) => {
-          const busy = active.some((a) => a.driver_id === d.id);
-          const name = `${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() || "Livrè";
-          return {
-            id: `drv-${d.id}`,
-            lat: Number(d.current_lat),
-            lng: Number(d.current_lng),
-            type: "driver" as const,
-            label: name,
-            info: { title: name, lines: [`Estati: ${busy ? "An liv rezon" : "Disponib"}`] },
-          };
-        }),
-      ...filteredActive
-        .filter(
-          (d) =>
-            d.customer_location || (d.order?.delivery_lat != null && d.order?.delivery_lng != null),
-        )
-        .map((d) => {
-          const address = d.order?.delivery_address ?? "—";
-          const phone = d.order?.contact_phone ?? "—";
-          const orderNumber = d.order?.order_number ?? "";
-          // Prefer the customer's live shared position (Phase 1 GPS
-          // sharing) over their registered delivery address, same
-          // preference order as the customer/driver views.
-          const lat = d.customer_location ? d.customer_location.lat : d.order!.delivery_lat!;
-          const lng = d.customer_location ? d.customer_location.lng : d.order!.delivery_lng!;
-          return {
-            id: `dst-${d.id}`,
-            lat: Number(lat),
-            lng: Number(lng),
-            type: "client" as const,
-            label: `Adrès ${d.order?.order_number}`,
-            info: {
-              title: `Kòmand ${orderNumber}${d.customer_location ? " — pozisyon an tan reyèl" : ""}`,
-              lines: [
-                `Adrès: ${address}`,
-                `Telefòn: ${phone}`,
-                `Estati: ${DELIVERY_STATUS_LABEL[d.status] ?? d.status}`,
-              ],
-            },
-          };
-        }),
-    ],
+    () =>
+      buildAdminMapMarkers(filteredRestaurants, onlineDrivers.data ?? [], filteredActive, active),
     [filteredRestaurants, filteredActive, onlineDrivers.data, active],
   );
-
-  const stats = useQuery({
-    queryKey: ["admin-stats"],
-    queryFn: async () => {
-      const [users, restos, drivers, pendingR, pendingD] = await Promise.all([
-        supabase.from("profiles").select("id", { head: true, count: "exact" }),
-        supabase.from("restaurants").select("id", { head: true, count: "exact" }),
-        supabase.from("drivers").select("id", { head: true, count: "exact" }),
-        supabase
-          .from("restaurants")
-          .select("id", { head: true, count: "exact" })
-          .eq("status", "pending"),
-        supabase
-          .from("drivers")
-          .select("id", { head: true, count: "exact" })
-          .eq("status", "pending"),
-      ]);
-      return {
-        users: users.count ?? 0,
-        restaurants: restos.count ?? 0,
-        drivers: drivers.count ?? 0,
-        pendingRestaurants: pendingR.count ?? 0,
-        pendingDrivers: pendingD.count ?? 0,
-      };
-    },
-  });
-
-  const weeklyRevenue = useWeeklySeries(
-    ["admin-weekly-revenue"],
-    async (since) => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("created_at, total")
-        .gte("created_at", since.toISOString())
-        .neq("status", "cancelled")
-        .neq("status", "refunded");
-      if (error) throw error;
-      return data ?? [];
-    },
-    (o) => ({ date: o.created_at, value: Number(o.total) }),
-  );
-
-  const pendingRestaurants = useQuery({
-    queryKey: ["pending-restaurants"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("restaurants")
-        .select("id, name, cuisine, phone, address, description, logo_url, cover_url, created_at")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const pendingDrivers = useQuery({
-    queryKey: ["pending-drivers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select(
-          "id, first_name, last_name, phone, address, vehicle_type, license_plate, id_doc_url, license_doc_url, vehicle_photo_url, created_at",
-        )
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const updateResto = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: "approved" | "rejected" | "suspended";
-    }) => {
-      const { error } = await supabase.rpc("update_restaurant_status_secure", {
-        _restaurant_id: id,
-        _status: status,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pending-restaurants"] });
-      qc.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success("Estati restoran aktyalize");
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const updateDriver = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: "approved" | "rejected" | "suspended";
-    }) => {
-      const { error } = await supabase.rpc("update_driver_status_secure", {
-        _driver_id: id,
-        _status: status,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pending-drivers"] });
-      qc.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success("Estati livrè aktyalize");
-    },
-    onError: (e) => toast.error(e.message),
-  });
 
   const s = stats.data;
 

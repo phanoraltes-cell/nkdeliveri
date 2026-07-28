@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   Wallet,
   Clock,
@@ -12,7 +11,6 @@ import {
   Users,
   Timer,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
@@ -30,7 +28,7 @@ import {
   BeneficiaryDetailDialog,
   type BeneficiaryDetail,
 } from "@/components/dashboard/payouts/beneficiary-detail-dialog";
-import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
+import { useAdminPayoutsData, type WalletRow } from "@/hooks/useAdminPayoutsData";
 
 // recharts (~350KB) is only needed once this section has mounted — see
 // dashboard.admin.index.tsx for the same lazy-import + Suspense/Skeleton pattern.
@@ -43,29 +41,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/payouts")(
 });
 
 const PAGE_SIZE = 20;
-
-type WalletRow = {
-  id: string;
-  name: string;
-  moncash_number: string | null;
-  moncash_account_name: string | null;
-  natcash_number: string | null;
-  natcash_account_name: string | null;
-  available_balance: number;
-  pending_balance: number;
-  paid_balance: number;
-  lifetime_earnings: number;
-  total_orders: number;
-  last_payment_date: string | null;
-  computed_status: string;
-  total_count: number;
-};
-
-const MONTH_LABEL = new Intl.DateTimeFormat("fr-HT", { month: "short" });
-
-function bucketMonthly(rows: { month: string; value: number }[]) {
-  return rows.map((r) => ({ label: MONTH_LABEL.format(new Date(r.month)), value: r.value }));
-}
 
 function AdminPayouts() {
   const [tab, setTab] = useState<"restaurant" | "driver">("restaurant");
@@ -82,136 +57,15 @@ function AdminPayouts() {
   const [detailTarget, setDetailTarget] = useState<BeneficiaryDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const kpisQueryKey = ["admin-payout-kpis"] as const;
-  const kpis = useQuery({
-    queryKey: kpisQueryKey,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_payout_kpis");
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-  });
-
-  const since = new Date();
-  since.setMonth(since.getMonth() - 6);
-  const fromStr = since.toISOString().slice(0, 10);
-  const toStr = new Date().toISOString().slice(0, 10);
-
-  const commissionSeries = useQuery({
-    queryKey: ["admin-commission-monthly", fromStr, toStr],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_commission_monthly_series", {
-        _from: fromStr,
-        _to: toStr,
-      });
-      if (error) throw error;
-      return bucketMonthly(
-        (data ?? []).map((d) => ({ month: d.month, value: Number(d.total_commission) })),
-      );
-    },
-  });
-
-  const payoutsSeries = useQuery({
-    queryKey: ["admin-payouts-monthly", fromStr, toStr],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_payouts_monthly_series", {
-        _from: fromStr,
-        _to: toStr,
-      });
-      if (error) throw error;
-      return bucketMonthly(
-        (data ?? []).map((d) => ({ month: d.month, value: Number(d.total_paid) })),
-      );
-    },
-  });
-
-  const topRestaurants = useQuery({
-    queryKey: ["admin-top-restaurants", fromStr, toStr],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_top_restaurants_by_commission", {
-        _from: fromStr,
-        _to: toStr,
-        _limit: 5,
-      });
-      if (error) throw error;
-      return (data ?? []).map((r) => ({ name: r.name, value: Number(r.total_commission) }));
-    },
-  });
-
-  const topDrivers = useQuery({
-    queryKey: ["admin-top-drivers", fromStr, toStr],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_top_drivers_by_commission", {
-        _from: fromStr,
-        _to: toStr,
-        _limit: 5,
-      });
-      if (error) throw error;
-      return (data ?? []).map((r) => ({ name: r.name, value: Number(r.total_commission) }));
-    },
-  });
-
-  const walletsQueryKey = ["admin-wallets", tab, search, status, sort, page] as const;
-  const wallets = useQuery({
-    queryKey: walletsQueryKey,
-    queryFn: async (): Promise<WalletRow[]> => {
-      if (tab === "restaurant") {
-        const { data, error } = await supabase.rpc("get_restaurant_wallets_admin", {
-          _search: search || undefined,
-          _status: status || undefined,
-          _sort: sort,
-          _limit: PAGE_SIZE,
-          _offset: (page - 1) * PAGE_SIZE,
-        });
-        if (error) throw error;
-        return (data ?? []).map((r) => ({
-          id: r.restaurant_id,
-          name: r.name,
-          moncash_number: r.moncash_number,
-          moncash_account_name: r.moncash_account_name,
-          natcash_number: r.natcash_number,
-          natcash_account_name: r.natcash_account_name,
-          available_balance: Number(r.available_balance),
-          pending_balance: Number(r.pending_balance),
-          paid_balance: Number(r.paid_balance),
-          lifetime_earnings: Number(r.lifetime_earnings),
-          total_orders: r.total_orders,
-          last_payment_date: r.last_payment_date,
-          computed_status: r.computed_status,
-          total_count: Number(r.total_count),
-        }));
-      }
-      const { data, error } = await supabase.rpc("get_driver_wallets_admin", {
-        _search: search || undefined,
-        _status: status || undefined,
-        _sort: sort,
-        _limit: PAGE_SIZE,
-        _offset: (page - 1) * PAGE_SIZE,
-      });
-      if (error) throw error;
-      return (data ?? []).map((r) => ({
-        id: r.driver_id,
-        name: r.name,
-        moncash_number: r.moncash_number,
-        moncash_account_name: r.moncash_account_name,
-        natcash_number: r.natcash_number,
-        natcash_account_name: r.natcash_account_name,
-        available_balance: Number(r.available_balance),
-        pending_balance: Number(r.pending_balance),
-        paid_balance: Number(r.paid_balance),
-        lifetime_earnings: Number(r.lifetime_earnings),
-        total_orders: r.total_orders,
-        last_payment_date: r.last_payment_date,
-        computed_status: r.computed_status,
-        total_count: Number(r.total_count),
-      }));
-    },
-  });
-
-  // Feature 9 — no page refresh required: any wallet change (a new
-  // commission credited, a payout sent/confirmed/disputed/resolved)
-  // refreshes the queue and every KPI live.
-  useRealtimeTableSync("wallets", undefined, [walletsQueryKey, kpisQueryKey]);
+  const {
+    kpisQueryKey,
+    kpis,
+    commissionSeries,
+    payoutsSeries,
+    topRestaurants,
+    topDrivers,
+    wallets,
+  } = useAdminPayoutsData(tab, search, status, sort, page, PAGE_SIZE);
 
   function switchTab(next: "restaurant" | "driver") {
     setTab(next);
