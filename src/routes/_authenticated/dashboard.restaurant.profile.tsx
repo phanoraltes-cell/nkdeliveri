@@ -9,6 +9,7 @@ import { inputClsCompact as inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
+import { MyDevicesSection } from "@/components/my-devices-section";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant identity/settings shouldn't be editable by staff. Not
@@ -275,6 +276,7 @@ function RestaurantProfile() {
         </Button>
       </section>
 
+      <MyDevicesSection />
       <ActiveSessionsSection />
     </div>
   );

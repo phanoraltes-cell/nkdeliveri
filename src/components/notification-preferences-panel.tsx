@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Settings2 } from "lucide-react";
+import { Settings2, Volume2, Vibrate } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -75,22 +75,49 @@ export function NotificationPreferencesPanel({ userId }: { userId: string }) {
         <span className="text-xs font-bold text-brand-deep">{open ? "Fèmen" : "Modifye"}</span>
       </button>
       {open && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {CATEGORIES.map((c) => {
-            const on = prefs[c.key] ?? c.defaultOn;
-            return (
-              <label key={c.key} className="flex items-center gap-2 text-sm text-ink">
-                <input
-                  type="checkbox"
-                  checked={on}
-                  onChange={() => toggle(c.key, c.defaultOn)}
-                  disabled={save.isPending}
-                />
-                {c.label}
-              </label>
-            );
-          })}
-        </div>
+        <>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {CATEGORIES.map((c) => {
+              const on = prefs[c.key] ?? c.defaultOn;
+              return (
+                <label key={c.key} className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => toggle(c.key, c.defaultOn)}
+                    disabled={save.isPending}
+                  />
+                  {c.label}
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Separate from the category grid above — these two apply to how a
+              notification is delivered, not which ones arrive. Vibration only
+              has any effect on a phone; harmless to show everywhere since it's
+              simply a no-op where the hardware doesn't support it. */}
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-brand-soft/40 pt-3">
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={prefs.sound ?? true}
+                onChange={() => toggle("sound", true)}
+                disabled={save.isPending}
+              />
+              <Volume2 className="h-3.5 w-3.5 text-brand-deep" /> Son
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={prefs.vibration ?? true}
+                onChange={() => toggle("vibration", true)}
+                disabled={save.isPending}
+              />
+              <Vibrate className="h-3.5 w-3.5 text-brand-deep" /> Vibrasyon (sou telefòn)
+            </label>
+          </div>
+        </>
       )}
     </div>
   );

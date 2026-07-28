@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Upload, User as UserIcon } from "lucide-react";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
+import { MyDevicesSection } from "@/components/my-devices-section";
 import { inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
@@ -233,6 +234,7 @@ function DriverProfile() {
             <ChangePasswordForm />
           </section>
 
+          <MyDevicesSection />
           <ActiveSessionsSection />
         </>
       )}

@@ -59,6 +59,13 @@ type PushPayload = {
   url?: string;
   tag?: string;
   data?: Record<string, unknown>;
+  // Set server-side from the recipient's notification_preferences
+  // (sound/vibration keys) — see push-dispatch.server.ts. There is no
+  // custom-sound-file support in the Notification API on any browser
+  // today; `silent` only toggles the OS's own default notification sound
+  // on or off, which is the one lever actually available here.
+  silent?: boolean;
+  vibrate?: boolean;
 };
 
 self.addEventListener("push", (event) => {
@@ -71,14 +78,24 @@ self.addEventListener("push", (event) => {
 
   const title = payload.title || "NK Deliveri";
   const targetUrl = payload.url || "/notifications";
-  const options: NotificationOptions = {
+  const options = {
     body: payload.body || "",
     icon: "/app-icon-192.png",
     badge: "/app-icon-192.png",
     tag: payload.tag,
     data: { url: targetUrl, ...(payload.data || {}) },
     requireInteraction: false,
-  };
+    silent: payload.silent === true,
+    // A pattern, not a boolean — Notification.vibrate expects
+    // milliseconds on/off. Empty array = no vibration. Browsers that
+    // don't support vibration (desktop Chrome/Firefox, all of Safari)
+    // silently ignore this — the graceful degradation is automatic, not
+    // something this code has to detect. TypeScript's NotificationOptions
+    // doesn't declare `vibrate` even though it's a real, supported part
+    // of the spec — same class of DOM-lib gap as the RequestInit cast
+    // below for buildPushPayload's output.
+    vibrate: payload.vibrate === false ? [] : [200, 100, 200],
+  } as NotificationOptions;
 
   event.waitUntil(
     (async () => {

@@ -1428,6 +1428,7 @@ export type Database = {
         Row: {
           auth: string;
           created_at: string;
+          enabled: boolean;
           endpoint: string;
           id: string;
           last_used_at: string;
@@ -1438,6 +1439,7 @@ export type Database = {
         Insert: {
           auth: string;
           created_at?: string;
+          enabled?: boolean;
           endpoint: string;
           id?: string;
           last_used_at?: string;
@@ -1448,6 +1450,7 @@ export type Database = {
         Update: {
           auth?: string;
           created_at?: string;
+          enabled?: boolean;
           endpoint?: string;
           id?: string;
           last_used_at?: string;

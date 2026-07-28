@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Bell, User, ChevronDown, Check } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { playNotificationSound, vibrateDevice } from "@/lib/notification-sound";
 import { MobileDrawer } from "@/components/dashboard/drawer/mobile-drawer";
 import { PROFILE_LINK_BY_ROLE } from "@/components/dashboard/sidebar/nav-items";
 import { dashboardFamilies } from "@/lib/dashboard-family";
@@ -61,6 +62,31 @@ export function DashboardHeader({
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: unreadQueryKey }),
+      )
+      // Separate INSERT-only listener (same channel, no extra subscription)
+      // for the in-app sound/vibration — this covers exactly the gap Push
+      // can't: the tab is open and focused, so sw.ts's push handler
+      // deliberately skips showNotification() for it (see its
+      // alreadyFocusedHere check), and Realtime is what updates the badge
+      // instead. Reads the same cached prefs NotificationPreferencesPanel
+      // already fetches, so opening this dropdown never triggers its own
+      // network call just to check a preference.
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          const prefs = qc.getQueryData<Record<string, boolean>>([
+            "notification-preferences",
+            user.id,
+          ]);
+          if (prefs?.sound ?? true) playNotificationSound();
+          if (prefs?.vibration ?? true) vibrateDevice();
+        },
       )
       .subscribe();
     return () => {

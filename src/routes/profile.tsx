@@ -12,6 +12,7 @@ import { inputCls } from "@/lib/utils";
 import { AddressManager } from "@/components/address-manager";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
+import { MyDevicesSection } from "@/components/my-devices-section";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
 
@@ -206,7 +207,8 @@ function Profile() {
         )}
 
         {user && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
+            <MyDevicesSection />
             <ActiveSessionsSection />
           </div>
         )}
