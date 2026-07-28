@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
 import { CommissionHistoryTable } from "@/components/dashboard/commission/commission-history-table";
-import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // Owner-only: commissions are financial, not operational — same exclusion
 // of restaurant_staff as dashboard.restaurant.payouts.tsx.
@@ -61,13 +60,6 @@ function RestaurantCommissions() {
     },
   });
 
-  useRealtimeTableSync(
-    "wallets",
-    restaurant?.id ? `restaurant_id=eq.${restaurant.id}` : undefined,
-    [walletQueryKey, totalOrdersQueryKey],
-    !!restaurant?.id,
-  );
-
   if (isLoading) return <div className="text-ink-soft">Chajman…</div>;
 
   return (
@@ -89,7 +81,11 @@ function RestaurantCommissions() {
 
       <WalletSummaryCards wallet={wallet.data ?? null} totalOrders={totalOrders.data} />
 
-      <CommissionHistoryTable beneficiaryType="restaurant" beneficiaryId={restaurant?.id} />
+      <CommissionHistoryTable
+        beneficiaryType="restaurant"
+        beneficiaryId={restaurant?.id}
+        extraInvalidateKeys={[walletQueryKey, totalOrdersQueryKey]}
+      />
     </div>
   );
 }

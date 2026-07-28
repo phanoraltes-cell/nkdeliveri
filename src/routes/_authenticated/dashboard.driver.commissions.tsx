@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
 import { CommissionHistoryTable } from "@/components/dashboard/commission/commission-history-table";
-import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // Role guard lives on the parent layout (dashboard.driver.tsx) — this used
 // to repeat the same check locally, which was redundant with it.
@@ -57,13 +56,6 @@ function DriverCommissions() {
     },
   });
 
-  useRealtimeTableSync(
-    "wallets",
-    driver?.id ? `driver_id=eq.${driver.id}` : undefined,
-    [walletQueryKey, totalOrdersQueryKey],
-    !!driver?.id,
-  );
-
   if (isLoading) return <div className="text-ink-soft">Chajman…</div>;
 
   return (
@@ -82,7 +74,11 @@ function DriverCommissions() {
 
       <WalletSummaryCards wallet={wallet.data ?? null} totalOrders={totalOrders.data} />
 
-      <CommissionHistoryTable beneficiaryType="driver" beneficiaryId={driver?.id} />
+      <CommissionHistoryTable
+        beneficiaryType="driver"
+        beneficiaryId={driver?.id}
+        extraInvalidateKeys={[walletQueryKey, totalOrdersQueryKey]}
+      />
     </div>
   );
 }
