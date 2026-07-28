@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { pushToUsers } from "@/lib/push-dispatch.server";
+import { pushToUsers, enforceRateLimit } from "@/lib/push-dispatch.server";
 
 const InputSchema = z.object({ disputeId: z.string().uuid() });
 
@@ -16,13 +16,9 @@ export const sendDisputeUpdatePush = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: allowed, error: rlErr } = await supabase.rpc("check_rate_limit_secure", {
-      _action: "send_dispute_update_push",
-      _max_hits: 40,
-      _window_seconds: 600,
-    });
-    if (rlErr) throw new Error(rlErr.message);
-    if (!allowed) return { sent: 0, rateLimited: true };
+    if (!(await enforceRateLimit(supabase, "send_dispute_update_push", 40, 600))) {
+      return { sent: 0, rateLimited: true };
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

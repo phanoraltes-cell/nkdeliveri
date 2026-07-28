@@ -4,6 +4,31 @@
 // behavior is unchanged, this just gives every subsequent event type a
 // single implementation to import instead of re-copying it.
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+/**
+ * Same check_rate_limit_secure call/throw/return shape that used to be
+ * copy-pasted at the top of every send*Push handler. Returns whether the
+ * caller is within its limit — callers still decide what to return when
+ * it's false (usually `{ sent: 0, rateLimited: true }`), since a helper
+ * can't short-circuit its caller's own return.
+ */
+export async function enforceRateLimit(
+  supabase: SupabaseClient<Database>,
+  action: string,
+  maxHits: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  const { data: allowed, error } = await supabase.rpc("check_rate_limit_secure", {
+    _action: action,
+    _max_hits: maxHits,
+    _window_seconds: windowSeconds,
+  });
+  if (error) throw new Error(error.message);
+  return !!allowed;
+}
+
 export async function pushToUsers(
   userIds: string[],
   payload: {

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { pushToUsers } from "@/lib/push-dispatch.server";
+import { pushToUsers, enforceRateLimit } from "@/lib/push-dispatch.server";
 
 const OrderIdSchema = z.object({ orderId: z.string().uuid() });
 
@@ -21,13 +21,9 @@ export const sendNewOrderPush = createServerFn({ method: "POST" })
     // Only the customer who placed it may trigger this notification.
     if (order.customer_id !== context.userId) throw new Error("Forbidden");
 
-    const { data: allowed, error: rlErr } = await context.supabase.rpc("check_rate_limit_secure", {
-      _action: "send_new_order_push",
-      _max_hits: 20,
-      _window_seconds: 600,
-    });
-    if (rlErr) throw new Error(rlErr.message);
-    if (!allowed) return { sent: 0, rateLimited: true };
+    if (!(await enforceRateLimit(context.supabase, "send_new_order_push", 20, 600))) {
+      return { sent: 0, rateLimited: true };
+    }
 
     const ownerId = order.restaurants?.owner_id;
     if (!ownerId) return { sent: 0 };
@@ -57,13 +53,9 @@ export const sendDeliveryAssignedPush = createServerFn({ method: "POST" })
     const driverUserId = delivery.drivers?.user_id;
     if (!driverUserId || driverUserId !== context.userId) throw new Error("Forbidden");
 
-    const { data: allowed, error: rlErr } = await context.supabase.rpc("check_rate_limit_secure", {
-      _action: "send_delivery_assigned_push",
-      _max_hits: 20,
-      _window_seconds: 600,
-    });
-    if (rlErr) throw new Error(rlErr.message);
-    if (!allowed) return { sent: 0, rateLimited: true };
+    if (!(await enforceRateLimit(context.supabase, "send_delivery_assigned_push", 20, 600))) {
+      return { sent: 0, rateLimited: true };
+    }
 
     const order = delivery.orders;
     return pushToUsers([driverUserId], {
@@ -92,13 +84,9 @@ export const sendOrderDeliveredPush = createServerFn({ method: "POST" })
     if (!driverUserId || driverUserId !== context.userId) throw new Error("Forbidden");
     if (delivery.status !== "delivered") return { sent: 0, skipped: true };
 
-    const { data: allowed, error: rlErr } = await context.supabase.rpc("check_rate_limit_secure", {
-      _action: "send_order_delivered_push",
-      _max_hits: 20,
-      _window_seconds: 600,
-    });
-    if (rlErr) throw new Error(rlErr.message);
-    if (!allowed) return { sent: 0, rateLimited: true };
+    if (!(await enforceRateLimit(context.supabase, "send_order_delivered_push", 20, 600))) {
+      return { sent: 0, rateLimited: true };
+    }
 
     const order = delivery.orders;
     const customerId = order?.customer_id;
