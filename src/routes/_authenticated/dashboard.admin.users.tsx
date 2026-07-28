@@ -10,6 +10,8 @@ import { Download, Search, X, Ban, RotateCcw } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useReauth } from "@/hooks/useReauth";
+import { ReauthDialog } from "@/components/reauth-dialog";
 
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
@@ -59,6 +61,7 @@ function AdminUsers() {
   const suspendFn = useServerFn(suspendUserAccount);
   const reactivateFn = useServerFn(reactivateUserAccount);
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
+  const { withReauth, dialogState } = useReauth();
 
   const users = useQuery({
     queryKey: ["admin-all-users", search, roleFilter, page],
@@ -276,7 +279,10 @@ function AdminUsers() {
                               onClick={() =>
                                 requestConfirm(
                                   `Retire wòl ${ROLE_LABEL[r] ?? r} nan men ${u.email}?`,
-                                  () => removeRole.mutate({ userId: u.id, role: r as AppRole }),
+                                  () =>
+                                    withReauth(() =>
+                                      removeRole.mutate({ userId: u.id, role: r as AppRole }),
+                                    ),
                                 )
                               }
                               disabled={removeRole.isPending}
@@ -304,7 +310,11 @@ function AdminUsers() {
                           ))}
                         </select>
                         <button
-                          onClick={() => addRole.mutate({ userId: u.id, role: pendingRoleToAdd })}
+                          onClick={() =>
+                            withReauth(() =>
+                              addRole.mutate({ userId: u.id, role: pendingRoleToAdd }),
+                            )
+                          }
                           disabled={addRole.isPending}
                           className="rounded-md bg-brand-soft/60 px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white disabled:opacity-50"
                         >
@@ -357,6 +367,7 @@ function AdminUsers() {
         />
       </section>
       {ConfirmDialog}
+      <ReauthDialog state={dialogState} />
     </div>
   );
 }

@@ -16,6 +16,8 @@ import { inputClsCompact } from "@/lib/utils";
 import { formatHTG } from "@/lib/format";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { sendPayoutUpdatePush } from "@/lib/send-payout-push.functions";
+import { useReauth } from "@/hooks/useReauth";
+import { ReauthDialog } from "@/components/reauth-dialog";
 
 export type PayoutBeneficiary = {
   type: "restaurant" | "driver";
@@ -52,6 +54,7 @@ export function PayoutPayModal({
 }: PayoutPayModalProps) {
   const qc = useQueryClient();
   const sendPush = useServerFn(sendPayoutUpdatePush);
+  const { withReauth, dialogState } = useReauth();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<"moncash" | "natcash" | "">("");
   const [providerCode, setProviderCode] = useState("manual");
@@ -141,135 +144,138 @@ export function PayoutPayModal({
     : [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Voye yon peman</DialogTitle>
-          <DialogDescription>
-            {beneficiary?.name} — Balans disponib: {formatHTG(beneficiary?.availableBalance ?? 0)}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Voye yon peman</DialogTitle>
+            <DialogDescription>
+              {beneficiary?.name} — Balans disponib: {formatHTG(beneficiary?.availableBalance ?? 0)}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-3">
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Montan pou peye
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min={0}
-              max={beneficiary?.availableBalance}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className={inputClsCompact()}
-            />
-          </label>
-
-          {beneficiary && (
-            <div className="text-xs text-ink-soft">
-              Balans ki ap rete apre peman:{" "}
-              <b className="text-ink">
-                {formatHTG(Math.max(0, beneficiary.availableBalance - (Number(amount) || 0)))}
-              </b>
-            </div>
-          )}
-
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Metòd peman
-            </span>
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value as "moncash" | "natcash")}
-              className={inputClsCompact()}
-            >
-              <option value="" disabled>
-                Chwazi yon metòd
-              </option>
-              {availableMethods.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            {availableMethods.length === 0 && (
-              <span className="mt-1 block text-xs text-red-600">
-                Benefisyè a poko konfigire okenn nimewo peman.
+          <div className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Montan pou peye
               </span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={beneficiary?.availableBalance}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className={inputClsCompact()}
+              />
+            </label>
+
+            {beneficiary && (
+              <div className="text-xs text-ink-soft">
+                Balans ki ap rete apre peman:{" "}
+                <b className="text-ink">
+                  {formatHTG(Math.max(0, beneficiary.availableBalance - (Number(amount) || 0)))}
+                </b>
+              </div>
             )}
-          </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Ki jan peman an egzekite
-            </span>
-            <select
-              value={providerCode}
-              onChange={(e) => setProviderCode(e.target.value)}
-              className={inputClsCompact()}
-            >
-              {(providers.data ?? []).map((p) => (
-                <option key={p.code} value={p.code} disabled={!p.is_active}>
-                  {p.label}
-                  {!p.is_active ? " (byento)" : ""}
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Metòd peman
+              </span>
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value as "moncash" | "natcash")}
+                className={inputClsCompact()}
+              >
+                <option value="" disabled>
+                  Chwazi yon metòd
                 </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-xs text-ink-soft">
-              Manyèl = ou voye lajan an ou menm nan telefòn ou, tankou jodi a.
-            </span>
-          </label>
+                {availableMethods.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              {availableMethods.length === 0 && (
+                <span className="mt-1 block text-xs text-red-600">
+                  Benefisyè a poko konfigire okenn nimewo peman.
+                </span>
+              )}
+            </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Referans tranzaksyon
-            </span>
-            <input
-              value={transactionReference}
-              onChange={(e) => setTransactionReference(e.target.value)}
-              placeholder="Nimewo tranzaksyon MonCash/NatCash"
-              className={inputClsCompact()}
-            />
-          </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Ki jan peman an egzekite
+              </span>
+              <select
+                value={providerCode}
+                onChange={(e) => setProviderCode(e.target.value)}
+                className={inputClsCompact()}
+              >
+                {(providers.data ?? []).map((p) => (
+                  <option key={p.code} value={p.code} disabled={!p.is_active}>
+                    {p.label}
+                    {!p.is_active ? " (byento)" : ""}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs text-ink-soft">
+                Manyèl = ou voye lajan an ou menm nan telefòn ou, tankou jodi a.
+              </span>
+            </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Prèv peman (opsyonèl)
-            </span>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className={inputClsCompact()}
-            />
-          </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Referans tranzaksyon
+              </span>
+              <input
+                value={transactionReference}
+                onChange={(e) => setTransactionReference(e.target.value)}
+                placeholder="Nimewo tranzaksyon MonCash/NatCash"
+                className={inputClsCompact()}
+              />
+            </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-              Nòt (opsyonèl)
-            </span>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              className={inputClsCompact()}
-            />
-          </label>
-        </div>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Prèv peman (opsyonèl)
+              </span>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className={inputClsCompact()}
+              />
+            </label>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Anile
-          </Button>
-          <Button
-            disabled={pay.isPending || !method || !amount || !transactionReference.trim()}
-            onClick={() => pay.mutate()}
-          >
-            {pay.isPending ? "Ap voye…" : "Konfime peman"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Nòt (opsyonèl)
+              </span>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className={inputClsCompact()}
+              />
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Anile
+            </Button>
+            <Button
+              disabled={pay.isPending || !method || !amount || !transactionReference.trim()}
+              onClick={() => withReauth(() => pay.mutate())}
+            >
+              {pay.isPending ? "Ap voye…" : "Konfime peman"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <ReauthDialog state={dialogState} />
+    </>
   );
 }

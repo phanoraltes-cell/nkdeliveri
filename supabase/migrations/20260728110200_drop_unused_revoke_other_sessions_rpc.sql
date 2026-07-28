@@ -1,0 +1,14 @@
+-- revoke_my_other_sessions_secure() (20260728110000) turned out to
+-- duplicate a mechanism Supabase Auth's client SDK already provides
+-- officially: supabase.auth.signOut({ scope: "others" }) -- already used
+-- elsewhere in this codebase (src/components/change-password-form.tsx)
+-- to sign out every device except the current one after a password
+-- change. "Utiliser exclusivement les mécanismes officiels de Supabase
+-- Auth" means the "log out all other devices" button in the new Active
+-- Sessions UI calls that instead of a custom RPC doing the same DELETE by
+-- hand. Dropping the now-unused function rather than shipping dead code
+-- (get_my_active_sessions_secure and revoke_my_session_secure stay --
+-- there is no official client-side equivalent for revoking one specific
+-- *other* session by id, only "this device" / "every device" / "every
+-- other device").
+DROP FUNCTION IF EXISTS public.revoke_my_other_sessions_secure();

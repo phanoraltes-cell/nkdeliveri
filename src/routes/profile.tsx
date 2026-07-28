@@ -11,6 +11,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { inputCls } from "@/lib/utils";
 import { AddressManager } from "@/components/address-manager";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import { ActiveSessionsSection } from "@/components/active-sessions-section";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
 
@@ -201,6 +202,12 @@ function Profile() {
           <div className="mt-4 rounded-[18px] bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
             <h2 className="mb-3 font-display text-lg font-bold text-ink">Chanje modpas</h2>
             <ChangePasswordForm />
+          </div>
+        )}
+
+        {user && (
+          <div className="mt-4">
+            <ActiveSessionsSection />
           </div>
         )}
       </main>

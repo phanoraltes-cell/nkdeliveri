@@ -8,6 +8,7 @@ import { Upload } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
+import { ActiveSessionsSection } from "@/components/active-sessions-section";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant identity/settings shouldn't be editable by staff. Not
@@ -273,6 +274,8 @@ function RestaurantProfile() {
           {saveHours.isPending ? "Ap sove…" : "Sove orè yo"}
         </Button>
       </section>
+
+      <ActiveSessionsSection />
     </div>
   );
 }

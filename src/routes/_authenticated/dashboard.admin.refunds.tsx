@@ -9,6 +9,8 @@ import { formatHTG } from "@/lib/format";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { sendRefundStatusPush } from "@/lib/send-refund-push.functions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useReauth } from "@/hooks/useReauth";
+import { ReauthDialog } from "@/components/reauth-dialog";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
@@ -48,6 +50,7 @@ function AdminRefunds() {
 
   const refunds = useQuery({ queryKey: ["admin-refunds"], queryFn: fetchRefunds });
   const sendPush = useServerFn(sendRefundStatusPush);
+  const { withReauth, dialogState } = useReauth();
 
   const review = useMutation({
     mutationFn: async ({
@@ -183,7 +186,9 @@ function AdminRefunds() {
                 <button
                   disabled={review.isPending}
                   onClick={() =>
-                    review.mutate({ id: r.id, decision: "approved", adminNotes: notes[r.id] })
+                    withReauth(() =>
+                      review.mutate({ id: r.id, decision: "approved", adminNotes: notes[r.id] }),
+                    )
                   }
                   className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
@@ -205,7 +210,7 @@ function AdminRefunds() {
               <div className="mt-3">
                 <button
                   disabled={complete.isPending}
-                  onClick={() => complete.mutate(r.id)}
+                  onClick={() => withReauth(() => complete.mutate(r.id))}
                   className="inline-flex items-center gap-1 rounded-full bg-brand-deep px-3 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50"
                 >
                   <PackageCheck className="h-3.5 w-3.5" />{" "}
@@ -216,6 +221,7 @@ function AdminRefunds() {
           </div>
         ))}
       </div>
+      <ReauthDialog state={dialogState} />
     </div>
   );
 }

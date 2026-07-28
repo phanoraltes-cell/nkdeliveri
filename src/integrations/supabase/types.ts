@@ -2667,6 +2667,22 @@ export type Database = {
           total_count: number;
         }[];
       };
+      get_my_active_sessions_secure: {
+        Args: never;
+        Returns: {
+          id: string;
+          created_at: string;
+          refreshed_at: string | null;
+          not_after: string | null;
+          user_agent: string | null;
+          ip: string | null;
+          is_current: boolean;
+        }[];
+      };
+      revoke_my_session_secure: {
+        Args: { _session_id: string };
+        Returns: undefined;
+      };
       get_historical_backfill_summary_secure: {
         Args: never;
         Returns: {

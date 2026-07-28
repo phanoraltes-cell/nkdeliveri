@@ -115,9 +115,15 @@ export function getNavItems(role: string, employeeRole?: string | null): NavItem
 }
 
 // Roles with an actual profile-editing page get a Pwofil link in the sidebar/drawer footer.
+// admin/super_admin never had one — they share the customer page since it's
+// already open to any authenticated user regardless of role and is where
+// "Sesyon aktif" (Active Sessions) lives; a dedicated admin profile page
+// would just duplicate it.
 export const PROFILE_LINK_BY_ROLE: Record<string, string | undefined> = {
   customer: "/profile",
   driver: "/dashboard/driver/profile",
   restaurant_owner: "/dashboard/restaurant/profile",
   restaurant_staff: "/dashboard/restaurant/profile",
+  admin: "/profile",
+  super_admin: "/profile",
 };
