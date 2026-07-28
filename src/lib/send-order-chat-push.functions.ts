@@ -57,7 +57,10 @@ export const sendOrderChatPush = createServerFn({ method: "POST" })
     return pushToUsers(Array.from(parties), {
       title: "Nouvo mesaj",
       body: `Gen yon nouvo mesaj nan chat kòmand ${order.order_number}.`,
-      url: `/orders/${order.id}`,
+      // Role-agnostic — this fans out to customer + driver + every admin at
+      // once, and /chat/$orderId resolves each recipient into their own
+      // Mwen > Chat page instead of guessing one URL for all of them.
+      url: `/chat/${order.id}`,
       tag: `order-chat-${order.id}`,
       data: { orderId: order.id },
     });

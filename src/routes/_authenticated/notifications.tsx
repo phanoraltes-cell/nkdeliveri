@@ -216,14 +216,15 @@ function NotificationsPage() {
               </div>
             </div>
           );
+          const onClick = () => !n.read_at && markRead.mutate([n.id]);
           return (
             <li key={n.id}>
-              {orderId ? (
-                <Link
-                  to="/orders/$id"
-                  params={{ id: orderId }}
-                  onClick={() => !n.read_at && markRead.mutate([n.id])}
-                >
+              {orderId && n.type === "order_chat_message" ? (
+                <Link to="/chat/$orderId" params={{ orderId }} onClick={onClick}>
+                  {inner}
+                </Link>
+              ) : orderId ? (
+                <Link to="/orders/$id" params={{ id: orderId }} onClick={onClick}>
                   {inner}
                 </Link>
               ) : (

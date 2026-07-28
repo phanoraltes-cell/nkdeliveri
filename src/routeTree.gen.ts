@@ -35,8 +35,10 @@ import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
+import { Route as AuthenticatedChatOrderIdRouteImport } from './routes/_authenticated/chat.$orderId'
 import { Route as AuthenticatedDashboardRestaurantIndexRouteImport } from './routes/_authenticated/dashboard.restaurant.index'
 import { Route as AuthenticatedDashboardDriverIndexRouteImport } from './routes/_authenticated/dashboard.driver.index'
+import { Route as AuthenticatedDashboardCustomerIndexRouteImport } from './routes/_authenticated/dashboard.customer.index'
 import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
 import { Route as AuthenticatedDashboardRestaurantRevenueRouteImport } from './routes/_authenticated/dashboard.restaurant.revenue'
 import { Route as AuthenticatedDashboardRestaurantPromotionsRouteImport } from './routes/_authenticated/dashboard.restaurant.promotions'
@@ -53,7 +55,9 @@ import { Route as AuthenticatedDashboardDriverHistoryRouteImport } from './route
 import { Route as AuthenticatedDashboardDriverEarningsRouteImport } from './routes/_authenticated/dashboard.driver.earnings'
 import { Route as AuthenticatedDashboardDriverDisputesRouteImport } from './routes/_authenticated/dashboard.driver.disputes'
 import { Route as AuthenticatedDashboardDriverCommissionsRouteImport } from './routes/_authenticated/dashboard.driver.commissions'
+import { Route as AuthenticatedDashboardDriverChatRouteImport } from './routes/_authenticated/dashboard.driver.chat'
 import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './routes/_authenticated/dashboard.driver.available'
+import { Route as AuthenticatedDashboardCustomerChatRouteImport } from './routes/_authenticated/dashboard.customer.chat'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
 import { Route as AuthenticatedDashboardAdminRefundsRouteImport } from './routes/_authenticated/dashboard.admin.refunds'
@@ -64,6 +68,7 @@ import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './route
 import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
 import { Route as AuthenticatedDashboardAdminDisputesRouteImport } from './routes/_authenticated/dashboard.admin.disputes'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
+import { Route as AuthenticatedDashboardAdminChatRouteImport } from './routes/_authenticated/dashboard.admin.chat'
 import { Route as AuthenticatedDashboardAdminAdsRouteImport } from './routes/_authenticated/dashboard.admin.ads'
 
 const TermsRoute = TermsRouteImport.update({
@@ -201,6 +206,12 @@ const AuthenticatedDashboardAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedChatOrderIdRoute =
+  AuthenticatedChatOrderIdRouteImport.update({
+    id: '/chat/$orderId',
+    path: '/chat/$orderId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRestaurantIndexRoute =
   AuthenticatedDashboardRestaurantIndexRouteImport.update({
     id: '/',
@@ -212,6 +223,12 @@ const AuthenticatedDashboardDriverIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
+const AuthenticatedDashboardCustomerIndexRoute =
+  AuthenticatedDashboardCustomerIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardCustomerRoute,
   } as any)
 const AuthenticatedDashboardAdminIndexRoute =
   AuthenticatedDashboardAdminIndexRouteImport.update({
@@ -309,11 +326,23 @@ const AuthenticatedDashboardDriverCommissionsRoute =
     path: '/commissions',
     getParentRoute: () => AuthenticatedDashboardDriverRoute,
   } as any)
+const AuthenticatedDashboardDriverChatRoute =
+  AuthenticatedDashboardDriverChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
 const AuthenticatedDashboardDriverAvailableRoute =
   AuthenticatedDashboardDriverAvailableRouteImport.update({
     id: '/available',
     path: '/available',
     getParentRoute: () => AuthenticatedDashboardDriverRoute,
+  } as any)
+const AuthenticatedDashboardCustomerChatRoute =
+  AuthenticatedDashboardCustomerChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedDashboardCustomerRoute,
   } as any)
 const AuthenticatedDashboardAdminUsersRoute =
   AuthenticatedDashboardAdminUsersRouteImport.update({
@@ -375,6 +404,12 @@ const AuthenticatedDashboardAdminCustomersRoute =
     path: '/customers',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminChatRoute =
+  AuthenticatedDashboardAdminChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminAdsRoute =
   AuthenticatedDashboardAdminAdsRouteImport.update({
     id: '/ads',
@@ -403,12 +438,14 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof AuthIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
-  '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -419,7 +456,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
   '/dashboard/driver/disputes': typeof AuthenticatedDashboardDriverDisputesRoute
   '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
@@ -436,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
+  '/dashboard/customer/': typeof AuthenticatedDashboardCustomerIndexRoute
   '/dashboard/driver/': typeof AuthenticatedDashboardDriverIndexRoute
   '/dashboard/restaurant/': typeof AuthenticatedDashboardRestaurantIndexRoute
 }
@@ -459,9 +499,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
-  '/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -472,7 +513,9 @@ export interface FileRoutesByTo {
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
   '/dashboard/driver/disputes': typeof AuthenticatedDashboardDriverDisputesRoute
   '/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
@@ -489,6 +532,7 @@ export interface FileRoutesByTo {
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
+  '/dashboard/customer': typeof AuthenticatedDashboardCustomerIndexRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverIndexRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantIndexRoute
 }
@@ -515,12 +559,14 @@ export interface FileRoutesById {
   '/auth/': typeof AuthIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/_authenticated/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
-  '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRoute
+  '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/_authenticated/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/_authenticated/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/_authenticated/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -531,7 +577,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/_authenticated/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/_authenticated/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
+  '/_authenticated/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/_authenticated/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
   '/_authenticated/dashboard/driver/disputes': typeof AuthenticatedDashboardDriverDisputesRoute
   '/_authenticated/dashboard/driver/earnings': typeof AuthenticatedDashboardDriverEarningsRoute
@@ -548,6 +596,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/_authenticated/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
+  '/_authenticated/dashboard/customer/': typeof AuthenticatedDashboardCustomerIndexRoute
   '/_authenticated/dashboard/driver/': typeof AuthenticatedDashboardDriverIndexRoute
   '/_authenticated/dashboard/restaurant/': typeof AuthenticatedDashboardRestaurantIndexRoute
 }
@@ -574,12 +623,14 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/orders/'
     | '/restaurants/'
+    | '/chat/$orderId'
     | '/dashboard/admin'
     | '/dashboard/customer'
     | '/dashboard/driver'
     | '/dashboard/restaurant'
     | '/dashboard/'
     | '/dashboard/admin/ads'
+    | '/dashboard/admin/chat'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
@@ -590,7 +641,9 @@ export interface FileRouteTypes {
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/users'
+    | '/dashboard/customer/chat'
     | '/dashboard/driver/available'
+    | '/dashboard/driver/chat'
     | '/dashboard/driver/commissions'
     | '/dashboard/driver/disputes'
     | '/dashboard/driver/earnings'
@@ -607,6 +660,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/promotions'
     | '/dashboard/restaurant/revenue'
     | '/dashboard/admin/'
+    | '/dashboard/customer/'
     | '/dashboard/driver/'
     | '/dashboard/restaurant/'
   fileRoutesByTo: FileRoutesByTo
@@ -630,9 +684,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/orders'
     | '/restaurants'
-    | '/dashboard/customer'
+    | '/chat/$orderId'
     | '/dashboard'
     | '/dashboard/admin/ads'
+    | '/dashboard/admin/chat'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
@@ -643,7 +698,9 @@ export interface FileRouteTypes {
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/users'
+    | '/dashboard/customer/chat'
     | '/dashboard/driver/available'
+    | '/dashboard/driver/chat'
     | '/dashboard/driver/commissions'
     | '/dashboard/driver/disputes'
     | '/dashboard/driver/earnings'
@@ -660,6 +717,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/promotions'
     | '/dashboard/restaurant/revenue'
     | '/dashboard/admin'
+    | '/dashboard/customer'
     | '/dashboard/driver'
     | '/dashboard/restaurant'
   id:
@@ -685,12 +743,14 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/orders/'
     | '/restaurants/'
+    | '/_authenticated/chat/$orderId'
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/customer'
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/restaurant'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/ads'
+    | '/_authenticated/dashboard/admin/chat'
     | '/_authenticated/dashboard/admin/customers'
     | '/_authenticated/dashboard/admin/disputes'
     | '/_authenticated/dashboard/admin/drivers'
@@ -701,7 +761,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/refunds'
     | '/_authenticated/dashboard/admin/restaurants'
     | '/_authenticated/dashboard/admin/users'
+    | '/_authenticated/dashboard/customer/chat'
     | '/_authenticated/dashboard/driver/available'
+    | '/_authenticated/dashboard/driver/chat'
     | '/_authenticated/dashboard/driver/commissions'
     | '/_authenticated/dashboard/driver/disputes'
     | '/_authenticated/dashboard/driver/earnings'
@@ -718,6 +780,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/restaurant/promotions'
     | '/_authenticated/dashboard/restaurant/revenue'
     | '/_authenticated/dashboard/admin/'
+    | '/_authenticated/dashboard/customer/'
     | '/_authenticated/dashboard/driver/'
     | '/_authenticated/dashboard/restaurant/'
   fileRoutesById: FileRoutesById
@@ -928,6 +991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/chat/$orderId': {
+      id: '/_authenticated/chat/$orderId'
+      path: '/chat/$orderId'
+      fullPath: '/chat/$orderId'
+      preLoaderRoute: typeof AuthenticatedChatOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard/restaurant/': {
       id: '/_authenticated/dashboard/restaurant/'
       path: '/'
@@ -941,6 +1011,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/driver/'
       preLoaderRoute: typeof AuthenticatedDashboardDriverIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
+    '/_authenticated/dashboard/customer/': {
+      id: '/_authenticated/dashboard/customer/'
+      path: '/'
+      fullPath: '/dashboard/customer/'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomerIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardCustomerRoute
     }
     '/_authenticated/dashboard/admin/': {
       id: '/_authenticated/dashboard/admin/'
@@ -1054,12 +1131,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDriverCommissionsRouteImport
       parentRoute: typeof AuthenticatedDashboardDriverRoute
     }
+    '/_authenticated/dashboard/driver/chat': {
+      id: '/_authenticated/dashboard/driver/chat'
+      path: '/chat'
+      fullPath: '/dashboard/driver/chat'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverChatRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
     '/_authenticated/dashboard/driver/available': {
       id: '/_authenticated/dashboard/driver/available'
       path: '/available'
       fullPath: '/dashboard/driver/available'
       preLoaderRoute: typeof AuthenticatedDashboardDriverAvailableRouteImport
       parentRoute: typeof AuthenticatedDashboardDriverRoute
+    }
+    '/_authenticated/dashboard/customer/chat': {
+      id: '/_authenticated/dashboard/customer/chat'
+      path: '/chat'
+      fullPath: '/dashboard/customer/chat'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomerChatRouteImport
+      parentRoute: typeof AuthenticatedDashboardCustomerRoute
     }
     '/_authenticated/dashboard/admin/users': {
       id: '/_authenticated/dashboard/admin/users'
@@ -1131,6 +1222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminCustomersRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/chat': {
+      id: '/_authenticated/dashboard/admin/chat'
+      path: '/chat'
+      fullPath: '/dashboard/admin/chat'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminChatRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/ads': {
       id: '/_authenticated/dashboard/admin/ads'
       path: '/ads'
@@ -1143,6 +1241,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminAdsRoute: typeof AuthenticatedDashboardAdminAdsRoute
+  AuthenticatedDashboardAdminChatRoute: typeof AuthenticatedDashboardAdminChatRoute
   AuthenticatedDashboardAdminCustomersRoute: typeof AuthenticatedDashboardAdminCustomersRoute
   AuthenticatedDashboardAdminDisputesRoute: typeof AuthenticatedDashboardAdminDisputesRoute
   AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
@@ -1159,6 +1258,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
 const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
   {
     AuthenticatedDashboardAdminAdsRoute: AuthenticatedDashboardAdminAdsRoute,
+    AuthenticatedDashboardAdminChatRoute: AuthenticatedDashboardAdminChatRoute,
     AuthenticatedDashboardAdminCustomersRoute:
       AuthenticatedDashboardAdminCustomersRoute,
     AuthenticatedDashboardAdminDisputesRoute:
@@ -1188,8 +1288,27 @@ const AuthenticatedDashboardAdminRouteWithChildren =
     AuthenticatedDashboardAdminRouteChildren,
   )
 
+interface AuthenticatedDashboardCustomerRouteChildren {
+  AuthenticatedDashboardCustomerChatRoute: typeof AuthenticatedDashboardCustomerChatRoute
+  AuthenticatedDashboardCustomerIndexRoute: typeof AuthenticatedDashboardCustomerIndexRoute
+}
+
+const AuthenticatedDashboardCustomerRouteChildren: AuthenticatedDashboardCustomerRouteChildren =
+  {
+    AuthenticatedDashboardCustomerChatRoute:
+      AuthenticatedDashboardCustomerChatRoute,
+    AuthenticatedDashboardCustomerIndexRoute:
+      AuthenticatedDashboardCustomerIndexRoute,
+  }
+
+const AuthenticatedDashboardCustomerRouteWithChildren =
+  AuthenticatedDashboardCustomerRoute._addFileChildren(
+    AuthenticatedDashboardCustomerRouteChildren,
+  )
+
 interface AuthenticatedDashboardDriverRouteChildren {
   AuthenticatedDashboardDriverAvailableRoute: typeof AuthenticatedDashboardDriverAvailableRoute
+  AuthenticatedDashboardDriverChatRoute: typeof AuthenticatedDashboardDriverChatRoute
   AuthenticatedDashboardDriverCommissionsRoute: typeof AuthenticatedDashboardDriverCommissionsRoute
   AuthenticatedDashboardDriverDisputesRoute: typeof AuthenticatedDashboardDriverDisputesRoute
   AuthenticatedDashboardDriverEarningsRoute: typeof AuthenticatedDashboardDriverEarningsRoute
@@ -1203,6 +1322,8 @@ const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRou
   {
     AuthenticatedDashboardDriverAvailableRoute:
       AuthenticatedDashboardDriverAvailableRoute,
+    AuthenticatedDashboardDriverChatRoute:
+      AuthenticatedDashboardDriverChatRoute,
     AuthenticatedDashboardDriverCommissionsRoute:
       AuthenticatedDashboardDriverCommissionsRoute,
     AuthenticatedDashboardDriverDisputesRoute:
@@ -1268,7 +1389,7 @@ const AuthenticatedDashboardRestaurantRouteWithChildren =
 
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
-  AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRoute
+  AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRouteWithChildren
   AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRouteWithChildren
   AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRouteWithChildren
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -1278,7 +1399,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
   {
     AuthenticatedDashboardAdminRoute:
       AuthenticatedDashboardAdminRouteWithChildren,
-    AuthenticatedDashboardCustomerRoute: AuthenticatedDashboardCustomerRoute,
+    AuthenticatedDashboardCustomerRoute:
+      AuthenticatedDashboardCustomerRouteWithChildren,
     AuthenticatedDashboardDriverRoute:
       AuthenticatedDashboardDriverRouteWithChildren,
     AuthenticatedDashboardRestaurantRoute:
@@ -1294,11 +1416,13 @@ const AuthenticatedDashboardRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedChatOrderIdRoute: typeof AuthenticatedChatOrderIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedChatOrderIdRoute: AuthenticatedChatOrderIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

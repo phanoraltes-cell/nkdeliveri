@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Banknote,
   Percent,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -40,6 +41,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/customer", label: "Akèy", icon: LayoutDashboard },
     { to: "/restaurants", label: "Restoran", icon: Store },
     { to: "/orders", label: "Kòmand mwen", icon: ShoppingBag },
+    { to: "/dashboard/customer/chat", label: "Chat", icon: MessageCircle },
     { to: "/profile", label: "Adrès ak peman", icon: MapPin },
   ],
   restaurant_owner: [
@@ -64,6 +66,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/driver", label: "Akèy", icon: LayoutDashboard },
     { to: "/dashboard/driver/available", label: "Disponiblite", icon: Gauge },
     { to: "/dashboard/driver/history", label: "Istwa livrezon", icon: History },
+    { to: "/dashboard/driver/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/driver/disputes", label: "Litij", icon: AlertTriangle },
     { to: "/dashboard/driver/earnings", label: "Revni", icon: Wallet },
     { to: "/dashboard/driver/commissions", label: "Komisyon", icon: Percent },
@@ -75,6 +78,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/customers", label: "Kliyan", icon: UserCog },
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
+    { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
@@ -88,6 +92,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/customers", label: "Kliyan", icon: UserCog },
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
+    { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },

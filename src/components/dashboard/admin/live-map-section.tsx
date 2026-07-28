@@ -1,18 +1,16 @@
 import { Suspense, lazy, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Navigation, MessageCircle } from "lucide-react";
 import type { MapMarker, MapRoute } from "@/components/maps/LeafletMap";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DELIVERY_STATUS_LABEL } from "@/lib/delivery-status";
-import { CHAT_OPEN_STATUSES } from "@/lib/order-status";
 import type { ActiveDelivery } from "@/hooks/useLiveOrders";
 import {
   DeliveryRouteFetcher,
   type DeliveryRouteResult,
 } from "@/components/dashboard/admin/delivery-route-fetcher";
 import { formatDistance, formatDuration } from "@/components/dashboard/driver/delivery-route-info";
-import { OrderChatThread } from "@/components/order/order-chat-thread";
 
 // See dashboard.admin.index.tsx for why this is lazy: leaflet (~150KB) is
 // only needed once this section has mounted.
@@ -55,7 +53,6 @@ export function LiveMapSection({
   onZoneQueryChange,
 }: LiveMapSectionProps) {
   const [routeResults, setRouteResults] = useState<Record<string, DeliveryRouteResult>>({});
-  const [chatDelivery, setChatDelivery] = useState<ActiveDelivery | null>(null);
   const routedDeliveries = activeDeliveries.slice(0, MAX_LIVE_ROUTES);
 
   const routes: MapRoute[] = useMemo(
@@ -176,13 +173,10 @@ export function LiveMapSection({
                   {!r?.isLoading && r?.path == null && (
                     <span className="text-ink-soft">Pa gen pozisyon</span>
                   )}
-                  <Button
-                    size="icon-sm"
-                    variant="outline"
-                    aria-label="Chat"
-                    onClick={() => setChatDelivery(d)}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" />
+                  <Button size="icon-sm" variant="outline" aria-label="Chat" asChild>
+                    <Link to="/dashboard/admin/chat" search={{ order: d.order_id }}>
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </Link>
                   </Button>
                 </span>
               </div>
@@ -190,22 +184,6 @@ export function LiveMapSection({
           })}
         </div>
       )}
-
-      <Dialog open={!!chatDelivery} onOpenChange={(open) => !open && setChatDelivery(null)}>
-        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Chat — {chatDelivery?.order?.order_number}</DialogTitle>
-          </DialogHeader>
-          {chatDelivery && (
-            <OrderChatThread
-              orderId={chatDelivery.order_id}
-              isOpen={
-                !!chatDelivery.order?.status && CHAT_OPEN_STATUSES.has(chatDelivery.order.status)
-              }
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
