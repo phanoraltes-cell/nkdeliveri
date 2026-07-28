@@ -86,7 +86,13 @@ export default defineConfig({
         outDir: ".vercel/output/static",
         injectManifest: {
           globDirectory: ".vercel/output/static",
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
+          // webp/jpg/jpeg added: chef.jpg, hero-livreur.jpg, phone-mockup.jpg,
+          // scooter.jpg, moncash-logo.webp, and public/dishes/*.webp were all
+          // silently excluded before — first offline load of any page using
+          // them showed a broken image. json added for any small static data
+          // file the build emits (e.g. manifest-adjacent metadata); harmless
+          // if none exist, matches zero files.
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,json,webmanifest,woff2}"],
         },
       }),
     ],

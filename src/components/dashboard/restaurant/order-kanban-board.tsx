@@ -91,7 +91,14 @@ export function OrderKanbanBoard({
 
   return (
     <>
-      <div className="flex gap-3 overflow-x-auto pb-3">
+      {/* touch-pan-x: on touch devices, tells the browser this row's only
+          gesture is horizontal panning, so a finger drag reliably scrolls
+          the columns instead of being intercepted by page-level vertical
+          scroll heuristics — native HTML5 drag-and-drop (used below for
+          desktop mouse drags between columns) doesn't fire from touch at
+          all, so this row's horizontal swipe is the only touch interaction
+          it needs to guarantee. */}
+      <div className="flex touch-pan-x gap-3 overflow-x-auto pb-3">
         {COLUMNS.map((col) => {
           const cards = orders.filter((o) => col.statuses.includes(o.status));
           const isDropTarget = dragOrder != null && isValidDrop(dragOrder.status, col.key);

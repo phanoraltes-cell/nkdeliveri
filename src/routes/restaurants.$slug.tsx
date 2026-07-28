@@ -18,6 +18,37 @@ import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { SponsoredSection } from "@/components/restaurant/sponsored-section";
 
+const DAY_SCHEMA_NAME: Record<string, string> = {
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+  sun: "Sunday",
+};
+
+/**
+ * restaurants.opening_hours (jsonb, edited in dashboard.restaurant.profile.tsx)
+ * -> schema.org openingHoursSpecification, one entry per open day. Omitted
+ * entirely when unset/empty (`{}` is the default for a restaurant that's
+ * never configured hours) rather than fabricating a schedule.
+ */
+function openingHoursSpecification(raw: unknown) {
+  if (!raw || typeof raw !== "object") return {};
+  const days = Object.entries(
+    raw as Record<string, { open?: string; close?: string; closed?: boolean }>,
+  )
+    .filter(([key, v]) => DAY_SCHEMA_NAME[key] && v && !v.closed && v.open && v.close)
+    .map(([key, v]) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: DAY_SCHEMA_NAME[key],
+      opens: v.open,
+      closes: v.close,
+    }));
+  return days.length > 0 ? { openingHoursSpecification: days } : {};
+}
+
 const restQuery = (slug: string) =>
   queryOptions({
     queryKey: ["restaurant", slug],
@@ -99,6 +130,7 @@ export const Route = createFileRoute("/restaurants/$slug")({
           ...(r.lat != null && r.lng != null
             ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } }
             : {}),
+          ...openingHoursSpecification(r.opening_hours),
         }),
         jsonLdScript({
           "@context": "https://schema.org",
