@@ -53,7 +53,7 @@ function AdminPayments() {
       const { error } = await supabase.rpc("review_manual_payment_secure", {
         _payment_id: id,
         _decision: decision,
-        _note: note || null,
+        _note: note || undefined,
       });
       if (error) throw error;
       // Fire-and-log web push to customer + merchant

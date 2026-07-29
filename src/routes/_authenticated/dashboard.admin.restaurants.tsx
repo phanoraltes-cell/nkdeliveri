@@ -8,6 +8,7 @@ import { Percent, Store } from "lucide-react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
+import { ProofThumb } from "@/components/proof-thumb";
 import { inputClsCompact } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
@@ -79,8 +80,15 @@ function AdminRestaurants() {
               className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
-                  <Store className="h-5 w-5" />
+                <div className="flex gap-1.5">
+                  {r.logo_url ? (
+                    <ProofThumb path={r.logo_url} alt={`Logo ${r.name}`} />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep">
+                      <Store className="h-5 w-5" />
+                    </div>
+                  )}
+                  {r.cover_url && <ProofThumb path={r.cover_url} alt={`Kouvèti ${r.name}`} />}
                 </div>
                 <div>
                   <div className="font-display text-base font-bold text-ink">{r.name}</div>
@@ -133,6 +141,8 @@ type AdminRestaurantRow = {
   commission_type: string;
   commission_rate: number;
   monthly_commission_amount: number;
+  logo_url: string | null;
+  cover_url: string | null;
 };
 
 function CommissionForm({

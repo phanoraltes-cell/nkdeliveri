@@ -6,23 +6,153 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
-  graphql_public: {
+  private: {
     Tables: {
-      [_ in never]: never;
+      rate_limit_hits: {
+        Row: {
+          hit_count: number;
+          rl_key: string;
+          window_start: string;
+        };
+        Insert: {
+          hit_count?: number;
+          rl_key: string;
+          window_start: string;
+        };
+        Update: {
+          hit_count?: number;
+          rl_key?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
+      claim_delivery_secure: {
+        Args: { _order_id: string };
+        Returns: Database["public"]["Tables"]["deliveries"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "deliveries";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
+      };
+      compute_order_commission_preview: {
+        Args: { _order_id: string };
+        Returns: {
+          driver_commission_amount: number;
+          driver_commission_rate: number;
+          driver_fee: number;
+          driver_id: string;
+          driver_net_amount: number;
+          restaurant_commission_amount: number;
+          restaurant_commission_rate: number;
+          restaurant_id: string;
+          restaurant_net_amount: number;
+        }[];
+      };
+      create_order_secure: {
+        Args: {
+          _contact_phone: string;
+          _delivery_address: string;
+          _delivery_notes: string;
+          _items: Json;
+          _method: Database["public"]["Enums"]["payment_method"];
+          _restaurant_id: string;
+          _wants_location_sharing?: boolean;
+        };
+        Returns: string;
+      };
+      dispute_author_role: {
+        Args: { _dispute: Database["public"]["Tables"]["disputes"]["Row"] };
+        Returns: Database["public"]["Enums"]["dispute_author_role"];
+      };
+      dispute_folder_visible: {
+        Args: { _dispute_id: string };
+        Returns: boolean;
+      };
+      generate_commission_for_order: {
+        Args: { _actor_id: string; _order_id: string; _source: string };
+        Returns: undefined;
+      };
+      get_primary_role: { Args: { _user_id: string }; Returns: string };
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"];
+          _user_id: string;
+        };
+        Returns: boolean;
+      };
+      is_restaurant_manager: {
+        Args: { _restaurant_id: string };
+        Returns: boolean;
+      };
+      is_restaurant_staff_or_manager: {
+        Args: { _restaurant_id: string };
+        Returns: boolean;
+      };
+      log_audit_event: {
+        Args: {
+          _action: string;
+          _metadata: Json;
+          _role: string;
+          _user_id: string;
+        };
+        Returns: undefined;
+      };
+      notification_preferences_for: {
+        Args: { _user_id: string };
         Returns: Json;
       };
+      notify_secure: {
+        Args: {
+          _body: string;
+          _category: string;
+          _data?: Json;
+          _title: string;
+          _type: string;
+          _user_ids: string[];
+        };
+        Returns: undefined;
+      };
+      order_chat_author_role: { Args: { _order_id: string }; Returns: string };
+      order_chat_folder_visible: {
+        Args: { _order_id: string };
+        Returns: boolean;
+      };
+      order_visible_to_driver: {
+        Args: {
+          _order_id: string;
+          _status: Database["public"]["Enums"]["order_status"];
+        };
+        Returns: boolean;
+      };
+      payout_beneficiary_folder_visible: {
+        Args: { _folder_id: string };
+        Returns: boolean;
+      };
+      payout_beneficiary_visible: {
+        Args: { _driver_id: string; _restaurant_id: string };
+        Returns: boolean;
+      };
+      update_order_status_secure: {
+        Args: {
+          _new_status: Database["public"]["Enums"]["order_status"];
+          _order_id: string;
+        };
+        Returns: Database["public"]["Tables"]["orders"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "orders";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      wallet_owner_visible: { Args: { _wallet_id: string }; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;
@@ -87,7 +217,7 @@ export type Database = {
         Insert: {
           action: string;
           created_at?: string;
-          id?: number;
+          id?: never;
           metadata?: Json;
           role?: string | null;
           user_id?: string | null;
@@ -95,7 +225,7 @@ export type Database = {
         Update: {
           action?: string;
           created_at?: string;
-          id?: number;
+          id?: never;
           metadata?: Json;
           role?: string | null;
           user_id?: string | null;
@@ -210,6 +340,38 @@ export type Database = {
             columns: ["restaurant_id"];
             isOneToOne: false;
             referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      customer_delivery_locations: {
+        Row: {
+          accuracy: number | null;
+          delivery_id: string;
+          lat: number;
+          lng: number;
+          updated_at: string;
+        };
+        Insert: {
+          accuracy?: number | null;
+          delivery_id: string;
+          lat: number;
+          lng: number;
+          updated_at?: string;
+        };
+        Update: {
+          accuracy?: number | null;
+          delivery_id?: string;
+          lat?: number;
+          lng?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_delivery_locations_delivery_id_fkey";
+            columns: ["delivery_id"];
+            isOneToOne: true;
+            referencedRelation: "deliveries";
             referencedColumns: ["id"];
           },
         ];
@@ -378,6 +540,13 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "disputes_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "disputes_order_id_fkey";
             columns: ["order_id"];
             isOneToOne: true;
@@ -389,13 +558,6 @@ export type Database = {
             columns: ["restaurant_id"];
             isOneToOne: false;
             referencedRelation: "restaurants";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "disputes_driver_id_fkey";
-            columns: ["driver_id"];
-            isOneToOne: false;
-            referencedRelation: "drivers";
             referencedColumns: ["id"];
           },
         ];
@@ -413,8 +575,6 @@ export type Database = {
           last_name: string | null;
           license_doc_url: string | null;
           license_plate: string | null;
-          // Anticipates migration 20260712120000_add_driver_payout_account_names.sql
-          // (not yet applied) — re-run `supabase gen types` after applying it.
           moncash_account_name: string | null;
           moncash_number: string | null;
           natcash_account_name: string | null;
@@ -506,6 +666,27 @@ export type Database = {
           },
         ];
       };
+      hidden_history_items: {
+        Row: {
+          entity_id: string;
+          entity_type: string;
+          hidden_at: string;
+          user_id: string;
+        };
+        Insert: {
+          entity_id: string;
+          entity_type: string;
+          hidden_at?: string;
+          user_id: string;
+        };
+        Update: {
+          entity_id?: string;
+          entity_type?: string;
+          hidden_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       menu_categories: {
         Row: {
           created_at: string;
@@ -562,6 +743,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_preferences: {
+        Row: {
+          prefs: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          prefs?: Json;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          prefs?: Json;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       notifications: {
         Row: {
           body: string | null;
@@ -600,77 +799,6 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
-      };
-      hidden_history_items: {
-        Row: {
-          entity_id: string;
-          entity_type: string;
-          hidden_at: string;
-          user_id: string;
-        };
-        Insert: {
-          entity_id: string;
-          entity_type: string;
-          hidden_at?: string;
-          user_id: string;
-        };
-        Update: {
-          entity_id?: string;
-          entity_type?: string;
-          hidden_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      notification_preferences: {
-        Row: {
-          prefs: Json;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          prefs?: Json;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          prefs?: Json;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      customer_delivery_locations: {
-        Row: {
-          accuracy: number | null;
-          delivery_id: string;
-          lat: number;
-          lng: number;
-          updated_at: string;
-        };
-        Insert: {
-          accuracy?: number | null;
-          delivery_id: string;
-          lat: number;
-          lng: number;
-          updated_at?: string;
-        };
-        Update: {
-          accuracy?: number | null;
-          delivery_id?: string;
-          lat?: number;
-          lng?: number;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "customer_delivery_locations_delivery_id_fkey";
-            columns: ["delivery_id"];
-            isOneToOne: true;
-            referencedRelation: "deliveries";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       order_chat_messages: {
         Row: {
@@ -877,6 +1005,30 @@ export type Database = {
           },
         ];
       };
+      payment_methods: {
+        Row: {
+          code: string;
+          created_at: string;
+          is_active: boolean;
+          label: string;
+          sort_order: number;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          is_active?: boolean;
+          label: string;
+          sort_order?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          is_active?: boolean;
+          label?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
       payment_proofs: {
         Row: {
           created_at: string;
@@ -917,6 +1069,27 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      payment_providers: {
+        Row: {
+          code: string;
+          created_at: string;
+          is_active: boolean;
+          label: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          is_active?: boolean;
+          label: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          is_active?: boolean;
+          label?: string;
+        };
+        Relationships: [];
       };
       payments: {
         Row: {
@@ -1011,51 +1184,6 @@ export type Database = {
           },
         ];
       };
-      payment_methods: {
-        Row: {
-          code: string;
-          created_at: string;
-          is_active: boolean;
-          label: string;
-          sort_order: number;
-        };
-        Insert: {
-          code: string;
-          created_at?: string;
-          is_active?: boolean;
-          label: string;
-          sort_order?: number;
-        };
-        Update: {
-          code?: string;
-          created_at?: string;
-          is_active?: boolean;
-          label?: string;
-          sort_order?: number;
-        };
-        Relationships: [];
-      };
-      payment_providers: {
-        Row: {
-          code: string;
-          created_at: string;
-          is_active: boolean;
-          label: string;
-        };
-        Insert: {
-          code: string;
-          created_at?: string;
-          is_active?: boolean;
-          label: string;
-        };
-        Update: {
-          code?: string;
-          created_at?: string;
-          is_active?: boolean;
-          label?: string;
-        };
-        Relationships: [];
-      };
       payout_commissions: {
         Row: {
           commission_ledger_id: string;
@@ -1098,8 +1226,8 @@ export type Database = {
           amount: number;
           confirmed_at: string | null;
           created_at: string;
-          disputed_at: string | null;
           dispute_reason: string | null;
+          disputed_at: string | null;
           driver_id: string | null;
           id: string;
           method: string;
@@ -1123,8 +1251,8 @@ export type Database = {
           amount: number;
           confirmed_at?: string | null;
           created_at?: string;
-          disputed_at?: string | null;
           dispute_reason?: string | null;
+          disputed_at?: string | null;
           driver_id?: string | null;
           id?: string;
           method: string;
@@ -1148,8 +1276,8 @@ export type Database = {
           amount?: number;
           confirmed_at?: string | null;
           created_at?: string;
-          disputed_at?: string | null;
           dispute_reason?: string | null;
+          disputed_at?: string | null;
           driver_id?: string | null;
           id?: string;
           method?: string;
@@ -2031,15 +2159,11 @@ export type Database = {
       check_rate_limit_secure: {
         Args: {
           _action: string;
-          _actor_override?: string | null;
+          _actor_override?: string;
           _max_hits: number;
           _window_seconds: number;
         };
         Returns: boolean;
-      };
-      subscribe_newsletter_secure: {
-        Args: { _email: string; _source?: string };
-        Returns: undefined;
       };
       claim_delivery_secure: {
         Args: { _order_id: string };
@@ -2120,6 +2244,12 @@ export type Database = {
           transaction_ref: string | null;
           updated_at: string;
         };
+        SetofOptions: {
+          from: "*";
+          to: "payments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       confirm_payout_secure: {
         Args: { _payout_id: string };
@@ -2128,8 +2258,8 @@ export type Database = {
           amount: number;
           confirmed_at: string | null;
           created_at: string;
-          disputed_at: string | null;
           dispute_reason: string | null;
+          disputed_at: string | null;
           driver_id: string | null;
           id: string;
           method: string;
@@ -2183,72 +2313,6 @@ export type Database = {
         };
         Returns: string;
       };
-      push_customer_location_secure: {
-        Args: {
-          _accuracy?: number;
-          _delivery_id: string;
-          _lat: number;
-          _lng: number;
-        };
-        Returns: undefined;
-      };
-      send_order_chat_message_secure: {
-        Args: {
-          _image_url?: string;
-          _lat?: number;
-          _lng?: number;
-          _message?: string;
-          _order_id: string;
-        };
-        Returns: {
-          author_id: string;
-          author_role: string;
-          created_at: string;
-          id: string;
-          image_url: string | null;
-          lat: number | null;
-          lng: number | null;
-          message: string | null;
-          order_id: string;
-        };
-      };
-      mark_order_chat_read_secure: {
-        Args: { _order_id: string };
-        Returns: undefined;
-      };
-      stop_customer_location_sharing_secure: {
-        Args: { _delivery_id: string };
-        Returns: undefined;
-      };
-      send_promotional_notification_secure: {
-        Args: {
-          _body: string;
-          _cooldown_hours?: number;
-          _data?: Json;
-          _target_city?: string;
-          _target_role?: string;
-          _title: string;
-        };
-        Returns: {
-          body: string;
-          created_at: string;
-          data: Json;
-          id: string;
-          recipient_count: number;
-          sent_by: string;
-          target_city: string | null;
-          target_role: string;
-          title: string;
-        };
-      };
-      update_notification_preferences_secure: {
-        Args: { _prefs: Json };
-        Returns: {
-          prefs: Json;
-          updated_at: string;
-          user_id: string;
-        };
-      };
       create_product_secure: {
         Args: {
           _category_id: string;
@@ -2280,6 +2344,38 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "products";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_promotion_secure: {
+        Args: {
+          _code: string;
+          _description: string;
+          _discount_type: string;
+          _discount_value: number;
+          _ends_at: string;
+          _restaurant_id: string;
+          _starts_at: string;
+          _title: string;
+        };
+        Returns: {
+          active: boolean;
+          code: string | null;
+          created_at: string;
+          description: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at: string | null;
+          id: string;
+          restaurant_id: string;
+          starts_at: string | null;
+          title: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "promotions";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2317,95 +2413,6 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      update_sponsored_placement_secure: {
-        Args: {
-          _ends_at: string;
-          _id: string;
-          _image_url?: string;
-          _is_active: boolean;
-          _link_url?: string;
-          _sort_order?: number;
-          _starts_at: string;
-          _title: string;
-        };
-        Returns: {
-          created_at: string;
-          created_by: string;
-          ends_at: string;
-          id: string;
-          image_url: string | null;
-          is_active: boolean;
-          link_url: string | null;
-          placement: string;
-          restaurant_id: string | null;
-          sort_order: number;
-          starts_at: string;
-          title: string;
-          updated_at: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "sponsored_placements";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      delete_sponsored_placement_secure: {
-        Args: { _id: string };
-        Returns: undefined;
-      };
-      get_active_placements_secure: {
-        Args: { _limit?: number; _placement: string };
-        Returns: {
-          id: string;
-          image_url: string | null;
-          link_url: string | null;
-          placement: string;
-          restaurant_address: string | null;
-          restaurant_avg_prep_time: number | null;
-          restaurant_cover_url: string | null;
-          restaurant_cuisine: string | null;
-          restaurant_delivery_fee: number | null;
-          restaurant_id: string | null;
-          restaurant_name: string | null;
-          restaurant_rating: number | null;
-          restaurant_slug: string | null;
-          sort_order: number;
-          title: string;
-        }[];
-      };
-      create_promotion_secure: {
-        Args: {
-          _code: string;
-          _description: string;
-          _discount_type: string;
-          _discount_value: number;
-          _ends_at: string;
-          _restaurant_id: string;
-          _starts_at: string;
-          _title: string;
-        };
-        Returns: {
-          active: boolean;
-          code: string | null;
-          created_at: string;
-          description: string | null;
-          discount_type: string;
-          discount_value: number;
-          ends_at: string | null;
-          id: string;
-          restaurant_id: string;
-          starts_at: string | null;
-          title: string;
-          updated_at: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "promotions";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       delete_menu_category_secure: {
         Args: { _category_id: string };
         Returns: undefined;
@@ -2416,6 +2423,10 @@ export type Database = {
       };
       delete_promotion_secure: {
         Args: { _promotion_id: string };
+        Returns: undefined;
+      };
+      delete_sponsored_placement_secure: {
+        Args: { _id: string };
         Returns: undefined;
       };
       dispute_cash_payment_secure: {
@@ -2437,6 +2448,12 @@ export type Database = {
           status_history: Json;
           updated_at: string;
         };
+        SetofOptions: {
+          from: "*";
+          to: "disputes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       dispute_payout_secure: {
         Args: { _payout_id: string; _reason: string };
@@ -2445,8 +2462,8 @@ export type Database = {
           amount: number;
           confirmed_at: string | null;
           created_at: string;
-          disputed_at: string | null;
           dispute_reason: string | null;
+          disputed_at: string | null;
           driver_id: string | null;
           id: string;
           method: string;
@@ -2475,24 +2492,44 @@ export type Database = {
       execute_commission_backfill_secure: {
         Args: { _order_ids?: string[] };
         Returns: {
-          detail: string | null;
+          detail: string;
           order_id: string;
           order_number: string;
           outcome: string;
         }[];
       };
+      get_active_placements_secure: {
+        Args: { _limit?: number; _placement: string };
+        Returns: {
+          id: string;
+          image_url: string;
+          link_url: string;
+          placement: string;
+          restaurant_address: string;
+          restaurant_avg_prep_time: number;
+          restaurant_cover_url: string;
+          restaurant_cuisine: string;
+          restaurant_delivery_fee: number;
+          restaurant_id: string;
+          restaurant_name: string;
+          restaurant_rating: number;
+          restaurant_slug: string;
+          sort_order: number;
+          title: string;
+        }[];
+      };
       get_admin_payout_kpis: {
         Args: never;
         Returns: {
-          avg_payment_delay_hours: number | null;
-          avg_payout_amount: number | null;
+          avg_payment_delay_hours: number;
+          avg_payout_amount: number;
           commissions_this_month: number;
           dispute_count: number;
           drivers_waiting_count: number;
-          largest_unpaid_driver_amount: number | null;
-          largest_unpaid_driver_name: string | null;
-          largest_unpaid_restaurant_amount: number | null;
-          largest_unpaid_restaurant_name: string | null;
+          largest_unpaid_driver_amount: number;
+          largest_unpaid_driver_name: string;
+          largest_unpaid_restaurant_amount: number;
+          largest_unpaid_restaurant_name: string;
           owed_drivers: number;
           owed_restaurants: number;
           payout_count: number;
@@ -2505,7 +2542,7 @@ export type Database = {
         Args: {
           _limit?: number;
           _offset?: number;
-          _role?: Database["public"]["Enums"]["app_role"] | null;
+          _role?: Database["public"]["Enums"]["app_role"];
           _search?: string;
         };
         Returns: {
@@ -2522,14 +2559,17 @@ export type Database = {
       };
       get_commission_monthly_series: {
         Args: { _from: string; _to: string };
-        Returns: { month: string; total_commission: number }[];
+        Returns: {
+          month: string;
+          total_commission: number;
+        }[];
       };
       get_customer_activity_summary: {
         Args: { _customer_id: string };
         Returns: {
           favorite_restaurants: Json;
-          last_order_at: string | null;
-          last_order_number: string | null;
+          last_order_at: string;
+          last_order_number: string;
         }[];
       };
       get_customers_admin: {
@@ -2547,6 +2587,36 @@ export type Database = {
           total_spent: number;
         }[];
       };
+      get_disputes_admin: {
+        Args: {
+          _category_group?: string;
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+        };
+        Returns: {
+          assigned_email: string;
+          assigned_to: string;
+          category: string;
+          category_group: string;
+          created_at: string;
+          customer_id: string;
+          driver_first_name: string;
+          driver_id: string;
+          driver_last_name: string;
+          id: string;
+          order_id: string;
+          order_number: string;
+          resolution: string;
+          restaurant_id: string;
+          restaurant_name: string;
+          status: string;
+          total_count: number;
+          updated_at: string;
+        }[];
+      };
       get_driver_commissions_secure: {
         Args: {
           _driver_id: string;
@@ -2560,19 +2630,19 @@ export type Database = {
         };
         Returns: {
           commission_amount: number;
-          commission_rate: number | null;
+          commission_rate: number;
           commission_status: string;
-          contact_phone: string | null;
+          contact_phone: string;
           covered_amount: number;
           created_at: string;
           entry_type: string;
           gross_amount: number;
           id: string;
           net_amount: number;
-          order_date: string | null;
-          order_id: string | null;
-          order_number: string | null;
-          payout_id: string | null;
+          order_date: string;
+          order_id: string;
+          order_number: string;
+          payout_id: string;
           total_count: number;
         }[];
       };
@@ -2597,13 +2667,13 @@ export type Database = {
           available_balance: number;
           computed_status: string;
           driver_id: string;
-          last_payment_date: string | null;
+          last_payment_date: string;
           lifetime_earnings: number;
-          moncash_account_name: string | null;
-          moncash_number: string | null;
+          moncash_account_name: string;
+          moncash_number: string;
           name: string;
-          natcash_account_name: string | null;
-          natcash_number: string | null;
+          natcash_account_name: string;
+          natcash_number: string;
           paid_balance: number;
           pending_balance: number;
           total_count: number;
@@ -2621,25 +2691,28 @@ export type Database = {
         };
         Returns: {
           available_balance: number;
-          avg_delivery_minutes: number | null;
-          avg_rating: number | null;
+          avg_delivery_minutes: number;
+          avg_rating: number;
           cancelled_count: number;
           created_at: string;
           delivered_count: number;
           email: string;
-          first_name: string | null;
+          first_name: string;
           id: string;
-          last_name: string | null;
-          last_payment_date: string | null;
-          license_plate: string | null;
-          moncash_number: string | null;
-          natcash_number: string | null;
-          phone: string | null;
+          id_doc_url: string;
+          last_name: string;
+          last_payment_date: string;
+          license_doc_url: string;
+          license_plate: string;
+          moncash_number: string;
+          natcash_number: string;
+          phone: string;
           status: Database["public"]["Enums"]["driver_status"];
-          success_rate: number | null;
+          success_rate: number;
           total_count: number;
           total_deliveries: number;
-          vehicle_type: string | null;
+          vehicle_photo_url: string;
+          vehicle_type: string;
         }[];
       };
       get_historical_backfill_preview_secure: {
@@ -2655,36 +2728,20 @@ export type Database = {
         };
         Returns: {
           delivery_fee: number;
-          driver_commission_amount: number | null;
-          driver_id: string | null;
-          driver_name: string | null;
+          driver_commission_amount: number;
+          driver_id: string;
+          driver_name: string;
           migration_status: string;
           order_date: string;
           order_id: string;
           order_number: string;
           platform_commission_amount: number;
-          restaurant_commission_amount: number | null;
+          restaurant_commission_amount: number;
           restaurant_id: string;
-          restaurant_name: string | null;
+          restaurant_name: string;
           subtotal: number;
           total_count: number;
         }[];
-      };
-      get_my_active_sessions_secure: {
-        Args: never;
-        Returns: {
-          id: string;
-          created_at: string;
-          refreshed_at: string | null;
-          not_after: string | null;
-          user_agent: string | null;
-          ip: string | null;
-          is_current: boolean;
-        }[];
-      };
-      revoke_my_session_secure: {
-        Args: { _session_id: string };
-        Returns: undefined;
       };
       get_historical_backfill_summary_secure: {
         Args: never;
@@ -2697,9 +2754,24 @@ export type Database = {
           total_orders: number;
         }[];
       };
+      get_my_active_sessions_secure: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          id: string;
+          ip: string;
+          is_current: boolean;
+          not_after: string;
+          refreshed_at: string;
+          user_agent: string;
+        }[];
+      };
       get_payouts_monthly_series: {
         Args: { _from: string; _to: string };
-        Returns: { month: string; total_paid: number }[];
+        Returns: {
+          month: string;
+          total_paid: number;
+        }[];
       };
       get_platform_payout_public: {
         Args: never;
@@ -2735,19 +2807,19 @@ export type Database = {
         };
         Returns: {
           commission_amount: number;
-          commission_rate: number | null;
+          commission_rate: number;
           commission_status: string;
-          contact_phone: string | null;
+          contact_phone: string;
           covered_amount: number;
           created_at: string;
           entry_type: string;
           gross_amount: number;
           id: string;
           net_amount: number;
-          order_date: string | null;
-          order_id: string | null;
-          order_number: string | null;
-          payout_id: string | null;
+          order_date: string;
+          order_id: string;
+          order_number: string;
+          payout_id: string;
           total_count: number;
         }[];
       };
@@ -2786,13 +2858,13 @@ export type Database = {
         Returns: {
           available_balance: number;
           computed_status: string;
-          last_payment_date: string | null;
+          last_payment_date: string;
           lifetime_earnings: number;
-          moncash_account_name: string | null;
-          moncash_number: string | null;
+          moncash_account_name: string;
+          moncash_number: string;
           name: string;
-          natcash_account_name: string | null;
-          natcash_number: string | null;
+          natcash_account_name: string;
+          natcash_number: string;
           paid_balance: number;
           pending_balance: number;
           restaurant_id: string;
@@ -2805,9 +2877,11 @@ export type Database = {
         Returns: {
           commission_rate: number;
           commission_type: string;
+          cover_url: string;
           created_at: string;
           cuisine: string;
           id: string;
+          logo_url: string;
           monthly_commission_amount: number;
           name: string;
           status: Database["public"]["Enums"]["restaurant_status"];
@@ -2816,11 +2890,19 @@ export type Database = {
       };
       get_top_drivers_by_commission: {
         Args: { _from: string; _limit?: number; _to: string };
-        Returns: { driver_id: string; name: string; total_commission: number }[];
+        Returns: {
+          driver_id: string;
+          name: string;
+          total_commission: number;
+        }[];
       };
       get_top_restaurants_by_commission: {
         Args: { _from: string; _limit?: number; _to: string };
-        Returns: { name: string; restaurant_id: string; total_commission: number }[];
+        Returns: {
+          name: string;
+          restaurant_id: string;
+          total_commission: number;
+        }[];
       };
       has_role: {
         Args: {
@@ -2845,8 +2927,8 @@ export type Database = {
           amount: number;
           confirmed_at: string | null;
           created_at: string;
-          disputed_at: string | null;
           dispute_reason: string | null;
+          disputed_at: string | null;
           driver_id: string | null;
           id: string;
           method: string;
@@ -2884,6 +2966,10 @@ export type Database = {
           user_id: string;
         }[];
       };
+      mark_order_chat_read_secure: {
+        Args: { _order_id: string };
+        Returns: undefined;
+      };
       open_dispute_secure: {
         Args: {
           _category: string;
@@ -2914,6 +3000,15 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      push_customer_location_secure: {
+        Args: {
+          _accuracy?: number;
+          _delivery_id: string;
+          _lat: number;
+          _lng: number;
+        };
+        Returns: undefined;
       };
       recompute_wallet_secure: {
         Args: { _driver_id?: string; _restaurant_id?: string };
@@ -2998,80 +3093,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      update_dispute_status_secure: {
-        Args: {
-          _admin_notes?: string;
-          _assigned_to?: string;
-          _dispute_id: string;
-          _status: string;
-        };
-        Returns: {
-          assigned_to: string | null;
-          category: string;
-          category_group: string;
-          created_at: string;
-          customer_id: string;
-          driver_id: string | null;
-          id: string;
-          order_id: string;
-          resolution: string | null;
-          resolved_at: string | null;
-          resolved_by: string | null;
-          restaurant_id: string;
-          status: string;
-          status_history: Json;
-          updated_at: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "disputes";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      get_disputes_admin: {
-        Args: {
-          _category_group?: string;
-          _limit?: number;
-          _offset?: number;
-          _search?: string;
-          _sort?: string;
-          _status?: string;
-        };
-        Returns: {
-          assigned_email: string | null;
-          assigned_to: string | null;
-          category: string;
-          category_group: string;
-          created_at: string;
-          customer_id: string;
-          driver_first_name: string | null;
-          driver_id: string | null;
-          driver_last_name: string | null;
-          id: string;
-          order_id: string;
-          order_number: string;
-          resolution: string | null;
-          restaurant_id: string;
-          restaurant_name: string;
-          status: string;
-          total_count: number;
-          updated_at: string;
-        }[];
-      };
       resolve_payout_dispute_secure: {
-        Args: {
-          _admin_notes?: string;
-          _payout_id: string;
-          _resolution: string;
-        };
+        Args: { _admin_notes?: string; _payout_id: string; _resolution: string };
         Returns: {
           admin_notes: string | null;
           amount: number;
           confirmed_at: string | null;
           created_at: string;
-          disputed_at: string | null;
           dispute_reason: string | null;
+          disputed_at: string | null;
           driver_id: string | null;
           id: string;
           method: string;
@@ -3100,13 +3130,16 @@ export type Database = {
       review_manual_payment_secure: {
         Args: {
           _decision: Database["public"]["Enums"]["payment_status"];
-          _note?: string | null;
+          _note?: string;
           _payment_id: string;
         };
         Returns: {
           amount: number;
+          cash_confirmation_status: Database["public"]["Enums"]["cash_confirmation_status"] | null;
           created_at: string;
           currency: string;
+          customer_confirmed_at: string | null;
+          driver_confirmed_at: string | null;
           id: string;
           method: Database["public"]["Enums"]["payment_method"];
           order_id: string;
@@ -3162,6 +3195,67 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      revoke_my_session_secure: {
+        Args: { _session_id: string };
+        Returns: undefined;
+      };
+      send_order_chat_message_secure: {
+        Args: {
+          _image_url?: string;
+          _lat?: number;
+          _lng?: number;
+          _message?: string;
+          _order_id: string;
+        };
+        Returns: {
+          author_id: string;
+          author_role: string;
+          created_at: string;
+          id: string;
+          image_url: string | null;
+          lat: number | null;
+          lng: number | null;
+          message: string | null;
+          order_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "order_chat_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      send_promotional_notification_secure: {
+        Args: {
+          _body: string;
+          _cooldown_hours?: number;
+          _data?: Json;
+          _target_city?: string;
+          _target_role?: string;
+          _title: string;
+        };
+        Returns: {
+          body: string;
+          created_at: string;
+          data: Json;
+          id: string;
+          recipient_count: number;
+          sent_by: string;
+          target_city: string | null;
+          target_role: string;
+          title: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "promotional_notifications";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      stop_customer_location_sharing_secure: {
+        Args: { _delivery_id: string };
+        Returns: undefined;
+      };
       submit_payment_proof_secure: {
         Args: {
           _file_url: string;
@@ -3172,8 +3266,11 @@ export type Database = {
         };
         Returns: {
           amount: number;
+          cash_confirmation_status: Database["public"]["Enums"]["cash_confirmation_status"] | null;
           created_at: string;
           currency: string;
+          customer_confirmed_at: string | null;
+          driver_confirmed_at: string | null;
           id: string;
           method: Database["public"]["Enums"]["payment_method"];
           order_id: string;
@@ -3195,6 +3292,41 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "payments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      subscribe_newsletter_secure: {
+        Args: { _email: string; _source?: string };
+        Returns: undefined;
+      };
+      update_dispute_status_secure: {
+        Args: {
+          _admin_notes?: string;
+          _assigned_to?: string;
+          _dispute_id: string;
+          _status: string;
+        };
+        Returns: {
+          assigned_to: string | null;
+          category: string;
+          category_group: string;
+          created_at: string;
+          customer_id: string;
+          driver_id: string | null;
+          id: string;
+          order_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string;
+          status: string;
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "disputes";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3292,6 +3424,20 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      update_notification_preferences_secure: {
+        Args: { _prefs: Json };
+        Returns: {
+          prefs: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "notification_preferences";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       update_order_status_secure: {
         Args: {
           _new_status: Database["public"]["Enums"]["order_status"];
@@ -3317,6 +3463,7 @@ export type Database = {
           subtotal: number;
           total: number;
           updated_at: string;
+          wants_location_sharing: boolean;
         };
         SetofOptions: {
           from: "*";
@@ -3429,6 +3576,22 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      update_restaurant_employee_role_secure: {
+        Args: { _id: string; _role: string };
+        Returns: {
+          created_at: string;
+          id: string;
+          restaurant_id: string;
+          role: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "restaurant_employees";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       update_restaurant_hours_secure: {
         Args: { _opening_hours: Json; _restaurant_id: string };
         Returns: {
@@ -3531,22 +3694,6 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      update_restaurant_employee_role_secure: {
-        Args: { _id: string; _role: string };
-        Returns: {
-          created_at: string;
-          id: string;
-          restaurant_id: string;
-          role: string;
-          user_id: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "restaurant_employees";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       update_restaurant_status_secure: {
         Args: {
           _restaurant_id: string;
@@ -3579,6 +3726,39 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_sponsored_placement_secure: {
+        Args: {
+          _ends_at: string;
+          _id: string;
+          _image_url?: string;
+          _is_active: boolean;
+          _link_url?: string;
+          _sort_order?: number;
+          _starts_at: string;
+          _title: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          link_url: string | null;
+          placement: string;
+          restaurant_id: string | null;
+          sort_order: number;
+          starts_at: string;
+          title: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "sponsored_placements";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3735,7 +3915,7 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
+  private: {
     Enums: {},
   },
   public: {
@@ -3747,6 +3927,13 @@ export const Constants = {
         "driver",
         "admin",
         "super_admin",
+      ],
+      cash_confirmation_status: [
+        "pending",
+        "customer_confirmed",
+        "driver_confirmed",
+        "validated",
+        "disputed",
       ],
       commission_entry_type: ["order_commission", "monthly_fee", "reversal"],
       delivery_status: [

@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { CommissionHistoryTable } from "@/components/dashboard/commission/commission-history-table";
 import { PayoutHistoryTable } from "@/components/dashboard/payouts/payout-history-table";
+import { ProofThumb } from "@/components/proof-thumb";
 import { formatHTG } from "@/lib/format";
 import { Star, Bike, CheckCircle2, XCircle, Wallet, Clock } from "lucide-react";
 
@@ -35,6 +36,9 @@ export type DriverAdminDetail = {
   avg_rating: number | null;
   available_balance: number;
   last_payment_date: string | null;
+  id_doc_url: string | null;
+  license_doc_url: string | null;
+  vehicle_photo_url: string | null;
 };
 
 const DRIVER_STATUS_LABEL: Record<string, string> = {
@@ -129,6 +133,37 @@ export function DriverDetailDialog({
           </TabsList>
 
           <TabsContent value="apesi" className="space-y-5">
+            <section>
+              <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Dokiman</h3>
+              <div className="flex flex-wrap gap-2">
+                {driver.id_doc_url ? (
+                  <ProofThumb
+                    path={driver.id_doc_url}
+                    bucket="driver-documents"
+                    alt={`Pyès idantite ${name}`}
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-red-300 bg-red-50 text-center text-[10px] font-semibold text-red-700">
+                    Pa gen pyès idantite!
+                  </div>
+                )}
+                {driver.license_doc_url && (
+                  <ProofThumb
+                    path={driver.license_doc_url}
+                    bucket="driver-documents"
+                    alt={`Pèmi ${name}`}
+                  />
+                )}
+                {driver.vehicle_photo_url && (
+                  <ProofThumb
+                    path={driver.vehicle_photo_url}
+                    bucket="driver-documents"
+                    alt={`Veyikil ${name}`}
+                  />
+                )}
+              </div>
+            </section>
+
             <section>
               <h3 className="mb-2 text-xs font-bold uppercase text-ink-soft">Enfòmasyon jeneral</h3>
               <div className="grid gap-2 sm:grid-cols-2 text-sm">
