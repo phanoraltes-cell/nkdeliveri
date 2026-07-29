@@ -5,6 +5,11 @@ import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 export type WalletRow = {
   id: string;
   name: string;
+  phone: string | null;
+  /** Restaurant only (logo) — undefined on the driver tab. */
+  logo_url?: string | null;
+  /** Driver only (ID document, private bucket) — undefined on the restaurant tab. */
+  id_doc_url?: string | null;
   moncash_number: string | null;
   moncash_account_name: string | null;
   natcash_number: string | null;
@@ -32,6 +37,9 @@ function mapWalletRow(r: {
   restaurant_id?: string;
   driver_id?: string;
   name: string;
+  phone: string | null;
+  logo_url?: string | null;
+  id_doc_url?: string | null;
   moncash_number: string | null;
   moncash_account_name: string | null;
   natcash_number: string | null;
@@ -48,6 +56,9 @@ function mapWalletRow(r: {
   return {
     id: (r.restaurant_id ?? r.driver_id)!,
     name: r.name,
+    phone: r.phone,
+    logo_url: r.logo_url,
+    id_doc_url: r.id_doc_url,
     moncash_number: r.moncash_number,
     moncash_account_name: r.moncash_account_name,
     natcash_number: r.natcash_number,
@@ -75,6 +86,9 @@ export function useAdminPayoutsData(
   sort: string,
   page: number,
   pageSize: number,
+  method: string = "",
+  from: string = "",
+  to: string = "",
 ) {
   const kpisQueryKey = ["admin-payout-kpis"] as const;
   const kpis = useQuery({
@@ -145,7 +159,17 @@ export function useAdminPayoutsData(
     },
   });
 
-  const walletsQueryKey = ["admin-wallets", tab, search, status, sort, page] as const;
+  const walletsQueryKey = [
+    "admin-wallets",
+    tab,
+    search,
+    status,
+    sort,
+    page,
+    method,
+    from,
+    to,
+  ] as const;
   const wallets = useQuery({
     queryKey: walletsQueryKey,
     queryFn: async (): Promise<WalletRow[]> => {
@@ -156,6 +180,9 @@ export function useAdminPayoutsData(
           _sort: sort,
           _limit: pageSize,
           _offset: (page - 1) * pageSize,
+          _method: method || undefined,
+          _from: from || undefined,
+          _to: to || undefined,
         });
         if (error) throw error;
         return (data ?? []).map(mapWalletRow);
@@ -166,6 +193,9 @@ export function useAdminPayoutsData(
         _sort: sort,
         _limit: pageSize,
         _offset: (page - 1) * pageSize,
+        _method: method || undefined,
+        _from: from || undefined,
+        _to: to || undefined,
       });
       if (error) throw error;
       return (data ?? []).map(mapWalletRow);

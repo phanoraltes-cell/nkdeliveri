@@ -80,19 +80,27 @@ export function MobileDrawer({ role, allRoles, employeeRole, onSignOut }: Mobile
           aria-label="Navigasyon dashboard"
           className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
         >
-          {items.map((item) => {
+          {items.map((item, i) => {
             const Icon = item.icon;
+            const sectionHeading =
+              item.section !== items[i - 1]?.section ? item.section : undefined;
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                activeProps={{ className: "!bg-brand !text-white" }}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
-              >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {item.label}
-              </Link>
+              <div key={item.to}>
+                {sectionHeading && (
+                  <div className="mt-2 px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft first:mt-0">
+                    {sectionHeading}
+                  </div>
+                )}
+                <Link
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  activeProps={{ className: "!bg-brand !text-white" }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              </div>
             );
           })}
           <div className="my-2 border-t border-brand-soft/40" />

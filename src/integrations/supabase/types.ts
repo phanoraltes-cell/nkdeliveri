@@ -2657,16 +2657,20 @@ export type Database = {
       };
       get_driver_wallets_admin: {
         Args: {
+          _from?: string;
           _limit?: number;
+          _method?: string;
           _offset?: number;
           _search?: string;
           _sort?: string;
           _status?: string;
+          _to?: string;
         };
         Returns: {
           available_balance: number;
           computed_status: string;
           driver_id: string;
+          id_doc_url: string;
           last_payment_date: string;
           lifetime_earnings: number;
           moncash_account_name: string;
@@ -2676,6 +2680,7 @@ export type Database = {
           natcash_number: string;
           paid_balance: number;
           pending_balance: number;
+          phone: string;
           total_count: number;
           total_orders: number;
         }[];
@@ -2849,17 +2854,21 @@ export type Database = {
       };
       get_restaurant_wallets_admin: {
         Args: {
+          _from?: string;
           _limit?: number;
+          _method?: string;
           _offset?: number;
           _search?: string;
           _sort?: string;
           _status?: string;
+          _to?: string;
         };
         Returns: {
           available_balance: number;
           computed_status: string;
           last_payment_date: string;
           lifetime_earnings: number;
+          logo_url: string;
           moncash_account_name: string;
           moncash_number: string;
           name: string;
@@ -2867,6 +2876,7 @@ export type Database = {
           natcash_number: string;
           paid_balance: number;
           pending_balance: number;
+          phone: string;
           restaurant_id: string;
           total_count: number;
           total_orders: number;

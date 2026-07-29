@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/d
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
+import { ProofThumb } from "@/components/proof-thumb";
 import {
   PAYOUT_RESOLUTION_LABEL,
   PAYOUT_STATUS_LABEL,
@@ -24,6 +25,7 @@ type PayoutHistoryRow = {
   receiver_account_name: string | null;
   transaction_reference: string;
   dispute_reason: string | null;
+  proof_url: string | null;
 };
 
 type PayoutHistoryTableProps = {
@@ -53,7 +55,7 @@ export function PayoutHistoryTable({
       const { data, error } = await supabase
         .from("payouts")
         .select(
-          "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason",
+          "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason, proof_url",
         )
         .eq(column, beneficiaryId!)
         .order("created_at", { ascending: false });
@@ -86,6 +88,21 @@ export function PayoutHistoryTable({
           )}
         </div>
       ),
+    },
+    {
+      key: "proof",
+      header: "Prèv",
+      cell: (r) =>
+        r.proof_url ? (
+          <ProofThumb
+            path={r.proof_url}
+            bucket="payout-proofs"
+            alt={`Prèv peman ${beneficiaryName}`}
+          />
+        ) : (
+          <span className="text-xs text-ink-soft">—</span>
+        ),
+      hideOnMobileCard: true,
     },
     {
       key: "actions",

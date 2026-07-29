@@ -26,8 +26,14 @@ export function DashboardSidebar({ role, employeeRole, onSignOut }: DashboardSid
           aria-label="Navigasyon dashboard"
           className="flex flex-1 flex-col gap-1 overflow-y-auto p-3"
         >
-          {items.map((item) => (
-            <SidebarLink key={item.to} to={item.to} label={item.label} icon={item.icon} />
+          {items.map((item, i) => (
+            <SidebarLink
+              key={item.to}
+              to={item.to}
+              label={item.label}
+              icon={item.icon}
+              sectionHeading={item.section !== items[i - 1]?.section ? item.section : undefined}
+            />
           ))}
           <div className="my-2 border-t border-brand-soft/40 lg:hidden" />
           <SidebarLink to="/" label="Retounen sou sit la" icon={LayoutGrid} muted />
@@ -47,32 +53,41 @@ function SidebarLink({
   label,
   icon: Icon,
   muted = false,
+  sectionHeading,
 }: {
   to: string;
   label: string;
   icon: typeof User;
   muted?: boolean;
+  sectionHeading?: string;
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          to={to}
-          activeProps={{ className: "!bg-brand !text-white !shadow-brand-sm" }}
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
-            "justify-center lg:justify-start",
-            muted ? "text-ink-soft hover:bg-brand-soft/30" : "text-ink hover:bg-brand-soft/40",
-          )}
-        >
-          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="hidden lg:inline">{label}</span>
-        </Link>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="lg:hidden">
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <>
+      {sectionHeading && (
+        <div className="mt-2 hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft first:mt-0 lg:block">
+          {sectionHeading}
+        </div>
+      )}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to={to}
+            activeProps={{ className: "!bg-brand !text-white !shadow-brand-sm" }}
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
+              "justify-center lg:justify-start",
+              muted ? "text-ink-soft hover:bg-brand-soft/30" : "text-ink hover:bg-brand-soft/40",
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="hidden lg:inline">{label}</span>
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="lg:hidden">
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    </>
   );
 }
 

@@ -25,6 +25,8 @@ export type NavItem = {
   to: string;
   label: string;
   icon: LucideIcon;
+  /** Adjacent items sharing the same section render one small group heading above the first of them — see DashboardSidebar/MobileDrawer. */
+  section?: string;
 };
 
 export type DashboardRole =
@@ -79,11 +81,17 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
-    { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
-    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
-    { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
-    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
+    { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
+    { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },
+    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote, section: "Finans" },
+    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw, section: "Finans" },
+    {
+      to: "/dashboard/admin/payout-settings",
+      label: "Paramèt peman",
+      icon: Wallet,
+      section: "Finans",
+    },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
   ],
   super_admin: [
@@ -93,11 +101,17 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/restaurants", label: "Restoran", icon: Store },
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
-    { to: "/dashboard/admin/payments", label: "Peman", icon: CreditCard },
-    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
-    { to: "/dashboard/admin/payout-settings", label: "Paramèt peman", icon: Wallet },
-    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote },
+    { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
+    { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },
+    { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote, section: "Finans" },
+    { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw, section: "Finans" },
+    {
+      to: "/dashboard/admin/payout-settings",
+      label: "Paramèt peman",
+      icon: Wallet,
+      section: "Finans",
+    },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
   ],
 };

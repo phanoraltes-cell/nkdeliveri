@@ -20,6 +20,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { WALLET_STATUS_LABEL, WALLET_STATUS_TONE } from "@/lib/payout-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ProofThumb } from "@/components/proof-thumb";
 import {
   PayoutPayModal,
   type PayoutBeneficiary,
@@ -51,11 +52,36 @@ function AdminPayouts() {
   const [status, setStatus] = useState("pending");
   const [sort, setSort] = useState("priority");
   const [page, setPage] = useState(1);
+  // Method = which rail the beneficiary is configured to receive on;
+  // period = since when their oldest unpaid commission was earned (see
+  // the RPC's own comment for why it isn't last_payment_date).
+  const [method, setMethod] = useState("");
+  const [period, setPeriod] = useState<"" | "today" | "week" | "month" | "custom">("");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   const [payTarget, setPayTarget] = useState<PayoutBeneficiary | null>(null);
   const [payOpen, setPayOpen] = useState(false);
   const [detailTarget, setDetailTarget] = useState<BeneficiaryDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const today = new Date();
+  const periodRange: { from: string; to: string } =
+    period === "today"
+      ? { from: today.toISOString().slice(0, 10), to: today.toISOString().slice(0, 10) }
+      : period === "week"
+        ? {
+            from: new Date(today.getTime() - 7 * 86400000).toISOString().slice(0, 10),
+            to: today.toISOString().slice(0, 10),
+          }
+        : period === "month"
+          ? {
+              from: new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10),
+              to: today.toISOString().slice(0, 10),
+            }
+          : period === "custom"
+            ? { from: customFrom, to: customTo }
+            : { from: "", to: "" };
 
   const {
     kpisQueryKey,
@@ -65,12 +91,24 @@ function AdminPayouts() {
     topRestaurants,
     topDrivers,
     wallets,
-  } = useAdminPayoutsData(tab, search, status, sort, page, PAGE_SIZE);
+  } = useAdminPayoutsData(
+    tab,
+    search,
+    status,
+    sort,
+    page,
+    PAGE_SIZE,
+    method,
+    periodRange.from,
+    periodRange.to,
+  );
 
   function switchTab(next: "restaurant" | "driver") {
     setTab(next);
     setSearch("");
     setStatus("");
+    setMethod("");
+    setPeriod("");
     setPage(1);
   }
 
@@ -93,9 +131,32 @@ function AdminPayouts() {
 
   const columns: DataTableColumn<WalletRow>[] = [
     {
+      key: "photo",
+      header: "Foto",
+      cell: (r) => {
+        const path = tab === "restaurant" ? r.logo_url : r.id_doc_url;
+        if (!path) return <span className="text-ink-soft">—</span>;
+        return tab === "restaurant" ? (
+          <ProofThumb path={path} alt={r.name} />
+        ) : (
+          <ProofThumb path={path} bucket="driver-documents" alt={r.name} />
+        );
+      },
+      hideOnMobileCard: true,
+    },
+    {
       key: "name",
       header: "Non",
-      cell: (r) => <span className="font-bold text-ink">{r.name}</span>,
+      cell: (r) => (
+        <div>
+          <div className="font-bold text-ink">{r.name}</div>
+          {r.phone && (
+            <a href={`tel:${r.phone}`} className="text-xs font-semibold text-brand-deep">
+              {r.phone}
+            </a>
+          )}
+        </div>
+      ),
     },
     { key: "total_orders", header: "Kòmand", cell: (r) => r.total_orders },
     {
@@ -357,6 +418,58 @@ function AdminPayouts() {
           <option value="name_asc">Non (A-Z)</option>
           <option value="name_desc">Non (Z-A)</option>
         </select>
+        <select
+          value={method}
+          onChange={(e) => {
+            setMethod(e.target.value);
+            setPage(1);
+          }}
+          aria-label="Filtre pa metòd"
+          className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
+        >
+          <option value="">Tout metòd</option>
+          <option value="moncash">MonCash</option>
+          <option value="natcash">NatCash</option>
+        </select>
+        <select
+          value={period}
+          onChange={(e) => {
+            setPeriod(e.target.value as typeof period);
+            setPage(1);
+          }}
+          aria-label="Filtre pa peryòd"
+          className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs font-semibold outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
+        >
+          <option value="">Tout peryòd</option>
+          <option value="today">Jodi a</option>
+          <option value="week">Semèn sa a</option>
+          <option value="month">Mwa sa a</option>
+          <option value="custom">Peryòd pèsonalize</option>
+        </select>
+        {period === "custom" && (
+          <>
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => {
+                setCustomFrom(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Depi"
+              className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
+            />
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => {
+                setCustomTo(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Jiska"
+              className="rounded-lg border-2 border-brand-soft bg-white px-3 py-2.5 text-xs outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
+            />
+          </>
+        )}
       </div>
 
       <DataTable<WalletRow>

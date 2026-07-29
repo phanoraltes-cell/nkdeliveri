@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/data-table";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { Button } from "@/components/ui/button";
+import { ProofThumb } from "@/components/proof-thumb";
 import { PayoutConfirmSection } from "@/components/order/payout-confirm-section";
 import { formatHTG } from "@/lib/format";
 import { generatePayoutReceipt } from "@/lib/payout-receipt";
@@ -19,6 +20,7 @@ type PayoutHistoryRow = {
   receiver_account_name: string | null;
   transaction_reference: string;
   dispute_reason: string | null;
+  proof_url: string | null;
 };
 
 type WalletPayoutHistorySectionProps = {
@@ -46,7 +48,7 @@ export function WalletPayoutHistorySection({
       const { data, error } = await supabase
         .from("payouts")
         .select(
-          "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason",
+          "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason, proof_url",
         )
         .eq(column, beneficiaryId!)
         .order("created_at", { ascending: false });
@@ -74,6 +76,21 @@ export function WalletPayoutHistorySection({
           invalidateKeys={[queryKey, walletQueryKey]}
         />
       ),
+    },
+    {
+      key: "proof",
+      header: "Prèv",
+      cell: (r) =>
+        r.proof_url ? (
+          <ProofThumb
+            path={r.proof_url}
+            bucket="payout-proofs"
+            alt={`Prèv peman ${beneficiaryName}`}
+          />
+        ) : (
+          <span className="text-xs text-ink-soft">—</span>
+        ),
+      hideOnMobileCard: true,
     },
     {
       key: "actions",
