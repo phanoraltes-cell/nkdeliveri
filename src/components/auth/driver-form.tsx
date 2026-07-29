@@ -42,19 +42,33 @@ export function DriverForm() {
       });
       // Runs server-side with the service role — the ID document (required
       // for admin approval) is never silently dropped if email confirmation
-      // is pending or the browser closes right after signup.
-      await finalizeDocs({
-        data: {
-          userId,
-          email: f.email,
-          accountType: "driver",
-          files: {
-            idDoc: await toFileInput(idDoc),
-            license: license ? await toFileInput(license) : undefined,
-            vehiclePhoto: vehiclePhoto ? await toFileInput(vehiclePhoto) : undefined,
+      // is pending or the browser closes right after signup. Its own
+      // try/catch: the account is already created by this point (baseSignUp
+      // above succeeded), so a document upload failure must never turn into
+      // the red "registration failed" toast below — that used to happen
+      // because both awaits shared one try/catch, hiding a real account
+      // creation behind an unrelated storage error. Documents are required
+      // for approval, so this failure still needs to reach the driver, just
+      // without contradicting the "your account exists" message.
+      try {
+        await finalizeDocs({
+          data: {
+            userId,
+            email: f.email,
+            accountType: "driver",
+            files: {
+              idDoc: await toFileInput(idDoc),
+              license: license ? await toFileInput(license) : undefined,
+              vehiclePhoto: vehiclePhoto ? await toFileInput(vehiclePhoto) : undefined,
+            },
           },
-        },
-      });
+        });
+      } catch (e) {
+        console.warn("[register] driver documents upload failed post-signup", e);
+        toast.warning(
+          "Kont livrè ou kreye, men nou pa t kapab telechaje dokiman ou yo. San yo, nou p ap ka apwouve kont ou — kontakte sipò.",
+        );
+      }
       return { hasSession };
     }, "Kont livrè kreye! An atant valdasyon.");
   }

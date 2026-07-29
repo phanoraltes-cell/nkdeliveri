@@ -41,19 +41,31 @@ export function RestaurantForm() {
       });
       // Runs server-side with the service role — works even without a
       // client session, so logo/cover are never silently lost when email
-      // confirmation is pending.
+      // confirmation is pending. Its own try/catch: the account is already
+      // created by this point (baseSignUp above succeeded), so a logo/cover
+      // upload failure must never turn into the red "registration failed"
+      // toast below — that used to happen because both awaits shared one
+      // try/catch, hiding a real account creation behind an unrelated
+      // storage error.
       if (logo || cover) {
-        await finalizeDocs({
-          data: {
-            userId,
-            email: f.email,
-            accountType: "restaurant",
-            files: {
-              logo: logo ? await toFileInput(logo) : undefined,
-              cover: cover ? await toFileInput(cover) : undefined,
+        try {
+          await finalizeDocs({
+            data: {
+              userId,
+              email: f.email,
+              accountType: "restaurant",
+              files: {
+                logo: logo ? await toFileInput(logo) : undefined,
+                cover: cover ? await toFileInput(cover) : undefined,
+              },
             },
-          },
-        });
+          });
+        } catch (e) {
+          console.warn("[register] logo/cover upload failed post-signup", e);
+          toast.warning(
+            "Kont restoran ou kreye, men nou pa t kapab telechaje logo/foto kouvèti a. Kontakte sipò pou ajoute yo.",
+          );
+        }
       }
       return { hasSession };
     }, "Restoran w kreye! Kont ou an atant valdasyon.");
