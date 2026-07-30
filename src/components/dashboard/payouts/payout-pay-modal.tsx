@@ -29,6 +29,24 @@ export type PayoutBeneficiary = {
   natcashNumber: string | null;
 };
 
+type PayoutChannel = { method: "moncash" | "natcash"; providerCode: string; label: string };
+
+// Exactly the 3 choices an admin should see today: automatic MonCash (an
+// API call), and the two manual rails (an admin sends the money by hand,
+// same as always). No "NatCash Automatik" — natcashProvider has no
+// secrets/implementation at all, so offering it would be a dead end.
+// Never remove the two manual entries — see payout-pay-modal.tsx's own
+// invariant, restated in PAYMENT_PROVIDERS.md.
+const PAYOUT_CHANNELS: PayoutChannel[] = [
+  { method: "moncash", providerCode: "moncash_api", label: "MonCash Automatik" },
+  { method: "moncash", providerCode: "manual", label: "MonCash Manyèl" },
+  { method: "natcash", providerCode: "manual", label: "NatCash Manyèl" },
+];
+
+function channelKeyOf(c: { method: string; providerCode: string }): string {
+  return `${c.method}:${c.providerCode}`;
+}
+
 type PayoutPayModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -58,8 +76,7 @@ export function PayoutPayModal({
   const initiateProvider = useServerFn(initiateProviderPayout);
   const { withReauth, dialogState } = useReauth();
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<"moncash" | "natcash" | "">("");
-  const [providerCode, setProviderCode] = useState("manual");
+  const [channelKey, setChannelKey] = useState("");
   const [transactionReference, setTransactionReference] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -85,14 +102,35 @@ export function PayoutPayModal({
   useEffect(() => {
     if (!beneficiary) return;
     setAmount(String(beneficiary.availableBalance));
-    setMethod(beneficiary.moncashNumber ? "moncash" : beneficiary.natcashNumber ? "natcash" : "");
-    setProviderCode("manual");
+    setChannelKey(
+      beneficiary.moncashNumber
+        ? "moncash:manual"
+        : beneficiary.natcashNumber
+          ? "natcash:manual"
+          : "",
+    );
     setTransactionReference("");
     setNotes("");
     setFile(null);
   }, [beneficiary]);
 
+  const selectedChannel = PAYOUT_CHANNELS.find((c) => channelKeyOf(c) === channelKey);
+  const method = selectedChannel?.method;
+  const providerCode = selectedChannel?.providerCode ?? "manual";
   const isManual = providerCode === "manual";
+
+  const availableChannels = beneficiary
+    ? PAYOUT_CHANNELS.filter((c) =>
+        c.method === "moncash"
+          ? Boolean(beneficiary.moncashNumber)
+          : Boolean(beneficiary.natcashNumber),
+      )
+    : [];
+
+  function isChannelActive(code: string): boolean {
+    if (code === "manual") return true;
+    return providers.data?.find((p) => p.code === code)?.is_active ?? false;
+  }
 
   const pay = useMutation({
     mutationFn: async () => {
@@ -100,7 +138,7 @@ export function PayoutPayModal({
       const numAmount = Number(amount);
       if (!numAmount || numAmount <= 0) throw new Error("Montan envalid");
       if (numAmount > beneficiary.availableBalance) throw new Error("Balans disponib la pa ase");
-      if (!method) throw new Error("Chwazi yon metòd peman");
+      if (!method) throw new Error("Chwazi yon kanal peman");
 
       // Non-manual providers execute the transfer themselves and return
       // their own transaction reference — never through this component
@@ -169,13 +207,6 @@ export function PayoutPayModal({
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
-  const availableMethods: { value: "moncash" | "natcash"; label: string }[] = beneficiary
-    ? [
-        ...(beneficiary.moncashNumber ? [{ value: "moncash" as const, label: "MonCash" }] : []),
-        ...(beneficiary.natcashNumber ? [{ value: "natcash" as const, label: "NatCash" }] : []),
-      ]
-    : [];
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -214,47 +245,35 @@ export function PayoutPayModal({
 
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                Metòd peman
+                Kanal peman
               </span>
               <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as "moncash" | "natcash")}
+                value={channelKey}
+                onChange={(e) => setChannelKey(e.target.value)}
                 className={inputClsCompact()}
               >
                 <option value="" disabled>
-                  Chwazi yon metòd
+                  Chwazi yon kanal
                 </option>
-                {availableMethods.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
+                {availableChannels.map((c) => {
+                  const key = channelKeyOf(c);
+                  const active = isChannelActive(c.providerCode);
+                  return (
+                    <option key={key} value={key} disabled={!active}>
+                      {c.label}
+                      {!active ? " (byento)" : ""}
+                    </option>
+                  );
+                })}
               </select>
-              {availableMethods.length === 0 && (
+              {availableChannels.length === 0 && (
                 <span className="mt-1 block text-xs text-red-600">
                   Benefisyè a poko konfigire okenn nimewo peman.
                 </span>
               )}
-            </label>
-
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                Ki jan peman an egzekite
-              </span>
-              <select
-                value={providerCode}
-                onChange={(e) => setProviderCode(e.target.value)}
-                className={inputClsCompact()}
-              >
-                {(providers.data ?? []).map((p) => (
-                  <option key={p.code} value={p.code} disabled={!p.is_active}>
-                    {p.label}
-                    {!p.is_active ? " (byento)" : ""}
-                  </option>
-                ))}
-              </select>
               <span className="mt-1 block text-xs text-ink-soft">
-                Manyèl = ou voye lajan an ou menm nan telefòn ou, tankou jodi a.
+                Manyèl = ou voye lajan an ou menm nan telefòn ou, tankou jodi a. Automatik = API a
+                egzekite transfè a li menm.
               </span>
             </label>
 

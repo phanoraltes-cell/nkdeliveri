@@ -3139,6 +3139,17 @@ export type Database = {
           user_id: string;
         }[];
       };
+      log_payment_provider_error_secure: {
+        Args: {
+          _amount?: number;
+          _driver_id?: string;
+          _error?: string;
+          _method: string;
+          _provider_code: string;
+          _restaurant_id?: string;
+        };
+        Returns: undefined;
+      };
       mark_order_chat_read_secure: {
         Args: { _order_id: string };
         Returns: undefined;

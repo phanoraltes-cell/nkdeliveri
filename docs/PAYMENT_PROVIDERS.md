@@ -66,6 +66,8 @@ qu'exécuter le transfert et rapporter un statut.
 | `payment-providers/moncash-webhook-handler.server.ts` | Orchestration d'une livraison webhook entrante : idempotence, mise à jour du payout, notifications, journalisation. Voir [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md). |
 | `routes/api.webhooks.moncash.ts` | Route HTTP publique `POST /api/webhooks/moncash` — reçoit les livraisons MonCash, délègue tout au handler ci-dessus |
 | `initiate-provider-payout.functions.ts` | Fonction serveur TanStack Start — le seul appelant autorisé de `getPaymentProvider(...).initiatePayment()` pour un décaissement |
+| `get-moncash-status.functions.ts` | Fonction serveur admin-only exposant `isMonCashConfigured()` (un booléen, jamais un secret) au dashboard admin |
+| `routes/_authenticated/dashboard.admin.moncash.tsx` | Page admin "MonCash" — statut, historique, erreurs. Voir § Dashboard admin ci-dessous. |
 
 ## Pourquoi `.server.ts` et pas une convention de nommage
 
@@ -268,6 +270,53 @@ appelant vivant, puisque `direction: "disburse"` échoue toujours avant
 d'atteindre `"pending"` (voir ci-dessous) — toute cette chaîne est
 construite, testée par le typecheck/build, mais inatteignable en
 production tant que le décaissement MonCash lui-même n'est pas confirmé.
+
+## Dashboard admin (`/dashboard/admin/moncash`)
+
+Le sélecteur de `payout-pay-modal.tsx` (autrefois deux menus déroulants
+indépendants — "Metòd peman" et "Ki jan peman an egzekite" — pouvant
+produire des combinaisons incohérentes comme `natcash` + `moncash_api`)
+est maintenant **un seul choix** à exactement 3 options utiles,
+combinant rail et exécuteur :
+
+| Option affichée | `method` | `provider_code` |
+|---|---|---|
+| MonCash Automatik | `moncash` | `moncash_api` (désactivé tant que `is_active=false`) |
+| MonCash Manyèl | `moncash` | `manual` |
+| NatCash Manyèl | `natcash` | `manual` |
+
+Pas de "NatCash Automatik" — `natcashProvider` n'a ni secret ni
+implémentation, l'offrir serait un cul-de-sac. **Les deux canaux manuels
+ne sont jamais retirés ni désactivés par ce changement** — ils restent le
+choix par défaut (présélectionné à l'ouverture de la modale) et le seul
+chemin réellement atteignable en production aujourd'hui, exactement comme
+avant cette réorganisation.
+
+La page `/dashboard/admin/moncash` (nav "Finans" → "MonCash") affiche :
+
+- **Statut** — deux indicateurs indépendants et volontairement distincts :
+  `payment_providers.moncash_api.is_active` (contrôle s'il apparaît dans
+  le sélecteur) et `isMonCashConfigured()` (les 5 secrets sont-ils
+  présents côté serveur — via `get-moncash-status.functions.ts`, qui
+  n'expose qu'un booléen, jamais une valeur).
+- **Historique / progression / référence** — table des lignes `payouts`
+  où `provider_code = 'moncash_api'`, triée par date : bénéficiaire,
+  montant, statut (`StatusBadge`, voir le cycle de vie plus haut),
+  `transaction_reference` (notre référence) et `provider_transaction_id`
+  (celle de MonCash, une fois connue), dates de création/dernier
+  changement.
+- **Erreurs** — deux sources, une seule table (`audit_log`, déjà
+  admin-lisible) : `payout.provider_attempt_failed` (échec synchrone à
+  l'initiation — le seul chemin réellement atteignable aujourd'hui,
+  journalisé par la nouvelle RPC `log_payment_provider_error_secure`) et
+  `payout.provider_failed` (échec confirmé par webhook, déjà journalisé
+  par `fail_pending_payout_secure`).
+
+**Vide aujourd'hui, honnêtement** : puisque `create_pending_payout_secure`
+n'a aucun appelant vivant (voir plus haut), aucune ligne
+`provider_code='moncash_api'` ne peut exister dans `payouts` — l'historique
+et les erreurs de cette page seront réellement vides tant que le
+décaissement MonCash n'est pas confirmé, pas un bug d'affichage.
 
 ## Ce qui n'est PAS fait (volontairement)
 

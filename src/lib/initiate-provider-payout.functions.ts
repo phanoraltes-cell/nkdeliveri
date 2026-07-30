@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getPaymentProvider } from "@/lib/payment-providers/index.server";
 
@@ -51,10 +53,9 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
 
     const provider = getPaymentProvider(data.providerCode);
     if (!provider || !provider.isConfigured()) {
-      return {
-        outcome: "failed" as const,
-        error: `${data.providerCode} pa konfigire toujou — itilize peman manyèl la.`,
-      };
+      const error = `${data.providerCode} pa konfigire toujou — itilize peman manyèl la.`;
+      await logProviderError(supabase, data, error);
+      return { outcome: "failed" as const, error };
     }
 
     const receiverColumn = data.method === "moncash" ? "moncash_number" : "natcash_number";
@@ -97,6 +98,7 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
     });
 
     if (result.status === "failed") {
+      await logProviderError(supabase, data, result.error);
       return { outcome: "failed" as const, error: result.error };
     }
 
@@ -130,3 +132,23 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
 
     return { outcome: "success" as const, payout };
   });
+
+/**
+ * Best-effort — a logging failure must never mask the original provider
+ * error from the caller, so this only ever warns, never throws.
+ */
+async function logProviderError(
+  supabase: SupabaseClient<Database>,
+  data: z.infer<typeof InputSchema>,
+  error: string,
+): Promise<void> {
+  const { error: logError } = await supabase.rpc("log_payment_provider_error_secure", {
+    _provider_code: data.providerCode,
+    _method: data.method,
+    _restaurant_id: data.restaurantId,
+    _driver_id: data.driverId,
+    _amount: data.amount,
+    _error: error,
+  });
+  if (logError) console.warn("[moncash] failed to log provider error", logError.message);
+}
