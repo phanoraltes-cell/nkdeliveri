@@ -61,6 +61,7 @@ qu'exécuter le transfert et rapporter un statut.
 | `payment-providers/moncash-provider.server.ts` | Implémentation MonCash — voir statut ci-dessous |
 | `payment-providers/natcash-provider.server.ts` | Stub — `isConfigured()` toujours `false`, aucun secret NatCash n'existe encore |
 | `payment-providers/moncash-config.server.ts` | Lecture/validation centralisée des 5 secrets MonCash — voir plus bas |
+| `payment-providers/moncash-client.server.ts` | Client HTTP bas niveau de l'API MonCash Business — auth OAuth2, `CreatePayment`, `RetrieveOrderPayment`/`RetrieveTransactionPayment`, timeout + retry + réconciliation idempotente. Seul `moncash-provider.server.ts` l'appelle. |
 | `payment-providers/index.server.ts` | Registre `getPaymentProvider(code)` — le seul point d'accès à une implémentation |
 | `initiate-provider-payout.functions.ts` | Fonction serveur TanStack Start — le seul appelant autorisé de `getPaymentProvider(...).initiatePayment()` pour un décaissement |
 
@@ -88,11 +89,12 @@ fonction serveur) → `getPaymentProvider()`.
    par erreur avant que les secrets existent, cette vérification bloque
    quand même l'appel). Pour MonCash, reflète la présence réelle des 5
    variables d'environnement ci-dessous.
-3. **Les méthodes elles-mêmes** — même une fois `isConfigured()` vrai (les
-   5 secrets présents), `initiatePayment()`/`checkStatus()`/
-   `cancelPayment()`/`verifyWebhook()` renvoient aujourd'hui un échec
-   explicite ("intégration pas encore écrite"). C'est volontaire : voir
-   [Ce qui n'est PAS fait](#ce-qui-nest-pas-fait-volontairement) plus bas.
+3. **La direction du paiement** — même une fois `isConfigured()` vrai,
+   `initiatePayment({ direction: "disburse", ... })` (le seul appel que
+   fait le flux de décaissement) renvoie toujours un échec explicite et
+   traçable, jamais un succès inventé. Voir
+   [Ce qui n'est PAS fait](#ce-qui-nest-pas-fait-volontairement) plus bas
+   pour pourquoi.
 
 ## Gestion des secrets MonCash
 
@@ -139,12 +141,13 @@ sans préfixe).
    `moncashProvider.isConfigured()` devient `true` dans cet environnement —
    sans redéploiement de code, seulement une nouvelle exécution qui relit
    `process.env`.
-4. **Activer réellement le provider** (seulement une fois
-   [la vraie intégration API écrite](#ce-qui-nest-pas-fait-volontairement)) :
-   passer `payment_providers.moncash_api.is_active` à `true` en base — un
-   `UPDATE` simple, pas une migration de schéma. Tant que ce n'est pas
-   fait, le provider reste invisible dans l'UI admin même avec des secrets
-   valides.
+4. **Activer réellement le provider** (seulement une fois le
+   [B2C disbursement confirmé et implémenté](#ce-qui-nest-pas-fait-volontairement) —
+   la connexion écrite aujourd'hui ne couvre que la collecte, pas le
+   décaissement) : passer `payment_providers.moncash_api.is_active` à
+   `true` en base — un `UPDATE` simple, pas une migration de schéma. Tant
+   que ce n'est pas fait, le provider reste invisible dans l'UI admin même
+   avec des secrets valides.
 
 ### Rotation
 
@@ -161,31 +164,87 @@ sans préfixe).
   jamais les valeurs, seulement les noms des variables manquantes le cas
   échéant.
 
+## Le connecteur MonCash (`moncash-client.server.ts`)
+
+Implémentation réelle de l'API publique **MonCash Business**
+(https://moncashbutton.digicelgroup.com/Moncash-business/), pas un stub —
+c'est du code qui fait de vrais appels HTTP dès que les 5 secrets sont
+configurés. Tout appel passe par `moncash-provider.server.ts`, jamais
+directement.
+
+- **Authentification** — OAuth2 `client_credentials`
+  (`POST {MONCASH_API_URL}/oauth/token`, `Authorization: Basic
+  base64(clientId:clientSecret)`). Le jeton est mis en cache en mémoire
+  jusqu'à ~1 min avant son expiration (`expires_in`) ; des appels
+  concurrents pendant un cache froid partagent une seule requête de jeton
+  en vol (pas de N requêtes de jeton pour N décaissements simultanés). Le
+  jeton ne quitte jamais ce module, sauf comme en-tête `Bearer` de la
+  requête suivante — jamais journalisé, jamais retourné à un appelant.
+- **Création de paiement** — `POST {MONCASH_API_URL}/v1/CreatePayment`
+  (`{ amount, orderId }`). `orderId` est notre propre référence
+  (`InitiatePaymentInput.reference`) : MonCash exige un `orderId` unique
+  par marchand et rejette une seconde création pour un `orderId` déjà
+  utilisé — cette contrainte d'unicité est le mécanisme d'idempotence de
+  cette API (elle n'a pas d'en-tête `Idempotency-Key`).
+- **Récupération du statut** — `POST
+  {MONCASH_API_URL}/v1/RetrieveOrderPayment` (par notre `orderId` — le
+  chemin utilisé par `checkStatus()`) et `POST
+  {MONCASH_API_URL}/v1/RetrieveTransactionPayment` (par l'identifiant de
+  transaction propre à MonCash, exposé pour un usage futur — ex. un
+  webhook confirmé plus tard).
+- **Gestion des erreurs** — `MonCashApiError` (message, `httpStatus`,
+  corps de réponse brut) pour toute réponse HTTP non-2xx ; jamais une
+  exception `fetch` brute qui remonterait jusqu'à l'UI.
+- **Timeout** — `AbortController`, 15 secondes par tentative.
+- **Retry** — jusqu'à 3 tentatives, backoff exponentiel (300ms, 900ms),
+  seulement sur erreur réseau, timeout, HTTP 429, ou HTTP 5xx. Jamais sur
+  un 4xx — un `4xx` veut dire que MonCash a rejeté la requête elle-même
+  (identifiants invalides, paramètres invalides, `orderId` déjà utilisé),
+  la renvoyer à l'identique échouerait encore.
+- **Idempotence** — pas d'en-tête dédié (MonCash n'en documente pas) ;
+  l'unicité d'`orderId` en tient lieu côté serveur MonCash, et
+  `moncashProvider.initiatePayment()` réconcilie explicitement : si
+  `CreatePayment` échoue (réseau, timeout, ou "orderId déjà utilisé"), il
+  interroge `RetrieveOrderPayment(orderId)` avant de rapporter un échec —
+  un appel qui a réellement réussi côté MonCash malgré une erreur locale
+  n'est donc jamais réessayé en double.
+
 ## Ce qui n'est PAS fait (volontairement)
 
-- **Aucun appel HTTP réel vers MonCash n'est implémenté.** L'audit
+- **Le décaissement (B2C) reste refusé, explicitement.** L'audit
   d'intégration préalable (voir historique du projet) a identifié un point
-  non résolu : l'API publique de MonCash est historiquement une passerelle
-  de **collecte** marchande (client → marchand), pas confirmée pour du
-  **décaissement** B2C arbitraire (marchand → numéro de téléphone
-  quelconque), qui est le besoin réel ici. Écrire un appel HTTP contre un
-  contrat d'API non confirmé serait plus risqué qu'utile — les 4 méthodes
-  de `moncashProvider` renvoient donc un échec explicite et traçable
-  plutôt qu'un comportement inventé.
-- **Aucune route webhook n'existe.** `verifyWebhook()` est déjà présent
-  dans l'interface (prêt à recevoir une vérification de signature HMAC une
-  fois le format réel des webhooks MonCash confirmé), mais aucun endpoint
-  HTTP ne reçoit encore de requêtes entrantes de MonCash — à créer comme
-  route TanStack Start dédiée (`src/routes/api.webhooks.moncash.ts` ou
-  équivalent) le jour où l'intégration réelle est écrite.
+  non résolu, toujours vrai : l'API publique de MonCash est une passerelle
+  de **collecte** marchande (client → marchand, via une redirection que le
+  client complète lui-même) — elle ne documente aucun point final pour
+  envoyer de l'argent vers un numéro de téléphone arbitraire, qui est le
+  besoin réel du flux de décaissement de cette appli.
+  `moncashProvider.initiatePayment()` vérifie explicitement
+  `input.direction` et renvoie un échec clair et traçable pour
+  `"disburse"` (jamais un succès inventé), même une fois les secrets
+  configurés. `"collect"` (aucun appelant aujourd'hui — prévu pour une
+  future page de paiement client) est, lui, réellement implémenté contre
+  la vraie API.
+- **`cancelPayment()`** renvoie toujours `"not_cancellable"` — l'API
+  MonCash n'a pas de point final d'annulation ; un jeton de paiement créé
+  expire simplement s'il n'est pas utilisé.
+- **`verifyWebhook()`** renvoie toujours `valid: false` — l'API Business
+  de MonCash ne documente publiquement aucun mécanisme de webhook à ce
+  jour (contrairement à Stripe par exemple) ; les intégrateurs MonCash
+  interrogent `RetrieveOrderPayment`/`RetrieveTransactionPayment` au lieu
+  d'attendre une notification poussée. `MONCASH_WEBHOOK_SECRET` reste
+  configuré et prêt (vérification HMAC générique à écrire) au cas où
+  Digicel confirme un jour un tel mécanisme — aucune route HTTP
+  (`src/routes/api.webhooks.moncash.ts` ou équivalent) n'existe encore
+  pour le recevoir.
 - **`NatCash`** n'a aucun secret configuré (aucune variable
   `NATCASH_*` n'existe) — hors périmètre de ce document, `natcashProvider`
   reste un stub non configurable.
 
-Activer réellement MonCash nécessite, dans l'ordre : (1) confirmation
-écrite du contrat d'API B2C avec Digicel/MonCash, (2) implémentation des 4
-méthodes dans `moncash-provider.server.ts` contre ce contrat confirmé, (3)
-une route webhook, (4) tests contre l'environnement sandbox MonCash, (5)
-seulement alors, `payment_providers.moncash_api.is_active = true`. Ce
-document prépare les étapes (0) — gestion des secrets — sans en présumer
-le calendrier.
+Activer réellement le décaissement MonCash nécessite, dans l'ordre : (1)
+confirmation écrite d'un contrat d'API B2C avec Digicel/MonCash (aucun
+n'existe publiquement aujourd'hui), (2) implémentation contre ce contrat
+confirmé dans `moncash-provider.server.ts`/`moncash-client.server.ts`, (3)
+tests contre l'environnement sandbox MonCash, (4) seulement alors,
+`payment_providers.moncash_api.is_active = true`. Le flux de collecte
+(`direction: "collect"`), lui, est déjà utilisable dès que les 5 secrets
+sont configurés — voir la section connecteur ci-dessus.
