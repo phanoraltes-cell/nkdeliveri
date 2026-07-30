@@ -16,6 +16,7 @@ import { inputClsCompact } from "@/lib/utils";
 import { formatHTG } from "@/lib/format";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { sendPayoutUpdatePush } from "@/lib/send-payout-push.functions";
+import { initiateProviderPayout } from "@/lib/initiate-provider-payout.functions";
 import { useReauth } from "@/hooks/useReauth";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
@@ -54,6 +55,7 @@ export function PayoutPayModal({
 }: PayoutPayModalProps) {
   const qc = useQueryClient();
   const sendPush = useServerFn(sendPayoutUpdatePush);
+  const initiateProvider = useServerFn(initiateProviderPayout);
   const { withReauth, dialogState } = useReauth();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<"moncash" | "natcash" | "">("");
@@ -90,6 +92,8 @@ export function PayoutPayModal({
     setFile(null);
   }, [beneficiary]);
 
+  const isManual = providerCode === "manual";
+
   const pay = useMutation({
     mutationFn: async () => {
       if (!beneficiary) throw new Error("Pa gen benefisyè");
@@ -97,6 +101,26 @@ export function PayoutPayModal({
       if (!numAmount || numAmount <= 0) throw new Error("Montan envalid");
       if (numAmount > beneficiary.availableBalance) throw new Error("Balans disponib la pa ase");
       if (!method) throw new Error("Chwazi yon metòd peman");
+
+      // Non-manual providers execute the transfer themselves and return
+      // their own transaction reference — never through this component
+      // directly (see payment-providers/types.ts), always through the one
+      // server function allowed to call getPaymentProvider().
+      if (!isManual) {
+        const result = await initiateProvider({
+          data: {
+            restaurantId: beneficiary.type === "restaurant" ? beneficiary.id : undefined,
+            driverId: beneficiary.type === "driver" ? beneficiary.id : undefined,
+            amount: numAmount,
+            method,
+            providerCode: providerCode as "moncash_api" | "natcash_api",
+            notes: notes.trim() || undefined,
+          },
+        });
+        if (result.outcome !== "success") throw new Error(result.error);
+        return result.payout;
+      }
+
       if (!transactionReference.trim()) throw new Error("Referans tranzaksyon obligatwa");
 
       let proofUrl: string | undefined;
@@ -225,29 +249,38 @@ export function PayoutPayModal({
               </span>
             </label>
 
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                Referans tranzaksyon
-              </span>
-              <input
-                value={transactionReference}
-                onChange={(e) => setTransactionReference(e.target.value)}
-                placeholder="Nimewo tranzaksyon MonCash/NatCash"
-                className={inputClsCompact()}
-              />
-            </label>
+            {isManual ? (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Referans tranzaksyon
+                  </span>
+                  <input
+                    value={transactionReference}
+                    onChange={(e) => setTransactionReference(e.target.value)}
+                    placeholder="Nimewo tranzaksyon MonCash/NatCash"
+                    className={inputClsCompact()}
+                  />
+                </label>
 
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
-                Prèv peman (opsyonèl)
-              </span>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className={inputClsCompact()}
-              />
-            </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                    Prèv peman (opsyonèl)
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    className={inputClsCompact()}
+                  />
+                </label>
+              </>
+            ) : (
+              <p className="text-xs text-ink-soft">
+                Peman an ap egzekite otomatikman pa pwovidè a — pa gen referans oswa prèv pou antre
+                manyèlman.
+              </p>
+            )}
 
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
@@ -267,7 +300,9 @@ export function PayoutPayModal({
               Anile
             </Button>
             <Button
-              disabled={pay.isPending || !method || !amount || !transactionReference.trim()}
+              disabled={
+                pay.isPending || !method || !amount || (isManual && !transactionReference.trim())
+              }
               onClick={() => withReauth(() => pay.mutate())}
             >
               {pay.isPending ? "Ap voye…" : "Konfime peman"}
