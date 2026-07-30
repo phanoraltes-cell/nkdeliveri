@@ -34,6 +34,19 @@ type ProviderErrorRow = {
   created_at: string;
 };
 
+type ApiLogRow = {
+  id: string;
+  endpoint: string;
+  attempt: number;
+  http_status: number | null;
+  duration_ms: number;
+  error: string | null;
+  is_timeout: boolean;
+  transaction_reference: string | null;
+  provider_transaction_id: string | null;
+  created_at: string;
+};
+
 // "Statut" (progression) — 'pending' is the only state create_pending_payout_secure
 // can produce; 'paid' is where a webhook-confirmed payout lands (the exact
 // same status the manual flow starts at, so confirm_payout_secure/
@@ -126,6 +139,26 @@ function AdminMonCash() {
     },
   });
 
+  // The full financial audit trail — every HTTP attempt
+  // moncash-client.server.ts makes, append-only at the database level
+  // (see docs/MONCASH_FINANCIAL_AUDIT.md). Distinct from "Erè resan"
+  // above: this includes successful/retried attempts too, not just
+  // terminal failures, with timing for every one of them.
+  const apiLogs = useQuery({
+    queryKey: ["admin-moncash-api-logs"],
+    queryFn: async (): Promise<ApiLogRow[]> => {
+      const { data, error } = await supabase
+        .from("moncash_api_logs")
+        .select(
+          "id, endpoint, attempt, http_status, duration_ms, error, is_timeout, transaction_reference, provider_transaction_id, created_at",
+        )
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const columns: DataTableColumn<MonCashPayoutRow>[] = [
     {
       key: "beneficiary",
@@ -178,6 +211,66 @@ function AdminMonCash() {
           )}
         </div>
       ),
+      hideOnMobileCard: true,
+    },
+  ];
+
+  const apiLogColumns: DataTableColumn<ApiLogRow>[] = [
+    {
+      key: "endpoint",
+      header: "Pwen final",
+      cell: (r) => (
+        <div>
+          <div className="font-mono text-xs text-ink">{r.endpoint}</div>
+          {r.attempt > 1 && <div className="text-[11px] text-ink-soft">Eseye #{r.attempt}</div>}
+        </div>
+      ),
+    },
+    {
+      key: "http_status",
+      header: "Repons",
+      cell: (r) =>
+        r.is_timeout ? (
+          <StatusBadge tone="warn">Delè ekoule</StatusBadge>
+        ) : r.http_status == null ? (
+          <StatusBadge tone="bad">Erè rezo</StatusBadge>
+        ) : r.http_status >= 200 && r.http_status < 300 ? (
+          <StatusBadge tone="good">HTTP {r.http_status}</StatusBadge>
+        ) : (
+          <StatusBadge tone="bad">HTTP {r.http_status}</StatusBadge>
+        ),
+    },
+    {
+      key: "duration_ms",
+      header: "Delè",
+      cell: (r) => `${r.duration_ms} ms`,
+    },
+    {
+      key: "reference",
+      header: "Referans MonCash",
+      cell: (r) => (
+        <div className="text-xs">
+          {r.transaction_reference && (
+            <div className="font-mono text-ink">{r.transaction_reference}</div>
+          )}
+          {r.provider_transaction_id && (
+            <div className="font-mono text-ink-soft">{r.provider_transaction_id}</div>
+          )}
+          {!r.transaction_reference && !r.provider_transaction_id && "—"}
+        </div>
+      ),
+      hideOnMobileCard: true,
+    },
+    {
+      key: "error",
+      header: "Erè",
+      cell: (r) => r.error ?? "—",
+      hideOnMobileCard: true,
+    },
+    {
+      key: "created_at",
+      header: "Dat",
+      cell: (r) => new Date(r.created_at).toLocaleString("fr-HT"),
       hideOnMobileCard: true,
     },
   ];
@@ -270,6 +363,30 @@ function AdminMonCash() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 font-display text-lg font-bold text-ink">
+          Jounal apèl API (odit finansye)
+        </h2>
+        <p className="mb-3 text-xs text-ink-soft">
+          Chak tantativ (ansanm ak repriz yo) — pa janm efase, pa janm modifye. Gade
+          docs/MONCASH_FINANCIAL_AUDIT.md.
+        </p>
+        <DataTable<ApiLogRow>
+          rows={apiLogs.data ?? []}
+          getRowKey={(r) => r.id}
+          loading={apiLogs.isLoading}
+          mobileTitleKey="endpoint"
+          emptyState={
+            <EmptyState
+              icon={Smartphone}
+              title="Pa gen okenn apèl API toujou"
+              description="Nòmal: kanal sa a poko aktive."
+            />
+          }
+          columns={apiLogColumns}
+        />
       </section>
     </div>
   );

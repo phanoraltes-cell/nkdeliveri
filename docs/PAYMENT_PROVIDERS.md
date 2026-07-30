@@ -212,6 +212,11 @@ directement.
   interroge `RetrieveOrderPayment(orderId)` avant de rapporter un échec —
   un appel qui a réellement réussi côté MonCash malgré une erreur locale
   n'est donc jamais réessayé en double.
+- **Audit** — chaque tentative HTTP (y compris chaque repriz) est
+  journalisée dans `moncash_api_logs` : requête/réponse assainies,
+  statut, délai, erreur, référence. Table append-only (triggers
+  `BEFORE DELETE`/`UPDATE`/`TRUNCATE`, tout rôle confondu). Détail
+  complet : [MONCASH_FINANCIAL_AUDIT.md](./MONCASH_FINANCIAL_AUDIT.md).
 
 ## Le cycle de vie asynchrone (`payouts.status = 'pending'`) et le webhook
 

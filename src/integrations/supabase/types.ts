@@ -719,6 +719,54 @@ export type Database = {
           },
         ];
       };
+      moncash_api_logs: {
+        Row: {
+          attempt: number;
+          created_at: string;
+          duration_ms: number;
+          endpoint: string;
+          error: string | null;
+          http_status: number | null;
+          id: string;
+          is_timeout: boolean;
+          method: string;
+          provider_transaction_id: string | null;
+          request_summary: Json;
+          response_summary: Json | null;
+          transaction_reference: string | null;
+        };
+        Insert: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms: number;
+          endpoint: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Update: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms?: number;
+          endpoint?: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Relationships: [];
+      };
       moncash_webhook_events: {
         Row: {
           error: string | null;
