@@ -5,7 +5,9 @@ Ce document couvre l'abstraction `PaymentProvider`
 restaurants/livreurs) de son mode d'exécution — manuel aujourd'hui, API
 MonCash/NatCash demain — et la procédure de configuration de MonCash. Pour
 le module financier lui-même (wallets, commissions, `initiate_payout_secure`),
-voir [DATABASE.md](./DATABASE.md) et [API.md](./API.md).
+voir [DATABASE.md](./DATABASE.md) et [API.md](./API.md). Pour la campagne
+de tests (unitaires + transactionnels contre le schéma live, comparaison
+des 3 canaux), voir [MONCASH_TEST_REPORT.md](./MONCASH_TEST_REPORT.md).
 
 ## Vue d'ensemble de l'architecture
 
