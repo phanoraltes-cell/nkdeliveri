@@ -95,6 +95,12 @@ contournement de la validation client échouerait quand même à l'upload.
 - `VAPID_PRIVATE_JWK` (clé privée Web Push) suit la même règle — chargée
   dynamiquement à l'intérieur de `pushToUsers`/`sendPaymentReviewPush`, pas
   importée statiquement.
+- `MONCASH_CLIENT_ID`/`MONCASH_CLIENT_SECRET`/`MONCASH_MERCHANT_ID`/
+  `MONCASH_API_URL`/`MONCASH_WEBHOOK_SECRET` suivent la même règle —
+  lus exclusivement par `payment-providers/moncash-config.server.ts`,
+  jamais importés hors d'un module `.server.ts`. Voir
+  [PAYMENT_PROVIDERS.md](./PAYMENT_PROVIDERS.md) pour la procédure de
+  configuration et de rotation complète.
 
 ## Observabilité et confidentialité (Sentry)
 

@@ -34,7 +34,9 @@ uniquement.
 
 Voir `.env.example` à la racine du dépôt pour la liste complète, documentée
 et groupée par catégorie (Supabase, Web Push, email transactionnel,
-monitoring, routage). Règles générales :
+MonCash, monitoring, routage — voir
+[PAYMENT_PROVIDERS.md](./PAYMENT_PROVIDERS.md) pour la procédure complète
+des variables `MONCASH_*`). Règles générales :
 
 - Une variable préfixée `VITE_` est injectée dans le bundle navigateur au
   moment du build — **jamais** y placer un secret réel.

@@ -68,6 +68,7 @@ message.
 |---|---|---|
 | `finalizeRegistrationDocuments` | `register-documents.functions.ts` | Finalise l'upload des documents d'inscription (pièce d'identité livreur, documents restaurant) après création du compte |
 | `suspendUserAccount` / `reactivateUserAccount` | `manage-user.functions.ts` | Actions admin de suspension/réactivation d'un compte (via `supabaseAdmin`, Auth Admin API) |
+| `initiateProviderPayout` | `initiate-provider-payout.functions.ts` | Seul appelant autorisé d'un `PaymentProvider` (`getPaymentProvider`) pour un décaissement — voir [PAYMENT_PROVIDERS.md](./PAYMENT_PROVIDERS.md) |
 
 ## Utilitaires partagés (`src/lib/*.ts`)
 
