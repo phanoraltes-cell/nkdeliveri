@@ -35,7 +35,13 @@ export type InitiatePaymentInput = {
 export type InitiatePaymentResult =
   | { status: "success"; providerReference: string; raw?: unknown }
   | { status: "pending"; providerReference?: string; raw?: unknown }
-  | { status: "failed"; error: string; raw?: unknown };
+  | {
+      status: "failed";
+      error: string;
+      /** Coarse reason a caller can act on without parsing `error` text — e.g. the admin "timeout" notification vs. a generic failure one. Optional: not every provider/failure distinguishes these. */
+      code?: "timeout" | "not_configured" | "unsupported" | "rejected";
+      raw?: unknown;
+    };
 
 export type PaymentStatusResult =
   | { status: "success"; providerReference: string; raw?: unknown }

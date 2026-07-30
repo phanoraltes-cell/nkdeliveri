@@ -3142,6 +3142,7 @@ export type Database = {
       log_payment_provider_error_secure: {
         Args: {
           _amount?: number;
+          _code?: string;
           _driver_id?: string;
           _error?: string;
           _method: string;

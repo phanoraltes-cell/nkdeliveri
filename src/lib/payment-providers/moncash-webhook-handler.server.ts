@@ -168,28 +168,51 @@ async function pushOutcomeNotification(
     .maybeSingle();
   if (!payout) return;
 
+  const beneficiaryId =
+    (payout as { restaurants?: { owner_id?: string } | null }).restaurants?.owner_id ??
+    (payout as { drivers?: { user_id?: string } | null }).drivers?.user_id ??
+    null;
+
+  // Mirrors the in-app notifications complete_pending_payout_secure /
+  // fail_pending_payout_secure already send via private.notify_secure
+  // (20260730120000_moncash_provider_notifications.sql) — both the
+  // beneficiary and the initiating admin get told either way, since
+  // create_pending_payout_secure now tells the beneficiary a payment was
+  // sent in the first place.
   if (outcome === "confirmed") {
-    const beneficiaryId =
-      (payout as { restaurants?: { owner_id?: string } | null }).restaurants?.owner_id ??
-      (payout as { drivers?: { user_id?: string } | null }).drivers?.user_id ??
-      null;
-    if (!beneficiaryId) return;
-    await pushToUsers([beneficiaryId], {
-      title: "Ou resevwa yon peman",
-      body: `Ou resevwa yon peman ${payout.amount} HTG. Tanpri konfime resepsyon an.`,
-      url: "/dashboard",
+    if (beneficiaryId) {
+      await pushToUsers([beneficiaryId], {
+        title: "Ou resevwa yon peman",
+        body: `Ou resevwa yon peman ${payout.amount} HTG. Tanpri konfime resepsyon an.`,
+        url: "/dashboard",
+        tag: `payout-${payout.id}`,
+        data: { payoutId: payout.id },
+      });
+    }
+    await pushToUsers([payout.paid_by], {
+      title: "Peman pwovidè reyisi",
+      body: `Peman ${payout.amount} HTG atravè MonCash konfime pa pwovidè a.`,
+      url: "/dashboard/admin/moncash",
       tag: `payout-${payout.id}`,
       data: { payoutId: payout.id },
     });
     return;
   }
 
-  // failed -- notify the admin who initiated it, never the beneficiary
-  // (who was never told about a payout that never actually completed).
+  // failed
+  if (beneficiaryId) {
+    await pushToUsers([beneficiaryId], {
+      title: "Tantativ peman echwe",
+      body: `Tantativ peman ${payout.amount} HTG nou te anonse a pa reyisi.`,
+      url: "/dashboard",
+      tag: `payout-${payout.id}`,
+      data: { payoutId: payout.id },
+    });
+  }
   await pushToUsers([payout.paid_by], {
     title: "Peman pwovidè echwe",
     body: `Yon tantativ peman ${payout.amount} HTG atravè MonCash echwe. Lajan an retounen nan balans disponib la.`,
-    url: "/dashboard/admin/payouts",
+    url: "/dashboard/admin/moncash",
     tag: `payout-${payout.id}`,
     data: { payoutId: payout.id },
   });

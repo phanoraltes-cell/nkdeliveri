@@ -106,9 +106,11 @@ export const moncashProvider: PaymentProvider = {
   isConfigured: () => isMonCashConfigured(),
 
   async initiatePayment(input) {
-    if (!isMonCashConfigured()) return { status: "failed", error: NOT_CONFIGURED };
+    if (!isMonCashConfigured()) {
+      return { status: "failed", error: NOT_CONFIGURED, code: "not_configured" };
+    }
     if (input.direction === "disburse") {
-      return { status: "failed", error: DISBURSEMENT_NOT_SUPPORTED };
+      return { status: "failed", error: DISBURSEMENT_NOT_SUPPORTED, code: "unsupported" };
     }
 
     try {
@@ -145,7 +147,9 @@ export const moncashProvider: PaymentProvider = {
       } catch {
         // Reconciliation lookup itself failed — fall through to the original error.
       }
-      return { status: "failed", error: describeError(err) };
+      const code =
+        err instanceof MonCashApiError && err.code === "timeout" ? "timeout" : "rejected";
+      return { status: "failed", error: describeError(err), code };
     }
   },
 

@@ -227,8 +227,8 @@ initiate-provider-payout.functions.ts
         ▼
 supabase.rpc("create_pending_payout_secure")
   (réserve les fonds : available_balance → pending_balance,
-   status = 'pending', AUCUNE notification bénéficiaire,
-   AUCUNE liaison de commission — rien n'a encore été envoyé)
+   status = 'pending', notifie le bénéficiaire "peman ap pare",
+   AUCUNE liaison de commission — rien n'est encore confirmé)
         │
         ▼           ◀──────────────── webhook MonCash (async, plus tard)
    … en attente …            │
@@ -243,10 +243,46 @@ supabase.rpc("create_pending_payout_secure")
               ▼                                ▼
   complete_pending_payout_secure    fail_pending_payout_secure
   (status → 'paid', notifie le      (status → 'failed', restitue
-   bénéficiaire, lie les             pending_balance → available_balance,
-   commissions — même point          notifie l'admin qui a initié
-   d'arrivée que le flux manuel)     le paiement)
+   bénéficiaire ET l'admin, lie      pending_balance → available_balance,
+   les commissions — même point      notifie le bénéficiaire ET l'admin
+   d'arrivée que le flux manuel)     qui a initié le paiement)
 ```
+
+### Notifications automatiques
+
+Chaque étape du cycle ci-dessus appelle **`private.notify_secure`** (le
+moteur générique de
+[20260723090000_notifications_engine_and_gps_sharing.sql](../supabase/migrations/20260723090000_notifications_engine_and_gps_sharing.sql),
+déjà utilisé par le chat, le partage GPS et l'annulation client) —
+jamais un `INSERT INTO notifications` écrit à la main, exactement la
+règle déjà établie pour toute nouvelle fonctionnalité. Catégorie
+`commission` partout (même regroupement que les notifications de
+décaissement existantes), donc filtrable dans le centre de notifications
+comme n'importe quelle autre.
+
+| Destinataire | Événement | RPC | `type` |
+|---|---|---|---|
+| Restaurant/Livreur (bénéficiaire) | Peman voye | `create_pending_payout_secure` | `payout_provider_sent` |
+| Restaurant/Livreur (bénéficiaire) | Peman konfime | `complete_pending_payout_secure` | `payout_provider_confirmed` |
+| Restaurant/Livreur (bénéficiaire) | Erè | `fail_pending_payout_secure` | `payout_provider_failed` |
+| Admin (qui a lanse peman an) | Siksè | `complete_pending_payout_secure` | `payout_provider_admin_success` |
+| Admin (qui a lanse peman an) | Erè | `fail_pending_payout_secure` ou `log_payment_provider_error_secure` | `payout_provider_admin_error` |
+| Admin (qui a lanse peman an) | Delè ekoule (timeout) | `log_payment_provider_error_secure` | `payout_provider_admin_timeout` |
+
+Le "timeout" est une vraie distinction structurelle, pas un texte
+deviné : `MonCashApiError` (`moncash-client.server.ts`) porte un champ
+`code: "timeout"` posé uniquement quand `AbortController` coupe la
+requête faute de réponse à temps ; ce code remonte jusqu'à
+`InitiatePaymentResult.code` puis jusqu'à `_code` sur
+`log_payment_provider_error_secure`, qui choisit le `type`/titre en
+conséquence — jamais un `error.includes("timeout")` fragile.
+
+Notifications push (best-effort, en plus des notifications en app) :
+`moncash-webhook-handler.server.ts` pousse au bénéficiaire et à l'admin
+sur confirmation/échec webhook ; le chemin synchrone
+(`initiate-provider-payout.functions.ts`, toujours le seul atteignable
+aujourd'hui) ne pousse rien lui-même — le toast client-side donne déjà
+un retour immédiat dans ce cas.
 
 Point clé : `complete_pending_payout_secure` fait aboutir un payout
 confirmé par webhook exactement au même état (`status = 'paid'`) qu'un

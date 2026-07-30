@@ -54,7 +54,7 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
     const provider = getPaymentProvider(data.providerCode);
     if (!provider || !provider.isConfigured()) {
       const error = `${data.providerCode} pa konfigire toujou — itilize peman manyèl la.`;
-      await logProviderError(supabase, data, error);
+      await logProviderError(supabase, data, error, "not_configured");
       return { outcome: "failed" as const, error };
     }
 
@@ -98,7 +98,7 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
     });
 
     if (result.status === "failed") {
-      await logProviderError(supabase, data, result.error);
+      await logProviderError(supabase, data, result.error, result.code);
       return { outcome: "failed" as const, error: result.error };
     }
 
@@ -141,6 +141,7 @@ async function logProviderError(
   supabase: SupabaseClient<Database>,
   data: z.infer<typeof InputSchema>,
   error: string,
+  code?: string,
 ): Promise<void> {
   const { error: logError } = await supabase.rpc("log_payment_provider_error_secure", {
     _provider_code: data.providerCode,
@@ -149,6 +150,7 @@ async function logProviderError(
     _driver_id: data.driverId,
     _amount: data.amount,
     _error: error,
+    _code: code,
   });
   if (logError) console.warn("[moncash] failed to log provider error", logError.message);
 }

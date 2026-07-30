@@ -28,12 +28,15 @@ const TOKEN_SAFETY_MARGIN_MS = 60_000;
 export class MonCashApiError extends Error {
   readonly httpStatus?: number;
   readonly raw?: unknown;
+  /** Set only for a request that never got a response in time — lets callers (the admin "timeout" notification) tell this apart from a genuine rejection. */
+  readonly code?: "timeout";
 
-  constructor(message: string, httpStatus?: number, raw?: unknown) {
+  constructor(message: string, httpStatus?: number, raw?: unknown, code?: "timeout") {
     super(message);
     this.name = "MonCashApiError";
     this.httpStatus = httpStatus;
     this.raw = raw;
+    this.code = code;
   }
 }
 
@@ -80,6 +83,7 @@ async function requestWithRetry(
           : `Erè rezo pandan apèl MonCash la: ${err instanceof Error ? err.message : String(err)}`,
         undefined,
         err,
+        isAbort ? "timeout" : undefined,
       );
     } finally {
       clearTimeout(timeoutHandle);
