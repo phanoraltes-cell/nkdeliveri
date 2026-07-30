@@ -117,8 +117,13 @@ export function PayoutPayModal({
             notes: notes.trim() || undefined,
           },
         });
-        if (result.outcome !== "success") throw new Error(result.error);
-        return result.payout;
+        if (result.outcome === "failed") throw new Error(result.error);
+        // "pending": a real payout row now exists (status='pending') --
+        // not an error, but not done either. The webhook
+        // (moncash-webhook-handler.server.ts) or a later reconciliation
+        // finalizes it; nothing here sends a "paid" push since nothing
+        // is actually paid yet.
+        return { payout: result.payout, outcome: result.outcome };
       }
 
       if (!transactionReference.trim()) throw new Error("Referans tranzaksyon obligatwa");
@@ -145,13 +150,17 @@ export function PayoutPayModal({
         _provider_code: providerCode,
       });
       if (error) throw error;
-      return data;
+      return { payout: data, outcome: "success" as const };
     },
-    onSuccess: (data) => {
-      toast.success("Peman voye. Benefisyè a resevwa yon notifikasyon.");
+    onSuccess: ({ payout, outcome }) => {
+      if (outcome === "pending") {
+        toast.success("Demann peman voye bay pwovidè a. N ap konfime lè li reponn.");
+      } else {
+        toast.success("Peman voye. Benefisyè a resevwa yon notifikasyon.");
+      }
       for (const key of invalidateKeys) qc.invalidateQueries({ queryKey: key });
-      if (data?.id) {
-        sendPush({ data: { payoutId: data.id, event: "paid" } }).catch((e) =>
+      if (outcome === "success" && payout?.id) {
+        sendPush({ data: { payoutId: payout.id, event: "paid" } }).catch((e) =>
           console.warn("[push] payout paid notify failed", e),
         );
       }

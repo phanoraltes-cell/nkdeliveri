@@ -25,12 +25,17 @@ const InputSchema = z
  *
  *   1. Look up the beneficiary's receiver number for the chosen rail.
  *   2. Ask the provider to execute the transfer.
- *   3. Only on a *confirmed* success does this ever touch the ledger —
- *      by calling initiate_payout_secure exactly as the manual flow does,
- *      with the provider's own transaction reference (never a
- *      client-supplied one) as `_transaction_reference`. A failed or
- *      still-pending provider result returns without calling it, so the
- *      wallet is never debited for a transfer that didn't (yet) happen.
+ *   3. On an immediate success, call initiate_payout_secure exactly as
+ *      the manual flow does, with the provider's own transaction
+ *      reference (never a client-supplied one) as `_transaction_reference`.
+ *   4. On a *pending* result (the provider accepted the request but
+ *      hasn't confirmed completion), call create_pending_payout_secure
+ *      instead — reserves the funds without treating the transfer as
+ *      done. A later webhook delivery (moncash-webhook-handler.server.ts)
+ *      or manual reconciliation finalizes it via
+ *      complete_pending_payout_secure/fail_pending_payout_secure.
+ *   5. On a failed result, nothing touches the ledger at all — the
+ *      wallet is never debited for a transfer that didn't happen.
  *
  * Inert today by construction: getPaymentProvider(...).isConfigured() is
  * false for every non-manual provider until a real integration replaces
@@ -91,12 +96,25 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
       description: data.notes,
     });
 
-    if (result.status !== "success") {
-      return {
-        outcome: result.status === "pending" ? ("pending" as const) : ("failed" as const),
-        error:
-          result.status === "failed" ? result.error : "Peman an an atant konfimasyon pwovidè a",
-      };
+    if (result.status === "failed") {
+      return { outcome: "failed" as const, error: result.error };
+    }
+
+    if (result.status === "pending") {
+      const { data: payout, error: pendingError } = await supabase.rpc(
+        "create_pending_payout_secure",
+        {
+          _restaurant_id: data.restaurantId,
+          _driver_id: data.driverId,
+          _amount: data.amount,
+          _method: data.method,
+          _own_reference: idempotencyKey,
+          _notes: data.notes,
+          _provider_code: data.providerCode,
+        },
+      );
+      if (pendingError) throw new Error(pendingError.message);
+      return { outcome: "pending" as const, payout };
     }
 
     const { data: payout, error: rpcError } = await supabase.rpc("initiate_payout_secure", {

@@ -31,6 +31,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-pas
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as ApiWebhooksMoncashRouteImport } from './routes/api.webhooks.moncash'
 import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
@@ -183,6 +184,11 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const ApiWebhooksMoncashRoute = ApiWebhooksMoncashRouteImport.update({
+  id: '/api/webhooks/moncash',
+  path: '/api/webhooks/moncash',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardRestaurantRoute =
   AuthenticatedDashboardRestaurantRouteImport.update({
     id: '/restaurant',
@@ -450,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
   '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
+  '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/_authenticated/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
@@ -638,6 +647,7 @@ export interface FileRouteTypes {
     | '/dashboard/customer'
     | '/dashboard/driver'
     | '/dashboard/restaurant'
+    | '/api/webhooks/moncash'
     | '/dashboard/'
     | '/dashboard/admin/ads'
     | '/dashboard/admin/chat'
@@ -696,6 +706,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/restaurants'
     | '/chat/$orderId'
+    | '/api/webhooks/moncash'
     | '/dashboard'
     | '/dashboard/admin/ads'
     | '/dashboard/admin/chat'
@@ -760,6 +771,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/customer'
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/restaurant'
+    | '/api/webhooks/moncash'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/ads'
     | '/_authenticated/dashboard/admin/chat'
@@ -818,6 +830,7 @@ export interface RootRouteChildren {
   AuthIndexRoute: typeof AuthIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
+  ApiWebhooksMoncashRoute: typeof ApiWebhooksMoncashRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -975,6 +988,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/api/webhooks/moncash': {
+      id: '/api/webhooks/moncash'
+      path: '/api/webhooks/moncash'
+      fullPath: '/api/webhooks/moncash'
+      preLoaderRoute: typeof ApiWebhooksMoncashRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard/restaurant': {
       id: '/_authenticated/dashboard/restaurant'
@@ -1471,6 +1491,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
+  ApiWebhooksMoncashRoute: ApiWebhooksMoncashRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

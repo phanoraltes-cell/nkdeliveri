@@ -1,5 +1,6 @@
-import type { PaymentProvider } from "./types";
-import { isMonCashConfigured } from "./moncash-config.server";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import type { PaymentProvider, PaymentWebhookEvent } from "./types";
+import { isMonCashConfigured, getMonCashConfig } from "./moncash-config.server";
 import { MonCashApiError, createPayment, retrieveOrderPayment } from "./moncash-client.server";
 
 // Real MonCash Business API integration (moncash-client.server.ts) —
@@ -26,13 +27,78 @@ import { MonCashApiError, createPayment, retrieveOrderPayment } from "./moncash-
 const NOT_CONFIGURED = "MonCash API pa konfigire toujou";
 const DISBURSEMENT_NOT_SUPPORTED =
   "API biznis MonCash la se yon pòtay kolekte (kliyan peye machann) — li pa gen okenn pwen final piblik pou voye lajan (disbursement) nan yon nimewo telefòn. Kontra sa a poko konfime ak Digicel.";
-const NO_PUBLIC_WEBHOOK =
-  "API biznis MonCash la pa dokimante piblikman okenn mekanis webhook pou kounye a — itilize checkStatus() pou verifye eta yon peman.";
 
 function describeError(err: unknown): string {
   if (err instanceof MonCashApiError) return err.message;
   if (err instanceof Error) return err.message;
   return "Erè MonCash san detay";
+}
+
+// MonCash's Business API does not publicly document a webhook mechanism
+// (header name, signing algorithm, or payload shape) — everything below
+// is the standard, generic convention used by most payment providers
+// (HMAC-SHA256 over the raw request body, hex-encoded, in a custom
+// signature header), NOT a confirmed MonCash contract. This is written
+// so a real webhook is genuinely verifiable and processable the moment
+// Digicel confirms the actual scheme — until then, treat the header name
+// below as a placeholder to double-check, not a documented fact. See
+// docs/MONCASH_WEBHOOK_SECURITY.md.
+const SIGNATURE_HEADER = "x-moncash-signature";
+
+function verifySignature(
+  rawBody: string,
+  signatureHeader: string | undefined,
+  secret: string,
+): boolean {
+  if (!signatureHeader) return false;
+  const expected = createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const providedBuf = Buffer.from(signatureHeader.trim(), "utf8");
+  // timingSafeEqual throws on length mismatch rather than returning
+  // false -- check first so a wrong-length header can't ever throw an
+  // unhandled error out of the request handler.
+  if (expectedBuf.length !== providedBuf.length) return false;
+  return timingSafeEqual(expectedBuf, providedBuf);
+}
+
+function parseWebhookPayload(rawBody: string): PaymentWebhookEvent | undefined {
+  let json: Record<string, unknown>;
+  try {
+    json = JSON.parse(rawBody);
+  } catch {
+    return undefined;
+  }
+
+  const providerReference =
+    typeof json.transaction_id === "string"
+      ? json.transaction_id
+      : typeof json.reference === "string"
+        ? json.reference
+        : undefined;
+  if (!providerReference) return undefined;
+
+  const ourReference =
+    typeof json.order_id === "string"
+      ? json.order_id
+      : typeof json.orderId === "string"
+        ? json.orderId
+        : null;
+
+  const message = String(json.message ?? json.status ?? "").toLowerCase();
+  const status: PaymentWebhookEvent["status"] = message.includes("success")
+    ? "success"
+    : message.includes("fail") || message.includes("cancel") || message.includes("expir")
+      ? "failed"
+      : "pending";
+
+  const amount =
+    typeof json.amount === "number"
+      ? json.amount
+      : typeof json.cost === "number"
+        ? json.cost
+        : undefined;
+
+  return { providerReference, ourReference, status, amount, raw: json };
 }
 
 export const moncashProvider: PaymentProvider = {
@@ -109,7 +175,20 @@ export const moncashProvider: PaymentProvider = {
     return { status: "not_cancellable" };
   },
 
-  async verifyWebhook() {
-    return { valid: false, error: NO_PUBLIC_WEBHOOK };
+  async verifyWebhook(rawBody, headers) {
+    if (!isMonCashConfigured()) return { valid: false, error: NOT_CONFIGURED };
+
+    const { webhookSecret } = getMonCashConfig();
+    const signatureHeader = headers[SIGNATURE_HEADER] ?? headers[SIGNATURE_HEADER.toUpperCase()];
+    if (!verifySignature(rawBody, signatureHeader, webhookSecret)) {
+      return { valid: false, error: "Siyati webhook la envalid oswa absan" };
+    }
+
+    const event = parseWebhookPayload(rawBody);
+    if (!event) {
+      return { valid: false, error: "Peyload webhook la pa nan fòma ki atann" };
+    }
+
+    return { valid: true, event };
   },
 };

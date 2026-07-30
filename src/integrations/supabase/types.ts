@@ -719,6 +719,42 @@ export type Database = {
           },
         ];
       };
+      moncash_webhook_events: {
+        Row: {
+          error: string | null;
+          event_id: string;
+          id: string;
+          outcome: string | null;
+          payload: Json;
+          processed_at: string | null;
+          received_at: string;
+          status: string;
+          transaction_reference: string | null;
+        };
+        Insert: {
+          error?: string | null;
+          event_id: string;
+          id?: string;
+          outcome?: string | null;
+          payload: Json;
+          processed_at?: string | null;
+          received_at?: string;
+          status?: string;
+          transaction_reference?: string | null;
+        };
+        Update: {
+          error?: string | null;
+          event_id?: string;
+          id?: string;
+          outcome?: string | null;
+          payload?: Json;
+          processed_at?: string | null;
+          received_at?: string;
+          status?: string;
+          transaction_reference?: string | null;
+        };
+        Relationships: [];
+      };
       newsletter_subscribers: {
         Row: {
           email: string;
@@ -1234,13 +1270,14 @@ export type Database = {
           paid_by: string;
           proof_url: string | null;
           provider_code: string;
+          provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string | null;
-          status: Database["public"]["Enums"]["payout_status"];
+          status: string;
           status_history: Json;
           transaction_reference: string;
           updated_at: string;
@@ -1259,13 +1296,14 @@ export type Database = {
           paid_by: string;
           proof_url?: string | null;
           provider_code?: string;
+          provider_transaction_id?: string | null;
           receiver_account_name?: string | null;
           receiver_number: string;
           resolution?: string | null;
           resolved_at?: string | null;
           resolved_by?: string | null;
           restaurant_id?: string | null;
-          status?: Database["public"]["Enums"]["payout_status"];
+          status?: string;
           status_history?: Json;
           transaction_reference: string;
           updated_at?: string;
@@ -1284,13 +1322,14 @@ export type Database = {
           paid_by?: string;
           proof_url?: string | null;
           provider_code?: string;
+          provider_transaction_id?: string | null;
           receiver_account_name?: string | null;
           receiver_number?: string;
           resolution?: string | null;
           resolved_at?: string | null;
           resolved_by?: string | null;
           restaurant_id?: string | null;
-          status?: Database["public"]["Enums"]["payout_status"];
+          status?: string;
           status_history?: Json;
           transaction_reference?: string;
           updated_at?: string;
@@ -2191,6 +2230,45 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      complete_pending_payout_secure: {
+        Args: {
+          _provider_code: string;
+          _provider_transaction_id?: string;
+          _transaction_reference: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       complete_refund_secure: {
         Args: { _refund_id: string };
         Returns: {
@@ -2266,13 +2344,14 @@ export type Database = {
           paid_by: string;
           proof_url: string | null;
           provider_code: string;
+          provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string | null;
-          status: Database["public"]["Enums"]["payout_status"];
+          status: string;
           status_history: Json;
           transaction_reference: string;
           updated_at: string;
@@ -2312,6 +2391,49 @@ export type Database = {
           _wants_location_sharing?: boolean;
         };
         Returns: string;
+      };
+      create_pending_payout_secure: {
+        Args: {
+          _amount?: number;
+          _driver_id?: string;
+          _method?: string;
+          _notes?: string;
+          _own_reference?: string;
+          _provider_code?: string;
+          _restaurant_id?: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_product_secure: {
         Args: {
@@ -2470,13 +2592,14 @@ export type Database = {
           paid_by: string;
           proof_url: string | null;
           provider_code: string;
+          provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string | null;
-          status: Database["public"]["Enums"]["payout_status"];
+          status: string;
           status_history: Json;
           transaction_reference: string;
           updated_at: string;
@@ -2497,6 +2620,45 @@ export type Database = {
           order_number: string;
           outcome: string;
         }[];
+      };
+      fail_pending_payout_secure: {
+        Args: {
+          _provider_code: string;
+          _reason?: string;
+          _transaction_reference: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       get_active_placements_secure: {
         Args: { _limit?: number; _placement: string };
@@ -2945,13 +3107,14 @@ export type Database = {
           paid_by: string;
           proof_url: string | null;
           provider_code: string;
+          provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string | null;
-          status: Database["public"]["Enums"]["payout_status"];
+          status: string;
           status_history: Json;
           transaction_reference: string;
           updated_at: string;
@@ -3118,13 +3281,14 @@ export type Database = {
           paid_by: string;
           proof_url: string | null;
           provider_code: string;
+          provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
           restaurant_id: string | null;
-          status: Database["public"]["Enums"]["payout_status"];
+          status: string;
           status_history: Json;
           transaction_reference: string;
           updated_at: string;

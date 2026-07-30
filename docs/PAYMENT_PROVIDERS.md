@@ -63,6 +63,8 @@ qu'exécuter le transfert et rapporter un statut.
 | `payment-providers/moncash-config.server.ts` | Lecture/validation centralisée des 5 secrets MonCash — voir plus bas |
 | `payment-providers/moncash-client.server.ts` | Client HTTP bas niveau de l'API MonCash Business — auth OAuth2, `CreatePayment`, `RetrieveOrderPayment`/`RetrieveTransactionPayment`, timeout + retry + réconciliation idempotente. Seul `moncash-provider.server.ts` l'appelle. |
 | `payment-providers/index.server.ts` | Registre `getPaymentProvider(code)` — le seul point d'accès à une implémentation |
+| `payment-providers/moncash-webhook-handler.server.ts` | Orchestration d'une livraison webhook entrante : idempotence, mise à jour du payout, notifications, journalisation. Voir [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md). |
+| `routes/api.webhooks.moncash.ts` | Route HTTP publique `POST /api/webhooks/moncash` — reçoit les livraisons MonCash, délègue tout au handler ci-dessus |
 | `initiate-provider-payout.functions.ts` | Fonction serveur TanStack Start — le seul appelant autorisé de `getPaymentProvider(...).initiatePayment()` pour un décaissement |
 
 ## Pourquoi `.server.ts` et pas une convention de nommage
@@ -209,6 +211,64 @@ directement.
   un appel qui a réellement réussi côté MonCash malgré une erreur locale
   n'est donc jamais réessayé en double.
 
+## Le cycle de vie asynchrone (`payouts.status = 'pending'`) et le webhook
+
+Jusqu'à cette migration, `payouts` ne modélisait qu'un transfert *déjà
+effectué* (`status` par défaut `'paid'`, comme le fait toujours le flux
+manuel) — il n'existait nulle part de "on a demandé, pas encore
+confirmé". Un webhook a besoin de cet état intermédiaire pour avoir
+quelque chose à mettre à jour :
+
+```
+initiate-provider-payout.functions.ts
+        │  provider.initiatePayment() → status: "pending"
+        ▼
+supabase.rpc("create_pending_payout_secure")
+  (réserve les fonds : available_balance → pending_balance,
+   status = 'pending', AUCUNE notification bénéficiaire,
+   AUCUNE liaison de commission — rien n'a encore été envoyé)
+        │
+        ▼           ◀──────────────── webhook MonCash (async, plus tard)
+   … en attente …            │
+                              ▼
+                    POST /api/webhooks/moncash
+                              │
+                    moncash-webhook-handler.server.ts
+                    (signature, idempotence — voir
+                    MONCASH_WEBHOOK_SECURITY.md)
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                                ▼
+  complete_pending_payout_secure    fail_pending_payout_secure
+  (status → 'paid', notifie le      (status → 'failed', restitue
+   bénéficiaire, lie les             pending_balance → available_balance,
+   commissions — même point          notifie l'admin qui a initié
+   d'arrivée que le flux manuel)     le paiement)
+```
+
+Point clé : `complete_pending_payout_secure` fait aboutir un payout
+confirmé par webhook exactement au même état (`status = 'paid'`) qu'un
+payout manuel dès sa création — `confirm_payout_secure`/
+`dispute_payout_secure` (la confirmation de réception par le
+bénéficiaire) fonctionnent donc *sans aucune modification* sur un payout
+d'origine webhook.
+
+**`complete_pending_payout_secure`/`fail_pending_payout_secure` ne sont
+appelables que par le rôle `service_role`** (`GRANT`/`REVOKE` au niveau
+Postgres, pas seulement une vérification applicative) — seul le handler
+webhook, via `supabaseAdmin`, peut les invoquer ; aucune session
+utilisateur authentifiée ne le peut, même admin. Les deux sont également
+idempotentes indépendamment de la table `moncash_webhook_events` : un
+appel sur un payout qui n'est plus `'pending'` renvoie la ligne
+inchangée plutôt que de rejouer un mouvement de solde. Détail complet :
+[MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md).
+
+**Statut réel aujourd'hui** : `create_pending_payout_secure` n'a aucun
+appelant vivant, puisque `direction: "disburse"` échoue toujours avant
+d'atteindre `"pending"` (voir ci-dessous) — toute cette chaîne est
+construite, testée par le typecheck/build, mais inatteignable en
+production tant que le décaissement MonCash lui-même n'est pas confirmé.
+
 ## Ce qui n'est PAS fait (volontairement)
 
 - **Le décaissement (B2C) reste refusé, explicitement.** L'audit
@@ -227,15 +287,14 @@ directement.
 - **`cancelPayment()`** renvoie toujours `"not_cancellable"` — l'API
   MonCash n'a pas de point final d'annulation ; un jeton de paiement créé
   expire simplement s'il n'est pas utilisé.
-- **`verifyWebhook()`** renvoie toujours `valid: false` — l'API Business
-  de MonCash ne documente publiquement aucun mécanisme de webhook à ce
-  jour (contrairement à Stripe par exemple) ; les intégrateurs MonCash
-  interrogent `RetrieveOrderPayment`/`RetrieveTransactionPayment` au lieu
-  d'attendre une notification poussée. `MONCASH_WEBHOOK_SECRET` reste
-  configuré et prêt (vérification HMAC générique à écrire) au cas où
-  Digicel confirme un jour un tel mécanisme — aucune route HTTP
-  (`src/routes/api.webhooks.moncash.ts` ou équivalent) n'existe encore
-  pour le recevoir.
+- **`verifyWebhook()` est implémenté, mais contre un schéma non confirmé.**
+  L'API Business de MonCash ne documente publiquement aucun mécanisme de
+  webhook (contrairement à Stripe par exemple) — la vérification de
+  signature (HMAC-SHA256 sur le corps brut, en-tête `x-moncash-signature`)
+  est la convention générique la plus répandue, écrite pour qu'un vrai
+  webhook soit immédiatement traitable, mais **pas** une donnée confirmée
+  par Digicel. Voir [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md)
+  pour l'audit complet de ce endpoint.
 - **`NatCash`** n'a aucun secret configuré (aucune variable
   `NATCASH_*` n'existe) — hors périmètre de ce document, `natcashProvider`
   reste un stub non configurable.
