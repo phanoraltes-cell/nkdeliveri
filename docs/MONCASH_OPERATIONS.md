@@ -54,9 +54,10 @@ de la configuration MonCash).
 
 1. Vérifier que le cron tourne : Vercel Dashboard → Project → Cron Jobs
    → `moncash-reconcile` — dernière exécution, code de statut.
-2. Si le cron ne tourne pas : vérifier le plan Vercel supporte bien un
-   intervalle `*/5 * * * *` (voir MONCASH_RETRY_STRATEGY.md — Hobby ne
-   le supporte pas, prévoir un déclencheur externe).
+2. Le cron tourne aujourd'hui une fois par jour (`0 3 * * *`) — plan
+   Vercel Hobby confirmé ne pas supporter un intervalle plus court (voir
+   MONCASH_RETRY_STRATEGY.md). Pour une réconciliation plus fréquente
+   avant un upgrade Pro, prévoir un déclencheur externe.
 3. Appeler manuellement `GET /api/cron/moncash-reconcile` avec
    `Authorization: Bearer <CRON_SECRET>` pour forcer une passe
    immédiate.

@@ -42,7 +42,7 @@ create_pending_payout_secure (payout créé, status='pending')
    … webhook attendu …
         │
         ▼ (rien après 5 minutes)
-Vercel Cron */5 * * * * → POST-équivalent GET /api/cron/moncash-reconcile
+Vercel Cron 0 3 * * * → POST-équivalent GET /api/cron/moncash-reconcile
         │
         ▼
 reconcilePendingMonCashPayouts()
@@ -81,7 +81,7 @@ automatique.
 |---|---|
 | `payment-providers/moncash-reconcile.server.ts` | La logique elle-même — 7 tests dédiés (succès, échec, toujours en attente, fenêtre de backoff respectée/expirée, échéancier épuisé) |
 | `routes/api.cron.moncash-reconcile.ts` | Cible Vercel Cron, protégée par `CRON_SECRET` |
-| `vercel.json` (`crons`) | `*/5 * * * *` — nécessite un plan Vercel supportant un intervalle de cron inférieur à 1/jour (Pro ou supérieur) ; sur Hobby, utiliser un déclencheur externe (GitHub Actions planifié, service de cron tiers) appelant le même endpoint avec le même `Authorization: Bearer <CRON_SECRET>` |
+| `vercel.json` (`crons`) | `0 3 * * *` (une fois par jour, 3h UTC) — **confirmé, pas juste anticipé** : un `*/5 * * * *` a réellement fait échouer le déploiement entier sur ce projet (compte Hobby, message Vercel : "Hobby accounts are limited to daily cron jobs"), pas seulement la fonctionnalité cron. Repasser à un intervalle plus court nécessite un upgrade vers le plan Pro ; en attendant, un déclencheur externe (GitHub Actions planifié, service de cron tiers) peut appeler le même endpoint plus souvent avec le même `Authorization: Bearer <CRON_SECRET>` si une réconciliation plus fréquente est souhaitée avant l'upgrade |
 
 ### Statut aujourd'hui
 
