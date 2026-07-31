@@ -211,6 +211,27 @@ async function safeReadBody(response: Response): Promise<unknown> {
   }
 }
 
+/**
+ * A 2xx response with a body that isn't valid JSON (a proxy/gateway
+ * error page, a truncated response, MonCash returning something
+ * unexpected) must still surface as a clean MonCashApiError — not a raw
+ * SyntaxError from `.json()` propagating past every other error-handling
+ * path in this file. Resilience gap closed in the hardening pass (see
+ * docs/MONCASH_RESILIENCE_REPORT.md) — response.ok being true is not the
+ * same guarantee as "the body is well-formed JSON".
+ */
+async function parseJsonOrThrow(response: Response, context: string): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new MonCashApiError(
+      `Repons MonCash pa nan fòma JSON ki atann pou ${context} (HTTP ${response.status})`,
+      response.status,
+      await safeReadBody(response),
+    );
+  }
+}
+
 type CachedToken = { accessToken: string; expiresAt: number };
 let cachedToken: CachedToken | undefined;
 let pendingTokenRequest: Promise<string> | undefined;
@@ -254,7 +275,10 @@ async function requestAccessToken(): Promise<string> {
     );
   }
 
-  const data = (await response.json()) as { access_token?: string; expires_in?: number };
+  const data = (await parseJsonOrThrow(response, "oauth/token")) as {
+    access_token?: string;
+    expires_in?: number;
+  };
   if (!data.access_token) {
     throw new MonCashApiError(
       "Repons otantifikasyon MonCash la pa gen access_token",
@@ -372,7 +396,7 @@ export async function createPayment(
     );
   }
 
-  const data = (await response.json()) as {
+  const data = (await parseJsonOrThrow(response, "CreatePayment")) as {
     payment_token?: { token?: string; created?: string; expired?: string };
   };
   const paymentToken = data.payment_token?.token;
@@ -466,7 +490,9 @@ async function retrieveBy(
     );
   }
 
-  const data = (await response.json()) as { transaction?: Record<string, unknown> };
+  const data = (await parseJsonOrThrow(response, path)) as {
+    transaction?: Record<string, unknown>;
+  };
   const tx = data.transaction;
   if (!tx) return null;
 

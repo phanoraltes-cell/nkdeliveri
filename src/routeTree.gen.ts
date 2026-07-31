@@ -32,6 +32,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as ApiWebhooksMoncashRouteImport } from './routes/api.webhooks.moncash'
+import { Route as ApiCronMoncashReconcileRouteImport } from './routes/api.cron.moncash-reconcile'
 import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
@@ -188,6 +189,11 @@ const AuthenticatedDashboardIndexRoute =
 const ApiWebhooksMoncashRoute = ApiWebhooksMoncashRouteImport.update({
   id: '/api/webhooks/moncash',
   path: '/api/webhooks/moncash',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronMoncashReconcileRoute = ApiCronMoncashReconcileRouteImport.update({
+  id: '/api/cron/moncash-reconcile',
+  path: '/api/cron/moncash-reconcile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashboardRestaurantRoute =
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
@@ -523,6 +530,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
   '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
+  '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
@@ -590,6 +598,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
@@ -657,6 +666,7 @@ export interface FileRouteTypes {
     | '/dashboard/customer'
     | '/dashboard/driver'
     | '/dashboard/restaurant'
+    | '/api/cron/moncash-reconcile'
     | '/api/webhooks/moncash'
     | '/dashboard/'
     | '/dashboard/admin/ads'
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/restaurants'
     | '/chat/$orderId'
+    | '/api/cron/moncash-reconcile'
     | '/api/webhooks/moncash'
     | '/dashboard'
     | '/dashboard/admin/ads'
@@ -783,6 +794,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/customer'
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/restaurant'
+    | '/api/cron/moncash-reconcile'
     | '/api/webhooks/moncash'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/ads'
@@ -843,6 +855,7 @@ export interface RootRouteChildren {
   AuthIndexRoute: typeof AuthIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
+  ApiCronMoncashReconcileRoute: typeof ApiCronMoncashReconcileRoute
   ApiWebhooksMoncashRoute: typeof ApiWebhooksMoncashRoute
 }
 
@@ -1007,6 +1020,13 @@ declare module '@tanstack/react-router' {
       path: '/api/webhooks/moncash'
       fullPath: '/api/webhooks/moncash'
       preLoaderRoute: typeof ApiWebhooksMoncashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/moncash-reconcile': {
+      id: '/api/cron/moncash-reconcile'
+      path: '/api/cron/moncash-reconcile'
+      fullPath: '/api/cron/moncash-reconcile'
+      preLoaderRoute: typeof ApiCronMoncashReconcileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard/restaurant': {
@@ -1514,6 +1534,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
+  ApiCronMoncashReconcileRoute: ApiCronMoncashReconcileRoute,
   ApiWebhooksMoncashRoute: ApiWebhooksMoncashRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,0 +1,23 @@
+-- Hardening finding R1 (docs/MONCASH_PRODUCTION_READINESS_AUDIT.md § 2):
+-- create_pending_payout_secure has EXECUTE granted to `anon` in
+-- production — unlike complete_pending_payout_secure/
+-- fail_pending_payout_secure, which are correctly service_role-only.
+-- Not currently exploitable (the function's own
+-- private.has_role(auth.uid(), 'admin') check still rejects an
+-- anonymous caller with 'Forbidden'), but unnecessary attack surface —
+-- only an authenticated admin session should ever be able to reach this
+-- function at all.
+--
+-- Root cause (confirmed, not new to this function): this project's
+-- Supabase instance grants EXECUTE to `anon`/`authenticated` on every
+-- new public-schema function by default (ALTER DEFAULT PRIVILEGES at
+-- the project level) — REVOKE ALL ... FROM PUBLIC does not revoke a
+-- privilege already granted directly to a named role like `anon`. Five
+-- other pre-existing *_secure RPCs share this same pattern
+-- (initiate_payout_secure, confirm_payout_secure, dispute_payout_secure,
+-- resolve_payout_dispute_secure, update_notification_preferences_secure)
+-- — deliberately out of scope here (see the audit report); this
+-- migration only closes the gap on the one function this MonCash
+-- hardening pass is responsible for.
+REVOKE EXECUTE ON FUNCTION public.create_pending_payout_secure(uuid, uuid, numeric, text, text, text, text)
+  FROM anon;

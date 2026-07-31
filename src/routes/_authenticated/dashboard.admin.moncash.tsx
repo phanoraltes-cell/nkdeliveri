@@ -1,7 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Smartphone, ShieldCheck, ShieldAlert, AlertTriangle } from "lucide-react";
+import {
+  Smartphone,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Timer,
+  RefreshCw,
+  Webhook,
+  Activity,
+  Gauge,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
@@ -9,6 +22,23 @@ import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/data-table";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { getMonCashStatus } from "@/lib/get-moncash-status.functions";
+
+const SUCCESS_STATUSES = new Set(["paid", "confirmed", "resolved"]);
+// How long a 'pending' payout is allowed to sit before it's flagged as
+// stuck — matches the "reprise après incident" concern from Phase 9:
+// if MonCash never calls the webhook back, this is how an admin finds
+// out instead of the payout silently sitting in limbo forever.
+const STUCK_PENDING_MINUTES = 30;
+const WEBHOOK_MISSING_MINUTES = 15;
+const CONSECUTIVE_ERROR_THRESHOLD = 5;
+const FAILURE_RATE_ALERT_THRESHOLD = 0.5;
+
+type WebhookEventRow = {
+  event_id: string;
+  transaction_reference: string | null;
+  status: string;
+  received_at: string;
+};
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/moncash")({
   component: AdminMonCash,
@@ -159,6 +189,107 @@ function AdminMonCash() {
     },
   });
 
+  // Wider sample than the display tables above (which cap at 50 rows for
+  // readability) — this one purely feeds the KPI/alert computations
+  // below, so a slightly deeper window gives more honest aggregates
+  // without slowing the page down.
+  const webhookEvents = useQuery({
+    queryKey: ["admin-moncash-webhook-events"],
+    queryFn: async (): Promise<WebhookEventRow[]> => {
+      const { data, error } = await supabase
+        .from("moncash_webhook_events")
+        .select("event_id, transaction_reference, status, received_at")
+        .order("received_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const payouts = history.data ?? [];
+  const logs = apiLogs.data ?? [];
+  const events = webhookEvents.data ?? [];
+
+  const stats = {
+    succeeded: payouts.filter((p) => SUCCESS_STATUSES.has(p.status)).length,
+    failed: payouts.filter((p) => p.status === "failed").length,
+    pending: payouts.filter((p) => p.status === "pending").length,
+    timeouts: logs.filter((l) => l.is_timeout).length,
+    retries: logs.filter((l) => l.attempt > 1).length,
+    webhooksReceived: events.length,
+    webhooksRejected: events.filter((e) => e.status === "rejected").length,
+    apiErrors: logs.filter((l) => l.error != null).length,
+    avgDurationMs:
+      logs.length > 0
+        ? Math.round(logs.reduce((sum, l) => sum + l.duration_ms, 0) / logs.length)
+        : null,
+    availabilityPct:
+      logs.length > 0
+        ? Math.round((logs.filter((l) => l.error == null).length / logs.length) * 100)
+        : null,
+  };
+
+  // Alerts — computed straight from the same data already on the page,
+  // no separate polling/push mechanism. All 4 conditions come directly
+  // from the Phase 9 monitoring requirements.
+  const now = Date.now();
+  const stuckPending = payouts.filter(
+    (p) =>
+      p.status === "pending" &&
+      now - new Date(p.created_at).getTime() > STUCK_PENDING_MINUTES * 60_000,
+  );
+  const referencesWithWebhook = new Set(events.map((e) => e.transaction_reference).filter(Boolean));
+  const missingWebhook = payouts.filter(
+    (p) =>
+      p.status === "pending" &&
+      now - new Date(p.created_at).getTime() > WEBHOOK_MISSING_MINUTES * 60_000 &&
+      !referencesWithWebhook.has(p.transaction_reference),
+  );
+  const recentLogs = logs.slice(0, CONSECUTIVE_ERROR_THRESHOLD);
+  const consecutiveErrors =
+    recentLogs.length === CONSECUTIVE_ERROR_THRESHOLD && recentLogs.every((l) => l.error != null);
+  const recentFailureRate =
+    logs.length >= 10
+      ? logs.slice(0, 20).filter((l) => l.error != null).length / Math.min(20, logs.length)
+      : 0;
+  const abnormalFailureRate =
+    logs.length >= 10 && recentFailureRate >= FAILURE_RATE_ALERT_THRESHOLD;
+
+  const alerts: { title: string; body: string }[] = [
+    ...(consecutiveErrors
+      ? [
+          {
+            title: "Plizyè erè youn apre lòt",
+            body: `Dènye ${CONSECUTIVE_ERROR_THRESHOLD} apèl API MonCash yo tout echwe san rete.`,
+          },
+        ]
+      : []),
+    ...(missingWebhook.length > 0
+      ? [
+          {
+            title: "Webhook pa jwenn",
+            body: `${missingWebhook.length} peman an atant depi plis pase ${WEBHOOK_MISSING_MINUTES} minit san okenn webhook MonCash ki gen menm referans.`,
+          },
+        ]
+      : []),
+    ...(stuckPending.length > 0
+      ? [
+          {
+            title: "Peman bloke twò lontan",
+            body: `${stuckPending.length} peman rete "an atant" depi plis pase ${STUCK_PENDING_MINUTES} minit.`,
+          },
+        ]
+      : []),
+    ...(abnormalFailureRate
+      ? [
+          {
+            title: "Ogmantasyon echèk sispèk",
+            body: `Plis pase ${Math.round(FAILURE_RATE_ALERT_THRESHOLD * 100)}% nan dènye apèl yo echwe.`,
+          },
+        ]
+      : []),
+  ];
+
   const columns: DataTableColumn<MonCashPayoutRow>[] = [
     {
       key: "beneficiary",
@@ -290,6 +421,23 @@ function AdminMonCash() {
         </Link>
       </div>
 
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.map((a) => (
+            <div
+              key={a.title}
+              className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-bold">{a.title}</div>
+                <div className="text-xs">{a.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard
           label="Aktive nan sistèm nan"
@@ -307,6 +455,32 @@ function AdminMonCash() {
           label="Peman total nan istwa a"
           value={history.data ? history.data.length : "—"}
           icon={Smartphone}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <KpiCard label="Peman reyisi" value={stats.succeeded} icon={CheckCircle2} />
+        <KpiCard label="Peman echwe" value={stats.failed} icon={XCircle} />
+        <KpiCard label="Peman an atant" value={stats.pending} icon={Clock} />
+        <KpiCard label="Delè ekoule (timeout)" value={stats.timeouts} icon={Timer} />
+        <KpiCard label="Repriz (retries)" value={stats.retries} icon={RefreshCw} />
+        <KpiCard label="Webhooks resevwa" value={stats.webhooksReceived} icon={Webhook} />
+        <KpiCard label="Webhooks rejte" value={stats.webhooksRejected} icon={ShieldAlert} />
+        <KpiCard label="Erè API" value={stats.apiErrors} icon={AlertTriangle} />
+        <KpiCard
+          label="Tan repons mwayèn"
+          value={stats.avgDurationMs != null ? `${stats.avgDurationMs} ms` : "—"}
+          icon={Activity}
+        />
+        <KpiCard
+          label="Disponiblite API"
+          value={stats.availabilityPct != null ? `${stats.availabilityPct}%` : "—"}
+          icon={Gauge}
+          hint={
+            logs.length === 0
+              ? "Pa gen apèl toujou pou kalkile sa"
+              : `Sou ${logs.length} dènye apèl`
+          }
         />
       </div>
 

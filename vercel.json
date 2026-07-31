@@ -21,5 +21,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/moncash-reconcile",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }

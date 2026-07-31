@@ -173,6 +173,43 @@ describe("moncash-client.server.ts", () => {
     expect(createPaymentAttempts).toBe(2);
   }, 10_000);
 
+  it("createPayment: MonCash entirely unavailable (every attempt 503) fails cleanly after exactly 3 tries", async () => {
+    let createPaymentAttempts = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/oauth/token")) {
+        return jsonResponse(200, { access_token: "tok", expires_in: 3600 });
+      }
+      createPaymentAttempts += 1;
+      return jsonResponse(503, { message: "Service unavailable" });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment, MonCashApiError } = await import("../moncash-client.server");
+    const error = await createPayment("ORDER-DOWN", 100).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(MonCashApiError);
+    expect(createPaymentAttempts).toBe(3);
+  }, 10_000);
+
+  it("createPayment: a 200 response with a malformed (non-JSON) body raises a clean MonCashApiError, not a raw SyntaxError", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/oauth/token")) {
+        return jsonResponse(200, { access_token: "tok", expires_in: 3600 });
+      }
+      return new Response("<html>502 Bad Gateway</html>", {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment, MonCashApiError } = await import("../moncash-client.server");
+    const error = await createPayment("ORDER-BADBODY", 100).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(MonCashApiError);
+    expect((error as Error).message).not.toMatch(/^Unexpected token|is not valid JSON/i);
+  });
+
   it("retrieveOrderPayment: a 404 resolves to null, not an error", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (url.endsWith("/oauth/token")) {
