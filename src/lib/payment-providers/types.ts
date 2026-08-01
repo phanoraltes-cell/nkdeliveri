@@ -24,8 +24,8 @@ export type InitiatePaymentInput = {
   /** "disburse" = platform → beneficiary (a payout); "collect" = customer → platform (a future checkout gateway). Every provider today only implements disburse. */
   direction: PaymentDirection;
   amount: number;
-  /** E.164-ish local format, e.g. "+509XXXXXXXX" — whatever the beneficiary/customer has on file. */
-  counterpartyNumber: string;
+  /** E.164-ish local format, e.g. "+509XXXXXXXX" — whatever the beneficiary has on file. Disbursement only — a "collect" call has no counterparty to name, the customer pays through their own MonCash app. */
+  counterpartyNumber?: string;
   counterpartyName?: string | null;
   /** Our own id (payout id today) — passed through so a provider that supports idempotency keys can use it; also what a later webhook must be matched back against. */
   reference: string;

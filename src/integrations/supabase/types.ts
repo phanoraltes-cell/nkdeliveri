@@ -1175,6 +1175,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_transactions: {
+        Row: {
+          amount: number;
+          created_at: string;
+          direction: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          status: string;
+          updated_at: string;
+          webhook_data: Json | null;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          direction?: string;
+          error?: string | null;
+          external_reference: string;
+          id?: string;
+          order_id: string;
+          payment_id: string;
+          provider?: string;
+          provider_transaction_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          webhook_data?: Json | null;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          direction?: string;
+          error?: string | null;
+          external_reference?: string;
+          id?: string;
+          order_id?: string;
+          payment_id?: string;
+          provider?: string;
+          provider_transaction_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          webhook_data?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_transactions_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount: number;
@@ -2278,6 +2341,30 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      complete_collect_payment_secure: {
+        Args: {
+          _decision: string;
+          _error?: string;
+          _external_reference: string;
+          _provider_transaction_id?: string;
+          _webhook_data?: Json;
+        };
+        Returns: {
+          amount: number;
+          created_at: string;
+          direction: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          status: string;
+          updated_at: string;
+          webhook_data: Json | null;
+        };
+      };
       complete_pending_payout_secure: {
         Args: {
           _provider_code: string;
@@ -2410,6 +2497,29 @@ export type Database = {
           to: "payouts";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      create_collect_payment_secure: {
+        Args: {
+          _error?: string;
+          _external_reference: string;
+          _payment_id: string;
+          _status?: string;
+        };
+        Returns: {
+          amount: number;
+          created_at: string;
+          direction: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          status: string;
+          updated_at: string;
+          webhook_data: Json | null;
         };
       };
       create_menu_category_secure: {

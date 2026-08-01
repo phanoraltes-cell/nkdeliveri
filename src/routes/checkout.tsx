@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendNewOrderPush } from "@/lib/send-order-push.functions";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -21,16 +22,30 @@ export const Route = createFileRoute("/checkout")({
 });
 
 const METHODS = [
-  { id: "moncash", label: "MonCash", sub: "Peman manyèl ak prèv", logo: "/moncash-logo-hero.png" },
+  {
+    id: "moncash_auto",
+    label: "MonCash Automatik",
+    sub: "Peman otomatik, konfimasyon imedya",
+    logo: "/moncash-logo-hero.png",
+  },
+  {
+    id: "moncash",
+    label: "MonCash Manyèl",
+    sub: "Peman manyèl ak prèv",
+    logo: "/moncash-logo-hero.png",
+  },
   { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo-new.png" },
   { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
 ] as const;
+
+type CheckoutMethod = (typeof METHODS)[number]["id"];
 
 function Checkout() {
   const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
   const { clear } = useCart();
   const { user } = useAuth();
-  const [method, setMethod] = useState<"moncash" | "natcash" | "kach">("moncash");
+  const [method, setMethod] = useState<CheckoutMethod>("moncash_auto");
+  const initiateCollect = useServerFn(initiateCollectPayment);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
@@ -97,16 +112,22 @@ function Checkout() {
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
+  // "MonCash Automatik" moves money through the same rail as "MonCash
+  // Manyèl" — create_order_secure only knows the rail (payment_method
+  // enum: moncash/natcash/kach/stripe), never *how* it gets confirmed.
+  // The distinction is a checkout-flow choice, not a new backend method.
+  const orderMethod = method === "moncash_auto" ? "moncash" : method;
+
   const payNumber =
-    method === "moncash"
+    orderMethod === "moncash"
       ? platformPayout.data?.moncash_number
-      : method === "natcash"
+      : orderMethod === "natcash"
         ? platformPayout.data?.natcash_number
         : null;
   const payName =
-    method === "moncash"
+    orderMethod === "moncash"
       ? platformPayout.data?.moncash_account_name
-      : method === "natcash"
+      : orderMethod === "natcash"
         ? platformPayout.data?.natcash_account_name
         : null;
 
@@ -137,19 +158,59 @@ function Checkout() {
         _delivery_address: address,
         _contact_phone: phone,
         _delivery_notes: notes || "",
-        _method: method,
+        _method: orderMethod,
         _wants_location_sharing: wantsLocationSharing,
       });
       if (rpcErr) throw rpcErr;
-      clear();
-      toast.success(
-        method === "moncash" || method === "natcash"
-          ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
-          : "Kòmand kreye ak siksè",
-      );
+
       // Best-effort — a failed push send must never block order creation.
       sendNewOrderPushFn({ data: { orderId: orderId as string } }).catch((e) =>
         console.warn("[push] new-order notify failed", e),
+      );
+
+      if (method === "moncash_auto") {
+        // The order already exists at this point (create_order_secure
+        // above succeeded) — a failure from here on is a payment-
+        // initiation problem, never a reason to let the customer land
+        // back on this same form with the cart still full. Doing so
+        // would let a resubmit call create_order_secure a second time
+        // for the same cart, creating a duplicate order. Once the order
+        // exists, it — not the cart — is the source of truth, so every
+        // path below clears the cart and sends the customer to it;
+        // orders.$id.tsx already shows a clear "otomatik la pa t reyisi"
+        // state for the failure case.
+        const { data: paymentRow, error: payErr } = await supabase
+          .from("payments")
+          .select("id")
+          .eq("order_id", orderId as string)
+          .single();
+        if (payErr || !paymentRow) {
+          clear();
+          toast.error("Kòmand kreye, men nou pa jwenn peman an. Kontakte sipò.");
+          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          return;
+        }
+
+        const result = await initiateCollect({ data: { paymentId: paymentRow.id } });
+        if (result.outcome !== "pending") {
+          clear();
+          toast.error(
+            result.error ||
+              "Kòmand kreye, men peman otomatik la pa reyisi kòmanse. Ou ka eseye ankò nan paj kòmand la.",
+          );
+          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          return;
+        }
+        clear();
+        window.location.href = result.redirectUrl;
+        return;
+      }
+
+      clear();
+      toast.success(
+        orderMethod === "moncash" || orderMethod === "natcash"
+          ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
+          : "Kòmand kreye ak siksè",
       );
       nav({ to: "/orders/$id", params: { id: orderId as string } });
     } catch (e) {
@@ -340,6 +401,23 @@ function Checkout() {
                     </button>
                   ))}
                 </div>
+                {method === "moncash_auto" && (
+                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
+                    <img
+                      src="/moncash-logo-hero.png"
+                      alt=""
+                      width={40}
+                      height={28}
+                      loading="lazy"
+                      className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
+                    />
+                    <div>
+                      Apre w konfime kòmand la, n ap voye w sou paj MonCash pou w peye dirèkteman.
+                      Kòmand la konfime otomatikman apre peman an fin fèt — pa gen prèv pou
+                      telechaje.
+                    </div>
+                  </div>
+                )}
                 {(method === "moncash" || method === "natcash") && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
                     <img

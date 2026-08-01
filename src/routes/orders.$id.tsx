@@ -8,6 +8,7 @@ import { formatHTG } from "@/lib/format";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useOrderDelivery, ACTIVE_DELIVERY_STATUSES } from "@/hooks/useLiveOrders";
+import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 import { useRoute } from "@/hooks/useRoute";
 import { noIndexMeta } from "@/lib/seo";
 import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-section";
@@ -54,7 +55,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at)",
+          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference))",
         )
         .eq("id", id)
         .maybeSingle();
@@ -68,6 +69,12 @@ function OrderDetail() {
   // renders and violate the Rules of Hooks (React would throw or silently
   // drop hooks, breaking this exact component on the transition from
   // "loading" to "loaded", which is also where the map should appear).
+  // Payments aren't keyed by order_id in the realtime filter directly
+  // (the filter runs against the changed row, i.e. the payments table
+  // itself) — order_id IS a real column on payments, so this scopes
+  // correctly to just this order's payment(s).
+  useRealtimeTableSync("payments", `order_id=eq.${id}`, [["order", id]]);
+
   const delivery = useOrderDelivery(order.data?.id);
   const driverPoint =
     delivery?.driver_lat != null && delivery?.driver_lng != null
@@ -161,7 +168,13 @@ function OrderDetail() {
     }
     return arr;
   })();
-  const isManual = payment?.method === "moncash" || payment?.method === "natcash";
+  // A payment_transactions row only ever exists for the automatic
+  // collect flow (create_collect_payment_secure) — its presence is what
+  // tells this page apart from the manual proof-upload flow, since both
+  // share the same payments.method='moncash' rail.
+  const collectTransaction = payment?.payment_transactions?.[0];
+  const isCollect = Boolean(collectTransaction);
+  const isManual = (payment?.method === "moncash" || payment?.method === "natcash") && !isCollect;
   const needsProof =
     isManual &&
     (payment?.status === "awaiting_proof" ||
@@ -207,7 +220,10 @@ function OrderDetail() {
               )}
               {payment ? PAY_STATUS_LABEL[payment.status] || payment.status : "—"}
             </div>
-            <div className="mt-0.5 text-xs text-ink-soft capitalize">{payment?.method}</div>
+            <div className="mt-0.5 text-xs text-ink-soft capitalize">
+              {payment?.method}
+              {isCollect && " · Otomatik"}
+            </div>
             {needsProof && (
               <a
                 href="#payment-proof"
@@ -215,6 +231,16 @@ function OrderDetail() {
               >
                 ↓ Voye prèv peman an
               </a>
+            )}
+            {isCollect && collectTransaction?.status === "pending" && (
+              <p className="mt-2 text-xs text-ink-soft">
+                N ap tann konfimasyon MonCash — paj sa a ap mete ajou otomatikman.
+              </p>
+            )}
+            {isCollect && collectTransaction?.status === "failed" && (
+              <p className="mt-2 text-xs text-red-700">
+                Peman otomatik la pa t reyisi. Tanpri eseye ankò oswa kontakte sipò.
+              </p>
             )}
           </div>
         </div>
