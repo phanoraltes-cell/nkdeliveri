@@ -307,7 +307,12 @@ function AdminDashboard() {
             desc: "Jere anons sponsorize yo",
             to: "/dashboard/admin/ads",
           },
-          { icon: BarChart3, title: "Rapò", desc: "Vant ak analiz", to: null },
+          {
+            icon: BarChart3,
+            title: "Rapò",
+            desc: "Vant ak analiz",
+            to: "/dashboard/admin/finance",
+          },
         ]}
       />
     </div>

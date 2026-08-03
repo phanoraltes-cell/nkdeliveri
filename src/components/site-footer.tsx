@@ -66,9 +66,7 @@ export function SiteFooter() {
           )}
         </div>
         <nav aria-label="Navigasyon footer" className="flex flex-col gap-2 text-sm">
-          <span className="font-semibold uppercase tracking-wide text-white/70 text-xs">
-            Navigasyon
-          </span>
+          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Navigasyon</span>
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -80,9 +78,7 @@ export function SiteFooter() {
           ))}
         </nav>
         <nav aria-label="Konpayi" className="flex flex-col gap-2 text-sm">
-          <span className="font-semibold uppercase tracking-wide text-white/70 text-xs">
-            Konpayi
-          </span>
+          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Konpayi</span>
           {companyLinks.map((l) => (
             <Link
               key={l.to}
@@ -95,9 +91,7 @@ export function SiteFooter() {
         </nav>
         <div className="flex flex-col gap-4">
           <nav aria-label="Legal" className="flex flex-col gap-2 text-sm">
-            <span className="font-semibold uppercase tracking-wide text-white/70 text-xs">
-              Legal
-            </span>
+            <span className="font-semibold uppercase tracking-wide text-ink text-xs">Legal</span>
             {legalLinks.map((l) => (
               <Link
                 key={l.to}
@@ -109,9 +103,7 @@ export function SiteFooter() {
             ))}
           </nav>
           <div className="flex flex-col gap-2">
-            <span className="font-semibold uppercase tracking-wide text-white/70 text-xs">
-              Peman
-            </span>
+            <span className="font-semibold uppercase tracking-wide text-ink text-xs">Peman</span>
             <div className="flex flex-wrap gap-2">
               {payments.map((p) =>
                 p.kind === "image" ? (
@@ -140,7 +132,7 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-white/80">
+      <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-ink">
         © {new Date().getFullYear()} NK Deliveri — Tout dwa rezève
       </div>
     </footer>

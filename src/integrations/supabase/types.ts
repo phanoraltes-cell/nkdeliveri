@@ -2838,6 +2838,57 @@ export type Database = {
           title: string;
         }[];
       };
+      get_admin_finance_history_secure: {
+        Args: {
+          _amount_max?: number;
+          _amount_min?: number;
+          _driver_id?: string;
+          _event_type?: string;
+          _from?: string;
+          _limit?: number;
+          _method?: string;
+          _offset?: number;
+          _restaurant_id?: string;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+          _to?: string;
+        };
+        Returns: {
+          amount: number;
+          description: string;
+          driver_id: string | null;
+          driver_name: string | null;
+          event_date: string;
+          event_id: string;
+          event_type: string;
+          method: string | null;
+          order_id: string | null;
+          order_number: string | null;
+          reference: string | null;
+          restaurant_id: string | null;
+          restaurant_name: string | null;
+          status: string | null;
+          total_count: number;
+        }[];
+      };
+      get_admin_finance_overview_secure: {
+        Args: { _from?: string; _to?: string };
+        Returns: {
+          amount_to_disburse: number;
+          cash_volume: number;
+          commissions_paid: number;
+          commissions_pending: number;
+          drivers_paid_count: number;
+          moncash_volume: number;
+          natcash_volume: number;
+          payouts_this_month: number;
+          payouts_this_week: number;
+          payouts_today: number;
+          restaurants_paid_count: number;
+          total_commissions: number;
+        }[];
+      };
       get_admin_payout_kpis: {
         Args: never;
         Returns: {
@@ -3089,6 +3140,21 @@ export type Database = {
           not_after: string;
           refreshed_at: string;
           user_agent: string;
+        }[];
+      };
+      get_order_financial_timeline_secure: {
+        Args: { _order_id: string };
+        Returns: {
+          amount: number | null;
+          beneficiary_name: string | null;
+          beneficiary_type: string | null;
+          category: string;
+          description: string | null;
+          event_id: string;
+          event_time: string;
+          method: string | null;
+          reference: string | null;
+          status: string | null;
         }[];
       };
       get_payouts_monthly_series: {
