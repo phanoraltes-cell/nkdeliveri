@@ -1154,6 +1154,42 @@ export type Database = {
           },
         ];
       };
+      payment_provider_settings: {
+        Row: {
+          id: string;
+          provider: string;
+          visible: boolean;
+          enabled: boolean;
+          default_provider: boolean;
+          maintenance_message: string | null;
+          updated_by: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider: string;
+          visible?: boolean;
+          enabled?: boolean;
+          default_provider?: boolean;
+          maintenance_message?: string | null;
+          updated_by?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          provider?: string;
+          visible?: boolean;
+          enabled?: boolean;
+          default_provider?: boolean;
+          maintenance_message?: string | null;
+          updated_by?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       payment_providers: {
         Row: {
           code: string;
@@ -3878,6 +3914,32 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "orders";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_payment_provider_setting_secure: {
+        Args: {
+          _enabled?: boolean;
+          _maintenance_message?: string;
+          _provider: string;
+          _set_as_default?: boolean;
+          _visible?: boolean;
+        };
+        Returns: {
+          id: string;
+          provider: string;
+          visible: boolean;
+          enabled: boolean;
+          default_provider: boolean;
+          maintenance_message: string | null;
+          updated_by: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_provider_settings";
           isOneToOne: true;
           isSetofReturn: false;
         };

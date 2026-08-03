@@ -19,9 +19,49 @@ vi.mock("../payment-providers/moncash-provider.server", () => ({
   },
 }));
 
+type ProviderSettingRow = {
+  provider: string;
+  visible: boolean;
+  enabled: boolean;
+  default_provider: boolean;
+  maintenance_message: string | null;
+};
+
+const DEFAULT_PROVIDER_SETTINGS: ProviderSettingRow[] = [
+  {
+    provider: "kach",
+    visible: true,
+    enabled: true,
+    default_provider: true,
+    maintenance_message: null,
+  },
+  {
+    provider: "moncash",
+    visible: true,
+    enabled: true,
+    default_provider: false,
+    maintenance_message: null,
+  },
+  {
+    provider: "moncash_auto",
+    visible: true,
+    enabled: true,
+    default_provider: false,
+    maintenance_message: null,
+  },
+  {
+    provider: "natcash",
+    visible: true,
+    enabled: true,
+    default_provider: false,
+    maintenance_message: null,
+  },
+];
+
 function buildSupabaseMock(opts: {
   payment?: { id: string; method: string; status: string; amount: number } | null;
   rpcResult?: { data: unknown; error: { message: string } | null };
+  providerSettings?: ProviderSettingRow[];
 }) {
   // `??` can't distinguish "not provided" from "explicitly null" (both
   // are nullish) -- and a test for "payment not found" needs exactly
@@ -31,15 +71,25 @@ function buildSupabaseMock(opts: {
       ? opts.payment
       : { id: "pay-1", method: "moncash", status: "awaiting_proof", amount: 500 };
   const rpcResult = opts.rpcResult ?? { data: { id: "tx-1", status: "pending" }, error: null };
+  const providerSettings = opts.providerSettings ?? DEFAULT_PROVIDER_SETTINGS;
 
   const rpc = vi.fn(async () => rpcResult);
-  const from = vi.fn(() => ({
-    select: () => ({
-      eq: () => ({
-        maybeSingle: async () => ({ data: payment, error: null }),
+  const from = vi.fn((table: string) => {
+    if (table === "payment_provider_settings") {
+      return {
+        select: () => ({
+          order: async () => ({ data: providerSettings, error: null }),
+        }),
+      };
+    }
+    return {
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: payment, error: null }),
+        }),
       }),
-    }),
-  }));
+    };
+  });
   return { from, rpc } as unknown as import("@supabase/supabase-js").SupabaseClient;
 }
 
@@ -172,5 +222,101 @@ describe("runInitiateCollectPayment", () => {
 
     expect(result.outcome).toBe("failed");
     expect(initiatePaymentMock).not.toHaveBeenCalled();
+  });
+
+  describe("payment_provider_settings hardening (backend is the sole source of truth)", () => {
+    it("refuses when moncash_auto is disabled — never checks isConfigured(), never imports the provider, but still logs the attempt", async () => {
+      const supabase = buildSupabaseMock({
+        providerSettings: [
+          ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "moncash_auto"),
+          {
+            provider: "moncash_auto",
+            visible: true,
+            enabled: false,
+            default_provider: false,
+            maintenance_message: "MonCash Automatik ap retounen byento.",
+          },
+        ],
+      });
+      const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+      const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+      expect(result).toEqual({
+        outcome: "failed",
+        error: "MonCash Automatik ap retounen byento.",
+      });
+      // The real point of this test: isConfigured() is never even asked,
+      // and the provider is never called — a disabled setting short-
+      // circuits before either, exactly like the mission's "ne jamais
+      // appeler l'API MonCash" requirement.
+      expect(isConfiguredMock).not.toHaveBeenCalled();
+      expect(initiatePaymentMock).not.toHaveBeenCalled();
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        "create_collect_payment_secure",
+        expect.objectContaining({
+          _status: "failed",
+          _error: "MonCash Automatik ap retounen byento.",
+        }),
+      );
+    });
+
+    it("falls back to a generic message when disabled without a maintenance_message set", async () => {
+      const supabase = buildSupabaseMock({
+        providerSettings: [
+          ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "moncash_auto"),
+          {
+            provider: "moncash_auto",
+            visible: true,
+            enabled: false,
+            default_provider: false,
+            maintenance_message: null,
+          },
+        ],
+      });
+      const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+      const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+      expect(result.outcome).toBe("failed");
+      if (result.outcome === "failed") {
+        expect(result.error).toBe("MonCash Automatik pa disponib pou kounye a.");
+      }
+    });
+
+    it("proceeds to isConfigured()/the provider once enabled is true (no regression from the new gate)", async () => {
+      initiatePaymentMock.mockResolvedValue({
+        status: "pending",
+        providerReference: "REF-6",
+        raw: { redirectUrl: "https://moncash.example/pay/jkl" },
+      });
+      const supabase = buildSupabaseMock({});
+      const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+      const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+      expect(result.outcome).toBe("pending");
+      expect(isConfiguredMock).toHaveBeenCalled();
+      expect(initiatePaymentMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("attackers cannot bypass the gate by any client-supplied input — the check reads only from the database, never from InitiateCollectPaymentInput", async () => {
+      // InitiateCollectPaymentInputSchema only ever accepts { paymentId }
+      // (see the zod schema at the top of initiate-collect-payment.logic.ts)
+      // — there is no field an attacker could set to claim "enabled: true".
+      // This test documents that guarantee structurally rather than
+      // asserting a negative that's easy to phrase but not actually verify.
+      const { InitiateCollectPaymentInputSchema } =
+        await import("../initiate-collect-payment.logic");
+      const parsed = InitiateCollectPaymentInputSchema.safeParse({
+        paymentId: "11111111-1111-1111-1111-111111111111",
+        enabled: true,
+        providerAvailable: true,
+      });
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(Object.keys(parsed.data)).toEqual(["paymentId"]);
+      }
+    });
   });
 });

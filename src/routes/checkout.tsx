@@ -16,10 +16,50 @@ import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
+import { usePaymentProviderAvailability } from "@/hooks/usePaymentProviderAvailability";
 import {
-  getDefaultPaymentMethod,
-  getPaymentMethodAvailability,
-} from "@/lib/payment-method-availability";
+  getDefaultProvider,
+  getProviderSetting,
+  isProviderEnabled,
+  type PaymentProviderSetting,
+} from "@/lib/payment-provider-availability";
+
+// Local, safe placeholder shown only for the brief window before
+// payment_provider_settings has loaded — never a fallback decision in
+// itself (the backend enforces the real gate independently in
+// initiate-collect-payment.logic.ts regardless of what renders here).
+// Mirrors the migration's own seed values so there's no visible flash
+// once the real query resolves.
+const PLACEHOLDER_PROVIDER_SETTINGS: PaymentProviderSetting[] = [
+  {
+    provider: "kach",
+    visible: true,
+    enabled: true,
+    defaultProvider: true,
+    maintenanceMessage: null,
+  },
+  {
+    provider: "moncash",
+    visible: true,
+    enabled: true,
+    defaultProvider: false,
+    maintenanceMessage: null,
+  },
+  {
+    provider: "natcash",
+    visible: true,
+    enabled: true,
+    defaultProvider: false,
+    maintenanceMessage: null,
+  },
+  {
+    provider: "moncash_auto",
+    visible: true,
+    enabled: false,
+    defaultProvider: false,
+    maintenanceMessage: "MonCash Automatik ap retounen byento.",
+  },
+];
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -49,7 +89,29 @@ function Checkout() {
   const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
   const { clear } = useCart();
   const { user } = useAuth();
-  const [method, setMethod] = useState<CheckoutMethod>(getDefaultPaymentMethod());
+  // "kach" is the same safe fallback the migration seeds as the real
+  // default — synced to the actual DB default below once it loads, but
+  // never blocking the first paint on a network round-trip.
+  const [method, setMethod] = useState<CheckoutMethod>("kach");
+  const [methodTouchedByUser, setMethodTouchedByUser] = useState(false);
+  const providerAvailability = usePaymentProviderAvailability();
+  const providerSettings = providerAvailability.data ?? PLACEHOLDER_PROVIDER_SETTINGS;
+
+  // Backend is the source of truth for the default selection too — once
+  // the real settings load, adopt the real default, but only if the
+  // customer hasn't already picked something themselves (a later
+  // background refetch must never yank their selection out from under
+  // them).
+  useEffect(() => {
+    if (methodTouchedByUser || !providerAvailability.data) return;
+    setMethod(getDefaultProvider(providerAvailability.data));
+  }, [providerAvailability.data, methodTouchedByUser]);
+
+  function selectMethod(id: CheckoutMethod) {
+    setMethodTouchedByUser(true);
+    setMethod(id);
+  }
+
   const initiateCollect = useServerFn(initiateCollectPayment);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -378,12 +440,15 @@ function Checkout() {
                 <label className="mb-2 block text-sm font-bold">Metòd peman</label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {METHODS.map((m) => {
-                    const availability = getPaymentMethodAvailability(m.id);
-                    const isDisabled = !availability.enabled;
+                    const isDisabled = !isProviderEnabled(providerSettings, m.id);
+                    const maintenanceMessage = getProviderSetting(
+                      providerSettings,
+                      m.id,
+                    )?.maintenanceMessage;
                     return (
                       <button
                         key={m.id}
-                        onClick={() => setMethod(m.id)}
+                        onClick={() => selectMethod(m.id)}
                         disabled={isDisabled}
                         aria-disabled={isDisabled}
                         className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
@@ -414,7 +479,7 @@ function Checkout() {
                             )}
                           </span>
                           <small className="mt-0.5 block text-xs font-normal text-ink-soft">
-                            {isDisabled ? availability.maintenanceMessage : m.sub}
+                            {isDisabled ? maintenanceMessage : m.sub}
                           </small>
                         </span>
                       </button>

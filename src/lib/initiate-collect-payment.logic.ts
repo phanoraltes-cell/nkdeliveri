@@ -35,16 +35,51 @@ export async function runInitiateCollectPayment(
     return { outcome: "failed", error: "MonCash Automatik disponib sèlman pou peman MonCash" };
   }
 
-  const { moncashProvider } = await import("@/lib/payment-providers/moncash-provider.server");
-  if (!moncashProvider.isConfigured()) {
-    return { outcome: "failed", error: "MonCash Automatik pa konfigire toujou" };
-  }
-
   // Our own reference, generated fresh every attempt — never derived from
   // anything the client sends, and never itself capable of carrying a
   // secret (a random UUID, nothing more) even though it ends up in logs
-  // (moncash_api_logs) and the payment_transactions row.
+  // (moncash_api_logs) and the payment_transactions row. Generated before
+  // either gate below so every refusal, not just a provider rejection, is
+  // journaled through the same create_collect_payment_secure path.
   const reference = crypto.randomUUID();
+
+  // Backend is the sole source of truth for whether this method may be
+  // used at all — checked *before* isConfigured() and before importing
+  // the provider module, so a disabled method never even reaches a point
+  // where it could call the MonCash API, regardless of what the frontend
+  // shows. See docs/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md.
+  const { fetchPaymentProviderSettings, isProviderEnabled, getProviderSetting } =
+    await import("@/lib/payment-provider-availability");
+  const settings = await fetchPaymentProviderSettings(supabase);
+  if (!isProviderEnabled(settings, "moncash_auto")) {
+    const message =
+      getProviderSetting(settings, "moncash_auto")?.maintenanceMessage ??
+      "MonCash Automatik pa disponib pou kounye a.";
+    const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
+      _payment_id: data.paymentId,
+      _external_reference: reference,
+      _status: "failed",
+      _error: message,
+    });
+    if (logError)
+      console.warn("[collect] failed to record disabled-provider attempt", logError.message);
+    return { outcome: "failed", error: message };
+  }
+
+  const { moncashProvider } = await import("@/lib/payment-providers/moncash-provider.server");
+  if (!moncashProvider.isConfigured()) {
+    const message = "MonCash Automatik pa konfigire toujou";
+    const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
+      _payment_id: data.paymentId,
+      _external_reference: reference,
+      _status: "failed",
+      _error: message,
+    });
+    if (logError)
+      console.warn("[collect] failed to record not-configured attempt", logError.message);
+    return { outcome: "failed", error: message };
+  }
+
   const result = await moncashProvider.initiatePayment({
     direction: "collect",
     amount: payment.amount,

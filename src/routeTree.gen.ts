@@ -68,6 +68,7 @@ import { Route as AuthenticatedDashboardAdminPayoutsRouteImport } from './routes
 import { Route as AuthenticatedDashboardAdminPayoutSettingsRouteImport } from './routes/_authenticated/dashboard.admin.payout-settings'
 import { Route as AuthenticatedDashboardAdminPayoutMigrationRouteImport } from './routes/_authenticated/dashboard.admin.payout-migration'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
+import { Route as AuthenticatedDashboardAdminPaymentProvidersRouteImport } from './routes/_authenticated/dashboard.admin.payment-providers'
 import { Route as AuthenticatedDashboardAdminMoncashRouteImport } from './routes/_authenticated/dashboard.admin.moncash'
 import { Route as AuthenticatedDashboardAdminFinanceRouteImport } from './routes/_authenticated/dashboard.admin.finance'
 import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
@@ -408,6 +409,12 @@ const AuthenticatedDashboardAdminPaymentsRoute =
     path: '/payments',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminPaymentProvidersRoute =
+  AuthenticatedDashboardAdminPaymentProvidersRouteImport.update({
+    id: '/payment-providers',
+    path: '/payment-providers',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminMoncashRoute =
   AuthenticatedDashboardAdminMoncashRouteImport.update({
     id: '/moncash',
@@ -494,6 +501,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/dashboard/admin/moncash': typeof AuthenticatedDashboardAdminMoncashRoute
+  '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -557,6 +565,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/dashboard/admin/moncash': typeof AuthenticatedDashboardAdminMoncashRoute
+  '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -627,6 +636,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/_authenticated/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/_authenticated/dashboard/admin/moncash': typeof AuthenticatedDashboardAdminMoncashRoute
+  '/_authenticated/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/_authenticated/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/_authenticated/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -697,6 +707,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
     | '/dashboard/admin/moncash'
+    | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
@@ -760,6 +771,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
     | '/dashboard/admin/moncash'
+    | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
@@ -829,6 +841,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/drivers'
     | '/_authenticated/dashboard/admin/finance'
     | '/_authenticated/dashboard/admin/moncash'
+    | '/_authenticated/dashboard/admin/payment-providers'
     | '/_authenticated/dashboard/admin/payments'
     | '/_authenticated/dashboard/admin/payout-migration'
     | '/_authenticated/dashboard/admin/payout-settings'
@@ -1300,6 +1313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/payment-providers': {
+      id: '/_authenticated/dashboard/admin/payment-providers'
+      path: '/payment-providers'
+      fullPath: '/dashboard/admin/payment-providers'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentProvidersRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/moncash': {
       id: '/_authenticated/dashboard/admin/moncash'
       path: '/moncash'
@@ -1368,6 +1388,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
   AuthenticatedDashboardAdminFinanceRoute: typeof AuthenticatedDashboardAdminFinanceRoute
   AuthenticatedDashboardAdminMoncashRoute: typeof AuthenticatedDashboardAdminMoncashRoute
+  AuthenticatedDashboardAdminPaymentProvidersRoute: typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
   AuthenticatedDashboardAdminPayoutMigrationRoute: typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   AuthenticatedDashboardAdminPayoutSettingsRoute: typeof AuthenticatedDashboardAdminPayoutSettingsRoute
@@ -1394,6 +1415,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminFinanceRoute,
     AuthenticatedDashboardAdminMoncashRoute:
       AuthenticatedDashboardAdminMoncashRoute,
+    AuthenticatedDashboardAdminPaymentProvidersRoute:
+      AuthenticatedDashboardAdminPaymentProvidersRoute,
     AuthenticatedDashboardAdminPaymentsRoute:
       AuthenticatedDashboardAdminPaymentsRoute,
     AuthenticatedDashboardAdminPayoutMigrationRoute:

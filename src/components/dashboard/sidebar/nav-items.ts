@@ -96,6 +96,12 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
       icon: Wallet,
       section: "Finans",
     },
+    {
+      to: "/dashboard/admin/payment-providers",
+      label: "Fournisseurs",
+      icon: CreditCard,
+      section: "Finans",
+    },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
   ],
   super_admin: [
@@ -116,6 +122,12 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
       to: "/dashboard/admin/payout-settings",
       label: "Paramèt peman",
       icon: Wallet,
+      section: "Finans",
+    },
+    {
+      to: "/dashboard/admin/payment-providers",
+      label: "Fournisseurs",
+      icon: CreditCard,
       section: "Finans",
     },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
