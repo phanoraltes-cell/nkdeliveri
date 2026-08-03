@@ -56,20 +56,20 @@ qu'exécuter le transfert et rapporter un statut.
 
 ### Fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `payment-providers/types.ts` | Interface commune : `initiatePayment()`, `checkStatus()`, `cancelPayment()`, `verifyWebhook()`, `isConfigured()` |
-| `payment-providers/manual-provider.server.ts` | Implémentation triviale — reflète le geste humain déjà fait (`isConfigured()` toujours `true`) |
-| `payment-providers/moncash-provider.server.ts` | Implémentation MonCash — voir statut ci-dessous |
-| `payment-providers/natcash-provider.server.ts` | Stub — `isConfigured()` toujours `false`, aucun secret NatCash n'existe encore |
-| `payment-providers/moncash-config.server.ts` | Lecture/validation centralisée des 5 secrets MonCash — voir plus bas |
-| `payment-providers/moncash-client.server.ts` | Client HTTP bas niveau de l'API MonCash Business — auth OAuth2, `CreatePayment`, `RetrieveOrderPayment`/`RetrieveTransactionPayment`, timeout + retry + réconciliation idempotente. Seul `moncash-provider.server.ts` l'appelle. |
-| `payment-providers/index.server.ts` | Registre `getPaymentProvider(code)` — le seul point d'accès à une implémentation |
-| `payment-providers/moncash-webhook-handler.server.ts` | Orchestration d'une livraison webhook entrante : idempotence, mise à jour du payout, notifications, journalisation. Voir [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md). |
-| `routes/api.webhooks.moncash.ts` | Route HTTP publique `POST /api/webhooks/moncash` — reçoit les livraisons MonCash, délègue tout au handler ci-dessus |
-| `initiate-provider-payout.functions.ts` | Fonction serveur TanStack Start — le seul appelant autorisé de `getPaymentProvider(...).initiatePayment()` pour un décaissement |
-| `get-moncash-status.functions.ts` | Fonction serveur admin-only exposant `isMonCashConfigured()` (un booléen, jamais un secret) au dashboard admin |
-| `routes/_authenticated/dashboard.admin.moncash.tsx` | Page admin "MonCash" — statut, historique, erreurs. Voir § Dashboard admin ci-dessous. |
+| Fichier                                               | Rôle                                                                                                                                                                                                                             |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payment-providers/types.ts`                          | Interface commune : `initiatePayment()`, `checkStatus()`, `cancelPayment()`, `verifyWebhook()`, `isConfigured()`                                                                                                                 |
+| `payment-providers/manual-provider.server.ts`         | Implémentation triviale — reflète le geste humain déjà fait (`isConfigured()` toujours `true`)                                                                                                                                   |
+| `payment-providers/moncash-provider.server.ts`        | Implémentation MonCash — voir statut ci-dessous                                                                                                                                                                                  |
+| `payment-providers/natcash-provider.server.ts`        | Stub — `isConfigured()` toujours `false`, aucun secret NatCash n'existe encore                                                                                                                                                   |
+| `payment-providers/moncash-config.server.ts`          | Lecture/validation centralisée des 5 secrets MonCash — voir plus bas                                                                                                                                                             |
+| `payment-providers/moncash-client.server.ts`          | Client HTTP bas niveau de l'API MonCash Business — auth OAuth2, `CreatePayment`, `RetrieveOrderPayment`/`RetrieveTransactionPayment`, timeout + retry + réconciliation idempotente. Seul `moncash-provider.server.ts` l'appelle. |
+| `payment-providers/index.server.ts`                   | Registre `getPaymentProvider(code)` — le seul point d'accès à une implémentation                                                                                                                                                 |
+| `payment-providers/moncash-webhook-handler.server.ts` | Orchestration d'une livraison webhook entrante : idempotence, mise à jour du payout, notifications, journalisation. Voir [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md).                                           |
+| `routes/api.webhooks.moncash.ts`                      | Route HTTP publique `POST /api/webhooks/moncash` — reçoit les livraisons MonCash, délègue tout au handler ci-dessus                                                                                                              |
+| `initiate-provider-payout.functions.ts`               | Fonction serveur TanStack Start — le seul appelant autorisé de `getPaymentProvider(...).initiatePayment()` pour un décaissement                                                                                                  |
+| `get-moncash-status.functions.ts`                     | Fonction serveur admin-only exposant `isMonCashConfigured()` (un booléen, jamais un secret) au dashboard admin                                                                                                                   |
+| `routes/_authenticated/dashboard.admin.moncash.tsx`   | Page admin "MonCash" — statut, historique, erreurs. Voir § Dashboard admin ci-dessous.                                                                                                                                           |
 
 ## Pourquoi `.server.ts` et pas une convention de nommage
 
@@ -84,10 +84,39 @@ Aucun composant React n'appelle jamais un provider ; le seul chemin est
 `payout-pay-modal.tsx` → `initiate-provider-payout.functions.ts` (une
 fonction serveur) → `getPaymentProvider()`.
 
-## Trois portes indépendantes avant qu'un transfert réel puisse partir
+## ⚠️ Mise à jour 2026-08-01 — le Collect client est en production, ce document ne le couvrait pas
+
+Tout ce document, écrit avant le Go-Live du paiement client, décrit
+exclusivement le chemin **décaissement (B2C, plateforme → bénéficiaire)** —
+`payout-pay-modal.tsx` → `initiate-provider-payout.functions.ts` →
+`getPaymentProvider()`. Ce chemin reste inatteignable en production (voir
+[Ce qui n'est PAS fait](#ce-qui-nest-pas-fait-volontairement)).
+
+**Le chemin Collect (B2C inverse, client → plateforme) est un flux
+entièrement séparé, déjà en production** depuis le Go-Live MonCash Collect
+de cette session : `checkout.tsx` → `initiate-collect-payment.functions.ts`
+→ `moncashProvider.initiatePayment({ direction: "collect", ... })`. Ce flux
+**n'est gardé que par `moncashProvider.isConfigured()`** (présence des 5
+variables ci-dessous) — **jamais par `payment_providers.moncash_api.is_active`**,
+qui ne s'applique qu'au menu déroulant du décaissement admin, § ci-dessous.
+Détail complet, y compris pourquoi cette décision est conservée telle
+quelle pour la v1.0 : [MONCASH_CONFIGURATION.md](./MONCASH_CONFIGURATION.md).
+
+**Piège de nommage à connaître** : l'option "MonCash Automatik" existe à
+deux endroits différents avec deux comportements opposés — dans
+`checkout.tsx` (client, en production, gardée par `isConfigured()` seul) et
+dans `payout-pay-modal.tsx` (admin, décaissement, gardée par `is_active` ET
+`isConfigured()` ET toujours refusée par le check `direction` — § ci-dessous).
+Le même libellé créole ne désigne pas le même flux.
+
+## Trois portes indépendantes avant qu'un transfert de **décaissement** puisse partir
+
+Cette section ne concerne que le décaissement (B2C) — le Collect client
+(voir l'encart ci-dessus) n'a que la porte 2.
 
 1. **`payment_providers.is_active`** (base de données) — contrôle si le
-   provider apparaît dans le menu déroulant de `payout-pay-modal.tsx`.
+   provider apparaît dans le menu déroulant de `payout-pay-modal.tsx`
+   (décaissement admin uniquement — n'affecte jamais le Collect client).
    `moncash_api` reste `is_active = false` jusqu'à activation délibérée.
 2. **`provider.isConfigured()`** (code) — vérifié par
    `initiate-provider-payout.functions.ts` avant tout appel, indépendamment
@@ -118,13 +147,13 @@ expose :
 
 ### Variables requises
 
-| Variable | Description | Où l'obtenir |
-|---|---|---|
-| `MONCASH_CLIENT_ID` | Identifiant client OAuth2 de l'application MonCash Business | Portail développeur MonCash/Digicel, après création d'une application |
-| `MONCASH_CLIENT_SECRET` | Secret associé au client ID — permet d'obtenir un jeton d'accès OAuth2 | Idem, affiché une seule fois à la création — le régénérer révoque l'ancien |
-| `MONCASH_MERCHANT_ID` | Identifiant du compte marchand MonCash de NK Deliveri | Contrat marchand signé avec Digicel/MonCash |
-| `MONCASH_API_URL` | URL de base de l'API (sandbox ou production — MonCash distingue les deux) | Documentation MonCash — **ne jamais pointer la production vers l'URL sandbox ou inversement** |
-| `MONCASH_WEBHOOK_SECRET` | Secret utilisé pour vérifier la signature des webhooks entrants (notifications asynchrones de MonCash) | Portail développeur MonCash, section webhooks |
+| Variable                 | Description                                                                                            | Où l'obtenir                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `MONCASH_CLIENT_ID`      | Identifiant client OAuth2 de l'application MonCash Business                                            | Portail développeur MonCash/Digicel, après création d'une application                         |
+| `MONCASH_CLIENT_SECRET`  | Secret associé au client ID — permet d'obtenir un jeton d'accès OAuth2                                 | Idem, affiché une seule fois à la création — le régénérer révoque l'ancien                    |
+| `MONCASH_MERCHANT_ID`    | Identifiant du compte marchand MonCash de NK Deliveri                                                  | Contrat marchand signé avec Digicel/MonCash                                                   |
+| `MONCASH_API_URL`        | URL de base de l'API (sandbox ou production — MonCash distingue les deux)                              | Documentation MonCash — **ne jamais pointer la production vers l'URL sandbox ou inversement** |
+| `MONCASH_WEBHOOK_SECRET` | Secret utilisé pour vérifier la signature des webhooks entrants (notifications asynchrones de MonCash) | Portail développeur MonCash, section webhooks                                                 |
 
 Toutes sont **server-only** — jamais de variante `VITE_*`, jamais commitées
 (voir [`.env.example`](../.env.example) pour les placeholders et
@@ -146,14 +175,18 @@ sans préfixe).
 3. **Vérifier** : une fois les 5 variables présentes dans un environnement,
    `moncashProvider.isConfigured()` devient `true` dans cet environnement —
    sans redéploiement de code, seulement une nouvelle exécution qui relit
-   `process.env`.
-4. **Activer réellement le provider** (seulement une fois le
+   `process.env`. **C'est déjà, à elle seule, suffisant pour que le Collect
+   client (`checkout.tsx`) fonctionne réellement** — aucune étape
+   supplémentaire, aucun flag base de données à changer pour ce flux-là.
+4. **Activer réellement le provider de _décaissement_** (seulement une fois le
    [B2C disbursement confirmé et implémenté](#ce-qui-nest-pas-fait-volontairement) —
    la connexion écrite aujourd'hui ne couvre que la collecte, pas le
-   décaissement) : passer `payment_providers.moncash_api.is_active` à
+   décaissement — **sans lien avec l'étape 3 ci-dessus, qui concerne le
+   Collect**) : passer `payment_providers.moncash_api.is_active` à
    `true` en base — un `UPDATE` simple, pas une migration de schéma. Tant
-   que ce n'est pas fait, le provider reste invisible dans l'UI admin même
-   avec des secrets valides.
+   que ce n'est pas fait, le provider de décaissement reste invisible dans
+   `payout-pay-modal.tsx` même avec des secrets valides. Sans effet sur le
+   Collect client, déjà actif indépendamment (étape 3).
 
 ### Rotation
 
@@ -180,7 +213,7 @@ directement.
 
 - **Authentification** — OAuth2 `client_credentials`
   (`POST {MONCASH_API_URL}/oauth/token`, `Authorization: Basic
-  base64(clientId:clientSecret)`). Le jeton est mis en cache en mémoire
+base64(clientId:clientSecret)`). Le jeton est mis en cache en mémoire
   jusqu'à ~1 min avant son expiration (`expires_in`) ; des appels
   concurrents pendant un cache froid partagent une seule requête de jeton
   en vol (pas de N requêtes de jeton pour N décaissements simultanés). Le
@@ -193,9 +226,9 @@ directement.
   utilisé — cette contrainte d'unicité est le mécanisme d'idempotence de
   cette API (elle n'a pas d'en-tête `Idempotency-Key`).
 - **Récupération du statut** — `POST
-  {MONCASH_API_URL}/v1/RetrieveOrderPayment` (par notre `orderId` — le
+{MONCASH_API_URL}/v1/RetrieveOrderPayment` (par notre `orderId` — le
   chemin utilisé par `checkStatus()`) et `POST
-  {MONCASH_API_URL}/v1/RetrieveTransactionPayment` (par l'identifiant de
+{MONCASH_API_URL}/v1/RetrieveTransactionPayment` (par l'identifiant de
   transaction propre à MonCash, exposé pour un usage futur — ex. un
   webhook confirmé plus tard).
 - **Gestion des erreurs** — `MonCashApiError` (message, `httpStatus`,
@@ -222,8 +255,8 @@ directement.
 
 ## Le cycle de vie asynchrone (`payouts.status = 'pending'`) et le webhook
 
-Jusqu'à cette migration, `payouts` ne modélisait qu'un transfert *déjà
-effectué* (`status` par défaut `'paid'`, comme le fait toujours le flux
+Jusqu'à cette migration, `payouts` ne modélisait qu'un transfert _déjà
+effectué_ (`status` par défaut `'paid'`, comme le fait toujours le flux
 manuel) — il n'existait nulle part de "on a demandé, pas encore
 confirmé". Un webhook a besoin de cet état intermédiaire pour avoir
 quelque chose à mettre à jour :
@@ -267,14 +300,14 @@ règle déjà établie pour toute nouvelle fonctionnalité. Catégorie
 décaissement existantes), donc filtrable dans le centre de notifications
 comme n'importe quelle autre.
 
-| Destinataire | Événement | RPC | `type` |
-|---|---|---|---|
-| Restaurant/Livreur (bénéficiaire) | Peman voye | `create_pending_payout_secure` | `payout_provider_sent` |
-| Restaurant/Livreur (bénéficiaire) | Peman konfime | `complete_pending_payout_secure` | `payout_provider_confirmed` |
-| Restaurant/Livreur (bénéficiaire) | Erè | `fail_pending_payout_secure` | `payout_provider_failed` |
-| Admin (qui a lanse peman an) | Siksè | `complete_pending_payout_secure` | `payout_provider_admin_success` |
-| Admin (qui a lanse peman an) | Erè | `fail_pending_payout_secure` ou `log_payment_provider_error_secure` | `payout_provider_admin_error` |
-| Admin (qui a lanse peman an) | Delè ekoule (timeout) | `log_payment_provider_error_secure` | `payout_provider_admin_timeout` |
+| Destinataire                      | Événement             | RPC                                                                 | `type`                          |
+| --------------------------------- | --------------------- | ------------------------------------------------------------------- | ------------------------------- |
+| Restaurant/Livreur (bénéficiaire) | Peman voye            | `create_pending_payout_secure`                                      | `payout_provider_sent`          |
+| Restaurant/Livreur (bénéficiaire) | Peman konfime         | `complete_pending_payout_secure`                                    | `payout_provider_confirmed`     |
+| Restaurant/Livreur (bénéficiaire) | Erè                   | `fail_pending_payout_secure`                                        | `payout_provider_failed`        |
+| Admin (qui a lanse peman an)      | Siksè                 | `complete_pending_payout_secure`                                    | `payout_provider_admin_success` |
+| Admin (qui a lanse peman an)      | Erè                   | `fail_pending_payout_secure` ou `log_payment_provider_error_secure` | `payout_provider_admin_error`   |
+| Admin (qui a lanse peman an)      | Delè ekoule (timeout) | `log_payment_provider_error_secure`                                 | `payout_provider_admin_timeout` |
 
 Le "timeout" est une vraie distinction structurelle, pas un texte
 deviné : `MonCashApiError` (`moncash-client.server.ts`) porte un champ
@@ -295,7 +328,7 @@ Point clé : `complete_pending_payout_secure` fait aboutir un payout
 confirmé par webhook exactement au même état (`status = 'paid'`) qu'un
 payout manuel dès sa création — `confirm_payout_secure`/
 `dispute_payout_secure` (la confirmation de réception par le
-bénéficiaire) fonctionnent donc *sans aucune modification* sur un payout
+bénéficiaire) fonctionnent donc _sans aucune modification_ sur un payout
 d'origine webhook.
 
 **`complete_pending_payout_secure`/`fail_pending_payout_secure` ne sont
@@ -322,11 +355,11 @@ produire des combinaisons incohérentes comme `natcash` + `moncash_api`)
 est maintenant **un seul choix** à exactement 3 options utiles,
 combinant rail et exécuteur :
 
-| Option affichée | `method` | `provider_code` |
-|---|---|---|
+| Option affichée   | `method`  | `provider_code`                                      |
+| ----------------- | --------- | ---------------------------------------------------- |
 | MonCash Automatik | `moncash` | `moncash_api` (désactivé tant que `is_active=false`) |
-| MonCash Manyèl | `moncash` | `manual` |
-| NatCash Manyèl | `natcash` | `manual` |
+| MonCash Manyèl    | `moncash` | `manual`                                             |
+| NatCash Manyèl    | `natcash` | `manual`                                             |
 
 Pas de "NatCash Automatik" — `natcashProvider` n'a ni secret ni
 implémentation, l'offrir serait un cul-de-sac. **Les deux canaux manuels
@@ -373,9 +406,11 @@ décaissement MonCash n'est pas confirmé, pas un bug d'affichage.
   `moncashProvider.initiatePayment()` vérifie explicitement
   `input.direction` et renvoie un échec clair et traçable pour
   `"disburse"` (jamais un succès inventé), même une fois les secrets
-  configurés. `"collect"` (aucun appelant aujourd'hui — prévu pour une
-  future page de paiement client) est, lui, réellement implémenté contre
-  la vraie API.
+  configurés. `"collect"`, lui, est réellement implémenté contre la vraie
+  API **et a un appelant vivant en production depuis le Go-Live MonCash
+  Collect** (`checkout.tsx` → `initiate-collect-payment.functions.ts`) —
+  voir l'encart de mise à jour en tête de document et
+  [MONCASH_CONFIGURATION.md](./MONCASH_CONFIGURATION.md).
 - **`cancelPayment()`** renvoie toujours `"not_cancellable"` — l'API
   MonCash n'a pas de point final d'annulation ; un jeton de paiement créé
   expire simplement s'il n'est pas utilisé.
