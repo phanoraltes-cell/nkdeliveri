@@ -14,7 +14,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendNewOrderPush } from "@/lib/send-order-push.functions";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
+import {
+  getDefaultPaymentMethod,
+  getPaymentMethodAvailability,
+} from "@/lib/payment-method-availability";
 
 export const Route = createFileRoute("/checkout")({
   head: () => noIndexMeta("Panye — NK Deliveri"),
@@ -44,7 +49,7 @@ function Checkout() {
   const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
   const { clear } = useCart();
   const { user } = useAuth();
-  const [method, setMethod] = useState<CheckoutMethod>("moncash_auto");
+  const [method, setMethod] = useState<CheckoutMethod>(getDefaultPaymentMethod());
   const initiateCollect = useServerFn(initiateCollectPayment);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -372,34 +377,49 @@ function Checkout() {
               <div className="mt-5">
                 <label className="mb-2 block text-sm font-bold">Metòd peman</label>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {METHODS.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMethod(m.id)}
-                      className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
-                        method === m.id
-                          ? "border-brand bg-brand-soft shadow-brand-xs"
-                          : "border-brand-soft bg-white hover:-translate-y-0.5 hover:border-brand hover:shadow-brand-xs"
-                      }`}
-                    >
-                      {m.logo && (
-                        <img
-                          src={m.logo}
-                          alt=""
-                          width={40}
-                          height={28}
-                          loading="lazy"
-                          className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
-                        />
-                      )}
-                      <span>
-                        {m.label}
-                        <small className="mt-0.5 block text-xs font-normal text-ink-soft">
-                          {m.sub}
-                        </small>
-                      </span>
-                    </button>
-                  ))}
+                  {METHODS.map((m) => {
+                    const availability = getPaymentMethodAvailability(m.id);
+                    const isDisabled = !availability.enabled;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setMethod(m.id)}
+                        disabled={isDisabled}
+                        aria-disabled={isDisabled}
+                        className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
+                          isDisabled
+                            ? "cursor-not-allowed border-brand-soft/60 bg-cream opacity-60"
+                            : method === m.id
+                              ? "border-brand bg-brand-soft shadow-brand-xs"
+                              : "border-brand-soft bg-white hover:-translate-y-0.5 hover:border-brand hover:shadow-brand-xs"
+                        }`}
+                      >
+                        {m.logo && (
+                          <img
+                            src={m.logo}
+                            alt=""
+                            width={40}
+                            height={28}
+                            loading="lazy"
+                            className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
+                          />
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            {m.label}
+                            {isDisabled && (
+                              <Badge variant="secondary" className="shrink-0 font-semibold">
+                                Byento disponib
+                              </Badge>
+                            )}
+                          </span>
+                          <small className="mt-0.5 block text-xs font-normal text-ink-soft">
+                            {isDisabled ? availability.maintenanceMessage : m.sub}
+                          </small>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
                 {method === "moncash_auto" && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
