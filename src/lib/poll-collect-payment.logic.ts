@@ -88,6 +88,7 @@ export async function runPollCollectPayment(
       _decision: "paid",
       _provider_transaction_id: status.providerReference,
       _webhook_data: (status.raw ?? null) as Json,
+      _payment_method_used: status.walletUsed ?? undefined,
     },
   );
   if (rpcError) throw new Error(rpcError.message);

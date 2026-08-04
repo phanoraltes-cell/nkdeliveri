@@ -60,6 +60,7 @@ async function finalizeAsPaid(
   supabaseAdmin: SupabaseAdmin,
   reference: string,
   providerTransactionId: string | undefined,
+  walletUsed: string | null | undefined,
   raw: unknown,
 ): Promise<void> {
   const { error } = await supabaseAdmin.rpc("complete_collect_payment_secure", {
@@ -67,6 +68,7 @@ async function finalizeAsPaid(
     _decision: "paid",
     _provider_transaction_id: providerTransactionId,
     _webhook_data: (raw ?? null) as Json,
+    _payment_method_used: walletUsed ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
@@ -107,7 +109,13 @@ export async function reconcilePendingPlopPayments(): Promise<ReconcileSummary> 
 
     if (status.status === "success") {
       try {
-        await finalizeAsPaid(supabaseAdmin, reference, status.providerReference, status.raw);
+        await finalizeAsPaid(
+          supabaseAdmin,
+          reference,
+          status.providerReference,
+          status.walletUsed,
+          status.raw,
+        );
         results.push({ externalReference: reference, outcome: "confirmed" });
       } catch (err) {
         // PLOP confirmed the payment but recording it here failed — a

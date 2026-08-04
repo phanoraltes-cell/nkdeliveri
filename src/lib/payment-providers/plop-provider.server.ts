@@ -23,7 +23,12 @@
  */
 import type { PaymentProvider } from "./types";
 import { isPlopConfigured } from "./plop-config.server";
-import { PlopApiError, createPayment, verifyPayment } from "./plop-client.server";
+import {
+  PlopApiError,
+  createPayment,
+  verifyPayment,
+  isValidPaymentMethod,
+} from "./plop-client.server";
 
 const NOT_CONFIGURED = "PLOP pa konfigire toujou";
 
@@ -53,15 +58,28 @@ export const plopProvider: PaymentProvider = {
     if (input.direction === "disburse") {
       return { status: "failed", error: DISBURSEMENT_NOT_SUPPORTED, code: "unsupported" };
     }
+    // Validated *before* the try/catch below on purpose — an unrecognized
+    // `paymentMethod` is a caller-side mistake, never a PLOP outcome. Doing
+    // this check first means an invalid wallet never triggers the
+    // reconciliation-on-error path (A1, below): there is nothing to
+    // reconcile against for a request that was never actually sent.
+    if (input.paymentMethod !== undefined && !isValidPaymentMethod(input.paymentMethod)) {
+      return {
+        status: "failed",
+        error: `Metòd peman "${input.paymentMethod}" pa yon valè PLOP rekonèt (moncash|kashpaw|natcash|all)`,
+        code: "invalid_wallet",
+      };
+    }
 
     try {
-      const result = await createPayment(input.reference, input.amount);
+      const result = await createPayment(input.reference, input.amount, input.paymentMethod);
       return {
         status: "pending",
         providerReference: input.reference,
         raw: {
           redirectUrl: result.redirectUrl,
           providerTransactionId: result.providerTransactionId,
+          paymentMethodRequested: result.paymentMethodRequested,
         },
       };
     } catch (err) {
@@ -86,6 +104,7 @@ export const plopProvider: PaymentProvider = {
           return {
             status: "success",
             providerReference: reconciled.providerTransactionId ?? input.reference,
+            walletUsed: reconciled.walletUsed,
             raw: reconciled.raw,
           };
         }
@@ -123,6 +142,7 @@ export const plopProvider: PaymentProvider = {
         return {
           status: "success",
           providerReference: result.providerTransactionId ?? providerReference,
+          walletUsed: result.walletUsed,
           raw: result.raw,
         };
       }

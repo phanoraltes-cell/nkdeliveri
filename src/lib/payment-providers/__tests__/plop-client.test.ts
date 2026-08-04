@@ -83,6 +83,45 @@ describe("plop-client.server.ts", () => {
     await createPayment("CMD-2", 500);
   });
 
+  it("createPayment: dynamic wallet selection — an explicit 'natcash' overrides the global config default (bug fix, docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
+      expect(body.payment_method).toBe("natcash");
+      return jsonResponse(200, { status: true, url: "https://x.test", transaction_id: "NC-1" });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment } = await import("../plop-client.server");
+    const result = await createPayment("CMD-NATCASH", 500, "natcash");
+
+    expect(result.paymentMethodRequested).toBe("natcash");
+  });
+
+  it("createPayment: an explicit 'moncash' still works exactly like before (no regression)", async () => {
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
+      expect(body.payment_method).toBe("moncash");
+      return jsonResponse(200, { status: true, url: "https://x.test", transaction_id: "MC-1" });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment } = await import("../plop-client.server");
+    const result = await createPayment("CMD-MONCASH", 500, "moncash");
+
+    expect(result.paymentMethodRequested).toBe("moncash");
+  });
+
+  it("createPayment: an unrecognized wallet is rejected before any network call (invalid wallet)", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment, PlopApiError } = await import("../plop-client.server");
+    await expect(createPayment("CMD-BADWALLET", 100, "bogus-wallet")).rejects.toBeInstanceOf(
+      PlopApiError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("createPayment: never logs the full client_id, only a redacted form", async () => {
     const fetchMock = vi.fn(async () =>
       jsonResponse(200, { status: true, url: "https://x.test", transaction_id: "1" }),
@@ -234,6 +273,31 @@ describe("plop-client.server.ts", () => {
     expect(result.transStatus).toBe("ok");
     expect(result.providerTransactionId).toBe("173763124912345");
     expect(result.amount).toBe(250);
+    expect(result.walletUsed).toBe("moncash");
+  });
+
+  it("verifyPayment: captures a different wallet than what might have been requested (payment_method:'all' letting the customer pick on PLOP's page)", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(200, { status: true, montant: 250, trans_status: "ok", method: "natcash" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { verifyPayment } = await import("../plop-client.server");
+    const result = await verifyPayment("CMD-ALL-1");
+
+    expect(result.walletUsed).toBe("natcash");
+  });
+
+  it("verifyPayment: walletUsed is null when PLOP doesn't return a method field", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(200, { status: true, montant: 250, trans_status: "no" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { verifyPayment } = await import("../plop-client.server");
+    const result = await verifyPayment("CMD-NOMETHOD");
+
+    expect(result.walletUsed).toBeNull();
   });
 
   it("verifyPayment: normalizes trans_status 'no' to pending-shaped result", async () => {

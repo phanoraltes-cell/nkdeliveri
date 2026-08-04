@@ -80,6 +80,7 @@ export async function runInitiateCollectPayment(
       _external_reference: reference,
       _status: "failed",
       _error: message,
+      _payment_method_requested: payment.method,
     });
     if (logError)
       console.warn("[collect] failed to record disabled-provider attempt", logError.message);
@@ -94,16 +95,29 @@ export async function runInitiateCollectPayment(
       _external_reference: reference,
       _status: "failed",
       _error: message,
+      _payment_method_requested: payment.method,
     });
     if (logError)
       console.warn("[collect] failed to record not-configured attempt", logError.message);
     return { outcome: "failed", error: message };
   }
 
+  // `payment.method` is the order's rail (already narrowed to `"moncash"`
+  // by the gate above) — passed through as PLOP's own `payment_method`
+  // rather than relying on plop-client.server.ts's global config default.
+  // The bug this fixes (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2):
+  // `plop-client.server.ts` previously always used
+  // `PLOP_PAYMENT_METHOD`, making it structurally impossible for any
+  // caller to select a wallet per transaction. This is still the only
+  // caller and the gate above still only allows `"moncash"` through — the
+  // gate itself is a separate, deliberate business-scope decision
+  // (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option B), not touched by
+  // this fix.
   const result = await plopProvider.initiatePayment({
     direction: "collect",
     amount: payment.amount,
     reference,
+    paymentMethod: payment.method,
   });
 
   if (result.status === "failed") {
@@ -114,6 +128,7 @@ export async function runInitiateCollectPayment(
       _external_reference: reference,
       _status: "failed",
       _error: result.error,
+      _payment_method_requested: payment.method,
     });
     if (logError) console.warn("[collect] failed to record failed attempt", logError.message);
     return { outcome: "failed", error: result.error };
@@ -131,7 +146,12 @@ export async function runInitiateCollectPayment(
   // "pending" row.
   const { data: transaction, error: rpcError } = await supabase.rpc(
     "create_collect_payment_secure",
-    { _payment_id: data.paymentId, _external_reference: reference, _status: "pending" },
+    {
+      _payment_id: data.paymentId,
+      _external_reference: reference,
+      _status: "pending",
+      _payment_method_requested: payment.method,
+    },
   );
   if (rpcError) throw new Error(rpcError.message);
 

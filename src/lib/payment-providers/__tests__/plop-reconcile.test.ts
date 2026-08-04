@@ -84,10 +84,11 @@ describe("reconcilePendingPlopPayments", () => {
     await expect(reconcilePendingPlopPayments()).rejects.toThrow("connection reset");
   });
 
-  it("confirms via complete_collect_payment_secure when checkStatus reports success", async () => {
+  it("confirms via complete_collect_payment_secure when checkStatus reports success, propagating walletUsed as payment_method_used", async () => {
     checkStatusMock.mockResolvedValue({
       status: "success",
       providerReference: "TX-1",
+      walletUsed: "natcash",
       raw: { trans_status: "ok" },
     });
     const { supabaseAdmin } = buildSupabaseAdminMock([
@@ -105,6 +106,7 @@ describe("reconcilePendingPlopPayments", () => {
         _external_reference: "REF-1",
         _decision: "paid",
         _provider_transaction_id: "TX-1",
+        _payment_method_used: "natcash",
       }),
     );
   });

@@ -1222,6 +1222,8 @@ export type Database = {
           id: string;
           order_id: string;
           payment_id: string;
+          payment_method_requested: string | null;
+          payment_method_used: string | null;
           provider: string;
           provider_transaction_id: string | null;
           status: string;
@@ -1237,6 +1239,8 @@ export type Database = {
           id?: string;
           order_id: string;
           payment_id: string;
+          payment_method_requested?: string | null;
+          payment_method_used?: string | null;
           provider?: string;
           provider_transaction_id?: string | null;
           status?: string;
@@ -1252,6 +1256,8 @@ export type Database = {
           id?: string;
           order_id?: string;
           payment_id?: string;
+          payment_method_requested?: string | null;
+          payment_method_used?: string | null;
           provider?: string;
           provider_transaction_id?: string | null;
           status?: string;
@@ -2431,6 +2437,7 @@ export type Database = {
           _decision: string;
           _error?: string;
           _external_reference: string;
+          _payment_method_used?: string;
           _provider_transaction_id?: string;
           _webhook_data?: Json;
         };
@@ -2443,6 +2450,8 @@ export type Database = {
           id: string;
           order_id: string;
           payment_id: string;
+          payment_method_requested: string | null;
+          payment_method_used: string | null;
           provider: string;
           provider_transaction_id: string | null;
           status: string;
@@ -2595,6 +2604,7 @@ export type Database = {
           _error?: string;
           _external_reference: string;
           _payment_id: string;
+          _payment_method_requested?: string;
           _status?: string;
         };
         Returns: {
@@ -2606,6 +2616,8 @@ export type Database = {
           id: string;
           order_id: string;
           payment_id: string;
+          payment_method_requested: string | null;
+          payment_method_used: string | null;
           provider: string;
           provider_transaction_id: string | null;
           status: string;

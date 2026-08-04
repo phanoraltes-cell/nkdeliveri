@@ -155,6 +155,7 @@ describe("plopProvider.initiatePayment — direction:'collect'", () => {
           transStatus: "ok" as const,
           providerTransactionId: "TX-RECONCILED",
           amount: 250,
+          walletUsed: null,
           raw: { trans_status: "ok" },
         })),
       };
@@ -171,6 +172,52 @@ describe("plopProvider.initiatePayment — direction:'collect'", () => {
     if (result.status === "success") expect(result.providerReference).toBe("TX-RECONCILED");
   });
 
+  it("dynamic wallet selection — passes input.paymentMethod through to createPayment (bug fix, docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
+    const createPaymentMock = vi.fn(async () => ({
+      redirectUrl: "https://redirect-paiement.example/natcash",
+      providerTransactionId: "TX-NC",
+      paymentMethodRequested: "natcash" as const,
+    }));
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, createPayment: createPaymentMock };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    await plopProvider.initiatePayment({
+      direction: "collect",
+      amount: 250,
+      reference: "REF-NC",
+      paymentMethod: "natcash",
+    });
+
+    expect(createPaymentMock).toHaveBeenCalledWith("REF-NC", 250, "natcash");
+  });
+
+  it("invalid wallet — rejected immediately with code:'invalid_wallet', never calls createPayment or attempts reconciliation", async () => {
+    const createPaymentMock = vi.fn();
+    const verifyPaymentMock = vi.fn();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, createPayment: createPaymentMock, verifyPayment: verifyPaymentMock };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "collect",
+      amount: 250,
+      reference: "REF-BAD",
+      paymentMethod: "bogus-wallet",
+    });
+
+    expect(result.status).toBe("failed");
+    if (result.status === "failed") expect(result.code).toBe("invalid_wallet");
+    expect(createPaymentMock).not.toHaveBeenCalled();
+    expect(verifyPaymentMock).not.toHaveBeenCalled();
+  });
+
   it("A1 fix — reports 'pending' (never 'failed') when createPayment throws but reconciliation finds trans_status:'no' (PLOP has the reference, just still processing)", async () => {
     vi.doMock("../plop-client.server", async () => {
       const actual =
@@ -184,6 +231,7 @@ describe("plopProvider.initiatePayment — direction:'collect'", () => {
           transStatus: "no" as const,
           providerTransactionId: null,
           amount: null,
+          walletUsed: null,
           raw: {},
         })),
       };
@@ -207,7 +255,7 @@ describe("plopProvider.checkStatus", () => {
     setConfiguredEnv();
   });
 
-  it("maps trans_status 'ok' to status:'success'", async () => {
+  it("maps trans_status 'ok' to status:'success', carrying walletUsed through", async () => {
     vi.doMock("../plop-client.server", async () => {
       const actual =
         await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
@@ -217,6 +265,7 @@ describe("plopProvider.checkStatus", () => {
           transStatus: "ok" as const,
           providerTransactionId: "TX-2",
           amount: 250,
+          walletUsed: "natcash",
           raw: {},
         })),
       };
@@ -226,7 +275,10 @@ describe("plopProvider.checkStatus", () => {
     const result = await plopProvider.checkStatus("REF-7");
 
     expect(result.status).toBe("success");
-    if (result.status === "success") expect(result.providerReference).toBe("TX-2");
+    if (result.status === "success") {
+      expect(result.providerReference).toBe("TX-2");
+      expect(result.walletUsed).toBe("natcash");
+    }
   });
 
   it("maps trans_status 'no' to status:'pending'", async () => {
@@ -239,6 +291,7 @@ describe("plopProvider.checkStatus", () => {
           transStatus: "no" as const,
           providerTransactionId: null,
           amount: null,
+          walletUsed: null,
           raw: {},
         })),
       };
@@ -260,6 +313,7 @@ describe("plopProvider.checkStatus", () => {
           transStatus: "unknown" as const,
           providerTransactionId: null,
           amount: null,
+          walletUsed: null,
           raw: {},
         })),
       };

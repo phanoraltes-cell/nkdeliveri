@@ -241,7 +241,24 @@ function redactId(value: string | undefined): string | null {
 export type PlopCreatePaymentResult = {
   redirectUrl: string;
   providerTransactionId: string | null;
+  /** Echoes back exactly what was sent to PLOP for this call — `payment_method_requested` traceability (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option A), not PLOP's own response (it doesn't echo this field). */
+  paymentMethodRequested: PlopPaymentMethod;
 };
+
+/**
+ * The 4 values PLOP documents for `payment_method` on `paiement-marchand`
+ * (docs/PLOP_PHASE0_AUDIT.md § 7) — `"all"` lets the customer choose on
+ * PLOP's own hosted page rather than pre-selecting a wallet. Never
+ * expanded on guesswork; if PLOP ever documents a 5th value, add it here
+ * explicitly, never accept an unrecognized string silently.
+ */
+const VALID_PAYMENT_METHODS = ["moncash", "kashpaw", "natcash", "all"] as const;
+export type PlopPaymentMethod = (typeof VALID_PAYMENT_METHODS)[number];
+
+/** Exported so callers (plop-provider.server.ts) can reject an unrecognized wallet *before* attempting a call, rather than parsing a thrown PlopApiError's message string to tell "invalid input" apart from "PLOP rejected it" — same list, one source of truth. */
+export function isValidPaymentMethod(value: string): value is PlopPaymentMethod {
+  return (VALID_PAYMENT_METHODS as readonly string[]).includes(value);
+}
 
 /**
  * Creates a PLOP Collect payment for `reference` (our own
@@ -252,12 +269,29 @@ export type PlopCreatePaymentResult = {
  * confirmed to reconcile against), a failure is reported honestly and the
  * reconciliation cron (plop-reconcile.server.ts) is the only thing that
  * later re-checks via `verifyPayment`.
+ *
+ * `paymentMethod` is optional and per-call — falls back to
+ * `PLOP_PAYMENT_METHOD`'s configured default only when the caller doesn't
+ * specify one, never the other way around (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md
+ * § 2/§ 6: the previous version read the config value unconditionally,
+ * making per-transaction wallet selection structurally impossible — this
+ * is the fix). Validated against PLOP's documented value set *before* any
+ * network call — never send an unrecognized string and let PLOP's own
+ * error handling (undocumented for this endpoint, Phase 0 § 14.4) decide
+ * what happens.
  */
 export async function createPayment(
   reference: string,
   amountHtg: number,
+  paymentMethod?: string,
 ): Promise<PlopCreatePaymentResult> {
-  const { clientId, paymentMethod } = getPlopConfig();
+  const { clientId, paymentMethod: defaultPaymentMethod } = getPlopConfig();
+  const requestedMethod = paymentMethod ?? defaultPaymentMethod;
+  if (!isValidPaymentMethod(requestedMethod)) {
+    throw new PlopApiError(
+      `Metòd peman "${requestedMethod}" pa yon valè PLOP rekonèt (moncash|kashpaw|natcash|all)`,
+    );
+  }
 
   const response = await requestWithRetry(
     `${PLOP_BASE_URL}/api/paiement-marchand`,
@@ -268,7 +302,7 @@ export async function createPayment(
         client_id: clientId,
         refference_id: reference,
         montant: amountHtg,
-        payment_method: paymentMethod,
+        payment_method: requestedMethod,
       }),
     },
     {
@@ -278,7 +312,7 @@ export async function createPayment(
         client_id: redactId(clientId),
         refference_id: reference,
         montant: amountHtg,
-        payment_method: paymentMethod,
+        payment_method: requestedMethod,
       },
       transactionReference: reference,
       summarizeResponse: (body) => {
@@ -327,6 +361,7 @@ export async function createPayment(
   return {
     redirectUrl: data.url,
     providerTransactionId: typeof data.transaction_id === "string" ? data.transaction_id : null,
+    paymentMethodRequested: requestedMethod,
   };
 }
 
@@ -341,6 +376,15 @@ export type PlopVerifyResult = {
   transStatus: PlopTransStatus;
   providerTransactionId: string | null;
   amount: number | null;
+  /**
+   * PLOP's own `method` field on `paiement-verify` — which wallet the
+   * customer actually used, as opposed to what we requested at creation
+   * (relevant when `payment_method:"all"` was sent, letting the customer
+   * pick on PLOP's page — docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 4.3,
+   * a gap this fixes: previously present only inside `raw`, never
+   * surfaced as a typed field).
+   */
+  walletUsed: string | null;
   raw: unknown;
 };
 
@@ -367,6 +411,7 @@ export async function verifyPayment(reference: string): Promise<PlopVerifyResult
           trans_status?: string;
           id_transaction?: string;
           montant?: number;
+          method?: string;
         };
         return {
           status: b.status ?? null,
@@ -374,6 +419,7 @@ export async function verifyPayment(reference: string): Promise<PlopVerifyResult
           trans_status: b.trans_status ?? null,
           id_transaction: b.id_transaction ?? null,
           montant: b.montant ?? null,
+          method: b.method ?? null,
         };
       },
       extractProviderTransactionId: (body) => {
@@ -397,6 +443,7 @@ export async function verifyPayment(reference: string): Promise<PlopVerifyResult
     trans_status?: string;
     id_transaction?: string;
     montant?: number;
+    method?: string;
   };
   if (!data.status) {
     throw new PlopApiError(
@@ -413,6 +460,7 @@ export async function verifyPayment(reference: string): Promise<PlopVerifyResult
     transStatus,
     providerTransactionId: typeof data.id_transaction === "string" ? data.id_transaction : null,
     amount: typeof data.montant === "number" ? data.montant : null,
+    walletUsed: typeof data.method === "string" ? data.method : null,
     raw: data,
   };
 }

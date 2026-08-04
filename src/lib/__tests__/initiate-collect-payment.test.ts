@@ -118,7 +118,14 @@ describe("runInitiateCollectPayment", () => {
       expect(result.redirectUrl).toBe("https://moncash.example/pay/abc");
     }
     expect(initiatePaymentMock).toHaveBeenCalledWith(
-      expect.objectContaining({ direction: "collect", amount: 500 }),
+      expect.objectContaining({ direction: "collect", amount: 500, paymentMethod: "moncash" }),
+    );
+    // Dynamic wallet selection (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)
+    // — the order's own rail is recorded as payment_method_requested,
+    // never left to plop-client.server.ts's global config default.
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "create_collect_payment_secure",
+      expect.objectContaining({ _status: "pending", _payment_method_requested: "moncash" }),
     );
   });
 

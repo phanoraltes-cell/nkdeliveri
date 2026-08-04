@@ -30,21 +30,36 @@ export type InitiatePaymentInput = {
   /** Our own id (payout id today) — passed through so a provider that supports idempotency keys can use it; also what a later webhook must be matched back against. */
   reference: string;
   description?: string;
+  /**
+   * Optional per-call payment-method/wallet hint (e.g. PLOP's own
+   * `moncash`|`kashpaw`|`natcash`|`all` — docs/PLOP_PHASE0_AUDIT.md § 7).
+   * Providers that route through a single fixed rail (MonCash Digicel,
+   * NatCash) simply ignore this. Added specifically so a multi-wallet
+   * gateway (PLOP) is never forced to rely on one global config value for
+   * every transaction — docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md §§ 2, 6.
+   */
+  paymentMethod?: string;
 };
 
 export type InitiatePaymentResult =
-  | { status: "success"; providerReference: string; raw?: unknown }
+  | {
+      status: "success";
+      providerReference: string;
+      /** Which wallet the provider actually processed this through, when it can say (e.g. PLOP's `paiement-verify.method`) — distinct from `paymentMethod` above, which is only what was *requested*. `undefined`/`null` for providers that don't expose this. */
+      walletUsed?: string | null;
+      raw?: unknown;
+    }
   | { status: "pending"; providerReference?: string; raw?: unknown }
   | {
       status: "failed";
       error: string;
       /** Coarse reason a caller can act on without parsing `error` text — e.g. the admin "timeout" notification vs. a generic failure one. Optional: not every provider/failure distinguishes these. */
-      code?: "timeout" | "not_configured" | "unsupported" | "rejected";
+      code?: "timeout" | "not_configured" | "unsupported" | "rejected" | "invalid_wallet";
       raw?: unknown;
     };
 
 export type PaymentStatusResult =
-  | { status: "success"; providerReference: string; raw?: unknown }
+  | { status: "success"; providerReference: string; walletUsed?: string | null; raw?: unknown }
   | { status: "pending"; raw?: unknown }
   | { status: "failed"; error: string; raw?: unknown }
   /** The provider itself couldn't say — a network/auth error asking the status, not a real "the payment failed". Callers must not treat this as failure. */
