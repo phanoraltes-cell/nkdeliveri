@@ -18,7 +18,8 @@ type PaymentTransactionRow = Database["public"]["Tables"]["payment_transactions"
  * refactor-for-testability, not a design change.
  *
  * Phase 3 (PLOP wiring, docs/PLOP_PHASE3_WIRING_REPORT.md): the provider
- * behind "MonCash Automatik" is now `plopProvider`
+ * behind the "Peman Otomatik" checkout method (`moncash_auto`) is now
+ * `plopProvider`
  * (payment-providers/plop-provider.server.ts) — this function itself
  * only ever talks to the generic `PaymentProvider` interface and knows
  * no PLOP-specific detail, unchanged from before.
@@ -51,7 +52,7 @@ export async function runInitiateCollectPayment(
   if (paymentError) throw new Error(paymentError.message);
   if (!payment) return { outcome: "failed", error: "Peman pa jwenn" };
   if (payment.method !== "moncash") {
-    return { outcome: "failed", error: "MonCash Automatik disponib sèlman pou peman MonCash" };
+    return { outcome: "failed", error: "Peman Otomatik disponib sèlman pou peman MonCash" };
   }
 
   // Our own reference, generated fresh every attempt — never derived from
@@ -73,7 +74,7 @@ export async function runInitiateCollectPayment(
   if (!isProviderEnabled(settings, "moncash_auto")) {
     const message =
       getProviderSetting(settings, "moncash_auto")?.maintenanceMessage ??
-      "MonCash Automatik pa disponib pou kounye a.";
+      "Peman Otomatik pa disponib pou kounye a.";
     const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
       _payment_id: data.paymentId,
       _external_reference: reference,
@@ -87,7 +88,7 @@ export async function runInitiateCollectPayment(
 
   const { plopProvider } = await import("@/lib/payment-providers/plop-provider.server");
   if (!plopProvider.isConfigured()) {
-    const message = "MonCash Automatik pa konfigire toujou";
+    const message = "Peman Otomatik pa konfigire toujou";
     const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
       _payment_id: data.paymentId,
       _external_reference: reference,

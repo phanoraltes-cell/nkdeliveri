@@ -261,7 +261,7 @@ describe("runInitiateCollectPayment", () => {
             visible: true,
             enabled: false,
             default_provider: false,
-            maintenance_message: "MonCash Automatik ap retounen byento.",
+            maintenance_message: "Peman Otomatik ap retounen byento.",
           },
         ],
       });
@@ -271,7 +271,7 @@ describe("runInitiateCollectPayment", () => {
 
       expect(result).toEqual({
         outcome: "failed",
-        error: "MonCash Automatik ap retounen byento.",
+        error: "Peman Otomatik ap retounen byento.",
       });
       // The real point of this test: isConfigured() is never even asked,
       // and the provider is never called — a disabled setting short-
@@ -283,7 +283,7 @@ describe("runInitiateCollectPayment", () => {
         "create_collect_payment_secure",
         expect.objectContaining({
           _status: "failed",
-          _error: "MonCash Automatik ap retounen byento.",
+          _error: "Peman Otomatik ap retounen byento.",
         }),
       );
     });
@@ -307,7 +307,7 @@ describe("runInitiateCollectPayment", () => {
 
       expect(result.outcome).toBe("failed");
       if (result.outcome === "failed") {
-        expect(result.error).toBe("MonCash Automatik pa disponib pou kounye a.");
+        expect(result.error).toBe("Peman Otomatik pa disponib pou kounye a.");
       }
     });
 

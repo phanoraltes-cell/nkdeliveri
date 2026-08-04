@@ -20,7 +20,7 @@ const PROVIDER_LABELS: Record<CheckoutProviderId, string> = {
   kach: "Kach nan livrezon",
   moncash: "MonCash Manyèl",
   natcash: "NatCash",
-  moncash_auto: "MonCash Automatik",
+  moncash_auto: "Peman Otomatik",
 };
 
 type ProviderSettingRow = {

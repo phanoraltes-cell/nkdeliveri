@@ -1,7 +1,9 @@
 /**
  * PLOP implementation of `PaymentProvider` (`./types.ts`) — the actual
- * fournisseur behind the "MonCash Automatik" checkout method
- * (`payment_provider_settings.provider = 'moncash_auto'`), replacing the
+ * fournisseur behind the "Peman Otomatik" checkout method
+ * (`payment_provider_settings.provider = 'moncash_auto'` — internal code
+ * unchanged, only the customer-facing label was ever "MonCash
+ * Automatik"), replacing the
  * dormant Digicel-direct integration in `moncash-provider.server.ts`
  * (kept, untouched, legacy — see docs/PLOP_REMEDIATION_REPORT.md § 2 for
  * why this is a new file rather than a rewrite of that one).

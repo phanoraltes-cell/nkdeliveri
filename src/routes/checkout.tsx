@@ -57,7 +57,7 @@ const PLACEHOLDER_PROVIDER_SETTINGS: PaymentProviderSetting[] = [
     visible: true,
     enabled: false,
     defaultProvider: false,
-    maintenanceMessage: "MonCash Automatik ap retounen byento.",
+    maintenanceMessage: "Peman Otomatik ap retounen byento.",
   },
 ];
 
@@ -69,7 +69,7 @@ export const Route = createFileRoute("/checkout")({
 const METHODS = [
   {
     id: "moncash_auto",
-    label: "MonCash Automatik",
+    label: "Peman Otomatik",
     sub: "Peman otomatik, konfimasyon imedya",
     logo: "/moncash-logo-hero.png",
   },
@@ -179,7 +179,9 @@ function Checkout() {
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
-  // "MonCash Automatik" moves money through the same rail as "MonCash
+  // "Peman Otomatik" (checkout id `moncash_auto`, displayed generically
+  // since the underlying gateway — PLOP — can itself route through more
+  // than one rail) moves money through the same rail as "MonCash
   // Manyèl" — create_order_secure only knows the rail (payment_method
   // enum: moncash/natcash/kach/stripe), never *how* it gets confirmed.
   // The distinction is a checkout-flow choice, not a new backend method.
@@ -507,9 +509,9 @@ function Checkout() {
                       className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
                     />
                     <div>
-                      Apre w konfime kòmand la, n ap voye w sou paj MonCash pou w peye dirèkteman.
-                      Kòmand la konfime otomatikman apre peman an fin fèt — pa gen prèv pou
-                      telechaje.
+                      Apre w konfime kòmand la, n ap voye w sou paj peman an pou w peye dirèkteman
+                      (MonCash, elatriye). Kòmand la konfime otomatikman apre peman an fin fèt — pa
+                      gen prèv pou telechaje.
                     </div>
                   </div>
                 )}
