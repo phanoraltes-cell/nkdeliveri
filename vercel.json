@@ -26,6 +26,10 @@
     {
       "path": "/api/cron/moncash-reconcile",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/plop-reconcile",
+      "schedule": "15 3 * * *"
     }
   ]
 }

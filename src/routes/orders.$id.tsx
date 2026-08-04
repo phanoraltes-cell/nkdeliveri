@@ -3,7 +3,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCollectPaymentPoll } from "@/hooks/useCollectPaymentPoll";
 import { formatHTG } from "@/lib/format";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
@@ -48,6 +49,7 @@ const PAY_STATUS_LABEL: Record<string, string> = {
 function OrderDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const order = useQuery({
     queryKey: ["order", id],
@@ -55,7 +57,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference))",
+          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference, created_at))",
         )
         .eq("id", id)
         .maybeSingle();
@@ -74,6 +76,24 @@ function OrderDetail() {
   // itself) — order_id IS a real column on payments, so this scopes
   // correctly to just this order's payment(s).
   useRealtimeTableSync("payments", `order_id=eq.${id}`, [["order", id]]);
+
+  // Also computed unconditionally, before the loading/not-found early
+  // returns below, for the same Rules-of-Hooks reason —
+  // useCollectPaymentPoll must run every render regardless of `enabled`.
+  // A payment_transactions row only ever exists for the automatic collect
+  // flow (create_collect_payment_secure) — see the fuller comment on
+  // `collectTransaction` further down, where the same value is recomputed
+  // for rendering (cheap optional chaining, not worth hoisting a shared
+  // variable across the early-return boundary).
+  const pendingCollectTransaction = order.data?.payments?.[0]?.payment_transactions?.find(
+    (pt) => pt.status === "pending",
+  );
+  useCollectPaymentPoll({
+    enabled: Boolean(pendingCollectTransaction),
+    externalReference: pendingCollectTransaction?.external_reference,
+    createdAt: pendingCollectTransaction?.created_at,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["order", id] }),
+  });
 
   const delivery = useOrderDelivery(order.data?.id);
   const driverPoint =

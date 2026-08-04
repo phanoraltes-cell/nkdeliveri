@@ -6,8 +6,9 @@ import {
 } from "@/lib/initiate-collect-payment.logic";
 
 /**
- * The *only* place allowed to call moncashProvider.initiatePayment() for
- * a customer checkout — never from checkout.tsx directly (see
+ * The *only* place allowed to call the collect provider's
+ * initiatePayment() (plopProvider, docs/PLOP_PHASE3_WIRING_REPORT.md)
+ * for a customer checkout — never from checkout.tsx directly (see
  * payment-providers/types.ts). Mirrors initiate-provider-payout
  * .functions.ts's own shape on the disbursement side: call the real
  * provider first, only record the outcome afterward, so

@@ -259,12 +259,22 @@ function Checkout() {
         }
 
         const result = await initiateCollect({ data: { paymentId: paymentRow.id } });
-        if (result.outcome !== "pending") {
+        if (result.outcome === "failed") {
           clear();
           toast.error(
             result.error ||
               "Kòmand kreye, men peman otomatik la pa reyisi kòmanse. Ou ka eseye ankò nan paj kòmand la.",
           );
+          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          return;
+        }
+        if (result.outcome === "already_confirmed") {
+          // Rare reconciliation-on-error path (docs/PLOP_PHASE2_AUDIT.md §
+          // A1) — the provider already confirmed this payment before this
+          // call even returned. Nothing to redirect to; the order page's
+          // own poll/Realtime picks up the "paid" status within moments.
+          clear();
+          toast.success("Peman an konfime! N ap trete kòmand ou an.");
           nav({ to: "/orders/$id", params: { id: orderId as string } });
           return;
         }

@@ -767,6 +767,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      // Hand-added ahead of the migration in
+      // supabase/migrations/20260804120000_plop_api_logs.sql being applied
+      // — schema matrix-matched to moncash_api_logs above (see
+      // docs/PLOP_PHASE1_ARCHITECTURE.md § 10). Regenerate for real via
+      // `supabase gen types` once that migration is applied; this block is
+      // safe to be overwritten verbatim by that regeneration.
+      plop_api_logs: {
+        Row: {
+          attempt: number;
+          created_at: string;
+          duration_ms: number;
+          endpoint: string;
+          error: string | null;
+          http_status: number | null;
+          id: string;
+          is_timeout: boolean;
+          method: string;
+          provider_transaction_id: string | null;
+          request_summary: Json;
+          response_summary: Json | null;
+          transaction_reference: string | null;
+        };
+        Insert: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms: number;
+          endpoint: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Update: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms?: number;
+          endpoint?: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Relationships: [];
+      };
       moncash_webhook_events: {
         Row: {
           error: string | null;

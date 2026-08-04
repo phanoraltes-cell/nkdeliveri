@@ -1,0 +1,86 @@
+# NK Deliveri — PLOP — Phase 3 : Remédiation des anomalies + branchement réel
+
+**Date** : 2026-08-04
+**Portée** : (1) correction des anomalies du `docs/PLOP_PHASE2_AUDIT.md`, (2) branchement réel du provider PLOP dans le flux Collect. **`moncash_auto` reste `enabled=false`** dans `payment_provider_settings` (aucune migration écrite dans cette phase) — le code est branché mais rien n'est activé en production tant que les identifiants réels et une validation manuelle (Phase 7) n'ont pas eu lieu.
+
+> **✅ Phase 3 validée (2026-08-04)**, avec réserve explicite de l'auteur du projet : *"Ne pas activer en production avant la Phase 7 qui doit uniquement ajouter les secrets, activer explicitement le provider et effectuer les tests sandbox/réels."* Cette réserve **borne désormais officiellement le périmètre de la Phase 7** — elle ne doit contenir que ces trois actions (configuration des secrets `PLOP_CLIENT_ID`/`PLOP_CLIENT_SECRET`, activation via `update_payment_provider_setting_secure`, tests en conditions réelles), rien de plus. Toute anomalie ou évolution architecturale découverte au-delà de ce périmètre doit faire l'objet d'un échange explicite avant d'être traitée dans cette phase.
+
+---
+
+## 1. Anomalies corrigées (Phase 2 audit)
+
+| # | Correction appliquée |
+|---|---|
+| **A9** | Commentaire corrompu dans `.env.example` restauré. |
+| **A1** | `plop-provider.server.ts::initiatePayment` tente désormais **une réconciliation** (`verifyPayment`) avant de déclarer un échec, exactement comme `moncashProvider`. Si PLOP a en fait confirmé (`trans_status:"ok"`), retourne `status:"success"` au lieu de `"failed"` ; si `trans_status:"no"`, retourne `"pending"` (PLOP a bien la référence, seule la réponse HTTP a été perdue) plutôt qu'un échec définitif. Une seconde erreur pendant la réconciliation ne masque jamais l'erreur d'origine. |
+| **A6** | `plop-reconcile.server.ts` appelle maintenant `plopProvider.checkStatus()` (couche provider) au lieu de `verifyPayment()` (client bas niveau) — même patron que `moncash-reconcile.server.ts`/`moncashProvider`. |
+| **A3** | Un échec de `complete_collect_payment_secure` **après** une confirmation PLOP réussie est désormais un outcome distinct (`"rpc_error"`, nouveau membre de `ReconcileOutcome`), journalisé en `console.error` avec le préfixe explicite `"RPC FAILED AFTER PLOP CONFIRMED"` — ne se fond plus dans le bruit normal d'attente. |
+| **A2** | Commentaire enrichi dans `plopProvider.checkStatus()` documentant explicitement la divergence assumée avec `moncashProvider` (statut ambigu → `"unknown"` chez PLOP, `"pending"` chez MonCash) et la règle que tout appelant doit en tirer (traiter `"unknown"` comme `"pending"`, jamais comme un échec) — appliquée concrètement dans `plop-reconcile.server.ts` et `poll-collect-payment.logic.ts`. |
+| **A5** | Nouveau test `plop-client.test.ts` : `PLOP_CLIENT_SECRET` n'apparaît dans aucune ligne journalisée, pour `createPayment` et `verifyPayment`. |
+| **A7** | Nouveau test `plop-provider.test.ts` : `checkStatus()` retourne `{status:"unknown", error}` (jamais une exception) quand `verifyPayment` lève. |
+| **A8** | Nouveaux tests `plop-reconcile.test.ts` : échec du `SELECT` initial propagé (jamais avalé), et le nouveau cas `"rpc_error"` (A3) testé explicitement. |
+
+**Vérification post-correction** : `npm run typecheck` propre, `npm run lint` 0 erreur, **90/90 tests** (contre 83 en fin de Phase 2 — 7 nouveaux tests dédiés aux anomalies).
+
+---
+
+## 2. Écart corrigé par rapport au plan Phase 1 — `index.server.ts`
+
+Le plan initial (`docs/PLOP_PHASE1_ARCHITECTURE.md` § 2, Phase 1) prévoyait de changer la ligne `moncash_api: moncashProvider` en `moncash_api: plopProvider` dans le registre `index.server.ts`. **Ce plan était incorrect et n'a pas été exécuté.**
+
+En relisant `initiate-provider-payout.functions.ts` avant d'agir, ce registre s'est révélé être **partagé avec le flux de décaissement** — `getPaymentProvider(data.providerCode)` y est appelé pour les paiements aux restaurants/livreurs, avec `providerCode` pouvant valoir `"moncash_api"` (sélectionnable dans `payout-pay-modal.tsx`, canal "MonCash Automatik"). Basculer ce registre aurait fait exécuter `plopProvider.initiatePayment({direction:"disburse"})` pour un décaissement, refusé avec un message PLOP ("hors périmètre") au lieu du message MonCash correct — un changement de comportement pour le décaissement, explicitement interdit.
+
+**Correction** : `index.server.ts` **n'a pas été touché** — confirmé par `git status` (absent de tout diff). Le flux Collect (`initiate-collect-payment.logic.ts`) contourne déjà ce registre par un import dynamique direct (architecture pré-existante, Phase 0 § 3) — c'est **ce seul import** qui a été changé (§ 3 ci-dessous), laissant le décaissement strictement intact.
+
+---
+
+## 3. Branchement réel
+
+| Fichier | Changement |
+|---|---|
+| `src/lib/initiate-collect-payment.logic.ts` | Import direct `moncash-provider.server` → `plop-provider.server` (`moncashProvider` → `plopProvider`) — le seul point de branchement du flux Collect, comme prévu. |
+| `src/lib/initiate-collect-payment.functions.ts` | Commentaire mis à jour (référence à `plopProvider`), aucun changement de comportement. |
+
+### Conséquence directe de la correction A1 — nouvel outcome `already_confirmed`
+
+`plopProvider.initiatePayment()` peut désormais retourner `status:"success"` immédiatement (réconciliation A1). L'ancien code de `runInitiateCollectPayment` supposait `"pending"` comme seule issue non-échec possible — un paiement confirmé aurait été traité comme "aucun lien de paiement retourné" et affiché comme un échec au client, alors qu'il vient de payer avec succès. **Détecté et corrigé pendant le branchement, jamais livré.**
+
+- `runInitiateCollectPayment` retourne maintenant un troisième outcome : `{outcome:"already_confirmed", transaction}`. La ligne `payment_transactions` est créée `'pending'` de la même façon (`create_collect_payment_secure` n'accepte que `pending`/`failed` en création — `complete_collect_payment_secure` est `service_role`-only, hors de portée du client authentifié utilisé ici) ; c'est le poll côté client ou le cron qui la finalisera en `'paid'` dans la foulée.
+- `src/routes/checkout.tsx` gère explicitement ce troisième cas : toast de succès + navigation directe vers la page de commande (aucune redirection externe fabriquée).
+- Tests mis à jour (`initiate-collect-payment.test.ts`) : mock basculé sur `plop-provider.server`, nouveau test `"1b. paiement déjà confirmé"`.
+
+### Poll côté client (mécanisme principal de confirmation)
+
+| Fichier (nouveau) | Rôle |
+|---|---|
+| `src/lib/poll-collect-payment.logic.ts` | Logique testable : vérifie que la ligne `payment_transactions` appartient bien à l'appelant (lecture via le client authentifié, RLS déjà existante), rate-limit dédié (`check_rate_limit_secure`, 40 requêtes/15 min — défense contre un appelant scripté qui contournerait le rythme du navigateur), appelle `plopProvider.checkStatus()`, finalise via `complete_collect_payment_secure` (`supabaseAdmin`, service_role) uniquement si confirmé. |
+| `src/lib/poll-collect-payment.functions.ts` | Wrapper `createServerFn`, même patron que `initiate-collect-payment.functions.ts`. |
+| `src/hooks/useCollectPaymentPoll.ts` | Hook React — 4 paliers dégressifs (5s/10s/30s/60s sur 15 min, jitter ±20 %, pause sur onglet caché avec reprise immédiate à la ré-visibilité), **calé sur `payment_transactions.created_at`, jamais sur le montage du composant** (corrige la recommandation d'audit Phase 2 § 6 : un rafraîchissement de page ne relance plus le palier rapide). |
+| `src/routes/orders.$id.tsx` | Câblage : `payment_transactions.created_at` ajouté à la requête, hook appelé de façon inconditionnelle (avant les retours anticipés, règle des Hooks) avec `enabled` calculé sur la ligne réellement `pending`, `onSettled` invalide la query `["order", id]` (redondant avec le Realtime déjà branché sur `payments` — le premier qui arrive gagne, comme prévu dès la Phase 1). |
+
+**Sécurité du poll** : jamais d'appel direct navigateur → PLOP (toujours via une server function) ; la lecture est RLS-scopée au propriétaire de la commande ; la finalisation reste exclusivement `service_role`, jamais atteignable autrement que par cette fonction ou le cron — aucune nouvelle voie d'accès à `complete_collect_payment_secure` n'est créée, seulement un second appelant légitime.
+
+---
+
+## 4. Vérification finale
+
+| Contrôle | Résultat |
+|---|---|
+| `npm run typecheck` | ✅ Propre |
+| `npm run lint` | ✅ 0 erreur (avertissements préexistants non liés, inchangés) |
+| `npx vitest run` | ✅ **91/91 tests** (9 → 10 fichiers avec le nouveau test `already_confirmed`) |
+| `npx vite build` | ✅ Build production complet réussi, aucune violation de la frontière `.server.ts` |
+| `git status` | Confirmé : `manual-provider.server.ts`, `natcash-provider.server.ts`, `moncash-provider.server.ts`, `moncash-client.server.ts`, `moncash-config.server.ts`, `moncash-webhook-handler.server.ts`, `moncash-collect-webhook-handler.server.ts`, `moncash-reconcile.server.ts`, `index.server.ts`, `payout-pay-modal.tsx`, `dashboard.admin.moncash.tsx`, `api.webhooks.moncash*.ts`, `api.cron.moncash-reconcile.ts`, `initiate-provider-payout.functions.ts`, toute migration SQL antérieure, `payment_provider_settings` — **aucun absent de la liste des fichiers non modifiés**. |
+
+---
+
+## 5. État actuel
+
+- Le code est **entièrement branché** : sélectionner "MonCash Automatik" au checkout appellerait désormais réellement `plopProvider`.
+- **`payment_provider_settings.moncash_auto.enabled` reste `false`** — aucune migration ne l'a changé, le flux reste donc inatteignable en production tant qu'un admin ne l'active pas explicitement (`update_payment_provider_setting_secure`), conformément au plan Phase 7.
+- `PLOP_CLIENT_ID`/`PLOP_CLIENT_SECRET` restent non définis dans tout environnement — `plopProvider.isConfigured()` renvoie `false`, donc même si `moncash_auto` était activé par erreur, toute tentative échouerait proprement (`"PLOP pa konfigire toujou"`) sans jamais atteindre le réseau.
+- Points encore ouverts, non bloquants pour ce qui précède (Phase 0 § 14, inchangés) : sandbox PLOP absent, format d'erreur JSON non documenté, identifiants réels à fournir uniquement au moment de l'activation.
+
+---
+
+**Aucune migration créée. `moncash_auto` toujours désactivé. En attente de votre validation avant toute activation réelle (Phase 7) — fourniture des identifiants PLOP réels, tests en conditions réelles avec de petits montants, puis activation explicite via le panneau admin.**

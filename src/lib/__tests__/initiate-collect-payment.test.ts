@@ -4,16 +4,17 @@
  * initiate-collect-payment.functions.ts specifically so it's importable
  * here without dragging in TanStack Start's createServerFn runtime,
  * which hangs when imported outside a real request context).
- * moncashProvider is mocked; no real network call, no real database
- * write.
+ * plopProvider is mocked (Phase 3 wiring — see
+ * docs/PLOP_PHASE3_WIRING_REPORT.md; previously moncashProvider); no
+ * real network call, no real database write.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InitiatePaymentResult } from "../payment-providers/types";
 
 const initiatePaymentMock = vi.fn<(input: unknown) => Promise<InitiatePaymentResult>>();
 const isConfiguredMock = vi.fn(() => true);
-vi.mock("../payment-providers/moncash-provider.server", () => ({
-  moncashProvider: {
+vi.mock("../payment-providers/plop-provider.server", () => ({
+  plopProvider: {
     isConfigured: () => isConfiguredMock(),
     initiatePayment: (input: unknown) => initiatePaymentMock(input),
   },
@@ -118,6 +119,32 @@ describe("runInitiateCollectPayment", () => {
     }
     expect(initiatePaymentMock).toHaveBeenCalledWith(
       expect.objectContaining({ direction: "collect", amount: 500 }),
+    );
+  });
+
+  it("1b. paiement déjà confirmé (reconciliation-on-error, A1) — returns 'already_confirmed', never fabricates a redirect", async () => {
+    initiatePaymentMock.mockResolvedValue({
+      status: "success",
+      providerReference: "TX-RECONCILED",
+      raw: { trans_status: "ok" },
+    });
+    const supabase = buildSupabaseMock({
+      rpcResult: { data: { id: "tx-already", status: "pending" }, error: null },
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+    const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+    expect(result.outcome).toBe("already_confirmed");
+    if (result.outcome === "already_confirmed") {
+      expect(result.transaction).toEqual({ id: "tx-already", status: "pending" });
+    }
+    // Still recorded via create_collect_payment_secure with _status:'pending'
+    // — complete_collect_payment_secure is service_role-only, this
+    // customer-scoped call could never call it directly.
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "create_collect_payment_secure",
+      expect.objectContaining({ _status: "pending" }),
     );
   });
 
