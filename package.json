@@ -18,7 +18,8 @@
     "check:migrations": "node scripts/check-migration-hazards.mjs",
     "verify": "npm run typecheck && npm run lint && npm run check:migrations && npm run test && npm run build",
     "db:backup": "bash scripts/backup-database.sh",
-    "db:restore": "bash scripts/restore-database.sh"
+    "db:restore": "bash scripts/restore-database.sh",
+    "db:test-restore": "bash scripts/test-restore-backup.sh"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^1.0.2",
