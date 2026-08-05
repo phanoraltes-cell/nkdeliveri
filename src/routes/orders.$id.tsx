@@ -253,8 +253,25 @@ function OrderDetail() {
               </a>
             )}
             {isCollect && collectTransaction?.status === "pending" && (
+              // Wallet-agnostic on purpose (post-incident audit remediation,
+              // docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
+              // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md): the
+              // previous text hardcoded "MonCash", which the business gate
+              // in initiate-collect-payment.logic.ts happens to make true
+              // today but won't stay true once another PLOP wallet (e.g.
+              // NatCash) is enabled here. Deliberately NOT routed through
+              // payment-provider-display.ts's getProviderDisplayLabel()
+              // either — that module maps provider_code "moncash_api" to
+              // the internal gateway name "PLOP" for a *future admin*
+              // surface (its own header comment is explicit this is never
+              // meant for a customer-facing screen); showing "PLOP" here
+              // would leak an internal vendor name customers were never
+              // meant to see (checkout.tsx's own copy calls this "Payment
+              // Global" precisely to avoid that). Naming no provider/wallet
+              // at all is the smallest, safest fix that stays correct for
+              // every wallet PLOP could ever route through.
               <p className="mt-2 text-xs text-ink-soft">
-                N ap tann konfimasyon MonCash — paj sa a ap mete ajou otomatikman.
+                N ap tann konfimasyon peman an — paj sa a ap mete ajou otomatikman.
               </p>
             )}
             {isCollect && collectTransaction?.status === "failed" && (

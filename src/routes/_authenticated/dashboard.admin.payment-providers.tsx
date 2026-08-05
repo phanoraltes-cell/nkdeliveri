@@ -20,7 +20,8 @@ const PROVIDER_LABELS: Record<CheckoutProviderId, string> = {
   kach: "Kach nan livrezon",
   moncash: "MonCash Manyèl",
   natcash: "NatCash",
-  moncash_auto: "Peman Otomatik",
+  moncash_auto: "MonCash Otomatik",
+  natcash_auto: "NatCash Otomatik",
 };
 
 type ProviderSettingRow = {
@@ -63,6 +64,16 @@ function AdminPaymentProviders() {
     qc.invalidateQueries({ queryKey: ["payment-provider-settings"] });
   }
 
+  // `visible` itself is still wired end-to-end (RPC, RLS, this mutation) —
+  // only the checkout page's own rendering never reads it yet (audit
+  // finding, docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°3":
+  // checkout.tsx only ever gates on `.enabled`). Toggling this control
+  // today silently has zero effect on what a customer can see or select,
+  // so the control itself is disabled here (post-incident remediation,
+  // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md) rather than left to
+  // imply a working "hide from customers" feature that doesn't exist yet
+  // — least-risk fix (no checkout/business-logic change) until a future
+  // chantier actually wires checkout.tsx to respect it.
   const toggleVisible = useMutation({
     mutationFn: (row: ProviderSettingRow) =>
       updatePaymentProviderSetting(supabase, row.provider as CheckoutProviderId, {
@@ -149,16 +160,21 @@ function AdminPaymentProviders() {
                     {PROVIDER_LABELS[row.provider as CheckoutProviderId] ?? row.provider}
                   </h2>
                   {row.default_provider && <Badge variant="default">Default</Badge>}
-                  {!row.visible && <Badge variant="outline">Kache</Badge>}
+                  {!row.visible && (
+                    <Badge variant="outline" title="San efè sou paj checkout la pou kounye a">
+                      Kache (san efè kounye a)
+                    </Badge>
+                  )}
                   {!row.enabled && <Badge variant="destructive">Dezaktive</Badge>}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => toggleVisible.mutate(row)}
-                    disabled={toggleVisible.isPending}
-                    className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
+                    disabled
+                    title="Poko gen efè sou paj checkout la — sèl 'Aktive/Dezaktive' kontwole sa kliyan yo ka itilize jodi a"
+                    className="cursor-not-allowed rounded-lg border-2 border-brand-soft/60 px-3 py-1 text-xs font-bold text-ink-soft opacity-60"
                   >
-                    {row.visible ? "Kache" : "Fè l vizib"}
+                    {row.visible ? "Kache" : "Fè l vizib"} (pa aktive)
                   </button>
                   <button
                     onClick={() => toggleEnabled.mutate(row)}

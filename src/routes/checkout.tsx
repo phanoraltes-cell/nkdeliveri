@@ -12,6 +12,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { sendNewOrderPush } from "@/lib/send-order-push.functions";
+import { sendCollectPaymentAdminErrorPush } from "@/lib/send-collect-payment-admin-error-push.functions";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,14 @@ const PLACEHOLDER_PROVIDER_SETTINGS: PaymentProviderSetting[] = [
     visible: true,
     enabled: false,
     defaultProvider: false,
-    maintenanceMessage: "Peman Otomatik ap retounen byento.",
+    maintenanceMessage: "MonCash Otomatik ap retounen byento.",
+  },
+  {
+    provider: "natcash_auto",
+    visible: true,
+    enabled: false,
+    defaultProvider: false,
+    maintenanceMessage: "NatCash Otomatik ap retounen byento.",
   },
 ];
 
@@ -69,9 +77,15 @@ export const Route = createFileRoute("/checkout")({
 const METHODS = [
   {
     id: "moncash_auto",
-    label: "Peman Otomatik",
+    label: "MonCash Otomatik",
     sub: "Peman otomatik, konfimasyon imedya",
     logo: "/moncash-logo-hero.png",
+  },
+  {
+    id: "natcash_auto",
+    label: "NatCash Otomatik",
+    sub: "Peman otomatik, konfimasyon imedya",
+    logo: "/natcash-logo-new.png",
   },
   {
     id: "moncash",
@@ -120,6 +134,7 @@ function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
   const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
+  const sendCollectPaymentAdminErrorPushFn = useServerFn(sendCollectPaymentAdminErrorPush);
 
   const platformPayout = useQuery({
     queryKey: ["platform-payout-public"],
@@ -179,13 +194,15 @@ function Checkout() {
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
-  // "Peman Otomatik" (checkout id `moncash_auto`, displayed generically
-  // since the underlying gateway — PLOP — can itself route through more
-  // than one rail) moves money through the same rail as "MonCash
-  // Manyèl" — create_order_secure only knows the rail (payment_method
-  // enum: moncash/natcash/kach/stripe), never *how* it gets confirmed.
-  // The distinction is a checkout-flow choice, not a new backend method.
-  const orderMethod = method === "moncash_auto" ? "moncash" : method;
+  // "MonCash Otomatik"/"NatCash Otomatik" (checkout ids `moncash_auto`/
+  // `natcash_auto`, both backed by the same PLOP gateway —
+  // docs/PLOP_NATCASH_INTEGRATION_PLAN.md) move money through the same
+  // rail as their manual counterpart — create_order_secure only knows the
+  // rail (payment_method enum: moncash/natcash/kach/stripe), never *how*
+  // it gets confirmed. The distinction is a checkout-flow choice, not a
+  // new backend method.
+  const orderMethod =
+    method === "moncash_auto" ? "moncash" : method === "natcash_auto" ? "natcash" : method;
 
   const payNumber =
     orderMethod === "moncash"
@@ -237,7 +254,7 @@ function Checkout() {
         console.warn("[push] new-order notify failed", e),
       );
 
-      if (method === "moncash_auto") {
+      if (method === "moncash_auto" || method === "natcash_auto") {
         // The order already exists at this point (create_order_secure
         // above succeeded) — a failure from here on is a payment-
         // initiation problem, never a reason to let the customer land
@@ -262,6 +279,17 @@ function Checkout() {
 
         const result = await initiateCollect({ data: { paymentId: paymentRow.id } });
         if (result.outcome === "failed") {
+          // Best-effort admin push (post-incident audit remediation,
+          // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md, Correction
+          // 5) — create_collect_payment_secure already recorded this via
+          // create_collect_payment_secure -> notify_secure (in-app bell,
+          // always fired); this is the missing real push notification
+          // sibling, [[project_notification_push_convention]]. A failure
+          // here must never block or alter the customer-facing outcome
+          // below, exactly like sendNewOrderPushFn above.
+          sendCollectPaymentAdminErrorPushFn({ data: { paymentId: paymentRow.id } }).catch((e) =>
+            console.warn("[push] collect-payment-admin-error notify failed", e),
+          );
           clear();
           toast.error(
             result.error ||
@@ -498,10 +526,14 @@ function Checkout() {
                     );
                   })}
                 </div>
-                {method === "moncash_auto" && (
+                {(method === "moncash_auto" || method === "natcash_auto") && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
                     <img
-                      src="/moncash-logo-hero.png"
+                      src={
+                        method === "moncash_auto"
+                          ? "/moncash-logo-hero.png"
+                          : "/natcash-logo-new.png"
+                      }
                       alt=""
                       width={40}
                       height={28}
@@ -509,9 +541,11 @@ function Checkout() {
                       className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
                     />
                     <div>
-                      Apre w konfime kòmand la, n ap voye w sou paj peman an pou w peye dirèkteman
-                      (MonCash, elatriye). Kòmand la konfime otomatikman apre peman an fin fèt — pa
-                      gen prèv pou telechaje.
+                      <b>{method === "moncash_auto" ? "MonCash Otomatik" : "NatCash Otomatik"}</b> —
+                      apre w konfime kòmand la, n ap voye w sou paj peman{" "}
+                      {method === "moncash_auto" ? "MonCash" : "NatCash"} la pou w peye dirèkteman.
+                      Kòmand la konfime otomatikman apre peman an fin fèt — pa gen prèv pou
+                      telechaje.
                     </div>
                   </div>
                 )}

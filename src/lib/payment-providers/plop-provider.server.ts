@@ -1,9 +1,11 @@
 /**
  * PLOP implementation of `PaymentProvider` (`./types.ts`) — the actual
- * fournisseur behind the "Peman Otomatik" checkout method
- * (`payment_provider_settings.provider = 'moncash_auto'` — internal code
- * unchanged, only the customer-facing label was ever "MonCash
- * Automatik"), replacing the
+ * fournisseur behind both the "MonCash Otomatik" (`payment_provider_settings
+ * .provider = 'moncash_auto'`) and "NatCash Otomatik" (`= 'natcash_auto'`)
+ * checkout methods (docs/PLOP_NATCASH_INTEGRATION_PLAN.md) — internal code
+ * unchanged, only the customer-facing labels evolved over time ("MonCash
+ * Automatik" → "Payment Global" → the current separate "MonCash Otomatik"/
+ * "NatCash Otomatik" buttons), replacing the
  * dormant Digicel-direct integration in `moncash-provider.server.ts`
  * (kept, untouched, legacy — see docs/PLOP_REMEDIATION_REPORT.md § 2 for
  * why this is a new file rather than a rewrite of that one).

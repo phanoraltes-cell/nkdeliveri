@@ -21,7 +21,7 @@ import type { Database } from "@/integrations/supabase/types";
  * of which layer calls it — this module adds no authority of its own.
  */
 
-export type CheckoutProviderId = "kach" | "moncash" | "natcash" | "moncash_auto";
+export type CheckoutProviderId = "kach" | "moncash" | "natcash" | "moncash_auto" | "natcash_auto";
 
 export type PaymentProviderSetting = {
   provider: CheckoutProviderId;
@@ -46,7 +46,7 @@ function mapRow(
   };
 }
 
-/** All 4 checkout methods' current settings, in `provider` order. */
+/** All 5 checkout methods' current settings, in `provider` order. */
 export async function fetchPaymentProviderSettings(
   supabase: SupabaseClient<Database>,
 ): Promise<PaymentProviderSetting[]> {

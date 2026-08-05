@@ -1,0 +1,18 @@
+<svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Payment Global">
+  <defs>
+    <linearGradient id="pgGrad" x1="0" y1="0" x2="100" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB923C"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+  <!-- Badge — brand-orange gradient, rounded, transparent margin around it -->
+  <rect x="2" y="2" width="96" height="66" rx="16" fill="url(#pgGrad)"/>
+  <!-- Card — a generic payment card, never a specific wallet mark -->
+  <rect x="22" y="19" width="40" height="29" rx="5" fill="#FFFFFF"/>
+  <rect x="22" y="26" width="40" height="6" fill="#EA580C" opacity="0.85"/>
+  <rect x="27" y="39" width="14" height="3" rx="1.5" fill="#EA580C" opacity="0.55"/>
+  <!-- Contactless/"works everywhere" arcs — universal payment motif, not a wallet logo -->
+  <path d="M69 29 A 10 10 0 0 1 69 41" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M76 22 A 19 19 0 0 1 76 48" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <path d="M83 15 A 28 28 0 0 1 83 55" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" fill="none" opacity="0.55"/>
+</svg>

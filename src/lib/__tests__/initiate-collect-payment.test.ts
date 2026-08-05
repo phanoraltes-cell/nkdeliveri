@@ -57,6 +57,13 @@ const DEFAULT_PROVIDER_SETTINGS: ProviderSettingRow[] = [
     default_provider: false,
     maintenance_message: null,
   },
+  {
+    provider: "natcash_auto",
+    visible: true,
+    enabled: true,
+    default_provider: false,
+    maintenance_message: null,
+  },
 ];
 
 function buildSupabaseMock(opts: {
@@ -235,9 +242,9 @@ describe("runInitiateCollectPayment", () => {
     expect(initiatePaymentMock).not.toHaveBeenCalled();
   });
 
-  it("rejects a non-MonCash payment (e.g. natcash) without ever calling the provider", async () => {
+  it("rejects a payment method that is neither MonCash nor NatCash (e.g. kach) without ever calling the provider", async () => {
     const supabase = buildSupabaseMock({
-      payment: { id: "pay-2", method: "natcash", status: "awaiting_proof", amount: 300 },
+      payment: { id: "pay-2", method: "kach", status: "awaiting_proof", amount: 300 },
     });
     const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
 
@@ -245,6 +252,29 @@ describe("runInitiateCollectPayment", () => {
 
     expect(result.outcome).toBe("failed");
     expect(initiatePaymentMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts a NatCash payment (docs/PLOP_NATCASH_INTEGRATION_PLAN.md) — passes paymentMethod:'natcash' through and records it", async () => {
+    initiatePaymentMock.mockResolvedValue({
+      status: "pending",
+      providerReference: "REF-NATCASH-1",
+      raw: { redirectUrl: "https://natcash.example/pay/abc" },
+    });
+    const supabase = buildSupabaseMock({
+      payment: { id: "pay-3", method: "natcash", status: "awaiting_proof", amount: 400 },
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+    const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-3" });
+
+    expect(result.outcome).toBe("pending");
+    expect(initiatePaymentMock).toHaveBeenCalledWith(
+      expect.objectContaining({ direction: "collect", amount: 400, paymentMethod: "natcash" }),
+    );
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "create_collect_payment_secure",
+      expect.objectContaining({ _status: "pending", _payment_method_requested: "natcash" }),
+    );
   });
 
   it("refuses to call an unconfigured provider", async () => {
@@ -268,7 +298,7 @@ describe("runInitiateCollectPayment", () => {
             visible: true,
             enabled: false,
             default_provider: false,
-            maintenance_message: "Peman Otomatik ap retounen byento.",
+            maintenance_message: "MonCash Otomatik ap retounen byento.",
           },
         ],
       });
@@ -278,7 +308,7 @@ describe("runInitiateCollectPayment", () => {
 
       expect(result).toEqual({
         outcome: "failed",
-        error: "Peman Otomatik ap retounen byento.",
+        error: "MonCash Otomatik ap retounen byento.",
       });
       // The real point of this test: isConfigured() is never even asked,
       // and the provider is never called — a disabled setting short-
@@ -290,7 +320,7 @@ describe("runInitiateCollectPayment", () => {
         "create_collect_payment_secure",
         expect.objectContaining({
           _status: "failed",
-          _error: "Peman Otomatik ap retounen byento.",
+          _error: "MonCash Otomatik ap retounen byento.",
         }),
       );
     });
@@ -314,7 +344,7 @@ describe("runInitiateCollectPayment", () => {
 
       expect(result.outcome).toBe("failed");
       if (result.outcome === "failed") {
-        expect(result.error).toBe("Peman Otomatik pa disponib pou kounye a.");
+        expect(result.error).toBe("MonCash Otomatik pa disponib pou kounye a.");
       }
     });
 
@@ -332,6 +362,85 @@ describe("runInitiateCollectPayment", () => {
       expect(result.outcome).toBe("pending");
       expect(isConfiguredMock).toHaveBeenCalled();
       expect(initiatePaymentMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses a NatCash payment when natcash_auto is disabled, with a NatCash-specific message", async () => {
+      const supabase = buildSupabaseMock({
+        payment: { id: "pay-1", method: "natcash", status: "awaiting_proof", amount: 250 },
+        providerSettings: [
+          ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "natcash_auto"),
+          {
+            provider: "natcash_auto",
+            visible: true,
+            enabled: false,
+            default_provider: false,
+            maintenance_message: null,
+          },
+        ],
+      });
+      const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+      const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+      expect(result.outcome).toBe("failed");
+      if (result.outcome === "failed") {
+        expect(result.error).toBe("NatCash Otomatik pa disponib pou kounye a.");
+      }
+      expect(initiatePaymentMock).not.toHaveBeenCalled();
+    });
+
+    it("disabling moncash_auto never blocks a NatCash payment, and disabling natcash_auto never blocks a MonCash payment — the two checkout methods are independently gated (docs/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5, the bug this migration fixes)", async () => {
+      initiatePaymentMock.mockResolvedValue({
+        status: "pending",
+        providerReference: "REF-INDEPENDENT",
+        raw: { redirectUrl: "https://natcash.example/pay/xyz" },
+      });
+      // moncash_auto disabled, natcash_auto still enabled — a NatCash
+      // payment must still go through.
+      const supabaseNatcash = buildSupabaseMock({
+        payment: { id: "pay-1", method: "natcash", status: "awaiting_proof", amount: 250 },
+        providerSettings: [
+          ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "moncash_auto"),
+          {
+            provider: "moncash_auto",
+            visible: true,
+            enabled: false,
+            default_provider: false,
+            maintenance_message: null,
+          },
+        ],
+      });
+      const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+      const natcashResult = await runInitiateCollectPayment(supabaseNatcash, {
+        paymentId: "pay-1",
+      });
+      expect(natcashResult.outcome).toBe("pending");
+
+      // The reverse: natcash_auto disabled, moncash_auto still enabled —
+      // a MonCash payment must still go through.
+      initiatePaymentMock.mockClear();
+      initiatePaymentMock.mockResolvedValue({
+        status: "pending",
+        providerReference: "REF-INDEPENDENT-2",
+        raw: { redirectUrl: "https://moncash.example/pay/xyz" },
+      });
+      const supabaseMoncash = buildSupabaseMock({
+        payment: { id: "pay-1", method: "moncash", status: "awaiting_proof", amount: 250 },
+        providerSettings: [
+          ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "natcash_auto"),
+          {
+            provider: "natcash_auto",
+            visible: true,
+            enabled: false,
+            default_provider: false,
+            maintenance_message: null,
+          },
+        ],
+      });
+      const moncashResult = await runInitiateCollectPayment(supabaseMoncash, {
+        paymentId: "pay-1",
+      });
+      expect(moncashResult.outcome).toBe("pending");
     });
 
     it("attackers cannot bypass the gate by any client-supplied input — the check reads only from the database, never from InitiateCollectPaymentInput", async () => {

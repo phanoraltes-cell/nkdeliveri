@@ -18,11 +18,11 @@ type PaymentTransactionRow = Database["public"]["Tables"]["payment_transactions"
  * refactor-for-testability, not a design change.
  *
  * Phase 3 (PLOP wiring, docs/PLOP_PHASE3_WIRING_REPORT.md): the provider
- * behind the "Peman Otomatik" checkout method (`moncash_auto`) is now
- * `plopProvider`
- * (payment-providers/plop-provider.server.ts) — this function itself
- * only ever talks to the generic `PaymentProvider` interface and knows
- * no PLOP-specific detail, unchanged from before.
+ * behind both the "MonCash Otomatik" (`moncash_auto`) and "NatCash
+ * Otomatik" (`natcash_auto`) checkout methods is `plopProvider`
+ * (payment-providers/plop-provider.server.ts, docs/PLOP_NATCASH_INTEGRATION_PLAN.md)
+ * — this function itself only ever talks to the generic `PaymentProvider`
+ * interface and knows no PLOP-specific detail, unchanged from before.
  */
 export async function runInitiateCollectPayment(
   supabase: SupabaseClient<Database>,
@@ -51,8 +51,8 @@ export async function runInitiateCollectPayment(
     .maybeSingle();
   if (paymentError) throw new Error(paymentError.message);
   if (!payment) return { outcome: "failed", error: "Peman pa jwenn" };
-  if (payment.method !== "moncash") {
-    return { outcome: "failed", error: "Peman Otomatik disponib sèlman pou peman MonCash" };
+  if (payment.method !== "moncash" && payment.method !== "natcash") {
+    return { outcome: "failed", error: "Peman otomatik disponib sèlman pou MonCash oswa NatCash" };
   }
 
   // Our own reference, generated fresh every attempt — never derived from
@@ -68,13 +68,25 @@ export async function runInitiateCollectPayment(
   // the provider module, so a disabled method never even reaches a point
   // where it could call the provider's API, regardless of what the
   // frontend shows. See docs/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md.
+  //
+  // MonCash Otomatik and NatCash Otomatik are two *independent* checkout
+  // buttons (docs/PLOP_NATCASH_INTEGRATION_PLAN.md) — each has its own row
+  // in payment_provider_settings, and each must only ever be gated by its
+  // own row. Deriving `providerKey` from `payment.method` here (rather
+  // than hardcoding "moncash_auto") is the fix for the exact bug that plan
+  // flagged: without it, disabling one wallet's automatic method from the
+  // admin dashboard would have silently disabled the other's too, since
+  // both used to share the same "moncash_auto" check regardless of which
+  // wallet a given payment actually was.
+  const providerKey = payment.method === "natcash" ? "natcash_auto" : "moncash_auto";
+  const providerLabel = payment.method === "natcash" ? "NatCash Otomatik" : "MonCash Otomatik";
   const { fetchPaymentProviderSettings, isProviderEnabled, getProviderSetting } =
     await import("@/lib/payment-provider-availability");
   const settings = await fetchPaymentProviderSettings(supabase);
-  if (!isProviderEnabled(settings, "moncash_auto")) {
+  if (!isProviderEnabled(settings, providerKey)) {
     const message =
-      getProviderSetting(settings, "moncash_auto")?.maintenanceMessage ??
-      "Peman Otomatik pa disponib pou kounye a.";
+      getProviderSetting(settings, providerKey)?.maintenanceMessage ??
+      `${providerLabel} pa disponib pou kounye a.`;
     const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
       _payment_id: data.paymentId,
       _external_reference: reference,
@@ -89,7 +101,7 @@ export async function runInitiateCollectPayment(
 
   const { plopProvider } = await import("@/lib/payment-providers/plop-provider.server");
   if (!plopProvider.isConfigured()) {
-    const message = "Peman Otomatik pa konfigire toujou";
+    const message = "Peman otomatik pa konfigire toujou";
     const { error: logError } = await supabase.rpc("create_collect_payment_secure", {
       _payment_id: data.paymentId,
       _external_reference: reference,
@@ -103,16 +115,16 @@ export async function runInitiateCollectPayment(
   }
 
   // `payment.method` is the order's rail (already narrowed to `"moncash"`
-  // by the gate above) — passed through as PLOP's own `payment_method`
-  // rather than relying on plop-client.server.ts's global config default.
-  // The bug this fixes (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2):
-  // `plop-client.server.ts` previously always used
+  // or `"natcash"` by the gate above) — passed through as PLOP's own
+  // `payment_method` rather than relying on plop-client.server.ts's global
+  // config default. The bug this fixes (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md
+  // § 2): `plop-client.server.ts` previously always used
   // `PLOP_PAYMENT_METHOD`, making it structurally impossible for any
   // caller to select a wallet per transaction. This is still the only
-  // caller and the gate above still only allows `"moncash"` through — the
-  // gate itself is a separate, deliberate business-scope decision
-  // (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option B), not touched by
-  // this fix.
+  // caller — the gate above now allows both `"moncash"` and `"natcash"`
+  // through (docs/PLOP_NATCASH_INTEGRATION_PLAN.md, resolving the Option B
+  // business-scope question that docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7
+  // had left open).
   const result = await plopProvider.initiatePayment({
     direction: "collect",
     amount: payment.amount,

@@ -1,0 +1,14 @@
+<svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Payment Global (monochrome noir)">
+  <!-- Monochrome derivative — every rect/path below shares the EXACT same
+       x/y/width/height/d/rx coordinates as public/payment-global-logo.svg.
+       Only fill/stroke attributes change (two-tone gradient+white → flat
+       black); no shape, position or proportion is altered. Background is
+       fully transparent so this stamps cleanly on any color surface. -->
+  <rect x="2" y="2" width="96" height="66" rx="16" fill="none" stroke="#000000" stroke-width="3"/>
+  <rect x="22" y="19" width="40" height="29" rx="5" fill="none" stroke="#000000" stroke-width="2.5"/>
+  <rect x="22" y="26" width="40" height="6" fill="#000000" opacity="0.85"/>
+  <rect x="27" y="39" width="14" height="3" rx="1.5" fill="#000000" opacity="0.55"/>
+  <path d="M69 29 A 10 10 0 0 1 69 41" stroke="#000000" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M76 22 A 19 19 0 0 1 76 48" stroke="#000000" stroke-width="3.2" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <path d="M83 15 A 28 28 0 0 1 83 55" stroke="#000000" stroke-width="3.2" stroke-linecap="round" fill="none" opacity="0.55"/>
+</svg>
