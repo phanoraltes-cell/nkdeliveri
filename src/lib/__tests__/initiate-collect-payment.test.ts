@@ -20,6 +20,18 @@ vi.mock("../payment-providers/plop-provider.server", () => ({
   },
 }));
 
+// Separate mock fns from PLOP's own — a test disabling/misconfiguring one
+// provider must never accidentally affect the other's mock state
+// (docs/STRIPE_INTEGRATION_REPORT.md).
+const stripeInitiatePaymentMock = vi.fn<(input: unknown) => Promise<InitiatePaymentResult>>();
+const stripeIsConfiguredMock = vi.fn(() => true);
+vi.mock("../payment-providers/stripe-provider.server", () => ({
+  stripeProvider: {
+    isConfigured: () => stripeIsConfiguredMock(),
+    initiatePayment: (input: unknown) => stripeInitiatePaymentMock(input),
+  },
+}));
+
 type ProviderSettingRow = {
   provider: string;
   visible: boolean;
@@ -64,10 +76,23 @@ const DEFAULT_PROVIDER_SETTINGS: ProviderSettingRow[] = [
     default_provider: false,
     maintenance_message: null,
   },
+  {
+    provider: "stripe",
+    visible: true,
+    enabled: true,
+    default_provider: false,
+    maintenance_message: null,
+  },
 ];
 
 function buildSupabaseMock(opts: {
-  payment?: { id: string; method: string; status: string; amount: number } | null;
+  payment?: {
+    id: string;
+    method: string;
+    status: string;
+    amount: number;
+    order_id?: string;
+  } | null;
   rpcResult?: { data: unknown; error: { message: string } | null };
   providerSettings?: ProviderSettingRow[];
 }) {
@@ -77,7 +102,13 @@ function buildSupabaseMock(opts: {
   const payment =
     "payment" in opts
       ? opts.payment
-      : { id: "pay-1", method: "moncash", status: "awaiting_proof", amount: 500 };
+      : {
+          id: "pay-1",
+          method: "moncash",
+          status: "awaiting_proof",
+          amount: 500,
+          order_id: "order-1",
+        };
   const rpcResult = opts.rpcResult ?? { data: { id: "tx-1", status: "pending" }, error: null };
   const providerSettings = opts.providerSettings ?? DEFAULT_PROVIDER_SETTINGS;
 
@@ -107,6 +138,9 @@ describe("runInitiateCollectPayment", () => {
     initiatePaymentMock.mockReset();
     isConfiguredMock.mockReset();
     isConfiguredMock.mockReturnValue(true);
+    stripeInitiatePaymentMock.mockReset();
+    stripeIsConfiguredMock.mockReset();
+    stripeIsConfiguredMock.mockReturnValue(true);
   });
 
   it("1. paiement créé correctement — returns pending with the redirect URL", async () => {
@@ -277,6 +311,146 @@ describe("runInitiateCollectPayment", () => {
     );
   });
 
+  it("accepts a Kat Kredi (Stripe) payment (docs/STRIPE_INTEGRATION_REPORT.md) — dispatches to stripeProvider, not plopProvider, passes a real returnUrl, and stores providerReference as _provider_transaction_id", async () => {
+    stripeInitiatePaymentMock.mockResolvedValue({
+      status: "pending",
+      providerReference: "cs_test_ABC123",
+      raw: { redirectUrl: "https://checkout.stripe.com/c/pay/cs_test_ABC123" },
+    });
+    const supabase = buildSupabaseMock({
+      payment: {
+        id: "pay-4",
+        method: "stripe",
+        status: "awaiting_proof",
+        amount: 750,
+        order_id: "order-4",
+      },
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+    const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-4" });
+
+    expect(result.outcome).toBe("pending");
+    if (result.outcome === "pending") {
+      expect(result.redirectUrl).toBe("https://checkout.stripe.com/c/pay/cs_test_ABC123");
+    }
+    // Never called the PLOP mock — a Stripe payment must dispatch to
+    // stripeProvider exclusively.
+    expect(initiatePaymentMock).not.toHaveBeenCalled();
+    expect(stripeInitiatePaymentMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        direction: "collect",
+        amount: 750,
+        paymentMethod: "stripe",
+        returnUrl: "https://www.nkdeliveri.com/orders/order-4",
+      }),
+    );
+    // The Stripe Checkout Session id (providerReference) must be
+    // persisted immediately — it's the only way checkStatus()/the poll
+    // can look this transaction up later (stripe-provider.server.ts's
+    // own header comment: Stripe has no lookup-by-reference endpoint).
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "create_collect_payment_secure",
+      expect.objectContaining({
+        _status: "pending",
+        _payment_method_requested: "stripe",
+        _provider_transaction_id: "cs_test_ABC123",
+      }),
+    );
+  });
+
+  it("refuses a Stripe payment when stripe is disabled, with a Kat Kredi-specific message", async () => {
+    const supabase = buildSupabaseMock({
+      payment: {
+        id: "pay-1",
+        method: "stripe",
+        status: "awaiting_proof",
+        amount: 250,
+        order_id: "order-1",
+      },
+      providerSettings: [
+        ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "stripe"),
+        {
+          provider: "stripe",
+          visible: true,
+          enabled: false,
+          default_provider: false,
+          maintenance_message: null,
+        },
+      ],
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+    const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+    expect(result.outcome).toBe("failed");
+    if (result.outcome === "failed") {
+      expect(result.error).toBe("Kat Kredi pa disponib pou kounye a.");
+    }
+    expect(stripeInitiatePaymentMock).not.toHaveBeenCalled();
+  });
+
+  it("disabling stripe never blocks a MonCash payment, and disabling moncash_auto never blocks a Stripe payment — all three automatic methods are independently gated", async () => {
+    initiatePaymentMock.mockResolvedValue({
+      status: "pending",
+      providerReference: "REF-MONCASH-INDEP",
+      raw: { redirectUrl: "https://moncash.example/pay/xyz" },
+    });
+    const supabaseMoncashWithStripeDisabled = buildSupabaseMock({
+      payment: {
+        id: "pay-1",
+        method: "moncash",
+        status: "awaiting_proof",
+        amount: 250,
+        order_id: "order-1",
+      },
+      providerSettings: [
+        ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "stripe"),
+        {
+          provider: "stripe",
+          visible: true,
+          enabled: false,
+          default_provider: false,
+          maintenance_message: null,
+        },
+      ],
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+    const moncashResult = await runInitiateCollectPayment(supabaseMoncashWithStripeDisabled, {
+      paymentId: "pay-1",
+    });
+    expect(moncashResult.outcome).toBe("pending");
+
+    stripeInitiatePaymentMock.mockResolvedValue({
+      status: "pending",
+      providerReference: "cs_test_INDEP",
+      raw: { redirectUrl: "https://checkout.stripe.com/c/pay/cs_test_INDEP" },
+    });
+    const supabaseStripeWithMoncashDisabled = buildSupabaseMock({
+      payment: {
+        id: "pay-1",
+        method: "stripe",
+        status: "awaiting_proof",
+        amount: 250,
+        order_id: "order-1",
+      },
+      providerSettings: [
+        ...DEFAULT_PROVIDER_SETTINGS.filter((s) => s.provider !== "moncash_auto"),
+        {
+          provider: "moncash_auto",
+          visible: true,
+          enabled: false,
+          default_provider: false,
+          maintenance_message: null,
+        },
+      ],
+    });
+    const stripeResult = await runInitiateCollectPayment(supabaseStripeWithMoncashDisabled, {
+      paymentId: "pay-1",
+    });
+    expect(stripeResult.outcome).toBe("pending");
+  });
+
   it("refuses to call an unconfigured provider", async () => {
     isConfiguredMock.mockReturnValue(false);
     const supabase = buildSupabaseMock({});
@@ -286,6 +460,28 @@ describe("runInitiateCollectPayment", () => {
 
     expect(result.outcome).toBe("failed");
     expect(initiatePaymentMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses to call an unconfigured Stripe provider, independently of PLOP's own isConfigured() state", async () => {
+    stripeIsConfiguredMock.mockReturnValue(false);
+    const supabase = buildSupabaseMock({
+      payment: {
+        id: "pay-1",
+        method: "stripe",
+        status: "awaiting_proof",
+        amount: 250,
+        order_id: "order-1",
+      },
+    });
+    const { runInitiateCollectPayment } = await import("../initiate-collect-payment.logic");
+
+    const result = await runInitiateCollectPayment(supabase, { paymentId: "pay-1" });
+
+    expect(result.outcome).toBe("failed");
+    expect(stripeInitiatePaymentMock).not.toHaveBeenCalled();
+    // PLOP's own isConfigured() mock was never touched by this test — it
+    // must not be asked at all when the payment is a Stripe one.
+    expect(isConfiguredMock).not.toHaveBeenCalled();
   });
 
   describe("payment_provider_settings hardening (backend is the sole source of truth)", () => {

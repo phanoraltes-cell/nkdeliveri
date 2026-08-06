@@ -1602,6 +1602,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      stripe_api_logs: {
+        Row: {
+          attempt: number;
+          created_at: string;
+          duration_ms: number;
+          endpoint: string;
+          error: string | null;
+          http_status: number | null;
+          id: string;
+          is_timeout: boolean;
+          method: string;
+          provider_transaction_id: string | null;
+          request_summary: Json;
+          response_summary: Json | null;
+          transaction_reference: string | null;
+        };
+        Insert: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms: number;
+          endpoint: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Update: {
+          attempt?: number;
+          created_at?: string;
+          duration_ms?: number;
+          endpoint?: string;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          is_timeout?: boolean;
+          method?: string;
+          provider_transaction_id?: string | null;
+          request_summary?: Json;
+          response_summary?: Json | null;
+          transaction_reference?: string | null;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           archived_at: string | null;
@@ -2605,6 +2653,7 @@ export type Database = {
           _external_reference: string;
           _payment_id: string;
           _payment_method_requested?: string;
+          _provider_transaction_id?: string;
           _status?: string;
         };
         Returns: {

@@ -2,6 +2,7 @@ import type { PaymentProvider, PaymentProviderCode } from "./types";
 import { manualProvider } from "./manual-provider.server";
 import { moncashProvider } from "./moncash-provider.server";
 import { natcashProvider } from "./natcash-provider.server";
+import { stripeProvider } from "./stripe-provider.server";
 
 export type {
   PaymentProvider,
@@ -31,6 +32,15 @@ const PROVIDERS: Record<PaymentProviderCode, PaymentProvider> = {
   manual: manualProvider,
   moncash_api: moncashProvider,
   natcash_api: natcashProvider,
+  // Present here only because `PaymentProviderCode`'s type requires every
+  // code to have a registry entry (TypeScript completeness) — Collect
+  // never reaches stripeProvider through this registry (it's imported
+  // directly by initiate-collect-payment.logic.ts, same as plopProvider,
+  // docs/STRIPE_INTEGRATION_REPORT.md), and this app has no card-based
+  // payout to route here either. Kept safe regardless: stripeProvider's
+  // own initiatePayment() refuses `direction: "disburse"` defensively,
+  // exactly like every other provider in this registry.
+  stripe_api: stripeProvider,
 };
 
 export function getPaymentProvider(code: string): PaymentProvider | undefined {

@@ -30,6 +30,7 @@ export const PROVIDER_CODE_DISPLAY_LABELS: Record<PaymentProviderCode, string> =
   // admin screen.
   moncash_api: "PLOP",
   natcash_api: "NatCash API",
+  stripe_api: "Stripe",
 };
 
 /** Falls back to the raw code for any value this map doesn't recognize, rather than throwing — an admin screen should degrade gracefully, never crash, on an unexpected provider string. */

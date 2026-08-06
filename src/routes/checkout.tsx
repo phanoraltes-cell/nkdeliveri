@@ -67,6 +67,13 @@ const PLACEHOLDER_PROVIDER_SETTINGS: PaymentProviderSetting[] = [
     defaultProvider: false,
     maintenanceMessage: "NatCash Otomatik ap retounen byento.",
   },
+  {
+    provider: "stripe",
+    visible: true,
+    enabled: false,
+    defaultProvider: false,
+    maintenanceMessage: "Peman ak kat kredi ap disponib byento.",
+  },
 ];
 
 export const Route = createFileRoute("/checkout")({
@@ -86,6 +93,12 @@ const METHODS = [
     label: "NatCash Otomatik",
     sub: "Peman otomatik, konfimasyon imedya",
     logo: "/natcash-logo-new.png",
+  },
+  {
+    id: "stripe",
+    label: "Kat Kredi",
+    sub: "Peman ak kat, konfimasyon imedya",
+    logo: "/stripe-card-logo.svg",
   },
   {
     id: "moncash",
@@ -254,7 +267,7 @@ function Checkout() {
         console.warn("[push] new-order notify failed", e),
       );
 
-      if (method === "moncash_auto" || method === "natcash_auto") {
+      if (method === "moncash_auto" || method === "natcash_auto" || method === "stripe") {
         // The order already exists at this point (create_order_secure
         // above succeeded) — a failure from here on is a payment-
         // initiation problem, never a reason to let the customer land
@@ -526,29 +539,44 @@ function Checkout() {
                     );
                   })}
                 </div>
-                {(method === "moncash_auto" || method === "natcash_auto") && (
-                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
-                    <img
-                      src={
-                        method === "moncash_auto"
-                          ? "/moncash-logo-hero.png"
-                          : "/natcash-logo-new.png"
-                      }
-                      alt=""
-                      width={40}
-                      height={28}
-                      loading="lazy"
-                      className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
-                    />
-                    <div>
-                      <b>{method === "moncash_auto" ? "MonCash Otomatik" : "NatCash Otomatik"}</b> —
-                      apre w konfime kòmand la, n ap voye w sou paj peman{" "}
-                      {method === "moncash_auto" ? "MonCash" : "NatCash"} la pou w peye dirèkteman.
-                      Kòmand la konfime otomatikman apre peman an fin fèt — pa gen prèv pou
-                      telechaje.
-                    </div>
-                  </div>
-                )}
+                {(method === "moncash_auto" || method === "natcash_auto" || method === "stripe") &&
+                  (() => {
+                    const info =
+                      method === "moncash_auto"
+                        ? {
+                            logo: "/moncash-logo-hero.png",
+                            label: "MonCash Otomatik",
+                            via: "MonCash",
+                          }
+                        : method === "natcash_auto"
+                          ? {
+                              logo: "/natcash-logo-new.png",
+                              label: "NatCash Otomatik",
+                              via: "NatCash",
+                            }
+                          : {
+                              logo: "/stripe-card-logo.svg",
+                              label: "Kat Kredi",
+                              via: "kat kredi ou",
+                            };
+                    return (
+                      <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
+                        <img
+                          src={info.logo}
+                          alt=""
+                          width={40}
+                          height={28}
+                          loading="lazy"
+                          className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
+                        />
+                        <div>
+                          <b>{info.label}</b> — apre w konfime kòmand la, n ap voye w sou paj peman{" "}
+                          {info.via} la pou w peye dirèkteman. Kòmand la konfime otomatikman apre
+                          peman an fin fèt — pa gen prèv pou telechaje.
+                        </div>
+                      </div>
+                    );
+                  })()}
                 {(method === "moncash" || method === "natcash") && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
                     <img

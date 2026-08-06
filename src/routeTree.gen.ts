@@ -43,6 +43,7 @@ import { Route as AuthenticatedDashboardRestaurantIndexRouteImport } from './rou
 import { Route as AuthenticatedDashboardDriverIndexRouteImport } from './routes/_authenticated/dashboard.driver.index'
 import { Route as AuthenticatedDashboardCustomerIndexRouteImport } from './routes/_authenticated/dashboard.customer.index'
 import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
+import { Route as ApiWebhooksStripeCollectRouteImport } from './routes/api.webhooks.stripe.collect'
 import { Route as ApiWebhooksMoncashCollectRouteImport } from './routes/api.webhooks.moncash.collect'
 import { Route as AuthenticatedDashboardRestaurantRevenueRouteImport } from './routes/_authenticated/dashboard.restaurant.revenue'
 import { Route as AuthenticatedDashboardRestaurantPromotionsRouteImport } from './routes/_authenticated/dashboard.restaurant.promotions'
@@ -258,6 +259,12 @@ const AuthenticatedDashboardAdminIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const ApiWebhooksStripeCollectRoute =
+  ApiWebhooksStripeCollectRouteImport.update({
+    id: '/api/webhooks/stripe/collect',
+    path: '/api/webhooks/stripe/collect',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiWebhooksMoncashCollectRoute =
   ApiWebhooksMoncashCollectRouteImport.update({
@@ -535,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
+  '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
   '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/customer/': typeof AuthenticatedDashboardCustomerIndexRoute
   '/dashboard/driver/': typeof AuthenticatedDashboardDriverIndexRoute
@@ -600,6 +608,7 @@ export interface FileRoutesByTo {
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
+  '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerIndexRoute
   '/dashboard/driver': typeof AuthenticatedDashboardDriverIndexRoute
@@ -672,6 +681,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
   '/_authenticated/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
+  '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
   '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/_authenticated/dashboard/customer/': typeof AuthenticatedDashboardCustomerIndexRoute
   '/_authenticated/dashboard/driver/': typeof AuthenticatedDashboardDriverIndexRoute
@@ -744,6 +754,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/promotions'
     | '/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
+    | '/api/webhooks/stripe/collect'
     | '/dashboard/admin/'
     | '/dashboard/customer/'
     | '/dashboard/driver/'
@@ -809,6 +820,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/promotions'
     | '/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
+    | '/api/webhooks/stripe/collect'
     | '/dashboard/admin'
     | '/dashboard/customer'
     | '/dashboard/driver'
@@ -880,6 +892,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/restaurant/promotions'
     | '/_authenticated/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
+    | '/api/webhooks/stripe/collect'
     | '/_authenticated/dashboard/admin/'
     | '/_authenticated/dashboard/customer/'
     | '/_authenticated/dashboard/driver/'
@@ -909,6 +922,7 @@ export interface RootRouteChildren {
   ApiCronMoncashReconcileRoute: typeof ApiCronMoncashReconcileRoute
   ApiCronPlopReconcileRoute: typeof ApiCronPlopReconcileRoute
   ApiWebhooksMoncashRoute: typeof ApiWebhooksMoncashRouteWithChildren
+  ApiWebhooksStripeCollectRoute: typeof ApiWebhooksStripeCollectRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1150,6 +1164,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/admin/'
       preLoaderRoute: typeof AuthenticatedDashboardAdminIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/api/webhooks/stripe/collect': {
+      id: '/api/webhooks/stripe/collect'
+      path: '/api/webhooks/stripe/collect'
+      fullPath: '/api/webhooks/stripe/collect'
+      preLoaderRoute: typeof ApiWebhooksStripeCollectRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/webhooks/moncash/collect': {
       id: '/api/webhooks/moncash/collect'
@@ -1634,6 +1655,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronMoncashReconcileRoute: ApiCronMoncashReconcileRoute,
   ApiCronPlopReconcileRoute: ApiCronPlopReconcileRoute,
   ApiWebhooksMoncashRoute: ApiWebhooksMoncashRouteWithChildren,
+  ApiWebhooksStripeCollectRoute: ApiWebhooksStripeCollectRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -16,7 +16,7 @@
  * interface is actually invoked — no page or component may call a
  * provider directly.
  */
-export type PaymentProviderCode = "manual" | "moncash_api" | "natcash_api";
+export type PaymentProviderCode = "manual" | "moncash_api" | "natcash_api" | "stripe_api";
 
 export type PaymentDirection = "collect" | "disburse";
 
@@ -39,6 +39,18 @@ export type InitiatePaymentInput = {
    * every transaction — docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md §§ 2, 6.
    */
   paymentMethod?: string;
+  /**
+   * Absolute URL to send the customer back to once they're done on the
+   * provider's own page — required by providers whose API mandates a
+   * real return URL at creation time (Stripe Checkout Sessions'
+   * `success_url`/`cancel_url`, docs/STRIPE_INTEGRATION_REPORT.md).
+   * Ignored by providers that don't need one (PLOP documents no
+   * `return_url` parameter at all — docs/PLOP_PHASE0_AUDIT.md § 9).
+   * Always the order page (`/orders/:id`), never the payment reference —
+   * a provider must never assume `reference` and the order id are
+   * interchangeable.
+   */
+  returnUrl?: string;
 };
 
 export type InitiatePaymentResult =

@@ -1,0 +1,27 @@
+<svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kat Kredi">
+  <!-- Generic "credit card" mark for the Stripe-backed checkout method —
+       same construction precedent as payment-global-logo.svg: a
+       hand-authored, brand-colored badge depicting the universal concept
+       (a payment card), never a reproduction of Stripe's own trademarked
+       wordmark/logo (which this project has no licensed asset file for).
+       Configure real Stripe branding separately if/when desired. -->
+  <defs>
+    <linearGradient id="skGrad" x1="0" y1="0" x2="100" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#635BFF"/>
+      <stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+  </defs>
+  <!-- Badge — a distinct indigo/violet gradient (evokes "card network"
+       branding in general, deliberately different from the orange
+       MonCash/NatCash badges so the three automatic methods stay easy to
+       tell apart at a glance), rounded, transparent margin around it. -->
+  <rect x="2" y="2" width="96" height="66" rx="16" fill="url(#skGrad)"/>
+  <!-- Card body -->
+  <rect x="18" y="16" width="64" height="38" rx="6" fill="#FFFFFF"/>
+  <!-- Magnetic stripe -->
+  <rect x="18" y="25" width="64" height="8" fill="#4338CA" opacity="0.85"/>
+  <!-- Chip -->
+  <rect x="26" y="39" width="14" height="10" rx="2" fill="#FBBF24"/>
+  <!-- Card number dashes -->
+  <rect x="26" y="45" width="34" height="3" rx="1.5" fill="#4338CA" opacity="0.35"/>
+</svg>
