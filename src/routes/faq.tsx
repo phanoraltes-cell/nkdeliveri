@@ -64,10 +64,7 @@ function Faq() {
         </h1>
         <div className="space-y-3">
           {FAQS.map((f) => (
-            <details
-              key={f.q}
-              className="group rounded-2xl bg-white p-5 shadow-[0_8px_24px_rgba(194,90,5,0.08)]"
-            >
+            <details key={f.q} className="group rounded-2xl bg-white p-5 shadow-brand-xs">
               <summary className="cursor-pointer font-display font-bold text-ink marker:content-none">
                 {f.q}
               </summary>

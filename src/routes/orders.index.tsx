@@ -87,7 +87,7 @@ function Orders() {
             pou wè kòmand ou yo.
           </div>
         ) : visible.length === 0 && page === 1 ? (
-          <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+          <div className="rounded-[18px] bg-white p-8 text-center text-ink-soft shadow-brand-sm">
             <p>Ou poko gen okenn kòmand.</p>
             <Link to="/" className="mt-3 inline-block font-bold text-brand-deep hover:underline">
               Kòmanse kòmande →
@@ -100,7 +100,7 @@ function Orders() {
                 key={o.id}
                 to="/orders/$id"
                 params={{ id: o.id }}
-                className="relative block rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(194,90,5,0.08)] hover:shadow-md"
+                className="relative block rounded-2xl bg-white p-4 shadow-brand-xs hover:shadow-brand-sm"
               >
                 <div className="flex items-center justify-between">
                   <div>

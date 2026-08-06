@@ -55,7 +55,12 @@ export function RevenueChart({
             contentStyle={{
               borderRadius: "var(--radius-lg)",
               border: "1px solid var(--brand-soft)",
-              boxShadow: "0 8px 24px rgba(194,90,5,0.10)",
+              // Recharts' contentStyle is a plain inline style object, not a
+              // className — var(--shadow-brand-sm) reuses the same token
+              // Tailwind's shadow-brand-sm utility resolves to (both read
+              // the custom property @theme inline registers on :root),
+              // instead of hand-copying its rgba value out of sync.
+              boxShadow: "var(--shadow-brand-sm)",
               fontSize: 13,
             }}
             labelStyle={{ color: "var(--ink)", fontWeight: 600 }}

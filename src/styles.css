@@ -76,6 +76,22 @@
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
 
+  /* Semantic status tokens — Refonte Frontend Premium, Phase 1 (P1).
+     One source of truth for "state" colors (paid/pending/cancelled/in
+     progress...) used across StatusBadge and any future status chip,
+     instead of each call site picking its own raw Tailwind palette color
+     (bg-emerald-100, bg-amber-100, ...). Kept in the same oklch-only
+     discipline as the rest of this file; --status-bad deliberately reuses
+     --destructive rather than inventing a second red. */
+  --color-status-good: var(--status-good);
+  --color-status-good-soft: var(--status-good-soft);
+  --color-status-warn: var(--status-warn);
+  --color-status-warn-soft: var(--status-warn-soft);
+  --color-status-bad: var(--status-bad);
+  --color-status-bad-soft: var(--status-bad-soft);
+  --color-status-info: var(--status-info);
+  --color-status-info-soft: var(--status-info-soft);
+
   /* Brand shadow scale — the one true source for the "soft colored depth"
      look used across the app. Always the vivid brand hue; never the dull
      rgba(194,90,5,...) that crept into some screens before this token
@@ -99,6 +115,24 @@
   --sar: env(safe-area-inset-right, 0px);
 
   --radius: 1.125rem;
+
+  /* Motion scale — Refonte Frontend Premium, Phase 1 (P1). Reference
+     durations for future transitions/animations (order-tracking timeline,
+     Kanban card feedback, entrance sections). Deliberately plain CSS
+     custom properties, not routed through @theme: Tailwind v4's utility
+     namespace for named transition-duration tokens isn't used elsewhere in
+     this codebase (existing components use numeric utilities like
+     `duration-200` directly, e.g. ui/button.tsx), so these stay
+     reference-only values for consumers (CSS var() or Framer Motion
+     `transition` props) rather than generating parallel `duration-*`
+     utility classes that would silently coexist with the numeric ones.
+     Respect prefers-reduced-motion exactly like every other
+     animation/transition in this file (see @layer base below). */
+  --duration-instant: 100ms; /* pressed/tactile feedback */
+  --duration-fast: 160ms; /* hover, focus */
+  --duration-base: 220ms; /* modal/drawer open, card transition */
+  --duration-entrance: 380ms; /* section entrance on scroll */
+
   /* NK Delivery brand palette (spec) */
   /* Reverted to the original vivid spec color at the user's request
      (2026-07-20) — note this brings back a known WCAG AA contrast failure
@@ -130,6 +164,31 @@
   --accent-foreground: var(--brand-deep);
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(1 0 0);
+
+  /* Status tokens (light) — see --color-status-* registration above.
+     Hues chosen to stay in the same restrained, slightly muted family as
+     the rest of this palette rather than importing Tailwind's default
+     emerald/amber/sky straight. --status-bad intentionally equals
+     --destructive: "bad" and "destructive" are the same meaning
+     (cancelled/failed/refused), not two colors to keep in sync by hand.
+     Lightness (~0.44-0.46) is deliberately dark, not a brand-deep-style
+     mid-tone — these render as small bold text on a near-white -soft
+     background (StatusBadge), the same "dark text, pale tint" contrast
+     shape as the Tailwind emerald-800/emerald-100 pair this replaces, not
+     the vivid mid-tone convention --brand-deep uses elsewhere. --status-bad
+     is the one exception (inherits --destructive's existing lightness
+     as-is, see comment above) — its contrast on -soft is carried to the
+     Refonte spec's P7 accessibility pass rather than re-tuned here, since
+     changing --destructive itself is out of P1's scope. */
+  --status-good: oklch(0.44 0.11 155);
+  --status-good-soft: oklch(0.94 0.05 155);
+  --status-warn: oklch(0.46 0.12 75);
+  --status-warn-soft: oklch(0.94 0.06 80);
+  --status-bad: var(--destructive);
+  --status-bad-soft: oklch(0.94 0.05 25);
+  --status-info: oklch(0.46 0.11 230);
+  --status-info-soft: oklch(0.94 0.04 230);
+
   --border: oklch(0.9 0.03 65);
   --input: oklch(0.9 0.03 65);
   --ring: var(--brand);
@@ -165,6 +224,21 @@
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.984 0.003 247.858);
+
+  /* Status tokens (dark) — mirrors the light block above; -soft variants
+     become low-opacity-on-dark-surface fills rather than pale tints. Not
+     wired to a toggle yet (tracked separately, see Refonte spec P8) but
+     kept complete so activating dark mode later doesn't leave status
+     colors half-migrated. */
+  --status-good: oklch(0.72 0.14 155);
+  --status-good-soft: oklch(0.32 0.06 155);
+  --status-warn: oklch(0.8 0.15 80);
+  --status-warn-soft: oklch(0.32 0.07 80);
+  --status-bad: var(--destructive);
+  --status-bad-soft: oklch(0.32 0.06 25);
+  --status-info: oklch(0.75 0.12 230);
+  --status-info-soft: oklch(0.3 0.05 230);
+
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.551 0.027 264.364);

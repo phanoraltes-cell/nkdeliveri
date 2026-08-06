@@ -3,12 +3,20 @@ import { cn } from "@/lib/utils";
 
 export type StatusTone = "good" | "warn" | "bad" | "neutral" | "info";
 
+// Refonte Frontend Premium, Phase 1 (P1) — migrated off raw Tailwind
+// palette colors (bg-emerald-100/text-emerald-800, ...) onto the
+// --status-* tokens registered in styles.css, so every status pill in the
+// app (this component) shares one source of truth instead of each
+// call-site's `tone` mapping needing its own separately-maintained color
+// choice if the palette ever changes. `neutral` intentionally stays on the
+// existing --ink token rather than gaining a new --status-neutral — it
+// already means "no particular status", which --ink/10 already expresses.
 const TONE_CLASSES: Record<StatusTone, string> = {
-  good: "bg-emerald-100 text-emerald-800",
-  warn: "bg-amber-100 text-amber-800",
-  bad: "bg-red-100 text-red-800",
+  good: "bg-status-good-soft text-status-good",
+  warn: "bg-status-warn-soft text-status-warn",
+  bad: "bg-status-bad-soft text-status-bad",
   neutral: "bg-ink/10 text-ink-soft",
-  info: "bg-sky-100 text-sky-800",
+  info: "bg-status-info-soft text-status-info",
 };
 
 /**

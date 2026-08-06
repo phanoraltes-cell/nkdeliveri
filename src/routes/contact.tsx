@@ -26,7 +26,7 @@ function Contact() {
           Yon kesyon sou yon kòmand, yon restoran ki enterese vin patenè, oswa yon lòt bagay? Ekri
           nou.
         </p>
-        <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-2xl bg-white p-6 shadow-brand-sm">
           <a
             href={`mailto:${CONTACT_EMAIL}`}
             className="flex items-center gap-3 rounded-xl border-2 border-brand-soft px-4 py-3 font-bold text-brand-deep hover:bg-brand-soft/30"

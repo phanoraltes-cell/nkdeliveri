@@ -41,13 +41,52 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /**
+   * Shows a spinner and disables interaction, without swapping the label
+   * for silent iconography — the label stays visible (dimmed) and
+   * `aria-busy` is set, so a screen reader still announces what the
+   * button does instead of losing its accessible name mid-action.
+   * Refonte Frontend Premium, Phase 1 (P1) — replaces the ad hoc
+   * "changer le libellé pendant le chargement" pattern used at call sites
+   * across the app (e.g. checkout.tsx's `submitting ? "Ap kreye…" : ...`).
+   * Only applies when `asChild` is false — `asChild` hands the DOM node
+   * to whatever child was passed (often a router <Link>), which can't
+   * also carry the spinner markup without breaking that child's own
+   * children contract.
+   */
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ className, variant, size, asChild = false, isLoading = false, children, ...props }, ref) => {
+    if (asChild) {
+      // `...props` still carries `disabled` through untouched here (it's
+      // never destructured out in this branch) — Radix's <Slot> types its
+      // props as generic HTMLAttributes, which doesn't declare `disabled`,
+      // so passing it as an explicit named attribute fails to typecheck;
+      // spreading it keeps the passthrough correct without fighting that.
+      return (
+        <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+          {children}
+        </Slot>
+      );
+    }
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        aria-busy={isLoading || undefined}
+        {...props}
+        disabled={props.disabled || isLoading}
+      >
+        {isLoading && (
+          <span
+            aria-hidden="true"
+            className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70"
+          />
+        )}
+        <span className={cn(isLoading && "opacity-70")}>{children}</span>
+      </button>
     );
   },
 );

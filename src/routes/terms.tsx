@@ -22,7 +22,7 @@ function Terms() {
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">
           Kondisyon Itilizasyon
         </h1>
-        <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-2xl bg-white p-6 shadow-brand-sm">
           <p className="text-sm text-ink-soft">
             Paj sa a ap mete ajou byento ak kondisyon itilizasyon konplè platfòm NK Deliveri
             (kòmand, peman, livrezon, responsablite restoran/livrè/kliyan).

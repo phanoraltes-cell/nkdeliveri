@@ -22,7 +22,7 @@ function Privacy() {
         <h1 className="mb-3 font-display text-3xl font-extrabold text-ink">
           Politik Konfidansyalite
         </h1>
-        <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_rgba(194,90,5,0.10)]">
+        <div className="rounded-2xl bg-white p-6 shadow-brand-sm">
           <p className="text-sm text-ink-soft">
             Paj sa a ap mete ajou byento ak detay konplè sou kijan NK Deliveri kolekte, itilize, epi
             pwoteje done pèsonèl ou yo (kont, kòmand, pozisyon GPS pou livrezon, elatriye), ansanm
