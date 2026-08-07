@@ -178,15 +178,24 @@ function RestaurantPage() {
     queryKey: ["restaurant-reviews", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const { data: rows, error } = await supabase
+      // { count: "exact" } piggybacks on this same request (no second round
+      // trip) to get the true total review count — `rows.length` alone
+      // would silently cap at 20 (the `.limit()` below) and under-report
+      // the count shown next to the rating for any restaurant with more
+      // reviews than that.
+      const {
+        data: rows,
+        error,
+        count,
+      } = await supabase
         .from("reviews")
-        .select("restaurant_rating, comment, created_at")
+        .select("restaurant_rating, comment, created_at", { count: "exact" })
         .eq("restaurant_id", restaurantId!)
         .not("restaurant_rating", "is", null)
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
-      return rows;
+      return { rows, count: count ?? rows.length };
     },
   });
 
@@ -341,7 +350,9 @@ function RestaurantPage() {
                     <div className="flex flex-1 flex-col p-4">
                       <h3 className="font-display text-base font-extrabold">{p.name}</h3>
                       {p.description && (
-                        <p className="mt-1 mb-2 flex-1 text-xs text-ink-soft">{p.description}</p>
+                        <p className="mt-1 mb-2 line-clamp-2 flex-1 text-xs text-ink-soft">
+                          {p.description}
+                        </p>
                       )}
                       <div className="mt-2 flex items-center justify-between">
                         <span className="font-display text-base font-extrabold text-brand-deep">
@@ -386,6 +397,9 @@ function RestaurantPage() {
             Avi kliyan yo
             <span className="flex items-center gap-1 rounded-full bg-brand-soft/60 px-3 py-1 text-sm font-bold text-brand-deep">
               <Star className="h-4 w-4 fill-brand-deep" /> {Number(r.rating ?? 0).toFixed(1)}
+              {!!reviews.data?.count && (
+                <span className="font-normal text-ink-soft">({reviews.data.count})</span>
+              )}
             </span>
           </h2>
           {reviews.isLoading && (
@@ -394,13 +408,13 @@ function RestaurantPage() {
               <Skeleton className="h-20 w-full rounded-2xl" />
             </div>
           )}
-          {!reviews.isLoading && (reviews.data?.length ?? 0) === 0 && (
+          {!reviews.isLoading && (reviews.data?.count ?? 0) === 0 && (
             <div className="rounded-2xl bg-white p-6 text-center text-sm text-ink-soft shadow-brand-xs">
               Pa gen avi pou restoran sa a ankò.
             </div>
           )}
           <div className="space-y-3">
-            {reviews.data?.map((rv, i) => (
+            {reviews.data?.rows.map((rv, i) => (
               <div key={i} className="rounded-2xl bg-white p-4 shadow-brand-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">

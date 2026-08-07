@@ -13,6 +13,23 @@ import { formatHTG } from "@/lib/format";
 import { noIndexMeta } from "@/lib/seo";
 import { ORDER_STATUS_LABEL as STATUS, TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
+import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
+
+// Refonte Frontend Premium, Phase 5 (P5) — same good/warn/bad/info tones
+// OrderStatusTimeline already uses for these statuses (see
+// order-status-timeline.tsx), reused here rather than re-derived so the
+// two screens read as one consistent status language.
+const ORDER_STATUS_TONE: Record<string, StatusTone> = {
+  pending: "warn",
+  confirmed: "info",
+  preparing: "info",
+  ready: "info",
+  assigned: "info",
+  picked_up: "info",
+  delivered: "good",
+  cancelled: "bad",
+  refunded: "bad",
+};
 
 export const Route = createFileRoute("/orders/")({
   head: () => noIndexMeta("Kòmand mwen — NK Deliveri"),
@@ -112,7 +129,9 @@ function Orders() {
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="font-bold">{formatHTG(o.total)}</div>
-                      <div className="text-xs text-brand-deep">{STATUS[o.status] || o.status}</div>
+                      <StatusBadge tone={ORDER_STATUS_TONE[o.status] ?? "neutral"} className="mt-1">
+                        {STATUS[o.status] || o.status}
+                      </StatusBadge>
                     </div>
                     {TERMINAL_ORDER_STATUSES.has(o.status) && (
                       <button

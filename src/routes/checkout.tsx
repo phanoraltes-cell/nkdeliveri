@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/useCart";
 import { formatHTG } from "@/lib/format";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Trash2, MapPin } from "lucide-react";
+import { Minus, Plus, Trash2, MapPin, Banknote } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -429,7 +429,15 @@ function Checkout() {
                 </div>
               </div>
 
-              <div className="mt-6">
+              {/* Two visually separated groups on the same page (per the
+                  Refonte spec's checkout wireframe) rather than a
+                  multi-step wizard — the click-count stays minimal, but
+                  "where this goes" and "how you're paying" no longer read
+                  as one undifferentiated block of fields. */}
+              <div className="mt-6 border-t-2 border-dashed border-brand-soft pt-5">
+                <h2 className="mb-3 flex items-center gap-2 font-display text-base font-bold text-ink">
+                  <MapPin className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Livrezon
+                </h2>
                 <label htmlFor="checkout-address" className="mb-2 block text-sm font-bold">
                   Adrès livrezon
                 </label>
@@ -489,7 +497,10 @@ function Checkout() {
                 </label>
               </div>
 
-              <div className="mt-5">
+              <div className="mt-5 border-t-2 border-dashed border-brand-soft pt-5">
+                <h2 className="mb-3 flex items-center gap-2 font-display text-base font-bold text-ink">
+                  <Banknote className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Peman
+                </h2>
                 <label className="mb-2 block text-sm font-bold">Metòd peman</label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {METHODS.map((m) => {

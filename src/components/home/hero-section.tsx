@@ -106,7 +106,11 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur sm:gap-x-3 sm:px-5 sm:py-3 md:absolute md:right-8 md:bottom-8 md:mt-0 md:flex-nowrap"
         >
-          <span className="text-xs font-semibold whitespace-nowrap text-ink sm:text-sm">
+          {/* w-full forces this label onto its own line inside the
+              flex-wrap row on mobile (so the badge reads as label line +
+              icons line, not an unpredictable mid-row wrap) — reverts to
+              auto width from `sm:` up, where there's room to sit inline. */}
+          <span className="w-full text-xs font-semibold whitespace-nowrap text-ink sm:w-auto sm:text-sm">
             Peman disponib
           </span>
           <img

@@ -15,12 +15,22 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { useActivePlacements } from "@/hooks/useActivePlacements";
+import { Chip } from "@/components/ui/chip";
 
 const PAGE_SIZE = 24;
 
-const listQuery = (q: string, page: number) =>
+// Refonte Frontend Premium, Phase 5 (P5) — sort control from the redesign
+// spec's wireframe ("tri pertinence/note/délai"). No separate "pertinence"
+// option: this app has no text-relevance scoring (search is a plain
+// ilike filter), so "note" already *is* the existing default order —
+// offering both would just be two labels for the same query. "rating" is
+// that default; "prep_time" is the one genuinely different ordering the
+// redesign asked for.
+type SortKey = "rating" | "prep_time";
+
+const listQuery = (q: string, page: number, sort: SortKey) =>
   queryOptions({
-    queryKey: ["restaurants-all", q, page],
+    queryKey: ["restaurants-all", q, page, sort],
     queryFn: async () => {
       const from = (page - 1) * PAGE_SIZE;
       let query = supabase
@@ -35,7 +45,9 @@ const listQuery = (q: string, page: number) =>
       // only search whatever page happened to be loaded.
       if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
       const { data, error, count } = await query
-        .order("rating", { ascending: false })
+        .order(sort === "prep_time" ? "avg_prep_time" : "rating", {
+          ascending: sort === "prep_time",
+        })
         .range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
       return { rows: data ?? [], totalCount: count ?? 0 };
@@ -45,11 +57,16 @@ const listQuery = (q: string, page: number) =>
 const searchSchema = z.object({
   q: z.string().optional(),
   page: z.coerce.number().int().min(1).optional(),
+  sort: z.enum(["rating", "prep_time"]).optional(),
 });
 
 export const Route = createFileRoute("/restaurants/")({
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ q: search.q ?? "", page: search.page ?? 1 }),
+  loaderDeps: ({ search }) => ({
+    q: search.q ?? "",
+    page: search.page ?? 1,
+    sort: search.sort ?? "rating",
+  }),
   head: () => ({
     ...pageMeta({
       title: "Restoran nan Gonaïves — NK Deliveri",
@@ -67,13 +84,14 @@ export const Route = createFileRoute("/restaurants/")({
       }),
     ],
   }),
-  loader: ({ context, deps }) => context.queryClient.ensureQueryData(listQuery(deps.q, deps.page)),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(listQuery(deps.q, deps.page, deps.sort)),
   component: RestaurantsPage,
 });
 
 function RestaurantsPage() {
-  const { q, page } = Route.useSearch();
-  const { data } = useSuspenseQuery(listQuery(q ?? "", page ?? 1));
+  const { q, page, sort } = Route.useSearch();
+  const { data } = useSuspenseQuery(listQuery(q ?? "", page ?? 1, sort ?? "rating"));
   const { rows, totalCount } = data;
   const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
   const nav = useNavigate();
@@ -86,7 +104,7 @@ function RestaurantsPage() {
   const sponsored = useActivePlacements("search_results", 2);
   const sponsoredRows = showSponsored ? (sponsored.data ?? []) : [];
 
-  function updateSearch(next: { q?: string; page?: number }) {
+  function updateSearch(next: { q?: string; page?: number; sort?: SortKey }) {
     navSearch({ search: (prev) => ({ ...prev, ...next }), replace: true });
   }
 
@@ -126,8 +144,23 @@ function RestaurantsPage() {
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Chèche pa non…"
           aria-label="Chèche pa non…"
-          className="mb-6 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-brand focus:shadow-brand-xs focus-visible:ring-2 focus-visible:ring-brand/30"
+          className="mb-4 w-full max-w-[400px] rounded-full border-2 border-brand-soft bg-white px-5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-soft focus:border-brand focus:shadow-brand-xs focus-visible:ring-2 focus-visible:ring-brand/30"
         />
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-ink-soft">Triye pa</span>
+          <Chip
+            selected={(sort ?? "rating") === "rating"}
+            onClick={() => updateSearch({ sort: "rating", page: 1 })}
+          >
+            Pi popilè
+          </Chip>
+          <Chip
+            selected={sort === "prep_time"}
+            onClick={() => updateSearch({ sort: "prep_time", page: 1 })}
+          >
+            Pi rapid
+          </Chip>
+        </div>
         {sponsoredRows.filter((s) => s.restaurant_slug).length > 0 && (
           <>
             <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">
