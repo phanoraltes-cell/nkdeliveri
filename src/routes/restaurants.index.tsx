@@ -169,7 +169,7 @@ function RestaurantsPage() {
             <div className="mb-6 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
               {sponsoredRows
                 .filter((s) => s.restaurant_slug)
-                .map((s) => (
+                .map((s, i) => (
                   <Link
                     key={s.id}
                     to="/restaurants/$slug"
@@ -181,7 +181,15 @@ function RestaurantsPage() {
                         src={s.restaurant_cover_url}
                         alt={s.restaurant_name ?? s.title}
                         icon={Store}
-                        loading="lazy"
+                        // Refonte Frontend Premium, Phase 8 (P8) — this
+                        // sponsored row renders first, above the fold, on
+                        // every viewport this grid supports (min 1
+                        // column). `loading="lazy"` on an image already
+                        // in the initial viewport can delay its own
+                        // fetch and is a documented LCP anti-pattern; only
+                        // defer past the first row actually likely to be
+                        // off-screen.
+                        loading={i < 4 ? undefined : "lazy"}
                         width={240}
                         height={144}
                         className="h-36 w-full object-cover transition duration-500 group-hover:scale-110"
@@ -215,7 +223,7 @@ function RestaurantsPage() {
           </>
         )}
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
-          {rows.map((r) => (
+          {rows.map((r, i) => (
             <Link
               key={r.id}
               to="/restaurants/$slug"
@@ -227,7 +235,11 @@ function RestaurantsPage() {
                   src={r.cover_url}
                   alt={r.name}
                   icon={Store}
-                  loading="lazy"
+                  // P8 — see the identical comment on the sponsored grid
+                  // above; same LCP reasoning applies to this grid's own
+                  // first row (it's the very first content on the page
+                  // when there's no sponsored section above it).
+                  loading={i < 4 ? undefined : "lazy"}
                   width={240}
                   height={144}
                   className="h-36 w-full object-cover transition duration-500 group-hover:scale-110"

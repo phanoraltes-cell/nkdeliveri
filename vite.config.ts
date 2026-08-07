@@ -51,7 +51,17 @@ export default defineConfig({
             )
               return "vendor-pdf";
             if (/[\\/]framer-motion[\\/]/.test(id)) return "vendor-motion";
-            if (/[\\/]react[\\/]|[\\/]react-dom[\\/]|[\\/]scheduler[\\/]/.test(id))
+            // Refonte Frontend Premium, Phase 8 (P8) — anchored to
+            // node_modules/<pkg>/ specifically. The previous bare
+            // [\/]react[\/] segment match also matched any path merely
+            // *containing* a "react" directory anywhere in it — which
+            // includes node_modules/@sentry/react/... (the package's own
+            // subfolder is literally named "react"). That silently pulled
+            // the whole @sentry/react SDK into this chunk too, which is
+            // eager on every page (React itself has to be), defeating the
+            // P8 fix that made sentry-browser.ts a dynamic import
+            // specifically so it *wouldn't* be in the initial load.
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id))
               return "vendor-react";
             if (/[\\/]@tanstack[\\/]/.test(id)) return "vendor-tanstack";
             if (/[\\/]@supabase[\\/]/.test(id)) return "vendor-supabase";
@@ -93,6 +103,25 @@ export default defineConfig({
           // file the build emits (e.g. manifest-adjacent metadata); harmless
           // if none exist, matches zero files.
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,json,webmanifest,woff2}"],
+          // Refonte Frontend Premium, Phase 8 (P8) — the glob above matched
+          // every route's chunk indiscriminately: 256 entries / ~5.65 MiB
+          // precached eagerly right after first visit, for every visitor,
+          // regardless of which role/pages they'll ever touch. Two classes
+          // excluded here, both still fully reachable at their own URL —
+          // this only stops the service worker's *eager* background
+          // precache of them, not their availability:
+          //  - public/payment-global/** (1.5 MB / 36 files): grepped
+          //    every reference in src/, none found — dead weight, likely
+          //    social/OG assets for an external service, never fetched by
+          //    the app itself.
+          //  - vendor-pdf / vendor-charts (779.7 kB + 358.9 kB): already
+          //    behind a dynamic `import()` (jspdf) or a route-only static
+          //    import (recharts in dashboard revenue views) — never in a
+          //    customer's initial load path. The runtime `CacheFirst` rule
+          //    in src/sw.ts still caches them the first time an admin/
+          //    restaurant user actually loads one, same offline guarantee,
+          //    just not paid upfront by every visitor.
+          globIgnores: ["payment-global/**", "assets/vendor-pdf-*.js", "assets/vendor-charts-*.js"],
         },
       }),
     ],

@@ -19,7 +19,19 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { SITE_URL, SITE_NAME, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { jsonLdScript } from "@/lib/seo";
-import { initSentryClient, captureExceptionClient } from "@/lib/sentry-browser";
+
+// Refonte Frontend Premium, Phase 8 (P8) — sentry-browser.ts (and the
+// @sentry/react SDK it pulls in) used to be a static import here, which
+// put it in the shared app-shell chunk loaded on *every* page before
+// first paint, whether or not that page ever errors. A dynamic import
+// fetches it after mount instead — error reporting only needs to be
+// *ready* shortly after the page is already visible, not block getting
+// there. Both call sites below share this one loader so the module (and
+// its internal `initialized` guard in sentry-browser.ts) is only ever
+// fetched/evaluated once per session.
+function loadSentry() {
+  return import("@/lib/sentry-browser");
+}
 
 function NotFoundComponent() {
   // The route match here never resolves to a real route, so there's no
@@ -64,7 +76,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  captureExceptionClient(error);
+  void loadSentry().then((m) => m.captureExceptionClient(error));
   const router = useRouter();
   useEffect(() => {
     document.title = "Yon erè rive — NK Deliveri";
@@ -205,7 +217,7 @@ function RootComponent() {
   useEffect(() => {
     // useEffect never runs during SSR, so this is inherently client-only —
     // no extra `typeof window` guard needed on top of it.
-    initSentryClient();
+    void loadSentry().then((m) => m.initSentryClient());
   }, []);
 
   return (
