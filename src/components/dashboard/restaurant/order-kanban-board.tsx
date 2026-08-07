@@ -54,6 +54,19 @@ function isValidDrop(fromStatus: string, toColumnKey: string) {
   return NEXT_COLUMN[fromStatus] === toColumnKey;
 }
 
+// Phase 6 (P6) fix — caught by actually rendering a screenshot rather than
+// reading the code: a raw minute count reads fine at realistic values
+// (single/double digits) but a stale or malformed `created_at` (or simply
+// an order nobody ever touched) could show something like "315007 min ap
+// tann", which reads as broken rather than urgent. Collapses to hours/days
+// once the number would stop being legible as minutes.
+function formatWaitTime(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} è`;
+  return `${Math.floor(hours / 24)} jou`;
+}
+
 type OrderKanbanBoardProps = {
   orders: KanbanOrder[];
   restaurantName: string;
@@ -234,7 +247,7 @@ function KanbanCard({
         </span>
         {isUrgent && (
           <span className="rounded-full bg-status-bad-soft px-1.5 py-0.5 font-bold text-status-bad">
-            {minutesWaiting} min ap tann
+            {formatWaitTime(minutesWaiting)} ap tann
           </span>
         )}
       </div>

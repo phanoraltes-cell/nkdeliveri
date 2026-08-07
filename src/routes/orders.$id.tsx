@@ -362,9 +362,19 @@ function OrderDetail() {
           />
         )}
 
+        {/* Also pulled out of the accordion, not just PaymentProofSection:
+            cancelling only ever applies during the pending/confirmed window
+            (CancelOrderSection's own guard), which is exactly when the
+            accordion is collapsed by default — leaving it inside made the
+            cancel button undiscoverable for the entire time it's actually
+            offered. Caught by e2e/client/order-lifecycle-customer.spec.ts
+            during the Phase 6 responsive pass, not by code review. Renders
+            nothing outside its own eligible window, same as before. */}
+        <CancelOrderSection orderId={o.id} orderStatus={o.status} />
+
         {/* Everything else — order contents, and whatever secondary action
-            (already-submitted proof, cancel, refund, cash confirmation,
-            dispute, review) applies to this order's current state.
+            (already-submitted proof, refund, cash confirmation, dispute,
+            review) applies to this order's current state.
             Collapsed by default while the order is still active (the
             timeline above is the focus); open by default once the order
             reaches a terminal state, where this section *is* what's left
@@ -434,8 +444,6 @@ function OrderDetail() {
                 reviewNotes={payment.review_notes}
               />
             )}
-
-            <CancelOrderSection orderId={o.id} orderStatus={o.status} />
 
             <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
 
