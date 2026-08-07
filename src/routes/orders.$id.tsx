@@ -13,6 +13,7 @@ import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 import { useRoute } from "@/hooks/useRoute";
 import { noIndexMeta } from "@/lib/seo";
 import { DeliveryTrackingSection } from "@/components/order/delivery-tracking-section";
+import { OrderStatusTimeline } from "@/components/order/order-status-timeline";
 import { PaymentProofSection } from "@/components/order/payment-proof-section";
 import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
@@ -21,7 +22,7 @@ import { DisputeSection } from "@/components/order/dispute-section";
 import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
 import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ORDER_STATUS_LABEL } from "@/lib/order-status";
+import { TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
 import { MessageCircle, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/orders/$id")({
@@ -36,15 +37,6 @@ export const Route = createFileRoute("/orders/$id")({
   },
   component: OrderDetail,
 });
-
-const PAY_STATUS_LABEL: Record<string, string> = {
-  pending: "An atant",
-  awaiting_proof: "Ap tann prèv peman",
-  under_review: "Ap verifye",
-  paid: "Peye",
-  failed: "Echwe",
-  refunded: "Ranbouse",
-};
 
 function OrderDetail() {
   const { id } = Route.useParams();
@@ -118,10 +110,9 @@ function OrderDetail() {
         <SiteHeader />
         <div className="mx-auto max-w-[720px] space-y-4 px-5 py-8">
           <Skeleton className="h-8 w-48 rounded-lg" />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Skeleton className="h-20 rounded-2xl" />
-            <Skeleton className="h-20 rounded-2xl" />
-          </div>
+          {/* Approximates OrderStatusTimeline's shape (label row + step
+              row) rather than the old two-card grid it replaced. */}
+          <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-64 rounded-2xl" />
         </div>
       </div>
@@ -223,64 +214,56 @@ function OrderDetail() {
           </Link>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white p-4 shadow-brand-xs ring-1 ring-brand-soft/40">
-            <div className="text-xs uppercase tracking-wider text-ink-soft">Estati kòmand</div>
-            <div className="mt-1 font-display text-lg font-extrabold text-brand-deep">
-              {ORDER_STATUS_LABEL[o.status] || o.status}
-            </div>
+        <OrderStatusTimeline status={o.status} />
+
+        {/* Payment trust signal — small and quiet on purpose: it's
+            reassurance, not an action, so it doesn't compete with the
+            "what needs your attention" banners below. */}
+        {payment?.status === "paid" && (
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-status-good">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Peman konfime
+            {isCollect && " · Otomatik"}
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-brand-xs ring-1 ring-brand-soft/40">
-            <div className="text-xs uppercase tracking-wider text-ink-soft">Estati peman</div>
-            <div className="mt-1 flex items-center gap-2 font-display text-lg font-extrabold">
-              {payment?.status === "paid" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-              {payment?.status === "under_review" && <Clock className="h-5 w-5 text-amber-600" />}
-              {payment?.status === "awaiting_proof" && (
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-              )}
-              {payment ? PAY_STATUS_LABEL[payment.status] || payment.status : "—"}
-            </div>
-            <div className="mt-0.5 text-xs text-ink-soft capitalize">
-              {payment?.method}
-              {isCollect && " · Otomatik"}
-            </div>
-            {needsProof && (
-              <a
-                href="#payment-proof"
-                className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline"
-              >
-                ↓ Voye prèv peman an
-              </a>
-            )}
-            {isCollect && collectTransaction?.status === "pending" && (
-              // Wallet-agnostic on purpose (post-incident audit remediation,
-              // docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
-              // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md): the
-              // previous text hardcoded "MonCash", which the business gate
-              // in initiate-collect-payment.logic.ts happens to make true
-              // today but won't stay true once another PLOP wallet (e.g.
-              // NatCash) is enabled here. Deliberately NOT routed through
-              // payment-provider-display.ts's getProviderDisplayLabel()
-              // either — that module maps provider_code "moncash_api" to
-              // the internal gateway name "PLOP" for a *future admin*
-              // surface (its own header comment is explicit this is never
-              // meant for a customer-facing screen); showing "PLOP" here
-              // would leak an internal vendor name customers were never
-              // meant to see (checkout.tsx's own copy calls this "Payment
-              // Global" precisely to avoid that). Naming no provider/wallet
-              // at all is the smallest, safest fix that stays correct for
-              // every wallet PLOP could ever route through.
-              <p className="mt-2 text-xs text-ink-soft">
-                N ap tann konfimasyon peman an — paj sa a ap mete ajou otomatikman.
-              </p>
-            )}
-            {isCollect && collectTransaction?.status === "failed" && (
-              <p className="mt-2 text-xs text-red-700">
-                Peman otomatik la pa t reyisi. Tanpri eseye ankò oswa kontakte sipò.
-              </p>
-            )}
+        )}
+        {payment?.status === "refunded" && (
+          <div className="text-xs font-semibold text-status-info">Peman ranbouse</div>
+        )}
+
+        {/* Contextual "what needs your attention now" banner — at most one
+            renders at a time; an order with nothing pending shows none,
+            per the Refonte spec's "one action at a time" rule. The
+            needsProof case has no banner of its own here: PaymentProofSection
+            below already carries its own clear call-to-action heading, so a
+            second banner pointing at it would just be noise. */}
+        {isCollect && collectTransaction?.status === "pending" && (
+          // Wallet-agnostic on purpose (post-incident audit remediation,
+          // docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
+          // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md): the
+          // previous text hardcoded "MonCash", which the business gate
+          // in initiate-collect-payment.logic.ts happens to make true
+          // today but won't stay true once another PLOP wallet (e.g.
+          // NatCash) is enabled here. Deliberately NOT routed through
+          // payment-provider-display.ts's getProviderDisplayLabel()
+          // either — that module maps provider_code "moncash_api" to
+          // the internal gateway name "PLOP" for a *future admin*
+          // surface (its own header comment is explicit this is never
+          // meant for a customer-facing screen); showing "PLOP" here
+          // would leak an internal vendor name customers were never
+          // meant to see (checkout.tsx's own copy calls this "Payment
+          // Global" precisely to avoid that). Naming no provider/wallet
+          // at all is the smallest, safest fix that stays correct for
+          // every wallet PLOP could ever route through.
+          <div className="flex items-center gap-3 rounded-2xl bg-status-info-soft p-4 text-sm font-semibold text-status-info">
+            <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />N ap tann konfimasyon peman an
+            — paj sa a ap mete ajou otomatikman.
           </div>
-        </div>
+        )}
+        {isCollect && collectTransaction?.status === "failed" && (
+          <div className="flex items-center gap-3 rounded-2xl bg-status-bad-soft p-4 text-sm font-semibold text-status-bad">
+            <AlertCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
+            Peman otomatik la pa t reyisi. Tanpri eseye ankò oswa kontakte sipò.
+          </div>
+        )}
 
         {delivery && trackingMarkers.length > 0 && (
           <DeliveryTrackingSection
@@ -308,49 +291,11 @@ function OrderDetail() {
           </Link>
         )}
 
-        <div className="rounded-2xl bg-white p-5 shadow-brand-xs ring-1 ring-brand-soft/40">
-          <div className="mb-3 font-display text-base font-bold">Detay</div>
-          {o.order_items?.map((it, i) => (
-            <div
-              key={i}
-              className="flex justify-between border-b border-dashed border-brand-soft py-2 text-sm"
-            >
-              <span>
-                {it.quantity}× {it.product_name}
-              </span>
-              <span>{formatHTG(it.line_total)}</span>
-            </div>
-          ))}
-          <div className="mt-3 space-y-1 text-sm">
-            <div className="flex justify-between text-ink-soft">
-              <span>Sou-total</span>
-              <span>{formatHTG(o.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-ink-soft">
-              <span>Frè livrezon</span>
-              <span>{formatHTG(o.delivery_fee)}</span>
-            </div>
-            <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-2 font-display text-lg font-extrabold">
-              <span>Total</span>
-              <span>{formatHTG(o.total)}</span>
-            </div>
-          </div>
-          <div className="mt-3 text-xs text-ink-soft">
-            <div>
-              <b>Livrezon:</b> {o.delivery_address}
-            </div>
-            <div>
-              <b>Telefòn:</b> {o.contact_phone}
-            </div>
-            {o.delivery_notes && (
-              <div>
-                <b>Nòt:</b> {o.delivery_notes}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {isManual && payment && (
+        {/* The order's own primary action when one is pending, pulled out of
+            the "Detay ak sipò" accordion below rather than duplicated with a
+            separate banner — PaymentProofSection already carries its own
+            clear call-to-action heading. */}
+        {isManual && payment && needsProof && (
           <PaymentProofSection
             orderId={o.id}
             paymentId={payment.id}
@@ -362,22 +307,97 @@ function OrderDetail() {
           />
         )}
 
-        <CancelOrderSection orderId={o.id} orderStatus={o.status} />
+        {/* Everything else — order contents, and whatever secondary action
+            (already-submitted proof, cancel, refund, cash confirmation,
+            dispute, review) applies to this order's current state.
+            Collapsed by default while the order is still active (the
+            timeline above is the focus); open by default once the order
+            reaches a terminal state, where this section *is* what's left
+            to do (leave a review, chase a refund, resolve a dispute) rather
+            than secondary to anything else on the page. */}
+        <details
+          className="group overflow-hidden rounded-2xl bg-white shadow-brand-xs ring-1 ring-brand-soft/40"
+          open={TERMINAL_ORDER_STATUSES.has(o.status)}
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-white p-5 font-display text-base font-bold text-ink marker:content-none">
+            Detay kòmand ak sipò
+            <ChevronRight
+              className="h-4 w-4 shrink-0 text-ink-soft transition-transform group-open:rotate-90"
+              aria-hidden="true"
+            />
+          </summary>
+          <div className="space-y-4 bg-cream/50 p-5">
+            <div>
+              {o.order_items?.map((it, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between border-b border-dashed border-brand-soft py-2 text-sm"
+                >
+                  <span>
+                    {it.quantity}× {it.product_name}
+                  </span>
+                  <span>{formatHTG(it.line_total)}</span>
+                </div>
+              ))}
+              <div className="mt-3 space-y-1 text-sm">
+                <div className="flex justify-between text-ink-soft">
+                  <span>Sou-total</span>
+                  <span>{formatHTG(o.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-ink-soft">
+                  <span>Frè livrezon</span>
+                  <span>{formatHTG(o.delivery_fee)}</span>
+                </div>
+                <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-2 font-display text-lg font-extrabold">
+                  <span>Total</span>
+                  <span>{formatHTG(o.total)}</span>
+                </div>
+              </div>
+              <div className="mt-3 text-xs text-ink-soft">
+                <div>
+                  <b>Livrezon:</b> {o.delivery_address}
+                </div>
+                <div>
+                  <b>Telefòn:</b> {o.contact_phone}
+                </div>
+                {o.delivery_notes && (
+                  <div>
+                    <b>Nòt:</b> {o.delivery_notes}
+                  </div>
+                )}
+              </div>
+            </div>
 
-        <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
+            {isManual && payment && !needsProof && (
+              <PaymentProofSection
+                orderId={o.id}
+                paymentId={payment.id}
+                total={o.total}
+                payLabel={payLabel}
+                payRoutingNote={payRoutingNote}
+                needsProof={needsProof}
+                reviewNotes={payment.review_notes}
+              />
+            )}
 
-        <CashConfirmationSection orderId={o.id} orderStatus={o.status} payment={payment} />
+            <CancelOrderSection orderId={o.id} orderStatus={o.status} />
 
-        <DisputeSection orderId={o.id} orderStatus={o.status} />
+            <RefundSection orderId={o.id} orderStatus={o.status} paymentStatus={payment?.status} />
 
-        {o.status === "delivered" && (
-          <OrderReviewSection
-            orderId={o.id}
-            customerId={user?.id}
-            restaurantId={o.restaurant_id}
-            driverId={delivery?.driver_id ?? null}
-          />
-        )}
+            <CashConfirmationSection orderId={o.id} orderStatus={o.status} payment={payment} />
+
+            <DisputeSection orderId={o.id} orderStatus={o.status} />
+
+            {o.status === "delivered" && (
+              <OrderReviewSection
+                orderId={o.id}
+                customerId={user?.id}
+                restaurantId={o.restaurant_id}
+                driverId={delivery?.driver_id ?? null}
+              />
+            )}
+          </div>
+        </details>
       </main>
       <SiteFooter />
     </div>
