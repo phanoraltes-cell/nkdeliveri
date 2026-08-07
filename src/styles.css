@@ -168,23 +168,29 @@
   /* Status tokens (light) — see --color-status-* registration above.
      Hues chosen to stay in the same restrained, slightly muted family as
      the rest of this palette rather than importing Tailwind's default
-     emerald/amber/sky straight. --status-bad intentionally equals
-     --destructive: "bad" and "destructive" are the same meaning
-     (cancelled/failed/refused), not two colors to keep in sync by hand.
-     Lightness (~0.44-0.46) is deliberately dark, not a brand-deep-style
-     mid-tone — these render as small bold text on a near-white -soft
-     background (StatusBadge), the same "dark text, pale tint" contrast
-     shape as the Tailwind emerald-800/emerald-100 pair this replaces, not
-     the vivid mid-tone convention --brand-deep uses elsewhere. --status-bad
-     is the one exception (inherits --destructive's existing lightness
-     as-is, see comment above) — its contrast on -soft is carried to the
-     Refonte spec's P7 accessibility pass rather than re-tuned here, since
-     changing --destructive itself is out of P1's scope. */
+     emerald/amber/sky straight. Lightness (~0.44-0.46) is deliberately
+     dark, not a brand-deep-style mid-tone — these render as small bold
+     text on a near-white -soft background (StatusBadge), the same "dark
+     text, pale tint" contrast shape as the Tailwind emerald-800/
+     emerald-100 pair this replaces, not the vivid mid-tone convention
+     --brand-deep uses elsewhere.
+     Refonte Frontend Premium, Phase 7 (P7) — --status-bad used to equal
+     --destructive verbatim (P1's rationale: "bad" and "destructive" are
+     the same meaning, one color to keep in sync). Measured contrast of
+     that reused value against --status-bad-soft: 3.53:1, below the 4.5:1
+     AA text threshold (verified with axe-core + a standalone WCAG
+     contrast calculation against the exact oklch values below) — the
+     P1 comment had explicitly flagged this exact ratio as carried
+     forward to this phase rather than fixed then. --destructive itself
+     (button fills, white text) is untouched — measured separately at
+     4.5:1+ in every use, and it's a much more broadly-used, already-
+     shipped token than a P1-created one; --status-bad now has its own
+     value instead, matching the same lightness family as its siblings. */
   --status-good: oklch(0.44 0.11 155);
   --status-good-soft: oklch(0.94 0.05 155);
   --status-warn: oklch(0.46 0.12 75);
   --status-warn-soft: oklch(0.94 0.06 80);
-  --status-bad: var(--destructive);
+  --status-bad: oklch(0.44 0.19 25);
   --status-bad-soft: oklch(0.94 0.05 25);
   --status-info: oklch(0.46 0.11 230);
   --status-info-soft: oklch(0.94 0.04 230);
@@ -229,12 +235,17 @@
      become low-opacity-on-dark-surface fills rather than pale tints. Not
      wired to a toggle yet (tracked separately, see Refonte spec P8) but
      kept complete so activating dark mode later doesn't leave status
-     colors half-migrated. */
+     colors half-migrated. --status-bad (P7): the inherited dark
+     --destructive value measured at exactly 4.50:1 against
+     --status-bad-soft — technically at the AA line, not comfortably past
+     it. Given its own value here too, matching the ~0.75 lightness family
+     of its siblings for a safer margin (~4.95:1), same reasoning as the
+     light block. */
   --status-good: oklch(0.72 0.14 155);
   --status-good-soft: oklch(0.32 0.06 155);
   --status-warn: oklch(0.8 0.15 80);
   --status-warn-soft: oklch(0.32 0.07 80);
-  --status-bad: var(--destructive);
+  --status-bad: oklch(0.75 0.19 25);
   --status-bad-soft: oklch(0.32 0.06 25);
   --status-info: oklch(0.75 0.12 230);
   --status-info-soft: oklch(0.3 0.05 230);

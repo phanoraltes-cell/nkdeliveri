@@ -64,12 +64,23 @@ export function OrderStatusTimeline({ status }: { status: string }) {
           {STEPS[activeIndex].label}
         </StatusBadge>
       </div>
-      <ol className="flex items-start">
+      {/* Refonte Frontend Premium, Phase 7 (P7) — the step badge above
+          already states the current step in real text, but the steps
+          themselves conveyed done/current/upcoming purely visually (color,
+          ring, a checkmark icon that's aria-hidden). aria-current="step"
+          (the ARIA value built for exactly this — a step within a
+          process) plus a visually-hidden state suffix per <li> close that
+          gap without changing anything sighted users see. */}
+      <ol className="flex items-start" aria-label="Pwogrè kòmand">
         {STEPS.map((step, i) => {
           const done = i < activeIndex;
           const active = i === activeIndex;
           return (
-            <li key={step.key} className="relative flex-1 text-center">
+            <li
+              key={step.key}
+              aria-current={active ? "step" : undefined}
+              className="relative flex-1 text-center"
+            >
               {i > 0 && (
                 <span
                   aria-hidden="true"
@@ -95,6 +106,8 @@ export function OrderStatusTimeline({ status }: { status: string }) {
                 }`}
               >
                 {step.label}
+                {done && <span className="sr-only"> — fini</span>}
+                {active && <span className="sr-only"> — etap aktyèl</span>}
               </span>
             </li>
           );
