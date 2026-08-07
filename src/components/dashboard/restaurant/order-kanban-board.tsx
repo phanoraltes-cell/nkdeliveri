@@ -185,12 +185,25 @@ function KanbanCard({
   const paymentMethod = o.payments?.[0]?.method;
   const nextCol = NEXT_COLUMN[o.status];
 
+  // Wait-time flag for the "Nouvo kòmand" column only — that's the queue
+  // staff must act on fastest, so it's the one place a card sitting too
+  // long is worth calling out. Computed at render time rather than on a
+  // ticking interval: the board's own data query already refetches
+  // periodically and on realtime order changes, which keeps this fresh
+  // enough without a per-card timer. Threshold matches the one used in
+  // the Refonte spec's own Kanban wireframe.
+  const isPending = o.status === "pending";
+  const minutesWaiting = isPending
+    ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000))
+    : null;
+  const isUrgent = isPending && minutesWaiting !== null && minutesWaiting >= 10;
+
   return (
     <div
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`rounded-xl border border-brand-soft/50 bg-white p-3 shadow-brand-xs transition hover:shadow-brand-sm ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`rounded-xl border border-brand-soft/50 bg-white p-3 shadow-brand-xs transition hover:shadow-brand-sm ${isUrgent ? "border-l-4 border-l-status-bad" : ""} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="font-display text-sm font-extrabold text-ink">{o.order_number}</span>
@@ -210,10 +223,20 @@ function KanbanCard({
           </button>
         </div>
       </div>
-      <div className="mt-0.5 text-[11px] text-ink-soft">
-        {new Date(o.created_at).toLocaleTimeString("fr-HT", { hour: "2-digit", minute: "2-digit" })}{" "}
-        · {itemCount} atik
-        {paymentMethod && ` · ${PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}`}
+      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-ink-soft">
+        <span>
+          {new Date(o.created_at).toLocaleTimeString("fr-HT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}{" "}
+          · {itemCount} atik
+          {paymentMethod && ` · ${PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}`}
+        </span>
+        {isUrgent && (
+          <span className="rounded-full bg-status-bad-soft px-1.5 py-0.5 font-bold text-status-bad">
+            {minutesWaiting} min ap tann
+          </span>
+        )}
       </div>
       <div className="mt-1 truncate text-[11px] text-ink-soft">{o.delivery_address}</div>
       {o.contact_phone && (
@@ -241,20 +264,33 @@ function KanbanCard({
         <div className="mt-2 flex flex-wrap gap-1.5">
           {o.status === "pending" && (
             <>
-              <button
+              {/* Was two hand-rolled <button>s with hardcoded
+                  bg-emerald-600/bg-red-600 (audit finding, docs/PHASE0_
+                  PREPARATION_REPORT.md's design-system inventory) —
+                  migrated onto the shared Button component. The "Lis"
+                  view on this same screen (dashboard.restaurant.orders.tsx)
+                  has the identical pattern and is not fixed by this
+                  change — out of scope for this phase's Kanban-only
+                  remediation, left for a future pass. flex-1 lets both
+                  buttons share the card's width evenly instead of a
+                  narrow inline pill. */}
+              <Button
+                size="sm"
+                className="h-auto flex-1 gap-1 px-2.5 py-2"
                 disabled={isChangingStatus}
                 onClick={() => onChangeStatus(o.id, "confirmed")}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700 disabled:pointer-events-none disabled:opacity-50"
               >
-                <Check className="h-3 w-3" /> Konfime
-              </button>
-              <button
+                <Check aria-hidden="true" /> Konfime
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-auto flex-1 gap-1 px-2.5 py-2"
                 disabled={isChangingStatus}
                 onClick={() => onRequestReject(o.id, o.order_number)}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-red-700 disabled:pointer-events-none disabled:opacity-50"
               >
-                <X className="h-3 w-3" /> Refize
-              </button>
+                <X aria-hidden="true" /> Refize
+              </Button>
             </>
           )}
           {nextCol && o.status !== "pending" && (

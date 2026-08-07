@@ -79,13 +79,28 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
         disabled={props.disabled || isLoading}
       >
-        {isLoading && (
+        {isLoading ? (
+          // Wrapping is conditional, not unconditional: the button's own
+          // `gap-2` (buttonVariants above) only ever spaces *direct* flex
+          // children apart. An unconditional wrapper span here would
+          // collapse every existing icon+label usage (e.g. `<Icon .../>
+          // Anile kòmand`) into a single flex item, silently erasing the
+          // gap between them for every Button in the app — this was
+          // exactly that bug, caught before any call site started
+          // depending on it. Only the loading state gets its own span
+          // (needed to dim the label as one unit), and that span gets its
+          // own `inline-flex items-center gap-2` so it doesn't reintroduce
+          // the same problem for whatever the label contains.
           <span
             aria-hidden="true"
             className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70"
           />
+        ) : null}
+        {isLoading ? (
+          <span className="inline-flex items-center gap-2 opacity-70">{children}</span>
+        ) : (
+          children
         )}
-        <span className={cn(isLoading && "opacity-70")}>{children}</span>
       </button>
     );
   },
