@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCollectPaymentPoll } from "@/hooks/useCollectPaymentPoll";
 import { formatHTG } from "@/lib/format";
-import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, AlertTriangle } from "lucide-react";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useOrderDelivery, ACTIVE_DELIVERY_STATUSES } from "@/hooks/useLiveOrders";
 import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
@@ -23,6 +23,7 @@ import { CashConfirmationSection } from "@/components/order/cash-confirmation-se
 import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
+import { DISPUTE_TERMINAL_STATUSES } from "@/lib/dispute-status";
 import { MessageCircle, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/orders/$id")({
@@ -103,6 +104,28 @@ function OrderDetail() {
   // Also unconditional and before the early returns below, for the same
   // Rules-of-Hooks reason as `delivery` above.
   const trackingRoute = useRoute(driverPoint, nextStopPoint);
+
+  // Phase 2.1 remediation (docs/PHASE2_PUSH_DECISION_REPORT.md, anomaly 2):
+  // mirrors DisputeSection's own query (identical queryKey and select) so
+  // React Query dedupes the two into a single request — no new backend
+  // call. Needed here, one level up, only so the page can surface an
+  // active dispute even while the "Detay ak sipò" accordion (where
+  // DisputeSection itself renders the full thread) is collapsed. Also
+  // unconditional and before the early returns below, for the same
+  // Rules-of-Hooks reason as `delivery`/`trackingRoute` above.
+  const dispute = useQuery({
+    queryKey: ["dispute", order.data?.id],
+    enabled: !!order.data?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("disputes")
+        .select("id, category, status, resolution, created_at")
+        .eq("order_id", order.data!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   if (order.isLoading) {
     return (
@@ -234,7 +257,39 @@ function OrderDetail() {
             per the Refonte spec's "one action at a time" rule. The
             needsProof case has no banner of its own here: PaymentProofSection
             below already carries its own clear call-to-action heading, so a
-            second banner pointing at it would just be noise. */}
+            second banner pointing at it would just be noise.
+            Ordered by urgency: an active dispute first (Phase 2.1
+            remediation, anomaly 2), then the payment-rail banners
+            (including under_review — Phase 2.1 remediation, anomaly 1).
+            These two families never actually compete for the same order:
+            a dispute only becomes eligible once the order status moves
+            past pending/confirmed/preparing (DisputeSection's own
+            NOT_YET_ELIGIBLE_STATUSES), and every one of the payment-rail
+            banners below only applies while the order is still "pending"
+            (update_order_status_secure/the restaurant dashboard both block
+            confirming a moncash/natcash order — manual or automatic —
+            until its payment is "paid"). Documented here rather than
+            re-guarded in code, to avoid adding logic this fix doesn't need. */}
+        {!TERMINAL_ORDER_STATUSES.has(o.status) &&
+          dispute.data &&
+          !DISPUTE_TERMINAL_STATUSES.has(dispute.data.status) && (
+            <a
+              href="#dispute"
+              className="flex items-center justify-between gap-3 rounded-2xl bg-status-warn-soft p-4 text-sm font-semibold text-status-warn"
+            >
+              <span className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
+                Nou resevwa siyalman ou a — ekip sipò a ap swiv dosye a.
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+            </a>
+          )}
+        {isManual && payment?.status === "under_review" && (
+          <div className="flex items-center gap-3 rounded-2xl bg-status-info-soft p-4 text-sm font-semibold text-status-info">
+            <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />
+            Nou resevwa prèv peman ou a — n ap verifye li. Pa gen lòt aksyon pou ou fè kounye a.
+          </div>
+        )}
         {isCollect && collectTransaction?.status === "pending" && (
           // Wallet-agnostic on purpose (post-incident audit remediation,
           // docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
@@ -386,7 +441,14 @@ function OrderDetail() {
 
             <CashConfirmationSection orderId={o.id} orderStatus={o.status} payment={payment} />
 
-            <DisputeSection orderId={o.id} orderStatus={o.status} />
+            {/* Anchor for the active-dispute banner's "quick access" link
+                above — wraps the call site only, DisputeSection itself is
+                untouched. Modern browsers auto-expand an ancestor
+                <details> when its content is the target of a fragment
+                navigation, so this also opens the accordion. */}
+            <div id="dispute" className="scroll-mt-20">
+              <DisputeSection orderId={o.id} orderStatus={o.status} />
+            </div>
 
             {o.status === "delivered" && (
               <OrderReviewSection
