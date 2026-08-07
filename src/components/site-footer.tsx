@@ -1,14 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import { Banknote } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/site-config";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SiteFooter() {
+  // Refonte Frontend Premium, Phase 10 (P10) — this footer is only ever
+  // rendered on public routes (never inside /dashboard/*), so it only
+  // needs to distinguish signed-in from signed-out, the same split
+  // site-header.tsx already handles with the same hook — not one branch
+  // per role. Before this, "Konekte" was shown unconditionally, even to a
+  // user already signed in one scroll away from a header that got this
+  // right.
+  const { user } = useAuth();
   const navLinks = [
     { to: "/", label: "Akèy" },
     { to: "/restaurants", label: "Restoran" },
     { to: "/orders", label: "Kòmand mwen" },
     { to: "/profile", label: "Pwofil" },
-    { to: "/auth", label: "Konekte" },
+    user
+      ? ({ to: "/dashboard", label: "Dashboard" } as const)
+      : ({ to: "/auth", label: "Konekte" } as const),
   ] as const;
 
   const companyLinks = [

@@ -15,6 +15,7 @@ import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ORDER_STATUS_LABEL as STATUS_LABEL, TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
+import { Chip } from "@/components/ui/chip";
 
 const PAGE_SIZE = 30;
 
@@ -223,18 +224,12 @@ function RestaurantOrders() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex gap-2">
-              <button
-                onClick={() => updateFilter("all")}
-                className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
-              >
+              <Chip selected={filter === "all"} onClick={() => updateFilter("all")}>
                 Tout
-              </button>
-              <button
-                onClick={() => updateFilter("pending")}
-                className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "pending" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
-              >
+              </Chip>
+              <Chip selected={filter === "pending"} onClick={() => updateFilter("pending")}>
                 An atant {pendingCount > 0 ? `(${pendingCount})` : ""}
-              </button>
+              </Chip>
             </div>
             {hasHideable && (
               <button
