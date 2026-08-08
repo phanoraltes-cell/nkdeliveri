@@ -74,6 +74,49 @@ async function finalizeAsPaid(
 }
 
 /**
+ * Escalates a transaction stuck past `STALE_REVIEW_AFTER_MS` — the real
+ * gap found during docs/BACKEND_PAYMENT_REMEDIATION.md: this cron already
+ * detected staleness correctly, but the only signal was a console.error,
+ * invisible without direct Vercel log access. `flag_stale_collect_payment_secure`
+ * (SQL, idempotent via `payment_transactions.stale_flagged_at`) fires the
+ * in-app bell exactly once via `private.notify_secure`; this function is
+ * the matching push-notification sibling this project's own convention
+ * requires ([[project_notification_push_convention]]) — reached directly
+ * (no `send-*-push.functions.ts`/`createServerFn` wrapper, since this runs
+ * in a cron context with no user session to authenticate, unlike every
+ * client-triggered push in this codebase).
+ */
+async function flagStaleAndNotify(supabaseAdmin: SupabaseAdmin, reference: string): Promise<void> {
+  const { data, error } = await supabaseAdmin.rpc("flag_stale_collect_payment_secure", {
+    _external_reference: reference,
+  });
+  if (error) throw new Error(error.message);
+  const flagged = data?.[0];
+  if (!flagged?.just_flagged) return; // already flagged on a previous day's run — no repeat push
+
+  const { data: admins, error: adminsError } = await supabaseAdmin
+    .from("user_roles")
+    .select("user_id")
+    .in("role", ["admin", "super_admin"]);
+  if (adminsError) throw new Error(adminsError.message);
+  const adminIds = (admins ?? []).map((r) => r.user_id);
+  if (adminIds.length === 0) return;
+
+  const { pushToUsers } = await import("@/lib/push-dispatch.server");
+  await pushToUsers(adminIds, {
+    title: "Peman otomatik bloke depi plizyè jou",
+    body: `Yon tantativ peman ${flagged.amount ?? "?"} HTG rete "an atant" depi plis pase 3 jou — verifye li manyèlman.`,
+    url: "/dashboard/admin/collect",
+    tag: `collect-payment-stale-${reference}`,
+    data: {
+      paymentId: flagged.payment_id,
+      orderId: flagged.order_id,
+      externalReference: reference,
+    },
+  });
+}
+
+/**
  * Finds every `pending` PLOP Collect transaction old enough to check,
  * asks PLOP directly for its real status via `plopProvider.checkStatus()`,
  * and finalizes confirmed payments through the same RPC the (currently
@@ -140,13 +183,22 @@ export async function reconcilePendingPlopPayments(): Promise<ReconcileSummary> 
     // still don't have a definitive answer").
     const isStale = Date.now() - new Date(row.created_at).getTime() > STALE_REVIEW_AFTER_MS;
     if (isStale) {
-      // Log only — payment_transactions.status has no "needs review"
-      // value (CHECK constraint: pending/paid/failed), and inventing one
-      // here would be a schema change this phase forbids. Visible in
-      // Vercel logs today; Phase 6 can wire a real admin alert.
+      // Escalates once, not merely logging — docs/BACKEND_PAYMENT_REMEDIATION.md:
+      // a console.error alone was found to be genuinely invisible in
+      // production (16 real stuck transactions, zero admin notifications,
+      // zero pushes, confirmed by direct data audit). flag_stale_collect_payment_secure
+      // is idempotent (payment_transactions.stale_flagged_at) — safe to
+      // call every day for the same still-pending transaction, it only
+      // ever fires the in-app bell/push once.
       console.error(
-        `[plop-reconcile] transaction ${reference} still pending after ${STALE_REVIEW_AFTER_MS / 86_400_000} days — needs manual review`,
+        `[plop-reconcile] transaction ${reference} still pending after ${STALE_REVIEW_AFTER_MS / 86_400_000} days — flagging for manual review`,
       );
+      try {
+        await flagStaleAndNotify(supabaseAdmin, reference);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`[plop-reconcile] failed to flag ${reference} as stale: ${message}`);
+      }
       results.push({ externalReference: reference, outcome: "needs_manual_review" });
       continue;
     }

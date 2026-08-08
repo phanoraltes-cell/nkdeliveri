@@ -18,6 +18,18 @@ vi.mock("../plop-provider.server", () => ({
   plopProvider: { checkStatus: (ref: string) => checkStatusMock(ref) },
 }));
 
+type PushPayload = {
+  title: string;
+  body: string;
+  url: string;
+  tag: string;
+  data?: Record<string, unknown>;
+};
+const pushToUsersMock = vi.fn(async (_userIds: string[], _payload: PushPayload) => ({ sent: 1 }));
+vi.mock("@/lib/push-dispatch.server", () => ({
+  pushToUsers: (userIds: string[], payload: PushPayload) => pushToUsersMock(userIds, payload),
+}));
+
 type PendingRow = { external_reference: string; created_at: string };
 
 function buildPendingChain(rows: PendingRow[]) {
@@ -30,13 +42,54 @@ function buildPendingChain(rows: PendingRow[]) {
   return chain;
 }
 
+function buildUserRolesChain(userIds: string[]) {
+  const chain: Record<string, unknown> = {};
+  chain.select = vi.fn(() => chain);
+  chain.in = vi.fn(() => chain);
+  chain.then = (resolve: (v: unknown) => unknown) =>
+    Promise.resolve({ data: userIds.map((user_id) => ({ user_id })), error: null }).then(resolve);
+  return chain;
+}
+
+/**
+ * Default `rpc` mock dispatches by function name so a single helper covers
+ * both `complete_collect_payment_secure` (existing behavior) and
+ * `flag_stale_collect_payment_secure` (docs/BACKEND_PAYMENT_REMEDIATION.md)
+ * without every pre-existing test needing to know about the new one.
+ */
 function buildSupabaseAdminMock(
   rows: PendingRow[],
-  rpcImpl: () => Promise<{ error: { message: string } | null }> = async () => ({ error: null }),
+  opts: {
+    completeRpcImpl?: () => Promise<{ error: { message: string } | null }>;
+    flagRpcImpl?: () => Promise<{
+      data:
+        | {
+            just_flagged: boolean;
+            amount: number | null;
+            payment_id: string | null;
+            order_id: string | null;
+          }[]
+        | null;
+      error: { message: string } | null;
+    }>;
+    adminIds?: string[];
+  } = {},
 ) {
-  const rpc = vi.fn(rpcImpl);
+  const completeRpcImpl = opts.completeRpcImpl ?? (async () => ({ error: null }));
+  const flagRpcImpl =
+    opts.flagRpcImpl ??
+    (async () => ({
+      data: [{ just_flagged: true, amount: 1150, payment_id: "PAY-1", order_id: "ORDER-1" }],
+      error: null,
+    }));
+  const rpc = vi.fn((fn: string) => {
+    if (fn === "complete_collect_payment_secure") return completeRpcImpl();
+    if (fn === "flag_stale_collect_payment_secure") return flagRpcImpl();
+    throw new Error(`unexpected rpc: ${fn}`);
+  });
   const from = vi.fn((table: string) => {
     if (table === "payment_transactions") return buildPendingChain(rows);
+    if (table === "user_roles") return buildUserRolesChain(opts.adminIds ?? ["ADMIN-1"]);
     throw new Error(`unexpected table: ${table}`);
   });
   return { supabaseAdmin: { from, rpc } };
@@ -53,6 +106,7 @@ describe("reconcilePendingPlopPayments", () => {
   beforeEach(() => {
     vi.resetModules();
     checkStatusMock.mockReset();
+    pushToUsersMock.mockClear();
   });
 
   it("returns candidates:0 when nothing is pending", async () => {
@@ -119,7 +173,7 @@ describe("reconcilePendingPlopPayments", () => {
     });
     const { supabaseAdmin } = buildSupabaseAdminMock(
       [{ external_reference: "REF-2", created_at: recentIso(ELEVEN_MIN_MS) }],
-      async () => ({ error: { message: "deadlock detected" } }),
+      { completeRpcImpl: async () => ({ error: { message: "deadlock detected" } }) },
     );
     vi.doMock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -162,11 +216,12 @@ describe("reconcilePendingPlopPayments", () => {
     expect(supabaseAdmin.rpc).not.toHaveBeenCalled();
   });
 
-  it("flags for manual review once stale (>3 days), never guessing a 'failed' decision — no RPC called", async () => {
+  it("flags for manual review once stale (>3 days), never guessing a 'failed' decision — calls flag_stale_collect_payment_secure and sends exactly one admin push (docs/BACKEND_PAYMENT_REMEDIATION.md)", async () => {
     checkStatusMock.mockResolvedValue({ status: "pending", raw: {} });
-    const { supabaseAdmin } = buildSupabaseAdminMock([
-      { external_reference: "REF-5", created_at: recentIso(FOUR_DAYS_MS) },
-    ]);
+    const { supabaseAdmin } = buildSupabaseAdminMock(
+      [{ external_reference: "REF-5", created_at: recentIso(FOUR_DAYS_MS) }],
+      { adminIds: ["ADMIN-1", "ADMIN-2"] },
+    );
     vi.doMock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -176,7 +231,66 @@ describe("reconcilePendingPlopPayments", () => {
     expect(summary.results).toEqual([
       { externalReference: "REF-5", outcome: "needs_manual_review" },
     ]);
-    expect(supabaseAdmin.rpc).not.toHaveBeenCalled();
+    expect(supabaseAdmin.rpc).toHaveBeenCalledWith("flag_stale_collect_payment_secure", {
+      _external_reference: "REF-5",
+    });
+    // complete_collect_payment_secure must never be called for a merely-stale (not confirmed) transaction.
+    expect(supabaseAdmin.rpc).not.toHaveBeenCalledWith(
+      "complete_collect_payment_secure",
+      expect.anything(),
+    );
+    expect(pushToUsersMock).toHaveBeenCalledTimes(1);
+    expect(pushToUsersMock).toHaveBeenCalledWith(
+      ["ADMIN-1", "ADMIN-2"],
+      expect.objectContaining({ tag: "collect-payment-stale-REF-5" }),
+    );
+    errorSpy.mockRestore();
+  });
+
+  it("does NOT send a repeat push when flag_stale_collect_payment_secure reports just_flagged:false (already flagged on a previous day's run)", async () => {
+    checkStatusMock.mockResolvedValue({ status: "pending", raw: {} });
+    const { supabaseAdmin } = buildSupabaseAdminMock(
+      [{ external_reference: "REF-6", created_at: recentIso(FOUR_DAYS_MS) }],
+      {
+        flagRpcImpl: async () => ({
+          data: [{ just_flagged: false, amount: 1150, payment_id: "PAY-1", order_id: "ORDER-1" }],
+          error: null,
+        }),
+      },
+    );
+    vi.doMock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { reconcilePendingPlopPayments } = await import("../plop-reconcile.server");
+    const summary = await reconcilePendingPlopPayments();
+
+    expect(summary.results).toEqual([
+      { externalReference: "REF-6", outcome: "needs_manual_review" },
+    ]);
+    expect(supabaseAdmin.rpc).toHaveBeenCalledWith("flag_stale_collect_payment_secure", {
+      _external_reference: "REF-6",
+    });
+    expect(pushToUsersMock).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("a flag_stale_collect_payment_secure failure is caught and logged, never crashes the reconcile pass or the rest of the batch", async () => {
+    checkStatusMock.mockResolvedValue({ status: "pending", raw: {} });
+    const { supabaseAdmin } = buildSupabaseAdminMock(
+      [{ external_reference: "REF-7", created_at: recentIso(FOUR_DAYS_MS) }],
+      { flagRpcImpl: async () => ({ data: null, error: { message: "connection reset" } }) },
+    );
+    vi.doMock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { reconcilePendingPlopPayments } = await import("../plop-reconcile.server");
+    const summary = await reconcilePendingPlopPayments();
+
+    expect(summary.results).toEqual([
+      { externalReference: "REF-7", outcome: "needs_manual_review" },
+    ]);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("failed to flag REF-7 as stale"));
+    expect(pushToUsersMock).not.toHaveBeenCalled();
     errorSpy.mockRestore();
   });
 
