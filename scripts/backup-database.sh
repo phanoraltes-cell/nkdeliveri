@@ -60,8 +60,18 @@ MIN_FUNCTIONS="${BACKUP_MIN_FUNCTIONS:-90}"
 MIN_TRIGGERS="${BACKUP_MIN_TRIGGERS:-15}"
 MIN_POLICIES="${BACKUP_MIN_POLICIES:-50}"
 
-SCHEMA_TMP="$(mktemp)"
-DATA_TMP="$(mktemp)"
+#   - `mktemp` defaults to the system temp dir (bash's own `/tmp`, whatever
+#     that resolves to). In this project's Git Bash/MSYS environment, that
+#     resolution has been observed to disagree with how the SAME path
+#     string resolves when passed as a `-f` argument to `supabase db dump`
+#     — a native (non-MSYS) Windows binary launched via node.exe — landing
+#     the real dump in one location while bash keeps looking at an empty
+#     placeholder file in another (docs/BACKUP_EMPTY_DUMP_ROOT_CAUSE_REPORT.md).
+#     `-p "$OUT_DIR"` sidesteps this entirely: a relative path under the
+#     project's own backups/ dir resolves identically for bash and for any
+#     native subprocess, no `/tmp` translation involved either way.
+SCHEMA_TMP="$(mktemp -p "$OUT_DIR")"
+DATA_TMP="$(mktemp -p "$OUT_DIR")"
 OUT_FILE=""
 REPORT_FILE=""
 SUCCESS=0
