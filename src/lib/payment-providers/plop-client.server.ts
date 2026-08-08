@@ -213,20 +213,35 @@ async function safeReadBody(response: Response): Promise<unknown> {
 }
 
 /**
- * A 2xx response with a body that isn't valid JSON must still surface as
- * a clean PlopApiError, never a raw SyntaxError escaping this module —
- * same gap MonCash's client was hardened against once already (see
- * docs/MONCASH_RESILIENCE_REPORT.md); guarded against here from the
- * start rather than reproducing it.
+ * A 2xx response with a body that isn't valid JSON (or is empty) must
+ * still surface as a clean PlopApiError, never a raw SyntaxError escaping
+ * this module — same gap MonCash's client was hardened against once
+ * already (see docs/MONCASH_RESILIENCE_REPORT.md); guarded against here
+ * from the start rather than reproducing it.
+ *
+ * Reads the body as text exactly once, then attempts `JSON.parse` on the
+ * captured text — deliberately NOT `response.json()` followed by
+ * `safeReadBody(response)` on failure (the bug this replaces, found by
+ * direct testing during docs/PLOP_CLIENT_REMEDIATION_REPORT.md): once a
+ * Response's body has been read (even by a call that throws, like an
+ * invalid-JSON parse), the Fetch spec marks it "disturbed" and any later
+ * read of that same Response — including `.clone()` — silently produces
+ * nothing. `safeReadBody`'s own defensive try/catch never threw, so this
+ * never crashed, but `PlopApiError.raw` was always `undefined` for a
+ * malformed or empty body — exactly the two cases where the raw evidence
+ * matters most (logging/debugging what PLOP actually sent). Reading once,
+ * up front, means the raw text is always available for `.raw`, whether or
+ * not it turns out to be valid JSON.
  */
 async function parseJsonOrThrow(response: Response, context: string): Promise<unknown> {
+  const rawText = await response.text();
   try {
-    return await response.json();
+    return JSON.parse(rawText);
   } catch {
     throw new PlopApiError(
       `Repons PLOP pa nan fòma JSON ki atann pou ${context} (HTTP ${response.status})`,
       response.status,
-      await safeReadBody(response),
+      rawText,
     );
   }
 }

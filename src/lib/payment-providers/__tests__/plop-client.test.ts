@@ -195,7 +195,7 @@ describe("plop-client.server.ts", () => {
     expect((error as InstanceType<typeof PlopApiError>).code).toBeUndefined();
   }, 10_000);
 
-  it("createPayment: retries a 503 and succeeds if a later attempt returns 200", async () => {
+  it("createPayment: retries a 503 and succeeds if a later attempt returns 200, journaling every attempt including the retry", async () => {
     let attempts = 0;
     const fetchMock = vi.fn(async () => {
       attempts += 1;
@@ -209,6 +209,11 @@ describe("plop-client.server.ts", () => {
 
     expect(result.providerTransactionId).toBe("OK-1");
     expect(attempts).toBe(2);
+    // Journalisation: both the failed 503 attempt AND the successful retry
+    // must each produce their own plop_api_logs row — never only the last.
+    expect(insertMock).toHaveBeenCalledTimes(2);
+    expect(insertMock.mock.calls[0][0]).toMatchObject({ attempt: 1, http_status: 503 });
+    expect(insertMock.mock.calls[1][0]).toMatchObject({ attempt: 2, http_status: 200 });
   }, 10_000);
 
   it("createPayment: PLOP entirely unavailable (every attempt 503) fails cleanly after exactly 3 tries", async () => {
@@ -234,7 +239,7 @@ describe("plop-client.server.ts", () => {
     await expect(createPayment("CMD-NOURL", 100)).rejects.toBeInstanceOf(PlopApiError);
   });
 
-  it("createPayment: a 200 response with a malformed (non-JSON) body raises a clean PlopApiError, not a raw SyntaxError", async () => {
+  it("createPayment: a 200 response with a malformed (non-JSON) body raises a clean PlopApiError, not a raw SyntaxError, and preserves the raw body for diagnostics", async () => {
     const fetchMock = vi.fn(
       async () =>
         new Response("<html>502 Bad Gateway</html>", {
@@ -249,6 +254,79 @@ describe("plop-client.server.ts", () => {
 
     expect(error).toBeInstanceOf(PlopApiError);
     expect((error as Error).message).not.toMatch(/^Unexpected token|is not valid JSON/i);
+    // Regression test for a real bug found during docs/PLOP_CLIENT_REMEDIATION_REPORT.md:
+    // parseJsonOrThrow used to read the body via `response.json()` directly, then try to
+    // recover it via `safeReadBody(response)` on failure — but a Response's body can only
+    // ever be read once (the Fetch spec marks it "disturbed" even when the read throws), so
+    // that recovery attempt silently always resolved to `undefined`. `.raw` must carry the
+    // actual malformed body PLOP sent, not `undefined` — otherwise a real production
+    // incident (PLOP returning an HTML error page, a proxy timeout page, etc.) would be
+    // logged/thrown with zero evidence of what was actually received.
+    expect((error as InstanceType<typeof PlopApiError>).raw).toBe("<html>502 Bad Gateway</html>");
+  });
+
+  it("createPayment: a 200 response with a completely empty body raises a clean PlopApiError with the empty string preserved as raw, never undefined", async () => {
+    const fetchMock = vi.fn(async () => new Response("", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment, PlopApiError } = await import("../plop-client.server");
+    const error = await createPayment("CMD-EMPTYBODY", 100).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PlopApiError);
+    expect((error as Error).message).not.toMatch(/^Unexpected end of JSON input/i);
+    expect((error as InstanceType<typeof PlopApiError>).raw).toBe("");
+  });
+
+  it("createPayment: PLOP declines at creation time (status:false on an otherwise-2xx response) raises a clean PlopApiError carrying PLOP's own message — a business refusal, not a transport error", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(200, { status: false, message: "Kliyan pa gen ase lajan" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { createPayment, PlopApiError } = await import("../plop-client.server");
+    const error = await createPayment("CMD-REFUSED", 100).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PlopApiError);
+    expect((error as Error).message).toContain("Kliyan pa gen ase lajan");
+    // Not retried — a business refusal on a 2xx response is never a transport-level
+    // condition isRetryableStatus() would recognize, so retrying would just repeat it.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("verifyPayment: a 200 response with a malformed (non-JSON) body preserves the raw body for diagnostics (same fix as createPayment, shared parseJsonOrThrow)", async () => {
+    const fetchMock = vi.fn(async () => new Response("not json at all", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { verifyPayment, PlopApiError } = await import("../plop-client.server");
+    const error = await verifyPayment("CMD-VERIFY-BADBODY").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PlopApiError);
+    expect((error as InstanceType<typeof PlopApiError>).raw).toBe("not json at all");
+  });
+
+  it("verifyPayment: a completely empty response body raises a clean PlopApiError, never a raw SyntaxError", async () => {
+    const fetchMock = vi.fn(async () => new Response("", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { verifyPayment, PlopApiError } = await import("../plop-client.server");
+    const error = await verifyPayment("CMD-VERIFY-EMPTY").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PlopApiError);
+    expect((error as Error).message).not.toMatch(/^Unexpected end of JSON input/i);
+  });
+
+  it("verifyPayment: a non-retryable HTTP error (404) is never retried and surfaces the real body", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(404, { status: false, message: "Referans pa jwenn" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { verifyPayment, PlopApiError } = await import("../plop-client.server");
+    const error = await verifyPayment("CMD-VERIFY-404").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(PlopApiError);
+    expect((error as InstanceType<typeof PlopApiError>).httpStatus).toBe(404);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("verifyPayment: normalizes trans_status 'ok' to success-shaped result", async () => {
