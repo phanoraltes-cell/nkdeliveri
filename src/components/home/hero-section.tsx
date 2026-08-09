@@ -134,6 +134,17 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             height={32}
             className="h-8 w-8 shrink-0 rounded object-cover"
           />
+          {/* Kat Kredi (Stripe) — same treatment as the 3 methods above,
+              added once payment-card-logo-integration confirmed it's a
+              genuinely enabled provider (payment_provider_settings),
+              not just visible-but-disabled. */}
+          <img
+            src="/katkredi.png"
+            alt="Kat Kredi"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 rounded object-cover"
+          />
         </motion.div>
       </div>
     </section>

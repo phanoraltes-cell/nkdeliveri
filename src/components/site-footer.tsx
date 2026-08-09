@@ -38,6 +38,11 @@ export function SiteFooter() {
     { name: "MonCash", kind: "image", src: "/moncash-logo-hero.png" },
     { name: "NatCash", kind: "image", src: "/natcash-logo-new.png" },
     { name: "Kach", kind: "icon" },
+    // Kat Kredi (Stripe) — same list, same treatment as the other 3
+    // enabled methods; added once payment-card-logo-integration
+    // confirmed it's genuinely enabled (payment_provider_settings),
+    // not just visible-but-disabled.
+    { name: "Kat Kredi", kind: "image", src: "/katkredi.png" },
   ] as const;
 
   return (
