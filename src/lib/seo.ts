@@ -1,4 +1,4 @@
-import { absoluteUrl } from "@/lib/site-config";
+import { SITE_NAME, absoluteUrl } from "@/lib/site-config";
 
 const DEFAULT_IMAGE = absoluteUrl("/nk-logo.png");
 
@@ -26,6 +26,12 @@ export function pageMeta({ title, description, path, image, type = "website" }: 
       { property: "og:url", content: url },
       { property: "og:type", content: type },
       { property: "og:image", content: ogImage },
+      // SEO brand-authority audit — every indexable page should identify
+      // which *site* it belongs to, not just carry its own page title.
+      // Distinct from og:title (varies per page): this is the constant
+      // brand name, so crawlers attribute e.g. the FAQ page to "NK
+      // Deliveri" as the site, not just to "Kesyon Moun Poze Souvan".
+      { property: "og:site_name", content: SITE_NAME },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },

@@ -127,7 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Kòmande manje nan meyè restoran nan Gonaïves epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach.",
+          "NK Deliveri se platfòm livrezon manje Gonaïves, Ayiti. Kòmande manje nan meyè restoran yo epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach.",
       },
       { name: "author", content: "NK Deliveri" },
       // Sensible default for any route that forgets to set its own — pages
@@ -137,10 +137,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "NK Deliveri — Manje lakay, livre lakay ou" },
       {
         property: "og:description",
-        content: "Livrezon manje nan Gonaïves. MonCash, NatCash, Kach.",
+        content: "Livrezon manje nan Gonaïves, Ayiti. MonCash, NatCash, Kach.",
       },
       { property: "og:url", content: SITE_URL },
       { property: "og:type", content: "website" },
+      // SEO brand-authority audit — the constant site/brand name, distinct
+      // from og:title (which varies per page via lib/seo.ts's pageMeta()).
+      // Missing before: Facebook/LinkedIn/etc. link previews had no
+      // explicit signal for which *site* a shared page belonged to.
+      { property: "og:site_name", content: SITE_NAME },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#F97316" },
       { name: "application-name", content: "NK Deliveri" },
@@ -151,7 +156,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "NK Deliveri — Manje lakay, livre lakay ou" },
       {
         name: "twitter:description",
-        content: "Livrezon manje nan Gonaïves. MonCash, NatCash, Kach.",
+        content: "Livrezon manje nan Gonaïves, Ayiti. MonCash, NatCash, Kach.",
       },
       { property: "og:image", content: absoluteUrl("/nk-logo.png") },
       { name: "twitter:image", content: absoluteUrl("/nk-logo.png") },
@@ -175,15 +180,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         "@context": "https://schema.org",
         "@type": "Organization",
         name: SITE_NAME,
+        // SEO brand-authority audit — schema.org's sanctioned way to tell
+        // Google "this same entity is also searched as X" without
+        // claiming X is the official name (`name` above stays "NK
+        // Deliveri", unchanged). Addresses the "NK Delivery" ⇄
+        // "NK Deliveri" spelling-suggestion behavior at the structured-
+        // data level — this can't force Google's spell-check UI to stop
+        // suggesting the alternate spelling (no on-site signal can), but
+        // it is a real, non-manipulative signal that both strings name
+        // the same organization.
+        alternateName: "NK Delivery",
+        description:
+          "NK Deliveri se platfòm livrezon manje nan Gonaïves, Ayiti — chwazi yon restoran, kòmande, epi resevwa manje w lakay ou.",
         url: SITE_URL,
         logo: absoluteUrl("/nk-logo.png"),
         areaServed: { "@type": "City", name: PRIMARY_CITY.name },
+        // No `sameAs` — deliberately omitted rather than populated with
+        // invented URLs. site-config.ts's SOCIAL_LINKS is empty because
+        // no official NK Deliveri social profile exists yet; add both
+        // together the day one does (see docs/SEO_BRAND_AUTHORITY_NK_DELIVERI.md).
       }),
       jsonLdScript({
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: SITE_NAME,
         url: SITE_URL,
+        // Real, working search — /restaurants?q= is the actual
+        // server-side filter used by restaurants.index.tsx (validated
+        // via its own searchSchema), not a hypothetical capability
+        // described for schema-enrichment's sake.
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${SITE_URL}/restaurants?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
       }),
     ],
   }),
