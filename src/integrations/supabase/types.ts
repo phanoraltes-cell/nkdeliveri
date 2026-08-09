@@ -803,6 +803,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      newsletter_send_log: {
+        Row: {
+          broadcast_id: string;
+          created_at: string;
+          duration_ms: number;
+          error: string | null;
+          http_status: number | null;
+          id: string;
+          recipient_email: string;
+          subject: string;
+          success: boolean;
+          triggered_by: string | null;
+        };
+        Insert: {
+          broadcast_id: string;
+          created_at?: string;
+          duration_ms: number;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          recipient_email: string;
+          subject: string;
+          success: boolean;
+          triggered_by?: string | null;
+        };
+        Update: {
+          broadcast_id?: string;
+          created_at?: string;
+          duration_ms?: number;
+          error?: string | null;
+          http_status?: number | null;
+          id?: string;
+          recipient_email?: string;
+          subject?: string;
+          success?: boolean;
+          triggered_by?: string | null;
+        };
+        Relationships: [];
+      };
       newsletter_subscribers: {
         Row: {
           email: string;

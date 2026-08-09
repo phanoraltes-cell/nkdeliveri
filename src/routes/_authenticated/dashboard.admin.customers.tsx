@@ -77,7 +77,16 @@ function AdminCustomers() {
       return res;
     },
     onSuccess: (res) => {
-      toast.success(`Voye: ${res.sent}/${res.total} · Echwe: ${res.failed}`);
+      const summary = `Voye: ${res.sent}/${res.total} · Echwe: ${res.failed}`;
+      if (res.failed > 0) {
+        // Exact reason(s) captured in newsletter_send_log too (per-recipient,
+        // append-only) — this is just the fast path so an admin doesn't have
+        // to go query it for a quick "why" right after clicking Voye.
+        const reasons = res.failureSamples.join(" | ");
+        toast.warning(reasons ? `${summary} — ${reasons}` : summary);
+      } else {
+        toast.success(summary);
+      }
       setSubject("");
       setBody("");
     },
