@@ -19,6 +19,7 @@ import {
   MessageCircle,
   Smartphone,
   BarChart3,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -89,6 +90,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },
     { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote, section: "Finans" },
     { to: "/dashboard/admin/moncash", label: "MonCash", icon: Smartphone, section: "Finans" },
+    { to: "/dashboard/admin/collect", label: "Peman Otomatik", icon: Zap, section: "Finans" },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw, section: "Finans" },
     {
       to: "/dashboard/admin/payout-settings",
@@ -117,6 +119,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },
     { to: "/dashboard/admin/payouts", label: "Dekesman", icon: Banknote, section: "Finans" },
     { to: "/dashboard/admin/moncash", label: "MonCash", icon: Smartphone, section: "Finans" },
+    { to: "/dashboard/admin/collect", label: "Peman Otomatik", icon: Zap, section: "Finans" },
     { to: "/dashboard/admin/refunds", label: "Ranbousman", icon: RotateCcw, section: "Finans" },
     {
       to: "/dashboard/admin/payout-settings",

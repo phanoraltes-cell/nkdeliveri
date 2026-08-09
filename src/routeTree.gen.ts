@@ -77,6 +77,7 @@ import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes
 import { Route as AuthenticatedDashboardAdminDisputesRouteImport } from './routes/_authenticated/dashboard.admin.disputes'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
 import { Route as AuthenticatedDashboardAdminCommissionsRouteImport } from './routes/_authenticated/dashboard.admin.commissions'
+import { Route as AuthenticatedDashboardAdminCollectRouteImport } from './routes/_authenticated/dashboard.admin.collect'
 import { Route as AuthenticatedDashboardAdminChatRouteImport } from './routes/_authenticated/dashboard.admin.chat'
 import { Route as AuthenticatedDashboardAdminAdsRouteImport } from './routes/_authenticated/dashboard.admin.ads'
 
@@ -464,6 +465,12 @@ const AuthenticatedDashboardAdminCommissionsRoute =
     path: '/commissions',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminCollectRoute =
+  AuthenticatedDashboardAdminCollectRouteImport.update({
+    id: '/collect',
+    path: '/collect',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminChatRoute =
   AuthenticatedDashboardAdminChatRouteImport.update({
     id: '/chat',
@@ -509,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
+  '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
@@ -575,6 +583,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
+  '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
@@ -648,6 +657,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
   '/_authenticated/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
+  '/_authenticated/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/_authenticated/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/_authenticated/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
   '/_authenticated/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
@@ -721,6 +731,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/admin/ads'
     | '/dashboard/admin/chat'
+    | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
@@ -787,6 +798,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/admin/ads'
     | '/dashboard/admin/chat'
+    | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
     | '/dashboard/admin/customers'
     | '/dashboard/admin/disputes'
@@ -859,6 +871,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/ads'
     | '/_authenticated/dashboard/admin/chat'
+    | '/_authenticated/dashboard/admin/collect'
     | '/_authenticated/dashboard/admin/commissions'
     | '/_authenticated/dashboard/admin/customers'
     | '/_authenticated/dashboard/admin/disputes'
@@ -1403,6 +1416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminCommissionsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/collect': {
+      id: '/_authenticated/dashboard/admin/collect'
+      path: '/collect'
+      fullPath: '/dashboard/admin/collect'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminCollectRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/chat': {
       id: '/_authenticated/dashboard/admin/chat'
       path: '/chat'
@@ -1423,6 +1443,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminAdsRoute: typeof AuthenticatedDashboardAdminAdsRoute
   AuthenticatedDashboardAdminChatRoute: typeof AuthenticatedDashboardAdminChatRoute
+  AuthenticatedDashboardAdminCollectRoute: typeof AuthenticatedDashboardAdminCollectRoute
   AuthenticatedDashboardAdminCommissionsRoute: typeof AuthenticatedDashboardAdminCommissionsRoute
   AuthenticatedDashboardAdminCustomersRoute: typeof AuthenticatedDashboardAdminCustomersRoute
   AuthenticatedDashboardAdminDisputesRoute: typeof AuthenticatedDashboardAdminDisputesRoute
@@ -1444,6 +1465,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
   {
     AuthenticatedDashboardAdminAdsRoute: AuthenticatedDashboardAdminAdsRoute,
     AuthenticatedDashboardAdminChatRoute: AuthenticatedDashboardAdminChatRoute,
+    AuthenticatedDashboardAdminCollectRoute:
+      AuthenticatedDashboardAdminCollectRoute,
     AuthenticatedDashboardAdminCommissionsRoute:
       AuthenticatedDashboardAdminCommissionsRoute,
     AuthenticatedDashboardAdminCustomersRoute:
