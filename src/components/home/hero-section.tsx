@@ -19,7 +19,7 @@ type HeroSectionProps = {
 /** Home page's full-width hero: background image, heading, search bar, stats row, and payment badge. */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
-    <section className="relative min-h-[600px] overflow-hidden md:min-h-[700px]">
+    <section id="hero" className="relative min-h-[600px] overflow-hidden md:min-h-[700px]">
       {/* Background image — the NK delivery person */}
       <img
         src={heroLivreur}

@@ -121,7 +121,21 @@ export default defineConfig({
           //    in src/sw.ts still caches them the first time an admin/
           //    restaurant user actually loads one, same offline guarantee,
           //    just not paid upfront by every visitor.
-          globIgnores: ["payment-global/**", "assets/vendor-pdf-*.js", "assets/vendor-charts-*.js"],
+          //  - public/kategori/*.webp (Kategori Pla home-page rail, ~3.4
+          //    MB / 10 files, added post-P10): 6 of the 10 cards already
+          //    use `loading="lazy"` in kategori-pla-section.tsx precisely
+          //    so their fetch is deferred until scrolled near — an eager
+          //    SW precache would silently undo that deferral for every
+          //    visitor regardless of whether they ever scroll the rail.
+          //    Same CacheFirst runtime rule picks each one up the moment
+          //    it's actually requested, still fully cached for offline
+          //    after that.
+          globIgnores: [
+            "payment-global/**",
+            "assets/vendor-pdf-*.js",
+            "assets/vendor-charts-*.js",
+            "kategori/*.webp",
+          ],
         },
       }),
     ],

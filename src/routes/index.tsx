@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { SITE_URL } from "@/lib/site-config";
 import { homeDataQuery } from "@/components/home/home-data";
 import { HeroSection } from "@/components/home/hero-section";
+import { KategoriPlaSection } from "@/components/home/kategori-pla-section";
+import { HaitiVideoPopup } from "@/components/home/haiti-video-popup";
 import { AdBannerSection } from "@/components/home/ad-banner-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { RestaurantCtaBanner } from "@/components/home/restaurant-cta-banner";
@@ -47,6 +49,17 @@ function Index() {
     toggleFavorite(restaurantId);
   }
 
+  // Kategori Pla cards → reuse the existing dish-type filter that already
+  // drives PopularDishesSection below, rather than inventing a new
+  // category mechanism. Cards without a real dish_type match pass "all"
+  // as an honest reset instead of leaving a stale/unrelated filter
+  // active — see kategori-pla-section.tsx's own comment for which 5 of
+  // the 10 categories actually have a match today.
+  function handleCategoryClick(dishTypeKey: string) {
+    setDishType(dishTypeKey);
+    document.getElementById("plat-popile")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   const restaurants = data.restaurants.filter(
     (r) =>
       (cuisine === "Tout" || r.cuisine === cuisine) &&
@@ -66,6 +79,8 @@ function Index() {
             nav({ to: "/restaurants", search: { q } });
           }}
         />
+
+        <KategoriPlaSection onCategoryClick={handleCategoryClick} />
 
         <AdBannerSection />
 
@@ -94,6 +109,10 @@ function Index() {
       </main>
 
       <SiteFooter />
+
+      {/* Home-only — deliberately NOT mounted in __root.tsx, so it can
+          never surface over checkout or order tracking mid-order. */}
+      <HaitiVideoPopup />
     </div>
   );
 }

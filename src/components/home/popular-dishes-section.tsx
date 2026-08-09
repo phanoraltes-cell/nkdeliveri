@@ -40,7 +40,7 @@ export function PopularDishesSection({
   }, {});
 
   return (
-    <section className="mx-auto max-w-[1200px] px-5 pb-14">
+    <section id="plat-popile" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 pb-14">
       <div className="mb-6 flex items-end justify-between">
         <h2 className="font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold tracking-tight">
           Plat <span className="text-brand">popilè</span>
