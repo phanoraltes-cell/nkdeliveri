@@ -14,7 +14,7 @@ const APP_BENEFITS = [
   { icon: Headphones, title: "Sipò 24/7", desc: "Nou la pou ede w nenpòt lè w bezwen nou." },
 ];
 
-/** Home page's "Tout sa w bezwen nan yon sèl aplikasyon" benefits + phone mockup section. */
+/** Home page's "Tout sa w bezwen nan yon sèl aplikasyon web" benefits + phone mockup section. */
 export function AppBenefitsSection() {
   return (
     <section className="mx-auto max-w-[1200px] px-5 pb-14">
@@ -23,7 +23,7 @@ export function AppBenefitsSection() {
           <h2 className="mb-8 font-display text-[clamp(1.6rem,2.8vw,2.2rem)] font-extrabold leading-tight">
             Tout sa w bezwen,
             <br />
-            <span className="text-brand">nan yon sèl aplikasyon</span>
+            <span className="text-brand">nan yon sèl aplikasyon web</span>
           </h2>
           <div className="grid gap-6 sm:grid-cols-2">
             {APP_BENEFITS.map((b) => (
