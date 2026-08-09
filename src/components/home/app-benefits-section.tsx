@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Layers, Timer, ShieldCheck, Headphones } from "lucide-react";
 
-const phoneMockup = "/phone-mockup.jpg";
+const phoneMockup = "/Mockup.png";
 
 const APP_BENEFITS = [
   { icon: Layers, title: "Plis chwa", desc: "Yon gwo seleksyon restoran ak plat pou tout gou." },
@@ -48,8 +48,8 @@ export function AppBenefitsSection() {
             src={phoneMockup}
             alt="Aplikasyon NK Deliveri"
             loading="lazy"
-            width={768}
-            height={1024}
+            width={833}
+            height={1725}
             className="max-h-[520px] w-auto object-contain drop-shadow-[0_30px_40px_rgba(249,115,22,0.25)]"
           />
         </motion.div>

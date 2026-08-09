@@ -130,11 +130,18 @@ export default defineConfig({
           //    Same CacheFirst runtime rule picks each one up the moment
           //    it's actually requested, still fully cached for offline
           //    after that.
+          //  - Mockup.png (753 kB, app-benefits-section.tsx): same
+          //    `loading="lazy"` deferral, same reasoning — added when the
+          //    section's phone mockup was swapped from phone-mockup.jpg
+          //    (61 kB) to this taller replacement, an eager precache
+          //    would silently undo that deferral for the largest single
+          //    image on the home page.
           globIgnores: [
             "payment-global/**",
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
+            "Mockup.png",
           ],
         },
       }),
