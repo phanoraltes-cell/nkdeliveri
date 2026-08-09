@@ -109,9 +109,6 @@ function tabButtonClass(active: boolean): string {
  * "MonCash Otomatik"/"NatCash Otomatik" (both backed by PLOP,
  * docs/PLOP_NATCASH_INTEGRATION_PLAN.md) and "Kat Kredi" (Stripe,
  * docs/STRIPE_INTEGRATION_REPORT.md). Distinct from
- * dashboard.admin.moncash.tsx (that page monitors the décaissement
- * (payout) side of the dormant Digicel-direct provider — a different
- * table, `payouts`, and a different concept entirely) and from
  * dashboard.admin.payments.tsx (manual proof-review flow,
  * review_manual_payment_secure — no PLOP/Stripe data at all). This is
  * the first admin surface ever built for the Collect flow — read-only,
@@ -279,8 +276,7 @@ function AdminCollect() {
   };
 
   // Alerts — computed straight from the same data already on the page,
-  // no separate polling/push mechanism (same principle as
-  // dashboard.admin.moncash.tsx). "Webhook manquant" is deliberately not
+  // no separate polling/push mechanism. "Webhook manquant" is deliberately not
   // included here: neither PLOP nor this Stripe integration write a
   // dedicated webhook-receipt log (Stripe's handler calls
   // complete_collect_payment_secure directly, no row anywhere), and

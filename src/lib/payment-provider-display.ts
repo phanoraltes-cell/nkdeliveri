@@ -8,7 +8,7 @@
  *
  * Deliberately scoped to the **Collect** admin surfaces this replacement
  * is about — no existing décaissement (payout) file
- * (`payout-pay-modal.tsx`, `dashboard.admin.moncash.tsx`) consumes this
+ * (`payout-pay-modal.tsx`) consumes this
  * today, and none should be retrofitted to as part of this chantier: on
  * the payout side, `moncash_api` still genuinely means the dormant
  * Digicel-direct integration, never PLOP (docs/PLOP_REMEDIATION_REPORT.md

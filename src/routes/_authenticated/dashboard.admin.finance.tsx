@@ -32,7 +32,6 @@ const TABS = [
   "commissions",
   "payouts",
   "payments",
-  "moncash",
   "wallets",
 ] as const;
 type Tab = (typeof TABS)[number];
@@ -44,7 +43,6 @@ const TAB_LABEL: Record<Tab, string> = {
   commissions: "Komisyon",
   payouts: "Dekesman",
   payments: "Peman",
-  moncash: "MonCash",
   wallets: "Wallets",
 };
 
@@ -185,14 +183,6 @@ function AdminFinance() {
           title="Peman Kliyan"
           description="Peman manyèl MonCash/NatCash an atant revizyon, ak istorik konplè peman yo."
           to="/dashboard/admin/payments"
-        />
-      )}
-
-      {tab === "moncash" && (
-        <LinkOutCard
-          title="MonCash"
-          description="Sante kanal MonCash Automatik — webhook, dekesman kwense, erè API."
-          to="/dashboard/admin/moncash"
         />
       )}
 
