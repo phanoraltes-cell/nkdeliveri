@@ -14,7 +14,12 @@ import { OrderKanbanBoard } from "@/components/dashboard/restaurant/order-kanban
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { ORDER_STATUS_LABEL as STATUS_LABEL, TERMINAL_ORDER_STATUSES } from "@/lib/order-status";
+import {
+  ORDER_STATUS_LABEL as STATUS_LABEL,
+  TERMINAL_ORDER_STATUSES,
+  getOrderWaitUrgency,
+  formatOrderWaitTime,
+} from "@/lib/order-status";
 import { Chip } from "@/components/ui/chip";
 
 const PAGE_SIZE = 30;
@@ -44,7 +49,26 @@ function RestaurantOrders() {
   const qc = useQueryClient();
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const { hiddenIds, hide } = useHiddenHistory("order");
-  const [view, setView] = useState<"kanban" | "list">("kanban");
+  // P11 (F-03 remediation) — default view now depends on the viewport at
+  // first render: a 7-column drag-and-drop board isn't the friendliest
+  // touch interaction, so mobile opens on the already-existing "Lis" view
+  // instead. Desktop keeps the previous "kanban" default unchanged. This
+  // is a *default* only, not a lock — the toggle below still lets anyone
+  // switch either way regardless of screen size, and nothing here changes
+  // after mount (no matchMedia listener) so a manual choice is never
+  // overridden by a later resize/devtools toggle.
+  //
+  // 768px matches Tailwind's own `md` breakpoint, the same one
+  // DashboardSidebar already uses to switch from the mobile chrome to the
+  // desktop one — not a new, one-off threshold.
+  // `_authenticated/route.tsx` sets `ssr: false` on this whole route
+  // family (same reason orders.$id.tsx gives for Leaflet: no SEO to lose,
+  // gated behind a session check anyway), so `window` is always available
+  // by the time this component's initializer runs — the `typeof window`
+  // guard is defensive, not load-bearing.
+  const [view, setView] = useState<"kanban" | "list">(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "kanban",
+  );
   const [filter, setFilter] = useState<"all" | "pending">("all");
   const [page, setPage] = useState(1);
 
@@ -186,15 +210,25 @@ function RestaurantOrders() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-1 rounded-full bg-brand-soft/40 p-1">
+      {/* P11 — role="group" + aria-pressed expose the active view to
+          assistive tech (the audit's own F-03 remediation brief calls this
+          out explicitly: a toggle's active state must not be conveyed by
+          color/shadow alone). */}
+      <div
+        role="group"
+        aria-label="Chwazi fason pou wè kòmand yo"
+        className="flex items-center gap-1 rounded-full bg-brand-soft/40 p-1"
+      >
         <button
           onClick={() => setView("kanban")}
+          aria-pressed={view === "kanban"}
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${view === "kanban" ? "bg-white text-brand-deep shadow-sm" : "text-ink-soft"}`}
         >
           <LayoutGrid className="h-3.5 w-3.5" /> Kanban
         </button>
         <button
           onClick={() => setView("list")}
+          aria-pressed={view === "list"}
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${view === "list" ? "bg-white text-brand-deep shadow-sm" : "text-ink-soft"}`}
         >
           <List className="h-3.5 w-3.5" /> Lis
@@ -249,163 +283,176 @@ function RestaurantOrders() {
           )}
 
           <div className="space-y-3">
-            {rows.map((o) => (
-              <div
-                key={o.id}
-                className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="font-display text-lg font-extrabold">
-                      {o.order_number}
-                      <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
-                        {STATUS_LABEL[o.status] || o.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-ink-soft">
-                      {new Date(o.created_at).toLocaleString("fr-HT")} ·{" "}
-                      {o.contact_phone ? (
-                        <a href={`tel:${o.contact_phone}`} className="font-bold text-brand-deep">
-                          {o.contact_phone}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="font-display text-xl font-extrabold text-brand-deep">
-                        {formatHTG(Number(o.total))}
+            {rows.map((o) => {
+              // P11 (F-03 remediation) — same "waiting too long" signal the
+              // Kanban board's cards already show for pending orders,
+              // shared via lib/order-status.ts so the "Lis" view (the
+              // mobile default since P11) doesn't lose that critical
+              // information just because it's a different presentation.
+              const urgency = getOrderWaitUrgency(o.status, o.created_at);
+              return (
+                <div
+                  key={o.id}
+                  className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="font-display text-lg font-extrabold">
+                        {o.order_number}
+                        <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
+                          {STATUS_LABEL[o.status] || o.status}
+                        </span>
+                        {urgency.isUrgent && (
+                          <span className="ml-2 rounded-full bg-status-bad-soft px-2 py-0.5 text-xs font-bold text-status-bad">
+                            {formatOrderWaitTime(urgency.minutesWaiting)} ap tann
+                          </span>
+                        )}
                       </div>
-                      <div className="text-[11px] text-ink-soft">
-                        Su-total {formatHTG(Number(o.subtotal))} + Livrezon{" "}
-                        {formatHTG(Number(o.delivery_fee))}
+                      <div className="text-xs text-ink-soft">
+                        {new Date(o.created_at).toLocaleString("fr-HT")} ·{" "}
+                        {o.contact_phone ? (
+                          <a href={`tel:${o.contact_phone}`} className="font-bold text-brand-deep">
+                            {o.contact_phone}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
                       </div>
-                      {o.payments?.[0]?.method && (
-                        <div className="text-[11px] font-bold text-ink-soft">
-                          {PAYMENT_METHOD_LABEL[o.payments[0].method] ?? o.payments[0].method}
+                      <div className="mt-1 text-xs text-ink-soft">{o.delivery_address}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <div className="font-display text-xl font-extrabold text-brand-deep">
+                          {formatHTG(Number(o.total))}
                         </div>
+                        <div className="text-[11px] text-ink-soft">
+                          Su-total {formatHTG(Number(o.subtotal))} + Livrezon{" "}
+                          {formatHTG(Number(o.delivery_fee))}
+                        </div>
+                        {o.payments?.[0]?.method && (
+                          <div className="text-[11px] font-bold text-ink-soft">
+                            {PAYMENT_METHOD_LABEL[o.payments[0].method] ?? o.payments[0].method}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() =>
+                          printKitchenTicket(
+                            { ...o, order_items: o.order_items ?? [] },
+                            restaurant?.name ?? "",
+                          )
+                        }
+                        className="text-ink-soft hover:text-brand-deep"
+                        aria-label="Enprime bon kizin"
+                        title="Enprime bon kizin"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </button>
+                      {TERMINAL_ORDER_STATUSES.has(o.status) && (
+                        <button
+                          onClick={() => hideOne(o.order_number, o.id)}
+                          className="text-ink-soft hover:text-brand-deep"
+                          aria-label="Kache kòmand sa a"
+                          title="Kache kòmand sa a"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
                       )}
                     </div>
-                    <button
-                      onClick={() =>
-                        printKitchenTicket(
-                          { ...o, order_items: o.order_items ?? [] },
-                          restaurant?.name ?? "",
-                        )
-                      }
-                      className="text-ink-soft hover:text-brand-deep"
-                      aria-label="Enprime bon kizin"
-                      title="Enprime bon kizin"
-                    >
-                      <Printer className="h-4 w-4" />
-                    </button>
-                    {TERMINAL_ORDER_STATUSES.has(o.status) && (
-                      <button
-                        onClick={() => hideOne(o.order_number, o.id)}
-                        className="text-ink-soft hover:text-brand-deep"
-                        aria-label="Kache kòmand sa a"
-                        title="Kache kòmand sa a"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                  </div>
+
+                  <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
+                    {o.order_items?.map((it) => (
+                      <li key={it.id} className="px-3 py-1.5">
+                        <div className="flex justify-between">
+                          <span>
+                            {it.quantity}× {it.product_name}
+                          </span>
+                          <span className="font-bold">
+                            {formatHTG(Number(it.unit_price) * it.quantity)}
+                          </span>
+                        </div>
+                        {it.notes && (
+                          <div className="mt-0.5 text-xs italic text-brand-deep">↳ {it.notes}</div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {o.delivery_notes && (
+                    <div className="mt-2 text-xs italic text-ink-soft">Nòt: {o.delivery_notes}</div>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {o.status === "pending" && (
+                      <>
+                        {(() => {
+                          const payment = o.payments?.[0];
+                          const paymentUnverified =
+                            payment &&
+                            (payment.method === "moncash" || payment.method === "natcash") &&
+                            payment.status !== "paid";
+                          return (
+                            <button
+                              disabled={changeStatus.isPending || paymentUnverified}
+                              title={
+                                paymentUnverified
+                                  ? "Tann yon admin konfime prèv peman an anvan w konfime kòmand la"
+                                  : undefined
+                              }
+                              onClick={() =>
+                                changeStatus.mutate({ orderId: o.id, status: "confirmed" })
+                              }
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                              {paymentUnverified ? "Tann verifikasyon peman" : "Konfime"}
+                            </button>
+                          );
+                        })()}
+                        <button
+                          disabled={changeStatus.isPending}
+                          onClick={() =>
+                            requestConfirm(`Refize kòmand ${o.order_number}?`, () =>
+                              changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                          <X className="h-3.5 w-3.5" /> Refize
+                        </button>
+                      </>
                     )}
+                    {NEXT_STATUS[o.status]?.map((n) => (
+                      <button
+                        key={n.to}
+                        disabled={changeStatus.isPending}
+                        onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
+                        className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+                      >
+                        {n.label} <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    ))}
+                    {o.status !== "pending" &&
+                      o.status !== "cancelled" &&
+                      o.status !== "delivered" &&
+                      o.status !== "refunded" && (
+                        <button
+                          disabled={changeStatus.isPending}
+                          onClick={() =>
+                            requestConfirm(`Anile kòmand ${o.order_number}?`, () =>
+                              changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          Anile kòmand
+                        </button>
+                      )}
                   </div>
                 </div>
-
-                <ul className="mt-3 divide-y divide-brand-soft/30 rounded-lg border border-brand-soft/40 bg-cream/50 text-sm">
-                  {o.order_items?.map((it) => (
-                    <li key={it.id} className="px-3 py-1.5">
-                      <div className="flex justify-between">
-                        <span>
-                          {it.quantity}× {it.product_name}
-                        </span>
-                        <span className="font-bold">
-                          {formatHTG(Number(it.unit_price) * it.quantity)}
-                        </span>
-                      </div>
-                      {it.notes && (
-                        <div className="mt-0.5 text-xs italic text-brand-deep">↳ {it.notes}</div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-
-                {o.delivery_notes && (
-                  <div className="mt-2 text-xs italic text-ink-soft">Nòt: {o.delivery_notes}</div>
-                )}
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {o.status === "pending" && (
-                    <>
-                      {(() => {
-                        const payment = o.payments?.[0];
-                        const paymentUnverified =
-                          payment &&
-                          (payment.method === "moncash" || payment.method === "natcash") &&
-                          payment.status !== "paid";
-                        return (
-                          <button
-                            disabled={changeStatus.isPending || paymentUnverified}
-                            title={
-                              paymentUnverified
-                                ? "Tann yon admin konfime prèv peman an anvan w konfime kòmand la"
-                                : undefined
-                            }
-                            onClick={() =>
-                              changeStatus.mutate({ orderId: o.id, status: "confirmed" })
-                            }
-                            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                            {paymentUnverified ? "Tann verifikasyon peman" : "Konfime"}
-                          </button>
-                        );
-                      })()}
-                      <button
-                        disabled={changeStatus.isPending}
-                        onClick={() =>
-                          requestConfirm(`Refize kòmand ${o.order_number}?`, () =>
-                            changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
-                          )
-                        }
-                        className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
-                      >
-                        <X className="h-3.5 w-3.5" /> Refize
-                      </button>
-                    </>
-                  )}
-                  {NEXT_STATUS[o.status]?.map((n) => (
-                    <button
-                      key={n.to}
-                      disabled={changeStatus.isPending}
-                      onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
-                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
-                    >
-                      {n.label} <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                  ))}
-                  {o.status !== "pending" &&
-                    o.status !== "cancelled" &&
-                    o.status !== "delivered" &&
-                    o.status !== "refunded" && (
-                      <button
-                        disabled={changeStatus.isPending}
-                        onClick={() =>
-                          requestConfirm(`Anile kòmand ${o.order_number}?`, () =>
-                            changeStatus.mutate({ orderId: o.id, status: "cancelled" }),
-                          )
-                        }
-                        className="inline-flex items-center gap-1 rounded-full border-2 border-red-200 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        Anile kòmand
-                      </button>
-                    )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {filter === "all" && (
             <PaginationControls

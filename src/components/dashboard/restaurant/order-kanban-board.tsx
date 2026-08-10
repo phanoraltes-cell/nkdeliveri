@@ -4,6 +4,7 @@ import { formatHTG } from "@/lib/format";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { getOrderWaitUrgency, formatOrderWaitTime } from "@/lib/order-status";
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   moncash: "MonCash",
@@ -52,19 +53,6 @@ const CANCELLABLE_FROM = new Set(["pending", "confirmed", "preparing", "ready"])
 function isValidDrop(fromStatus: string, toColumnKey: string) {
   if (toColumnKey === "cancelled") return CANCELLABLE_FROM.has(fromStatus);
   return NEXT_COLUMN[fromStatus] === toColumnKey;
-}
-
-// Phase 6 (P6) fix — caught by actually rendering a screenshot rather than
-// reading the code: a raw minute count reads fine at realistic values
-// (single/double digits) but a stale or malformed `created_at` (or simply
-// an order nobody ever touched) could show something like "315007 min ap
-// tann", which reads as broken rather than urgent. Collapses to hours/days
-// once the number would stop being legible as minutes.
-function formatWaitTime(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} è`;
-  return `${Math.floor(hours / 24)} jou`;
 }
 
 type OrderKanbanBoardProps = {
@@ -203,13 +191,9 @@ function KanbanCard({
   // long is worth calling out. Computed at render time rather than on a
   // ticking interval: the board's own data query already refetches
   // periodically and on realtime order changes, which keeps this fresh
-  // enough without a per-card timer. Threshold matches the one used in
-  // the Refonte spec's own Kanban wireframe.
-  const isPending = o.status === "pending";
-  const minutesWaiting = isPending
-    ? Math.max(0, Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000))
-    : null;
-  const isUrgent = isPending && minutesWaiting !== null && minutesWaiting >= 10;
+  // enough without a per-card timer. Shared with the "Lis" view (P11) via
+  // lib/order-status.ts instead of each computing it separately.
+  const { isUrgent, minutesWaiting } = getOrderWaitUrgency(o.status, o.created_at);
 
   return (
     <div
@@ -247,7 +231,7 @@ function KanbanCard({
         </span>
         {isUrgent && (
           <span className="rounded-full bg-status-bad-soft px-1.5 py-0.5 font-bold text-status-bad">
-            {formatWaitTime(minutesWaiting)} ap tann
+            {formatOrderWaitTime(minutesWaiting)} ap tann
           </span>
         )}
       </div>

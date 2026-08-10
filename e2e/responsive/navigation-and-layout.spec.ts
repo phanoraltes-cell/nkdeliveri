@@ -48,11 +48,55 @@ test.describe("Responsive — navigation and layout", () => {
     });
     await page.goto("/dashboard/restaurant/orders");
     await expect(page).toHaveURL(/\/dashboard\/restaurant\/orders/);
-    // Same fix as the customer-dashboard test above, and for the same
-    // reason: the Kanban board's data (useMyRestaurant, then the orders
-    // query keyed on it) loads after navigation resolves, so this waits
-    // for a real column heading before screenshotting instead of racing it.
-    await expect(page.getByText("Nouvo kòmand")).toBeVisible();
+
+    // P11 (F-03 remediation) — the default view now depends on viewport
+    // width (dashboard.restaurant.orders.tsx: < 768px opens on "Lis"
+    // instead of "Kanban"), matching Tailwind's own `md` breakpoint. This
+    // checks the actual rendered content for whichever default this
+    // viewport should get, not just the URL — a URL-only check would pass
+    // even if the wrong view (or neither) rendered.
+    const width = page.viewportSize()?.width ?? 0;
+    const kanbanHeading = page.getByText("Nouvo kòmand");
+    // "Tout" is the "Lis" view's own all-orders filter chip — it has no
+    // equivalent in the Kanban board, so its presence/absence is a real,
+    // view-specific signal, not a guess from the toggle's own label.
+    const listAllChip = page.getByRole("button", { name: "Tout" });
+
+    if (width < 768) {
+      await expect(listAllChip).toBeVisible();
+      await expect(kanbanHeading).not.toBeVisible();
+      // The fixture order itself must actually render in this default —
+      // not just the chip/toggle chrome around it.
+      await expect(page.getByText(order.order_number)).toBeVisible();
+      await expect(page.getByRole("button", { name: "Lis" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    } else {
+      // Same fix as the customer-dashboard test above, and for the same
+      // reason: the Kanban board's data (useMyRestaurant, then the orders
+      // query keyed on it) loads after navigation resolves, so this waits
+      // for a real column heading before screenshotting instead of racing it.
+      await expect(kanbanHeading).toBeVisible();
+      await expect(listAllChip).not.toBeVisible();
+      await expect(page.getByText(order.order_number)).toBeVisible();
+      await expect(page.getByRole("button", { name: "Kanban" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    }
+
+    // The toggle must still work in both directions regardless of which
+    // one loaded first — the point of P11 is a smarter default, not a
+    // narrower choice.
+    const otherViewLabel = width < 768 ? "Kanban" : "Lis";
+    await page.getByRole("button", { name: otherViewLabel, exact: true }).click();
+    if (width < 768) {
+      await expect(kanbanHeading).toBeVisible();
+    } else {
+      await expect(listAllChip).toBeVisible();
+    }
+
     await page.screenshot({
       path: `test-results/screenshots/restaurant-orders-${testInfo.project.name}.png`,
       fullPage: true,
