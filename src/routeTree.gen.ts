@@ -28,6 +28,7 @@ import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as ApiCspReportRouteImport } from './routes/api.csp-report'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
@@ -172,6 +173,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCspReportRoute = ApiCspReportRouteImport.update({
+  id: '/api/csp-report',
+  path: '/api/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -490,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -560,6 +567,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -629,6 +637,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -702,6 +711,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/notifications'
+    | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
     | '/auth/reset-password'
@@ -772,6 +782,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/notifications'
+    | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
     | '/auth/reset-password'
@@ -840,6 +851,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/dashboard'
     | '/_authenticated/notifications'
+    | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
     | '/auth/reset-password'
@@ -911,6 +923,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ApiCspReportRoute: typeof ApiCspReportRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
@@ -1058,6 +1071,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/forgot-password'
       fullPath: '/auth/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/csp-report': {
+      id: '/api/csp-report'
+      path: '/api/csp-report'
+      fullPath: '/api/csp-report'
+      preLoaderRoute: typeof ApiCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/notifications': {
@@ -1644,6 +1664,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ApiCspReportRoute: ApiCspReportRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,

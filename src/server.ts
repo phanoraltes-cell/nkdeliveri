@@ -39,11 +39,19 @@ type ServerEntry = {
 // directive governs, and Google Maps has no code path left at all as of
 // 1208cd1 (migrated to Leaflet/OSM/OSRM).
 const CSP_BASE =
-  "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests";
+  "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint";
 
 function buildCsp(nonce: string): string {
   return `script-src 'self' 'nonce-${nonce}'; ${CSP_BASE}`;
 }
+
+// Companion to the `report-to csp-endpoint` directive above — the
+// Reporting API (the standards-track replacement for the deprecated
+// `report-uri`) resolves an endpoint *name* used in the CSP to an actual
+// URL declared separately, here. Both mechanisms point at the same
+// same-origin route (src/routes/api.csp-report.ts); browsers use whichever
+// of the two they support and ignore the other.
+const REPORTING_ENDPOINTS = 'csp-endpoint="/api/csp-report"';
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
@@ -93,6 +101,7 @@ export default {
       const response = await handler.fetch(request, { context: { nonce } });
       const normalized = await normalizeCatastrophicSsrResponse(response);
       normalized.headers.set("Content-Security-Policy", buildCsp(nonce));
+      normalized.headers.set("Reporting-Endpoints", REPORTING_ENDPOINTS);
       return normalized;
     } catch (error) {
       console.error(error);
@@ -102,6 +111,7 @@ export default {
         headers: {
           "content-type": "text/html; charset=utf-8",
           "Content-Security-Policy": buildCsp(nonce),
+          "Reporting-Endpoints": REPORTING_ENDPOINTS,
         },
       });
     }
