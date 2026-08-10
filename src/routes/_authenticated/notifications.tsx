@@ -2,12 +2,29 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Check, CheckCircle2, XCircle, Clock, Trash2, Eraser } from "lucide-react";
+import {
+  Bell,
+  Check,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Trash2,
+  Eraser,
+  ShoppingBag,
+  Bike,
+  CreditCard,
+  Percent,
+  Megaphone,
+  AlertTriangle,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PushToggle } from "@/components/push-toggle";
 import { NotificationPreferencesPanel } from "@/components/notification-preferences-panel";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Chip } from "@/components/ui/chip";
+import { EmptyState } from "@/components/dashboard/cards/empty-state";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -24,6 +41,25 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
   { key: "dispute", label: "Litij" },
   { key: "system", label: "Sistèm" },
 ];
+
+// P12 — one icon per notification *category*, reusing the exact icons
+// already assigned to the same concept in the dashboard sidebars
+// (nav-items.ts) rather than inventing new ones: ShoppingBag for "Kòmand",
+// Bike for delivery (same icon as the "Livrè" driver role everywhere),
+// CreditCard for "Peman", Percent for "Komisyon", Megaphone for
+// "Pwomosyon"/"Piblisite", AlertTriangle for "Litij" — all consistent
+// site-wide. "system" is intentionally left out: there's no equivalent
+// nav destination to borrow an icon from, and the generic Bell fallback
+// already reads correctly as "notification" for it, so it's kept rather
+// than invented.
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  order: ShoppingBag,
+  delivery: Bike,
+  payment: CreditCard,
+  commission: Percent,
+  promotion: Megaphone,
+  dispute: AlertTriangle,
+};
 
 function NotificationsPage() {
   const { user } = Route.useRouteContext();
@@ -103,16 +139,31 @@ function NotificationsPage() {
     return n.category === tab;
   });
 
-  function iconFor(type: string) {
-    if (type === "payment_paid") return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
-    if (type === "payment_failed") return <XCircle className="h-5 w-5 text-red-600" />;
-    if (type === "payment_under_review") return <Clock className="h-5 w-5 text-amber-600" />;
+  // Payment notifications keep their finer-grained, outcome-specific icon
+  // (success/failure/pending) — that distinction matters more than the
+  // generic "this is a payment" signal a category icon alone would give.
+  // Everything else falls back to its category icon (see CATEGORY_ICON
+  // above), and finally to a generic Bell if the category itself is
+  // unrecognized.
+  function iconFor(n: { type: string; category: string }) {
+    if (n.type === "payment_paid") return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
+    if (n.type === "payment_failed") return <XCircle className="h-5 w-5 text-red-600" />;
+    if (n.type === "payment_under_review") return <Clock className="h-5 w-5 text-amber-600" />;
+    const CategoryIcon = CATEGORY_ICON[n.category];
+    if (CategoryIcon) return <CategoryIcon className="h-5 w-5 text-brand-deep" />;
     return <Bell className="h-5 w-5 text-brand-deep" />;
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      {/* P12 (F header P2) — flex-wrap (missing before) is the actual fix:
+          PushToggle isn't always a compact button — its "denied"/
+          "unsupported" states render a much wider help card, and without
+          wrap the two flex items got forced onto one line and crushed
+          into each other instead of PushToggle simply dropping to its own
+          line below the title, which is what happens now. Works for any
+          width either side ends up needing — not a fixed breakpoint. */}
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Notifikasyon</h1>
           <p className="mt-1 text-ink-soft">{unread.length} nouvo</p>
@@ -123,19 +174,16 @@ function NotificationsPage() {
       {user?.id && <NotificationPreferencesPanel userId={user.id} />}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* P12 — the shared Chip component replaces raw <button>s here:
+            same filtering behavior, same visual selected state, but
+            aria-pressed now comes for free instead of being conveyed by
+            color alone (Chip already wires this up, same pattern already
+            used for the Kanban/Lis toggle in P11). */}
         <div className="flex flex-wrap gap-1.5">
           {CATEGORY_TABS.map((c) => (
-            <button
-              key={c.key}
-              onClick={() => setTab(c.key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                tab === c.key
-                  ? "bg-brand text-white"
-                  : "bg-brand-soft/50 text-brand-deep hover:bg-brand-soft"
-              }`}
-            >
+            <Chip key={c.key} selected={tab === c.key} onClick={() => setTab(c.key)}>
               {c.label}
-            </button>
+            </Chip>
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -165,22 +213,28 @@ function NotificationsPage() {
           <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       )}
+      {/* P12 — reuses the shared EmptyState (already used on ~15 other
+          dashboard pages) instead of a one-off text box, same message. */}
       {!isLoading && visible.length === 0 && (
-        <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
-          Pa gen notifikasyon isit la.
-        </div>
+        <EmptyState icon={Bell} title="Pa gen notifikasyon isit la." />
       )}
 
       <ul className="space-y-2">
         {visible.map((n) => {
           const orderId = (n.data as { order_id?: string } | null)?.order_id;
+          // P12 — a notification with a real destination now looks
+          // subtly different from a purely informational one: same
+          // shadow-brand-xs/hover:shadow-brand-sm lift already used for
+          // the identical "whole card is a link" pattern in
+          // routes/orders.index.tsx, not a new visual language.
+          const clickable = Boolean(orderId);
           const inner = (
             <div
               className={`flex gap-3 rounded-2xl border p-4 transition ${
                 n.read_at ? "border-brand-soft/40 bg-white" : "border-brand/40 bg-brand-soft/30"
-              }`}
+              } ${clickable ? "shadow-brand-xs hover:shadow-brand-sm" : ""}`}
             >
-              <div className="mt-0.5">{iconFor(n.type)}</div>
+              <div className="mt-0.5">{iconFor(n)}</div>
               <div className="flex-1">
                 <div className="font-bold text-ink">{n.title}</div>
                 <div className="text-sm text-ink-soft">{n.body}</div>
@@ -217,14 +271,30 @@ function NotificationsPage() {
             </div>
           );
           const onClick = () => !n.read_at && markRead.mutate([n.id]);
+          // P12 — focus-visible ring lives on the actual focused element
+          // (the <a> Link renders), not on the inner div — a ring class
+          // on the div wouldn't fire since the div itself never receives
+          // focus.
+          const linkClassName =
+            "block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2";
           return (
             <li key={n.id}>
               {orderId && n.type === "order_chat_message" ? (
-                <Link to="/chat/$orderId" params={{ orderId }} onClick={onClick}>
+                <Link
+                  to="/chat/$orderId"
+                  params={{ orderId }}
+                  onClick={onClick}
+                  className={linkClassName}
+                >
                   {inner}
                 </Link>
               ) : orderId ? (
-                <Link to="/orders/$id" params={{ id: orderId }} onClick={onClick}>
+                <Link
+                  to="/orders/$id"
+                  params={{ id: orderId }}
+                  onClick={onClick}
+                  className={linkClassName}
+                >
                   {inner}
                 </Link>
               ) : (

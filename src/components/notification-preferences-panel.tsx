@@ -76,16 +76,29 @@ export function NotificationPreferencesPanel({ userId }: { userId: string }) {
       </button>
       {open && (
         <>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {/* P12 — still the native <input type="checkbox"> (no new
+              component/dependency added, per the remediation brief), but
+              each row is now a padded, rounded, hover-tinted label instead
+              of bare text next to a small square. A <label> wrapping its
+              <input> already makes the whole row natively clickable/
+              togglable — this just makes that obvious and comfortable to
+              tap (was effectively ~20px tall before, now a real ≥44px
+              target), and accent-brand tints the check itself instead of
+              the browser's default blue. */}
+          <div className="mt-3 grid gap-1 sm:grid-cols-2">
             {CATEGORIES.map((c) => {
               const on = prefs[c.key] ?? c.defaultOn;
               return (
-                <label key={c.key} className="flex items-center gap-2 text-sm text-ink">
+                <label
+                  key={c.key}
+                  className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm text-ink transition hover:bg-brand-soft/30"
+                >
                   <input
                     type="checkbox"
                     checked={on}
                     onChange={() => toggle(c.key, c.defaultOn)}
                     disabled={save.isPending}
+                    className="h-4 w-4 shrink-0 accent-brand"
                   />
                   {c.label}
                 </label>
@@ -97,22 +110,24 @@ export function NotificationPreferencesPanel({ userId }: { userId: string }) {
               notification is delivered, not which ones arrive. Vibration only
               has any effect on a phone; harmless to show everywhere since it's
               simply a no-op where the hardware doesn't support it. */}
-          <div className="mt-3 flex flex-wrap gap-4 border-t border-brand-soft/40 pt-3">
-            <label className="flex items-center gap-2 text-sm text-ink">
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-brand-soft/40 pt-3">
+            <label className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm text-ink transition hover:bg-brand-soft/30">
               <input
                 type="checkbox"
                 checked={prefs.sound ?? true}
                 onChange={() => toggle("sound", true)}
                 disabled={save.isPending}
+                className="h-4 w-4 shrink-0 accent-brand"
               />
               <Volume2 className="h-3.5 w-3.5 text-brand-deep" /> Son
             </label>
-            <label className="flex items-center gap-2 text-sm text-ink">
+            <label className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm text-ink transition hover:bg-brand-soft/30">
               <input
                 type="checkbox"
                 checked={prefs.vibration ?? true}
                 onChange={() => toggle("vibration", true)}
                 disabled={save.isPending}
+                className="h-4 w-4 shrink-0 accent-brand"
               />
               <Vibrate className="h-3.5 w-3.5 text-brand-deep" /> Vibrasyon (sou telefòn)
             </label>
