@@ -136,12 +136,24 @@ export default defineConfig({
           //    (61 kB) to this taller replacement, an eager precache
           //    would silently undo that deferral for the largest single
           //    image on the home page.
+          //  - scooter.png (1.4 MB, newsletter-section.tsx): same
+          //    `loading="lazy"` deferral, same reasoning — replaced
+          //    scooter.jpg (61 kB) as the newsletter card's image. At
+          //    1.4 MB this is now the single largest asset on the home
+          //    page; an eager precache would defeat the lazy deferral for
+          //    every visitor, whether or not they scroll to the card.
+          //  - scooter.jpg (61 kB): kept on disk (not deleted) but no
+          //    longer referenced anywhere in src/ after the swap above —
+          //    same "unused, don't pay for it upfront" reasoning as
+          //    payment-global/** below.
           globIgnores: [
             "payment-global/**",
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
             "Mockup.png",
+            "scooter.png",
+            "scooter.jpg",
           ],
         },
       }),

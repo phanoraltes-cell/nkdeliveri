@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const scooterImg = "/scooter.jpg";
+const scooterImg = "/scooter.png";
 
 /** Home page's newsletter signup card, with its own subscribe-form state and Supabase insert. */
 export function NewsletterSection() {
@@ -71,8 +71,8 @@ export function NewsletterSection() {
             src={scooterImg}
             alt="Scooter NK Deliveri"
             loading="lazy"
-            width={1024}
-            height={768}
+            width={1448}
+            height={1086}
             className="h-full w-full object-cover md:absolute md:inset-0"
           />
         </div>
