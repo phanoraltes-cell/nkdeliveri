@@ -81,17 +81,27 @@ async function verifyOptionalBearerMatchesUser(userId: string): Promise<void> {
 // (read/update/delete on driver-documents, restaurant-assets, ...) fail for
 // the user once they actually log in. Stamp ownership explicitly so those
 // policies keep working.
-async function stampOwner(
+//
+// Was `.schema("storage").from("objects").update(...)` — confirmed live
+// (docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5) to have zero effect:
+// both real objects sampled in production had owner=NULL despite this call
+// running right after each upload. Now goes through a SECURITY DEFINER RPC
+// instead (public.stamp_storage_object_owner_secure,
+// 20260809140000_fix_storage_document_owner.sql), which reaches
+// storage.objects directly in SQL and so works regardless of whether
+// PostgREST's exposed-schemas list includes "storage" — the likely (though
+// unconfirmed from this session) cause of the original failure.
+export async function stampOwner(
   supabaseAdmin: SupabaseClient,
   bucket: string,
   path: string,
   userId: string,
 ) {
-  const { error } = await supabaseAdmin
-    .schema("storage")
-    .from("objects")
-    .update({ owner: userId })
-    .match({ bucket_id: bucket, name: path });
+  const { error } = await supabaseAdmin.rpc("stamp_storage_object_owner_secure", {
+    _bucket: bucket,
+    _path: path,
+    _owner: userId,
+  });
   // The upload itself already succeeded by the time this runs, so a failure
   // here isn't fatal to the request — but it's exactly the failure mode the
   // comment above warns about (owner=auth.uid() RLS policies silently

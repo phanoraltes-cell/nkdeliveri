@@ -5,6 +5,20 @@ import { finalizeRegistrationDocuments } from "@/lib/register-documents.function
 import { inputCls } from "@/lib/utils";
 import { baseSignUp, toFileInput, useSubmit, FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
+import { HoursPicker, type WeeklyHours } from "@/components/hours-picker";
+
+/**
+ * Pure, exported for unit testing (no DOM/RTL in this project's Vitest
+ * setup — same "extract the pure logic" pattern as createPollController).
+ * Encodes as a JSON *string* to stay inside baseSignUp's
+ * Record<string,string> metadata contract; omits the key entirely when
+ * `hours` is empty so an untouched picker produces the exact same
+ * raw_user_meta_data (and therefore the same '{}' fallback in
+ * handle_new_user()) as before this fix.
+ */
+export function buildRestaurantHoursMetadata(hours: WeeklyHours): Record<string, string> {
+  return Object.keys(hours).length > 0 ? { restaurant_hours: JSON.stringify(hours) } : {};
+}
 
 export function RestaurantForm() {
   const [f, setF] = useState({
@@ -15,11 +29,19 @@ export function RestaurantForm() {
     phone: "",
     email: "",
     address: "",
-    hours: "",
     password: "",
     confirm: "",
     terms: false,
   });
+  // Kept separate from `f`/metadata's Record<string,string> shape — this
+  // needs to reach restaurants.opening_hours (jsonb) in the exact
+  // Record<dayKey,{open,close,closed}> shape the rest of the app already
+  // uses (dashboard.restaurant.profile.tsx, update_restaurant_hours_secure),
+  // never as free text. Starts empty and stays empty unless the owner
+  // actually touches a day row (HoursPicker only ever writes the days it's
+  // told to) — an untouched picker sends nothing, same as before this fix
+  // (docs/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md).
+  const [hours, setHours] = useState<WeeklyHours>({});
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const { loading, wrap } = useSubmit(() => {});
@@ -38,6 +60,7 @@ export function RestaurantForm() {
         restaurant_description: f.description,
         restaurant_cuisine: f.cuisine,
         restaurant_address: f.address,
+        ...buildRestaurantHoursMetadata(hours),
       });
       // Runs server-side with the service role — works even without a
       // client session, so logo/cover are never silently lost when email
@@ -134,13 +157,12 @@ export function RestaurantForm() {
           value={f.address}
           onChange={(e) => setF({ ...f, address: e.target.value })}
         />
-        <input
-          placeholder="Orè ouvèti (ex: Lendi-Sam 10h-22h)"
-          aria-label="Orè ouvèti (ex: Lendi-Sam 10h-22h)"
-          className={inputCls()}
-          value={f.hours}
-          onChange={(e) => setF({ ...f, hours: e.target.value })}
-        />
+        <div>
+          <span className="mb-1.5 block text-xs font-bold uppercase text-ink-soft">
+            Orè ouvèti (opsyonèl — ou ka ranpli sa pita nan pwofil ou)
+          </span>
+          <HoursPicker value={hours} onChange={setHours} />
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <FileField label="Logo" accept="image/*" onChange={setLogo} />

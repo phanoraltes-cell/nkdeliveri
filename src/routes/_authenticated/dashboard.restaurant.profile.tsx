@@ -10,6 +10,7 @@ import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
 import { MyDevicesSection } from "@/components/my-devices-section";
+import { HoursPicker, HOURS_DAYS, type WeeklyHours } from "@/components/hours-picker";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant identity/settings shouldn't be editable by staff. Not
@@ -20,16 +21,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profi
   },
   component: RestaurantProfile,
 });
-
-const DAYS: { key: string; label: string }[] = [
-  { key: "mon", label: "Lendi" },
-  { key: "tue", label: "Madi" },
-  { key: "wed", label: "Mèkredi" },
-  { key: "thu", label: "Jedi" },
-  { key: "fri", label: "Vandredi" },
-  { key: "sat", label: "Samdi" },
-  { key: "sun", label: "Dimanch" },
-];
 
 async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: File) {
   assertValidUploadFile(file, "restaurant-assets");
@@ -61,9 +52,7 @@ function RestaurantProfile() {
   const [f, setF] = useState({ name: "", description: "", cuisine: "", phone: "", address: "" });
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
-  const [hours, setHours] = useState<
-    Record<string, { open: string; close: string; closed: boolean }>
-  >({});
+  const [hours, setHours] = useState<WeeklyHours>({});
 
   useEffect(() => {
     if (!restaurant) return;
@@ -74,9 +63,9 @@ function RestaurantProfile() {
       phone: restaurant.phone ?? "",
       address: restaurant.address ?? "",
     });
-    const h = (restaurant.opening_hours as typeof hours | null) ?? {};
-    const next: typeof hours = {};
-    for (const d of DAYS) {
+    const h = (restaurant.opening_hours as WeeklyHours | null) ?? {};
+    const next: WeeklyHours = {};
+    for (const d of HOURS_DAYS) {
       next[d.key] = h[d.key] ?? { open: "10:00", close: "22:00", closed: false };
     }
     setHours(next);
@@ -225,51 +214,8 @@ function RestaurantProfile() {
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Orè ouvèti</h2>
-        <div className="mt-3 space-y-2">
-          {DAYS.map((d) => {
-            const v = hours[d.key] ?? { open: "10:00", close: "22:00", closed: false };
-            return (
-              <div
-                key={d.key}
-                className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-soft/10 p-2"
-              >
-                <span className="w-24 text-sm font-bold">{d.label}</span>
-                <label className="flex items-center gap-1 text-xs text-ink-soft">
-                  <input
-                    type="checkbox"
-                    checked={!v.closed}
-                    onChange={(e) =>
-                      setHours((s) => ({ ...s, [d.key]: { ...v, closed: !e.target.checked } }))
-                    }
-                  />
-                  Ouvè
-                </label>
-                {!v.closed && (
-                  <>
-                    <input
-                      type="time"
-                      value={v.open}
-                      onChange={(e) =>
-                        setHours((s) => ({ ...s, [d.key]: { ...v, open: e.target.value } }))
-                      }
-                      aria-label={`Lè ouvèti ${d.label}`}
-                      className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
-                    />
-                    <span className="text-xs text-ink-soft">jiska</span>
-                    <input
-                      type="time"
-                      value={v.close}
-                      onChange={(e) =>
-                        setHours((s) => ({ ...s, [d.key]: { ...v, close: e.target.value } }))
-                      }
-                      aria-label={`Lè fèmti ${d.label}`}
-                      className="rounded-md border border-brand-soft bg-white px-2 py-1 text-xs"
-                    />
-                  </>
-                )}
-              </div>
-            );
-          })}
+        <div className="mt-3">
+          <HoursPicker value={hours} onChange={setHours} />
         </div>
         <Button className="mt-4" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
           {saveHours.isPending ? "Ap sove…" : "Sove orè yo"}

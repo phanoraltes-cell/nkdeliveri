@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, User as UserIcon } from "lucide-react";
+import { Upload, User as UserIcon, IdCard, AlertTriangle } from "lucide-react";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
 import { MyDevicesSection } from "@/components/my-devices-section";
@@ -105,6 +105,41 @@ function DriverProfile() {
     setAvatar(file);
     if (file) setAvatarPreview(URL.createObjectURL(file));
   }
+
+  // Catch-up path for docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 9/13
+  // (Root Cause R2/R3): the one-shot signup-time upload
+  // (finalizeRegistrationDocuments) permanently locks out once the account
+  // leaves `pending` or after 2h — there was previously *no* way, for
+  // driver or admin, to attach a missing ID document afterward. This runs
+  // with the driver's own real session (unlike the signup-time path, which
+  // has none yet), so storage.objects.owner is set correctly by Storage
+  // itself — no stampOwner() call needed here at all.
+  const [idDoc, setIdDoc] = useState<File | null>(null);
+  const uploadIdDoc = useMutation({
+    mutationFn: async () => {
+      if (!user || !idDoc) throw new Error("Chwazi yon fichye dabò");
+      assertValidUploadFile(idDoc, "driver-documents");
+      const path = `${user.id}/id-${Date.now()}-${idDoc.name}`;
+      const { error: upErr } = await supabase.storage
+        .from("driver-documents")
+        .upload(path, idDoc, { upsert: false });
+      if (upErr) throw upErr;
+      // driver-documents is private — store the bare path, same convention
+      // as the signup-time upload (register-documents.functions.ts); admin
+      // reads it later via a signed URL (ProofThumb), never a public link.
+      const { error: dbErr } = await supabase
+        .from("drivers")
+        .update({ id_doc_url: path })
+        .eq("user_id", user.id);
+      if (dbErr) throw dbErr;
+    },
+    onSuccess: () => {
+      toast.success("Pyès idantite ou anrejistre. Y ap tcheke l pou apwobasyon.");
+      setIdDoc(null);
+      qc.invalidateQueries({ queryKey: ["me-driver-profile"] });
+    },
+    onError: (e) => toast.error(e.message ?? "Erè"),
+  });
 
   const displayAvatar = avatarPreview ?? data?.avatarUrl ?? null;
 
@@ -228,6 +263,34 @@ function DriverProfile() {
               {save.isPending ? "Ap sove…" : "Sove pwofil la"}
             </Button>
           </section>
+
+          {!data.driver.id_doc_url && (
+            <section className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5 shadow-sm">
+              <h2 className="mb-1 flex items-center gap-1.5 font-display text-lg font-bold text-ink">
+                <AlertTriangle className="h-4 w-4 text-amber-600" /> Pyès idantite manke
+              </h2>
+              <p className="mb-3 text-sm text-ink-soft">
+                Nou pa jwenn okenn pyès idantite nan dosye w. San li, n ap ka apwouve/kenbe kont ou
+                aktif. Chaje l kounye a.
+              </p>
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-amber-400 bg-white px-3 py-2.5 text-xs text-ink-soft hover:bg-amber-100/60">
+                <IdCard className="h-3.5 w-3.5" /> {idDoc?.name || "Chwazi yon fichye (foto/PDF)"}
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => setIdDoc(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              <Button
+                className="mt-3"
+                disabled={!idDoc || uploadIdDoc.isPending}
+                onClick={() => uploadIdDoc.mutate()}
+              >
+                {uploadIdDoc.isPending ? "Ap voye…" : "Voye pyès idantite a"}
+              </Button>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-lg font-bold text-ink">Chanje modpas</h2>

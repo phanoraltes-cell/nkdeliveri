@@ -3563,6 +3563,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      is_valid_opening_hours_shape: { Args: { _hours: Json }; Returns: boolean };
       list_restaurant_employees_secure: {
         Args: { _restaurant_id: string };
         Returns: {
@@ -3873,6 +3874,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      stamp_storage_object_owner_secure: {
+        Args: { _bucket: string; _owner: string; _path: string };
+        Returns: undefined;
       };
       stop_customer_location_sharing_secure: {
         Args: { _delivery_id: string };
