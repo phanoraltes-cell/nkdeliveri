@@ -1,22 +1,7 @@
 import { CheckCircle2, XCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { ProofThumb } from "@/components/proof-thumb";
-
-export async function fetchPendingPayments() {
-  const { data, error } = await supabase
-    .from("payments")
-    .select(
-      "id, method, status, amount, currency, created_at, transaction_ref, sender_phone, order_id, orders(order_number, total, customer_id, restaurants(name)), payment_proofs(id, file_url, transaction_ref, sender_phone, notes, created_at)",
-    )
-    .in("method", ["moncash", "natcash"])
-    .in("status", ["awaiting_proof", "under_review"])
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
-}
-
-export type PendingPayment = NonNullable<Awaited<ReturnType<typeof fetchPendingPayments>>>[number];
+import type { PendingPayment } from "./pending-payments-section.queries";
 
 type PendingPaymentsSectionProps = {
   payments: PendingPayment[] | undefined;

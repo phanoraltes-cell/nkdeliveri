@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRoute } from "@/hooks/useRoute";
-import { nextStopFor } from "@/components/dashboard/driver/delivery-route-info";
+import { nextStopFor } from "@/components/dashboard/driver/delivery-route-info.logic";
 import type { ActiveDelivery } from "@/hooks/useLiveOrders";
 
 export type DeliveryRouteResult = {

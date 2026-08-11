@@ -3,22 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { inputCls } from "@/lib/utils";
-import { baseSignUp, toFileInput, useSubmit, FormCard, FileField } from "./register-shared";
+import { baseSignUp, toFileInput } from "./register-shared.logic";
+import { useSubmit } from "@/hooks/useSubmit";
+import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { HoursPicker, type WeeklyHours } from "@/components/hours-picker";
-
-/**
- * Pure, exported for unit testing (no DOM/RTL in this project's Vitest
- * setup — same "extract the pure logic" pattern as createPollController).
- * Encodes as a JSON *string* to stay inside baseSignUp's
- * Record<string,string> metadata contract; omits the key entirely when
- * `hours` is empty so an untouched picker produces the exact same
- * raw_user_meta_data (and therefore the same '{}' fallback in
- * handle_new_user()) as before this fix.
- */
-export function buildRestaurantHoursMetadata(hours: WeeklyHours): Record<string, string> {
-  return Object.keys(hours).length > 0 ? { restaurant_hours: JSON.stringify(hours) } : {};
-}
+import { buildRestaurantHoursMetadata } from "./restaurant-form.logic";
 
 export function RestaurantForm() {
   const [f, setF] = useState({

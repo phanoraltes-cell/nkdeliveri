@@ -10,7 +10,8 @@ import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
 import { ActiveSessionsSection } from "@/components/active-sessions-section";
 import { MyDevicesSection } from "@/components/my-devices-section";
-import { HoursPicker, HOURS_DAYS, type WeeklyHours } from "@/components/hours-picker";
+import { HoursPicker, type WeeklyHours } from "@/components/hours-picker";
+import { HOURS_DAYS } from "@/components/hours-picker.data";
 
 // Owner-only: intentionally narrower than the parent layout's owner+staff
 // guard — restaurant identity/settings shouldn't be editable by staff. Not

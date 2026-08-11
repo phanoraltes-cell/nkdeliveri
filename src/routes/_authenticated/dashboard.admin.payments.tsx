@@ -5,11 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { sendPaymentReviewPush } from "@/lib/send-push.functions";
 import { toast } from "sonner";
 import { useState } from "react";
-import {
-  PendingPaymentsSection,
-  fetchPendingPayments,
-} from "@/components/dashboard/admin/pending-payments-section";
-import { PayoutHistory, fetchPayoutHistory } from "@/components/dashboard/admin/payout-history";
+import { PendingPaymentsSection } from "@/components/dashboard/admin/pending-payments-section";
+import { fetchPendingPayments } from "@/components/dashboard/admin/pending-payments-section.queries";
+import { PayoutHistory } from "@/components/dashboard/admin/payout-history";
+import { fetchPayoutHistory } from "@/components/dashboard/admin/payout-history.queries";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.

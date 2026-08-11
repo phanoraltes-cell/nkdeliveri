@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import { HOURS_DAYS } from "./hours-picker.data";
 
 /**
  * Shared day-by-day opening-hours editor — extracted from
@@ -11,16 +12,6 @@ import type { Dispatch, SetStateAction } from "react";
  */
 export type DayHours = { open: string; close: string; closed: boolean };
 export type WeeklyHours = Record<string, DayHours>;
-
-export const HOURS_DAYS: { key: string; label: string }[] = [
-  { key: "mon", label: "Lendi" },
-  { key: "tue", label: "Madi" },
-  { key: "wed", label: "Mèkredi" },
-  { key: "thu", label: "Jedi" },
-  { key: "fri", label: "Vandredi" },
-  { key: "sat", label: "Samdi" },
-  { key: "sun", label: "Dimanch" },
-];
 
 const DEFAULT_DAY: DayHours = { open: "10:00", close: "22:00", closed: false };
 

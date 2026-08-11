@@ -10,7 +10,10 @@ import {
   DeliveryRouteFetcher,
   type DeliveryRouteResult,
 } from "@/components/dashboard/admin/delivery-route-fetcher";
-import { formatDistance, formatDuration } from "@/components/dashboard/driver/delivery-route-info";
+import {
+  formatDistance,
+  formatDuration,
+} from "@/components/dashboard/driver/delivery-route-info.logic";
 
 // See dashboard.admin.index.tsx for why this is lazy: leaflet (~150KB) is
 // only needed once this section has mounted.

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { inputCls } from "@/lib/utils";
-import { baseSignUp, useSubmit, FormCard } from "./register-shared";
+import { baseSignUp } from "./register-shared.logic";
+import { useSubmit } from "@/hooks/useSubmit";
+import { FormCard } from "./register-shared";
 import { Button } from "@/components/ui/button";
 
 export function CustomerForm() {

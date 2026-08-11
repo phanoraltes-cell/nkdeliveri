@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { inputCls } from "@/lib/utils";
-import { baseSignUp, toFileInput, useSubmit, FormCard, FileField } from "./register-shared";
+import { baseSignUp, toFileInput } from "./register-shared.logic";
+import { useSubmit } from "@/hooks/useSubmit";
+import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
 
 export function DriverForm() {
