@@ -8,7 +8,20 @@ type AuthState = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** Single highest-priority role (super_admin > admin > restaurant_owner >
+   * restaurant_staff > driver > customer) — kept for existing/simple call
+   * sites, but genuinely single-role: a multi-role account (e.g. a
+   * restaurant_staff account that's also a customer) only ever appears as
+   * whichever role sorts highest here. Prefer `allRoles` for any check
+   * that decides whether a user is *permitted* to do something — `role`
+   * alone under-reports what they actually hold. (No current consumer of
+   * this hook reads `role` for an authorization decision — grepped before
+   * this comment was written — but the field stays for the ones that read
+   * it for display/labeling, so `allRoles` is added here rather than
+   * removing it.) */
   role: string | null;
+  /** Every role this account actually holds, unordered. See `role` above. */
+  allRoles: string[];
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -31,20 +44,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [allRoles, setAllRoles] = useState<string[]>([]);
   const router = useRouter();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     // onAuthStateChange fires immediately with the current session AND
     // getSession() below resolves independently — both can kick off a
-    // get_primary_role RPC for the same or a different user. currentUserId
-    // guards against the slower one winning and overwriting `role` with a
-    // stale value (e.g. sign-out then sign back in as another account
-    // before the first RPC has returned).
+    // get_primary_role RPC (+ user_roles select) for the same or a
+    // different user. currentUserId guards against the slower one winning
+    // and overwriting `role`/`allRoles` with a stale value (e.g. sign-out
+    // then sign back in as another account before the first call returns).
     let currentUserId: string | null = null;
 
     function applyRole(forUserId: string, roleResult: string | null) {
       if (forUserId === currentUserId) setRole(roleResult);
+    }
+    function applyAllRoles(forUserId: string, rows: { role: string }[]) {
+      if (forUserId === currentUserId) setAllRoles(rows.map((r) => r.role));
+    }
+
+    function loadRoles(userId: string) {
+      // .rpc()/.from() return a PostgrestBuilder, which is thenable but not
+      // a real Promise (no .catch()) — use the two-arg .then(ok, err) form.
+      supabase.rpc("get_primary_role", { _user_id: userId }).then(
+        ({ data }) => applyRole(userId, (data as string | null) ?? null),
+        (e: unknown) => console.error("[auth] get_primary_role failed", e),
+      );
+      // user_roles RLS already grants self-select (see
+      // _authenticated/route.tsx's own beforeLoad, which reads this exact
+      // table the same way) — no RPC needed for "list my own roles".
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .then(
+          ({ data, error }) => {
+            if (error) {
+              console.error("[auth] user_roles fetch failed", error);
+              return;
+            }
+            applyAllRoles(userId, (data ?? []) as { role: string }[]);
+          },
+          (e: unknown) => console.error("[auth] user_roles fetch failed", e),
+        );
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
@@ -52,15 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(s?.user ?? null);
       currentUserId = s?.user?.id ?? null;
       if (s?.user) {
-        const userId = s.user.id;
-        // .rpc() returns a PostgrestBuilder, which is thenable but not a
-        // real Promise (no .catch()) — use the two-arg .then(ok, err) form.
-        supabase.rpc("get_primary_role", { _user_id: userId }).then(
-          ({ data }) => applyRole(userId, (data as string | null) ?? null),
-          (e: unknown) => console.error("[auth] get_primary_role failed", e),
-        );
+        loadRoles(s.user.id);
       } else {
         setRole(null);
+        setAllRoles([]);
       }
 
       // Formerly RootComponent's own separate onAuthStateChange subscription
@@ -77,11 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.session?.user ?? null);
         currentUserId = data.session?.user?.id ?? null;
         if (data.session?.user) {
-          const userId = data.session.user.id;
-          supabase.rpc("get_primary_role", { _user_id: userId }).then(
-            ({ data: r }) => applyRole(userId, (r as string | null) ?? null),
-            (e: unknown) => console.error("[auth] get_primary_role failed", e),
-          );
+          loadRoles(data.session.user.id);
         }
         setLoading(false);
       })
@@ -97,7 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router, queryClient]);
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, role }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ session, user, loading, role, allRoles }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
