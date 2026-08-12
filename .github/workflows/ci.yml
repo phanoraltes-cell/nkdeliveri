@@ -42,6 +42,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # C-02 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
+      # 173-test unit suite existed but was never actually run by CI.
+      # Reuses this job's existing `npm ci` — no new job, no new install.
+      # Deliberately placed FIRST, ahead of lint/format/typecheck: found
+      # during regression verification that `npm run format:check` (a
+      # pre-existing step, unrelated to C-01/C-02) already fails on `main`
+      # today because of 114 pre-existing files never Prettier-formatted
+      # (docs/*.md, CLAUDE.md, README.md, CONTRIBUTING.md — confirmed on a
+      # clean tracked-only tree, nothing this phase touched). Left at
+      # step order it was, this new test step would never actually run —
+      # the job stops at the first failing step. Fixing that 114-file
+      # formatting debt is out of scope for a C-01/C-02-only phase (see
+      # the remediation report's "flagged, not fixed" section); running
+      # tests before the pre-existing-broken step is the smallest in-scope
+      # change that keeps them from being silently skipped.
+      - name: Unit tests (Vitest)
+        run: npm run test
+
       - name: Lint (ESLint)
         run: npm run lint
 
@@ -87,6 +105,96 @@ jobs:
       - name: Apply every migration to a fresh local database
         run: supabase start
 
+      # C-01 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) —
+      # persisted regression proof that direct writes to public.user_roles
+      # stay blocked for every role (the RLS bypass this migration fixed)
+      # and that add_user_role_secure/remove_user_role_secure keep working
+      # normally. Reuses the local stack this job already booted — no new
+      # service, no new dependency (psql ships on the ubuntu-latest
+      # runner), same DO $$ ... $$ / BEGIN-ROLLBACK idiom already used
+      # throughout this project's migration testing, just persisted to a
+      # file instead of run ad hoc.
+      - name: C-01 security regression — user_roles RLS + step-up MFA
+        run: |
+          eval "$(supabase status -o env)"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/c01_user_roles_security.sql
+
       - name: Stop local stack
         if: always()
         run: supabase stop --no-backup
+
+  # C-02 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
+  # 31-spec/77-test Playwright suite existed but was never run by CI.
+  # Split into two jobs, not one, per this project's own documented
+  # finding (docs/E2E_TEST_REPORT.md §5): running all 9 projects together
+  # causes real, reproducible resource contention (several Chromium/WebKit
+  # instances plus a Lighthouse audit competing for one machine) that
+  # produces intermittent, non-deterministic failures unrelated to actual
+  # regressions — not a suite defect, a documented side effect of the
+  # local hardware that recommended exactly this split. Both jobs target
+  # the fully-mocked E2E harness (e2e/mocks/*, `.env.e2e` — intentionally
+  # tracked in git, see its own .gitignore comment) — no live Supabase
+  # project, no secrets, by the same design decision documented in
+  # docs/E2E_TEST_REPORT.md §1 (validated with the user before that work
+  # began: never run E2E against the real backend).
+  e2e-functional:
+    name: E2E — client/restaurant/driver/admin/auth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Build (mock Supabase URL baked in via --mode e2e)
+        run: npm run build:e2e
+
+      - name: Run functional E2E projects
+        run: npx playwright test --project=client --project=restaurant --project=driver --project=admin --project=auth
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-functional
+          path: playwright-report/
+          retention-days: 14
+
+  e2e-cross-cutting:
+    name: E2E — accessibility/Lighthouse/SEO/PWA/offline/responsive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Build (mock Supabase URL baked in via --mode e2e)
+        run: npm run build:e2e
+
+      - name: Run cross-cutting + responsive E2E projects
+        run: npx playwright test --project=cross-cutting --project=responsive-mobile-chrome --project=responsive-mobile-safari --project=responsive-tablet --project=responsive-desktop
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-cross-cutting
+          path: playwright-report/
+          retention-days: 14

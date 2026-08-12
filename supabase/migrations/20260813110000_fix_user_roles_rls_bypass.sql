@@ -1,0 +1,43 @@
+-- C-01 remediation (docs/GLOBAL_AUDIT_360_2026-08-13.md, Finding C-01,
+-- CRITICAL). The "Admins manage roles" RLS policy on public.user_roles
+-- let any super_admin session write directly via PostgREST
+-- (supabase.from('user_roles').insert/update/delete) -- completely
+-- bypassing the STRICT step-up MFA enforcement
+-- add_user_role_secure()/remove_user_role_secure() require
+-- (supabase/migrations/20260811120000_admin_step_up_enforcement.sql:
+-- private.require_admin_step_up_strict(), TOTP mandatory, no fallback),
+-- and also bypassing those RPCs' own business rules (only super_admin
+-- may grant admin/super_admin, an admin can't remove their own
+-- admin/super_admin role, at least one super_admin must always remain).
+--
+-- Confirmed live before writing this (BEGIN/ROLLBACK against
+-- production, see the Phase 0 remediation report for the full
+-- transcript):
+--   - The exploit is real, not theoretical: as a genuine super_admin
+--     session (SET ROLE authenticated + matching JWT claims, RLS
+--     actually evaluated -- not the postgres/table-owner connection,
+--     which bypasses RLS entirely and would prove nothing), a direct
+--     `INSERT INTO user_roles (...)` granting super_admin succeeded,
+--     with zero TOTP challenge involved.
+--   - Zero legitimate application code path writes to user_roles
+--     directly -- grepped the entire src/ tree: the only writers are
+--     add_user_role_secure/remove_user_role_secure
+--     (src/routes/_authenticated/dashboard.admin.users.tsx). Every
+--     other user_roles reference in the app is a read
+--     (`.select(...)`) or a comment.
+--   - Dropping this policy is therefore a pure narrowing: it removes a
+--     redundant, dangerous second write path without touching the one
+--     real path (the RPCs), and without adding any new parallel
+--     validation logic that could drift out of sync with the RPCs'
+--     own business rules over time (the documented risk of a
+--     trigger-based alternative -- rejected in favor of this simpler
+--     fix).
+--   - This makes user_roles match the exact pattern already used by
+--     every other privilege-sensitive table in this schema (orders,
+--     platform_payout_settings, payment_provider_settings, payouts):
+--     zero direct-write RLS policy, RPC-only mutation.
+--
+-- "Users can view own roles" (SELECT) is untouched -- read access was
+-- never the vulnerability and this migration changes nothing about who
+-- can read what.
+DROP POLICY IF EXISTS "Admins manage roles" ON public.user_roles;
