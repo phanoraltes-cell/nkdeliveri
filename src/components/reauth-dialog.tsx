@@ -1,4 +1,4 @@
-import { ShieldCheck, KeyRound } from "lucide-react";
+import { ShieldCheck, KeyRound, Ticket } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,21 +13,26 @@ import { inputCls } from "@/lib/utils";
 type ReauthDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  mode: "totp" | "password" | "oauth";
+  mode: "totp" | "backup" | "password" | "oauth";
   hasPassword: boolean;
   hasVerifiedFactor: boolean;
+  hasBackupCodes: boolean;
   checkingFactor: boolean;
   password: string;
   setPassword: (v: string) => void;
   totpCode: string;
   setTotpCode: (v: string) => void;
+  backupCode: string;
+  setBackupCode: (v: string) => void;
   submitting: boolean;
   error: string | null;
   confirmTotp: () => void;
+  confirmBackup: () => void;
   confirmPassword: () => void;
   continueWithOAuth: () => void;
   switchToFallback: () => void;
   switchToTotp: () => void;
+  switchToBackup: () => void;
 };
 
 /** Render once per component tree that calls useReauth() — same shape as ConfirmDialog. */
@@ -80,6 +85,55 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
                 {state.submitting ? "Ap verifye…" : "Konfime"}
               </Button>
             </DialogFooter>
+            {state.hasBackupCodes && (
+              <button
+                type="button"
+                onClick={state.switchToBackup}
+                className="w-full text-center text-xs font-bold text-brand-deep hover:underline"
+              >
+                Sèvi ak yon kòd sekou pito
+              </button>
+            )}
+          </form>
+        ) : state.mode === "backup" && state.hasBackupCodes ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              state.confirmBackup();
+            }}
+            className="space-y-3"
+          >
+            <p className="flex items-center gap-2 text-sm text-ink-soft">
+              <Ticket className="h-4 w-4 shrink-0" /> Antre youn nan kòd sekou ou yo.
+            </p>
+            <input
+              type="text"
+              autoFocus
+              required
+              placeholder="XXXXX-XXXXX"
+              aria-label="Kòd sekou"
+              value={state.backupCode}
+              onChange={(e) => state.setBackupCode(e.target.value)}
+              className={inputCls() + " text-center font-mono uppercase tracking-wider"}
+            />
+            {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => state.setOpen(false)}>
+                Anile
+              </Button>
+              <Button type="submit" disabled={state.submitting || !state.backupCode.trim()}>
+                {state.submitting ? "Ap verifye…" : "Konfime"}
+              </Button>
+            </DialogFooter>
+            {state.hasVerifiedFactor && (
+              <button
+                type="button"
+                onClick={state.switchToTotp}
+                className="w-full text-center text-xs font-bold text-brand-deep hover:underline"
+              >
+                Sèvi ak kòd otantifikasyon pito
+              </button>
+            )}
           </form>
         ) : state.mode === "password" && state.hasPassword ? (
           <form
@@ -126,14 +180,14 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
           </>
         )}
 
-        {!state.checkingFactor && !state.hasVerifiedFactor && (
+        {!state.checkingFactor && !state.hasVerifiedFactor && !state.hasBackupCodes && (
           <p className="text-center text-[11px] text-ink-soft">
-            Ou pa gen verifikasyon an de etap (TOTP) aktive.{" "}
+            Ou pa gen verifikasyon an de etap (TOTP) ni kòd sekou aktive.{" "}
             <a
               href="/dashboard/admin/security"
               className="font-bold text-brand-deep underline underline-offset-2"
             >
-              Aktive li
+              Aktive youn
             </a>{" "}
             pou yon pwoteksyon pi fò — obligatwa pou sèten aksyon kritik.
           </p>

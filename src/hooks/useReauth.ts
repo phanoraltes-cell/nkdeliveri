@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTotpFactor } from "@/hooks/useTotpFactor";
+import { useBackupCodes } from "@/hooks/useBackupCodes";
 import { logStepUpEvent } from "@/lib/admin-step-up";
 
 export { isStepUpError } from "@/lib/admin-step-up";
@@ -59,10 +60,12 @@ const OAUTH_REAUTH_FLAG = "nk_reauth_pending";
 export function useReauth() {
   const { user } = useAuth();
   const totp = useTotpFactor();
+  const backup = useBackupCodes();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [mode, setMode] = useState<"totp" | "password" | "oauth">("password");
+  const [mode, setMode] = useState<"totp" | "backup" | "password" | "oauth">("password");
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const verifiedUntilRef = useRef<Partial<Record<StepUpTier, number>>>({});
@@ -71,10 +74,22 @@ export function useReauth() {
 
   const hasPassword = !!user?.app_metadata?.providers?.includes?.("email");
 
+  // Priority: TOTP (strongest, satisfies both tiers) > backup codes (only
+  // ever satisfies "standard" server-side, see confirmBackup below) >
+  // password > OAuth. Backup codes never take priority over TOTP when both
+  // exist -- switchToBackup() below is how an admin opts into it instead.
   useEffect(() => {
-    if (totp.checking) return;
-    setMode(totp.hasVerifiedFactor ? "totp" : hasPassword ? "password" : "oauth");
-  }, [totp.checking, totp.hasVerifiedFactor, hasPassword]);
+    if (totp.checking || backup.checking) return;
+    setMode(
+      totp.hasVerifiedFactor
+        ? "totp"
+        : backup.hasCodes
+          ? "backup"
+          : hasPassword
+            ? "password"
+            : "oauth",
+    );
+  }, [totp.checking, totp.hasVerifiedFactor, backup.checking, backup.hasCodes, hasPassword]);
 
   // Returning from the Google redirect this hook itself triggered.
   useEffect(() => {
@@ -106,6 +121,7 @@ export function useReauth() {
       setError(null);
       setPassword("");
       setTotpCode("");
+      setBackupCode("");
       setDialogOpen(true);
       void logStepUpEvent("admin_step_up_started");
     },
@@ -129,6 +145,7 @@ export function useReauth() {
     setDialogOpen(false);
     setPassword("");
     setTotpCode("");
+    setBackupCode("");
     const action = pendingActionRef.current;
     pendingActionRef.current = null;
     action?.();
@@ -144,6 +161,27 @@ export function useReauth() {
       runPending();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kòd la pa kòrèk.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function confirmBackup() {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await backup.verify(backupCode);
+      void logStepUpEvent("admin_step_up_success");
+      // Backup codes only ever satisfy "standard" server-side
+      // (private.admin_step_up_status() rejects them for the STRICT/
+      // _allow_fallback=false path by design) -- mirror that here exactly
+      // like the password/OAuth fallback below already does, so a
+      // pending STRICT action still correctly re-prompts (via
+      // isStepUpError/invalidateStepUp) instead of appearing to succeed.
+      markVerified("standard");
+      runPending();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Kòd sekou pa valid.");
     } finally {
       setSubmitting(false);
     }
@@ -199,18 +237,23 @@ export function useReauth() {
       mode,
       hasPassword,
       hasVerifiedFactor: totp.hasVerifiedFactor,
-      checkingFactor: totp.checking,
+      hasBackupCodes: backup.hasCodes,
+      checkingFactor: totp.checking || backup.checking,
       password,
       setPassword,
       totpCode,
       setTotpCode,
+      backupCode,
+      setBackupCode,
       submitting,
       error,
       confirmTotp,
+      confirmBackup,
       confirmPassword,
       continueWithOAuth,
       switchToFallback: () => setMode(hasPassword ? "password" : "oauth"),
       switchToTotp: () => setMode("totp"),
+      switchToBackup: () => setMode("backup"),
     },
   };
 }

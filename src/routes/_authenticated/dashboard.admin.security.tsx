@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, ShieldAlert, KeyRound } from "lucide-react";
+import { ShieldCheck, ShieldAlert, KeyRound, Ticket } from "lucide-react";
 import { useTotpFactor } from "@/hooks/useTotpFactor";
+import { useBackupCodes } from "@/hooks/useBackupCodes";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { inputCls } from "@/lib/utils";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx), same
@@ -24,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/security")
  */
 function AdminSecurity() {
   const totp = useTotpFactor();
+  const backup = useBackupCodes();
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const [enrolling, setEnrolling] = useState(false);
   const [pending, setPending] = useState<{
@@ -34,6 +44,10 @@ function AdminSecurity() {
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [generating, setGenerating] = useState(false);
+  const [newCodes, setNewCodes] = useState<string[] | null>(null);
+  const [codesSavedConfirmed, setCodesSavedConfirmed] = useState(false);
 
   async function startEnrollment() {
     setEnrolling(true);
@@ -79,6 +93,30 @@ function AdminSecurity() {
         await totp.refresh();
       },
     );
+  }
+
+  async function doGenerate() {
+    setGenerating(true);
+    try {
+      const codes = await backup.generate();
+      setNewCodes(codes);
+      setCodesSavedConfirmed(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Pa t kapab jenere kòd sekou yo");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function generateCodes() {
+    if (backup.hasCodes) {
+      requestConfirm(
+        "Jenere nouvo kòd sekou? Tout ansyen kòd ki pa itilize yo ap vin envalid imedyatman.",
+        doGenerate,
+      );
+    } else {
+      doGenerate();
+    }
   }
 
   return (
@@ -180,6 +218,91 @@ function AdminSecurity() {
           </div>
         )}
       </section>
+
+      <section className="rounded-2xl border border-brand-soft/60 bg-white p-6 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <Ticket className="h-5 w-5 text-brand-deep" />
+          <h2 className="font-display text-lg font-bold text-ink">Kòd sekou</h2>
+        </div>
+        <p className="mb-4 text-sm text-ink-soft">
+          Yon dezyèm mwayen endepandan pou konfime idantite w — itil si w pa gen aksè a aplikasyon
+          otantifikasyon an. Chak kòd itilizab yon sèl fwa. Kòd sekou ka debloke aksyon estanda yo
+          (revizyon ranbousman, deblokaj tablo admin) men PA aksyon ki pi sansib yo (chanjman wòl,
+          dekesman, konfigirasyon peman) — sa yo mande toujou yon kòd TOTP fre.
+        </p>
+
+        {backup.checking ? (
+          <p className="text-sm text-ink-soft">Chajman…</p>
+        ) : (
+          <div className="space-y-3">
+            {backup.hasCodes ? (
+              <p className="text-sm text-ink">
+                <span className="font-bold">{backup.codesRemaining}</span> kòd sekou rete
+                {backup.generatedAt && (
+                  <span className="text-ink-soft">
+                    {" "}
+                    · jenere sou {new Date(backup.generatedAt).toLocaleDateString("fr-HT")}
+                  </span>
+                )}
+              </p>
+            ) : (
+              <p className="text-sm text-ink-soft">Ou poko jenere kòd sekou.</p>
+            )}
+            <Button
+              variant={backup.hasCodes ? "outline" : "default"}
+              onClick={generateCodes}
+              disabled={generating}
+            >
+              {generating
+                ? "Ap jenere…"
+                : backup.hasCodes
+                  ? "Rejenere kòd sekou"
+                  : "Jenere kòd sekou"}
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <Dialog
+        open={!!newCodes}
+        onOpenChange={(open) => {
+          if (!open && codesSavedConfirmed) setNewCodes(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-brand-deep" /> Kòd sekou ou yo
+            </DialogTitle>
+            <DialogDescription>
+              N ap montre w kòd sa yo yon SÈL fwa. Sere yo yon kote ki an sekirite (jesyonè modpas,
+              papye byen kache) — nou pa gen okenn fason pou montre w yo ankò.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-brand-soft/20 p-4 font-mono text-sm">
+            {newCodes?.map((c) => (
+              <div key={c} className="text-center text-ink">
+                {c}
+              </div>
+            ))}
+          </div>
+          <label className="flex items-start gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={codesSavedConfirmed}
+              onChange={(e) => setCodesSavedConfirmed(e.target.checked)}
+              className="mt-0.5"
+            />
+            Mwen anrejistre kòd sa yo yon kote ki an sekirite.
+          </label>
+          <DialogFooter>
+            <Button disabled={!codesSavedConfirmed} onClick={() => setNewCodes(null)}>
+              Fèmen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {ConfirmDialog}
     </div>
   );

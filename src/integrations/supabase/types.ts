@@ -3050,6 +3050,10 @@ export type Database = {
           transaction_id: string;
         }[];
       };
+      generate_admin_backup_codes_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: string[];
+      };
       get_active_placements_secure: {
         Args: { _limit?: number; _placement: string };
         Returns: {
@@ -3068,6 +3072,14 @@ export type Database = {
           restaurant_slug: string;
           sort_order: number;
           title: string;
+        }[];
+      };
+      get_admin_backup_codes_status_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          codes_remaining: number;
+          generated_at: string | null;
+          last_used_at: string | null;
         }[];
       };
       get_admin_finance_history_secure: {
@@ -4514,6 +4526,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      verify_admin_backup_code_secure: {
+        Args: { _code: string };
+        Returns: boolean;
       };
     };
     Enums: {

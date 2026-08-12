@@ -1,10 +1,11 @@
 import { type ReactNode, useEffect, useState } from "react";
-import { ShieldAlert, LogOut, KeyRound } from "lucide-react";
+import { ShieldAlert, LogOut, KeyRound, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { useTotpFactor } from "@/hooks/useTotpFactor";
+import { useBackupCodes } from "@/hooks/useBackupCodes";
 import { logStepUpEvent } from "@/lib/admin-step-up";
 import { Button } from "@/components/ui/button";
 import { inputCls } from "@/lib/utils";
@@ -42,17 +43,30 @@ const IDLE_UNLOCK_FLAG = "nk_admin_idle_unlock_pending";
  *
  * Unlock prefers a real TOTP challenge when the account has one enrolled
  * (the same private.admin_step_up_status() the server checks); falls back
- * to password/OAuth re-entry for accounts with none yet.
+ * to password/OAuth re-entry for accounts with none yet. A backup code
+ * (supabase/migrations/20260813100000_admin_backup_codes.sql) is always
+ * offered as an alternative, independent of TOTP/password state -- an
+ * explicit toggle, not part of the primary priority chain, since it's
+ * valid regardless of what else the account has.
  */
 export function AdminIdleLock({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const totp = useTotpFactor();
+  const backup = useBackupCodes();
   const [locked, setLocked] = useState(false);
   const [checkingGate, setCheckingGate] = useState(true);
   const [totpCode, setTotpCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "primary" = whatever unlockWithTotp/hasPassword/OAuth's normal
+  // priority order picks; "backup" = the admin explicitly opted into
+  // entering a backup code instead. A separate toggle rather than folding
+  // "backup" into the same priority chain because backup codes are valid
+  // regardless of TOTP/password state (unlike those three, which are
+  // mutually exclusive based on what the account actually has).
+  const [unlockMethod, setUnlockMethod] = useState<"primary" | "backup">("primary");
 
   const hasPassword = !!user?.app_metadata?.providers?.includes?.("email");
 
@@ -113,6 +127,23 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
     }
   }
 
+  async function unlockWithBackup(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      await backup.verify(backupCode);
+      void logStepUpEvent("admin_step_up_success");
+      setBackupCode("");
+      setUnlockMethod("primary");
+      setLocked(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Kòd sekou pa valid.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function unlockWithPassword(e: React.FormEvent) {
     e.preventDefault();
     if (!user?.email) return;
@@ -166,8 +197,38 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
           nan espas administrasyon an, oswa apre {ADMIN_IDLE_TIMEOUT_MINUTES} minit san aktivite.
         </p>
 
-        {totp.checking ? (
+        {totp.checking || backup.checking ? (
           <p className="text-sm text-ink-soft">Chajman…</p>
+        ) : unlockMethod === "backup" ? (
+          <form onSubmit={unlockWithBackup} className="space-y-3">
+            <p className="flex items-center gap-2 text-xs text-ink-soft">
+              <Ticket className="h-3.5 w-3.5 shrink-0" /> Youn nan kòd sekou ou yo
+            </p>
+            <input
+              type="text"
+              autoFocus
+              required
+              placeholder="XXXXX-XXXXX"
+              aria-label="Kòd sekou"
+              value={backupCode}
+              onChange={(e) => setBackupCode(e.target.value)}
+              className={inputCls() + " text-center font-mono uppercase tracking-wider"}
+            />
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <Button type="submit" disabled={submitting || !backupCode.trim()} className="w-full">
+              {submitting ? "Ap verifye…" : "Debloke"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setUnlockMethod("primary");
+              }}
+              className="w-full text-center text-xs font-bold text-brand-deep hover:underline"
+            >
+              Retounen
+            </button>
+          </form>
         ) : totp.hasVerifiedFactor ? (
           <form onSubmit={unlockWithTotp} className="space-y-3">
             <p className="flex items-center gap-2 text-xs text-ink-soft">
@@ -214,13 +275,26 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
           </Button>
         )}
 
-        {!totp.checking && !totp.hasVerifiedFactor && (
+        {unlockMethod === "primary" && !totp.checking && !backup.checking && backup.hasCodes && (
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setUnlockMethod("backup");
+            }}
+            className="mt-3 w-full text-center text-xs font-bold text-brand-deep hover:underline"
+          >
+            Sèvi ak yon kòd sekou pito
+          </button>
+        )}
+
+        {!totp.checking && !backup.checking && !totp.hasVerifiedFactor && !backup.hasCodes && (
           <p className="mt-3 text-center text-[11px] text-ink-soft">
             <a
               href="/dashboard/admin/security"
               className="font-bold text-brand-deep underline underline-offset-2"
             >
-              Aktive verifikasyon an de etap
+              Aktive verifikasyon an de etap oswa kòd sekou
             </a>{" "}
             pou yon pwoteksyon pi fò.
           </p>
