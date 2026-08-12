@@ -20,6 +20,7 @@ import {
   BarChart3,
   Zap,
   ShieldCheck,
+  Radar,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -85,6 +86,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/admin/komand", label: "Komand", icon: Radar },
     { to: "/dashboard/admin/finance", label: "Tablo Finansye", icon: BarChart3, section: "Finans" },
     { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
     { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },
@@ -114,6 +116,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/admin/komand", label: "Komand", icon: Radar },
     { to: "/dashboard/admin/finance", label: "Tablo Finansye", icon: BarChart3, section: "Finans" },
     { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
     { to: "/dashboard/admin/commissions", label: "Komisyon", icon: Percent, section: "Finans" },

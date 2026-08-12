@@ -2430,6 +2430,22 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      add_order_admin_note_secure: {
+        Args: { _note: string; _order_id: string };
+        Returns: {
+          author_id: string;
+          created_at: string;
+          id: string;
+          note: string;
+          order_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "order_admin_notes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       add_restaurant_employee_secure: {
         Args: { _email: string; _restaurant_id: string; _role?: string };
         Returns: {
@@ -3160,7 +3176,12 @@ export type Database = {
         }[];
       };
       get_customers_admin: {
-        Args: { _limit?: number; _offset?: number; _search?: string };
+        Args: {
+          _customer_id?: string;
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+        };
         Returns: {
           address: string;
           created_at: string;
@@ -3358,6 +3379,10 @@ export type Database = {
           user_agent: string;
         }[];
       };
+      get_order_admin_detail: {
+        Args: { _order_id: string };
+        Returns: Json;
+      };
       get_order_financial_timeline_secure: {
         Args: { _order_id: string };
         Returns: {
@@ -3371,6 +3396,40 @@ export type Database = {
           method: string;
           reference: string;
           status: string;
+        }[];
+      };
+      get_orders_admin: {
+        Args: {
+          _driver_id?: string;
+          _health?: string;
+          _limit?: number;
+          _offset?: number;
+          _order_status?: Database["public"]["Enums"]["order_status"];
+          _restaurant_id?: string;
+          _search?: string;
+        };
+        Returns: {
+          assistance_status: string;
+          cash_confirmation_status: string;
+          created_at: string;
+          customer_id: string;
+          customer_name: string;
+          delivery_status: string;
+          dispute_open: boolean;
+          driver_id: string;
+          driver_name: string;
+          id: string;
+          komand_health: string;
+          last_activity: string;
+          order_number: string;
+          payment_method: string;
+          payment_status: string;
+          refund_status: string;
+          restaurant_id: string;
+          restaurant_name: string;
+          status: Database["public"]["Enums"]["order_status"];
+          total: number;
+          total_count: number;
         }[];
       };
       get_payouts_monthly_series: {
@@ -3586,6 +3645,10 @@ export type Database = {
       };
       log_dashboard_access_denied_secure: {
         Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
+      log_komand_contact_secure: {
+        Args: { _action: string; _order_id: string };
         Returns: undefined;
       };
       log_payment_provider_error_secure: {
@@ -3883,6 +3946,30 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "promotional_notifications";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_komand_assistance_secure: {
+        Args: {
+          _assigned_admin_id?: string;
+          _note?: string;
+          _order_id: string;
+          _status: string;
+        };
+        Returns: {
+          assigned_admin_id: string | null;
+          created_at: string;
+          order_id: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: string;
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "komand_assistance";
           isOneToOne: true;
           isSetofReturn: false;
         };

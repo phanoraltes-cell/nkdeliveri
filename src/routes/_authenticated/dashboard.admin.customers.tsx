@@ -6,7 +6,7 @@ import { formatHTG } from "@/lib/format";
 import { downloadCSV } from "@/lib/csv-export";
 import { sendNewsletterBroadcast } from "@/lib/send-newsletter.functions";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, Search, Send, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
@@ -21,13 +21,23 @@ import {
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 500;
 
+type CustomersSearch = { customer?: string };
+
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
 export const Route = createFileRoute("/_authenticated/dashboard/admin/customers")({
+  // ?customer=<id> deep-links here from the Komand "nouveau client inscrit"
+  // notification (Règle §5 of the Komand brief: reuse this existing list
+  // instead of building a new client-management page).
+  validateSearch: (search: Record<string, unknown>): CustomersSearch => ({
+    customer: typeof search.customer === "string" ? search.customer : undefined,
+  }),
   component: AdminCustomers,
 });
 
 function AdminCustomers() {
+  const { customer: customerIdParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [subject, setSubject] = useState("");
@@ -36,6 +46,36 @@ function AdminCustomers() {
   const [detailTarget, setDetailTarget] = useState<CustomerAdminDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const sendBroadcast = useServerFn(sendNewsletterBroadcast);
+
+  // Deep-link target: an exact _customer_id lookup, independent of the
+  // free-text search box above (a bare id isn't something a human would
+  // type there, and this must resolve even if the box has stale text in it).
+  const customerById = useQuery({
+    queryKey: ["admin-customer-by-id", customerIdParam],
+    enabled: !!customerIdParam,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_customers_admin", {
+        _customer_id: customerIdParam,
+        _limit: 1,
+      });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
+  useEffect(() => {
+    if (customerById.data) {
+      setDetailTarget(customerById.data);
+      setDetailOpen(true);
+      // Consume the param once opened — leaving it in the URL would
+      // reopen the same dialog on every back/forward navigation.
+      navigate({ search: { customer: undefined }, replace: true });
+    } else if (customerIdParam && customerById.isError) {
+      toast.error("Pa ka jwenn kliyan sa a");
+      navigate({ search: { customer: undefined }, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerById.data, customerById.isError]);
 
   const customers = useQuery({
     queryKey: ["admin-customers", search, page],

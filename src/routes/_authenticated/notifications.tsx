@@ -16,6 +16,7 @@ import {
   Percent,
   Megaphone,
   AlertTriangle,
+  UserCog,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
   { key: "promotion", label: "Pwomosyon" },
   { key: "dispute", label: "Litij" },
   { key: "system", label: "Sistèm" },
+  { key: "admin", label: "Admin" },
 ];
 
 // P12 — one icon per notification *category*, reusing the exact icons
@@ -51,7 +53,9 @@ const CATEGORY_TABS: { key: string; label: string }[] = [
 // site-wide. "system" is intentionally left out: there's no equivalent
 // nav destination to borrow an icon from, and the generic Bell fallback
 // already reads correctly as "notification" for it, so it's kept rather
-// than invented.
+// than invented. "admin" (Komand's "nouveau client inscrit") reuses
+// UserCog — same icon as the "Kliyan" nav item, since that's the only
+// notification this category carries today.
 const CATEGORY_ICON: Record<string, LucideIcon> = {
   order: ShoppingBag,
   delivery: Bike,
@@ -59,6 +63,7 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
   commission: Percent,
   promotion: Megaphone,
   dispute: AlertTriangle,
+  admin: UserCog,
 };
 
 function NotificationsPage() {
@@ -222,12 +227,18 @@ function NotificationsPage() {
       <ul className="space-y-2">
         {visible.map((n) => {
           const orderId = (n.data as { order_id?: string } | null)?.order_id;
+          // Komand's "nouveau client inscrit" notification (category
+          // 'admin') carries customer_id instead of order_id — links into
+          // the existing admin Kliyan list/search rather than a new page,
+          // per the "never build new client-management architecture just
+          // for this" decision.
+          const customerId = (n.data as { customer_id?: string } | null)?.customer_id;
           // P12 — a notification with a real destination now looks
           // subtly different from a purely informational one: same
           // shadow-brand-xs/hover:shadow-brand-sm lift already used for
           // the identical "whole card is a link" pattern in
           // routes/orders.index.tsx, not a new visual language.
-          const clickable = Boolean(orderId);
+          const clickable = Boolean(orderId || customerId);
           const inner = (
             <div
               className={`flex gap-3 rounded-2xl border p-4 transition ${
@@ -292,6 +303,15 @@ function NotificationsPage() {
                 <Link
                   to="/orders/$id"
                   params={{ id: orderId }}
+                  onClick={onClick}
+                  className={linkClassName}
+                >
+                  {inner}
+                </Link>
+              ) : customerId ? (
+                <Link
+                  to="/dashboard/admin/customers"
+                  search={{ customer: customerId }}
                   onClick={onClick}
                   className={linkClassName}
                 >

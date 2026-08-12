@@ -73,6 +73,7 @@ import { Route as AuthenticatedDashboardAdminPayoutSettingsRouteImport } from '.
 import { Route as AuthenticatedDashboardAdminPayoutMigrationRouteImport } from './routes/_authenticated/dashboard.admin.payout-migration'
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 import { Route as AuthenticatedDashboardAdminPaymentProvidersRouteImport } from './routes/_authenticated/dashboard.admin.payment-providers'
+import { Route as AuthenticatedDashboardAdminKomandRouteImport } from './routes/_authenticated/dashboard.admin.komand'
 import { Route as AuthenticatedDashboardAdminFinanceRouteImport } from './routes/_authenticated/dashboard.admin.finance'
 import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
 import { Route as AuthenticatedDashboardAdminDisputesRouteImport } from './routes/_authenticated/dashboard.admin.disputes'
@@ -441,6 +442,12 @@ const AuthenticatedDashboardAdminPaymentProvidersRoute =
     path: '/payment-providers',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminKomandRoute =
+  AuthenticatedDashboardAdminKomandRouteImport.update({
+    id: '/komand',
+    path: '/komand',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminFinanceRoute =
   AuthenticatedDashboardAdminFinanceRouteImport.update({
     id: '/finance',
@@ -529,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
+  '/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
   '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
@@ -597,6 +605,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
+  '/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
   '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
@@ -672,6 +681,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/_authenticated/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
+  '/_authenticated/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
   '/_authenticated/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
   '/_authenticated/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
@@ -747,6 +757,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
+    | '/dashboard/admin/komand'
     | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
@@ -815,6 +826,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
+    | '/dashboard/admin/komand'
     | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
     | '/dashboard/admin/payout-migration'
@@ -889,6 +901,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/disputes'
     | '/_authenticated/dashboard/admin/drivers'
     | '/_authenticated/dashboard/admin/finance'
+    | '/_authenticated/dashboard/admin/komand'
     | '/_authenticated/dashboard/admin/payment-providers'
     | '/_authenticated/dashboard/admin/payments'
     | '/_authenticated/dashboard/admin/payout-migration'
@@ -1401,6 +1414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminPaymentProvidersRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/komand': {
+      id: '/_authenticated/dashboard/admin/komand'
+      path: '/komand'
+      fullPath: '/dashboard/admin/komand'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminKomandRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/finance': {
       id: '/_authenticated/dashboard/admin/finance'
       path: '/finance'
@@ -1469,6 +1489,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminDisputesRoute: typeof AuthenticatedDashboardAdminDisputesRoute
   AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
   AuthenticatedDashboardAdminFinanceRoute: typeof AuthenticatedDashboardAdminFinanceRoute
+  AuthenticatedDashboardAdminKomandRoute: typeof AuthenticatedDashboardAdminKomandRoute
   AuthenticatedDashboardAdminPaymentProvidersRoute: typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
   AuthenticatedDashboardAdminPayoutMigrationRoute: typeof AuthenticatedDashboardAdminPayoutMigrationRoute
@@ -1497,6 +1518,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminDriversRoute,
     AuthenticatedDashboardAdminFinanceRoute:
       AuthenticatedDashboardAdminFinanceRoute,
+    AuthenticatedDashboardAdminKomandRoute:
+      AuthenticatedDashboardAdminKomandRoute,
     AuthenticatedDashboardAdminPaymentProvidersRoute:
       AuthenticatedDashboardAdminPaymentProvidersRoute,
     AuthenticatedDashboardAdminPaymentsRoute:
