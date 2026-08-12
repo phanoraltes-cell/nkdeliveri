@@ -17,7 +17,7 @@ import { formatHTG } from "@/lib/format";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { sendPayoutUpdatePush } from "@/lib/send-payout-push.functions";
 import { initiateProviderPayout } from "@/lib/initiate-provider-payout.functions";
-import { useReauth } from "@/hooks/useReauth";
+import { useReauth, isStepUpError } from "@/hooks/useReauth";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
 export type PayoutBeneficiary = {
@@ -74,7 +74,7 @@ export function PayoutPayModal({
   const qc = useQueryClient();
   const sendPush = useServerFn(sendPayoutUpdatePush);
   const initiateProvider = useServerFn(initiateProviderPayout);
-  const { withReauth, dialogState } = useReauth();
+  const { withReauth, invalidateStepUp, dialogState } = useReauth();
   const [amount, setAmount] = useState("");
   const [channelKey, setChannelKey] = useState("");
   const [transactionReference, setTransactionReference] = useState("");
@@ -204,7 +204,16 @@ export function PayoutPayModal({
       }
       onOpenChange(false);
     },
-    onError: (e) => toast.error(e.message ?? "Erè"),
+    onError: (e) => {
+      // initiate_payout_secure (the manual path) is STRICT tier — real
+      // money leaving the platform (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message ?? "Erè");
+    },
   });
 
   return (
@@ -331,7 +340,7 @@ export function PayoutPayModal({
               disabled={
                 pay.isPending || !method || !amount || (isManual && !transactionReference.trim())
               }
-              onClick={() => withReauth(() => pay.mutate())}
+              onClick={() => withReauth(() => pay.mutate(), "strict")}
             >
               {pay.isPending ? "Ap voye…" : "Konfime peman"}
             </Button>

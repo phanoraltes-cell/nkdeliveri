@@ -9,6 +9,8 @@ import {
   type CheckoutProviderId,
 } from "@/lib/payment-provider-availability";
 import { Badge } from "@/components/ui/badge";
+import { useReauth, isStepUpError } from "@/hooks/useReauth";
+import { ReauthDialog } from "@/components/reauth-dialog";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx), same
 // convention as every other admin route in this section.
@@ -38,6 +40,19 @@ type ProviderSettingRow = {
 function AdminPaymentProviders() {
   const qc = useQueryClient();
   const [draftMessages, setDraftMessages] = useState<Record<string, string>>({});
+  const { withReauth, invalidateStepUp, dialogState } = useReauth();
+
+  // update_payment_provider_setting_secure is STRICT tier regardless of
+  // which fields change — global payment-security configuration (see
+  // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+  function onStepUpAwareError(e: Error) {
+    if (isStepUpError(e)) {
+      invalidateStepUp("strict");
+      toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+      return;
+    }
+    toast.error(e.message ?? "Erè");
+  }
 
   // Admin needs more columns (id, updated_at) than the checkout-facing
   // usePaymentProviderAvailability hook fetches — a separate, richer
@@ -96,7 +111,7 @@ function AdminPaymentProviders() {
       toast.success(row.enabled ? "Metòd la dezaktive" : "Metòd la aktive");
       invalidate();
     },
-    onError: (e) => toast.error(e.message ?? "Erè"),
+    onError: onStepUpAwareError,
   });
 
   const setDefault = useMutation({
@@ -108,7 +123,7 @@ function AdminPaymentProviders() {
       toast.success("Nouvo metòd default anrejistre");
       invalidate();
     },
-    onError: (e) => toast.error(e.message ?? "Erè"),
+    onError: onStepUpAwareError,
   });
 
   const saveMessage = useMutation({
@@ -123,7 +138,7 @@ function AdminPaymentProviders() {
       toast.success("Mesaj anrejistre");
       invalidate();
     },
-    onError: (e) => toast.error(e.message ?? "Erè"),
+    onError: onStepUpAwareError,
   });
 
   return (
@@ -178,14 +193,14 @@ function AdminPaymentProviders() {
                     {row.visible ? "Kache" : "Fè l vizib"} (pa aktive)
                   </button>
                   <button
-                    onClick={() => toggleEnabled.mutate(row)}
+                    onClick={() => withReauth(() => toggleEnabled.mutate(row), "strict")}
                     disabled={toggleEnabled.isPending}
                     className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
                   >
                     {row.enabled ? "Dezaktive" : "Aktive"}
                   </button>
                   <button
-                    onClick={() => setDefault.mutate(row)}
+                    onClick={() => withReauth(() => setDefault.mutate(row), "strict")}
                     disabled={row.default_provider || setDefault.isPending}
                     className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40 disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -212,7 +227,7 @@ function AdminPaymentProviders() {
                     className="min-w-0 flex-1 rounded-lg border-2 border-brand-soft bg-white px-3 py-2 text-sm outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
                   />
                   <button
-                    onClick={() => saveMessage.mutate(row)}
+                    onClick={() => withReauth(() => saveMessage.mutate(row), "strict")}
                     disabled={saveMessage.isPending}
                     className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white hover:bg-brand-deep"
                   >
@@ -228,6 +243,7 @@ function AdminPaymentProviders() {
           ))
         )}
       </section>
+      <ReauthDialog state={dialogState} />
     </div>
   );
 }

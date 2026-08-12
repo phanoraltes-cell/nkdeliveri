@@ -65,6 +65,7 @@ import { Route as AuthenticatedDashboardDriverChatRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './routes/_authenticated/dashboard.driver.available'
 import { Route as AuthenticatedDashboardCustomerChatRouteImport } from './routes/_authenticated/dashboard.customer.chat'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
+import { Route as AuthenticatedDashboardAdminSecurityRouteImport } from './routes/_authenticated/dashboard.admin.security'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
 import { Route as AuthenticatedDashboardAdminRefundsRouteImport } from './routes/_authenticated/dashboard.admin.refunds'
 import { Route as AuthenticatedDashboardAdminPayoutsRouteImport } from './routes/_authenticated/dashboard.admin.payouts'
@@ -392,6 +393,12 @@ const AuthenticatedDashboardAdminUsersRoute =
     path: '/users',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminSecurityRoute =
+  AuthenticatedDashboardAdminSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminRestaurantsRoute =
   AuthenticatedDashboardAdminRestaurantsRouteImport.update({
     id: '/restaurants',
@@ -529,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
+  '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -596,6 +604,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
+  '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -670,6 +679,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/_authenticated/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
+  '/_authenticated/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/_authenticated/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
   '/_authenticated/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
@@ -744,6 +754,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payouts'
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
+    | '/dashboard/admin/security'
     | '/dashboard/admin/users'
     | '/dashboard/customer/chat'
     | '/dashboard/driver/available'
@@ -811,6 +822,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payouts'
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
+    | '/dashboard/admin/security'
     | '/dashboard/admin/users'
     | '/dashboard/customer/chat'
     | '/dashboard/driver/available'
@@ -884,6 +896,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/payouts'
     | '/_authenticated/dashboard/admin/refunds'
     | '/_authenticated/dashboard/admin/restaurants'
+    | '/_authenticated/dashboard/admin/security'
     | '/_authenticated/dashboard/admin/users'
     | '/_authenticated/dashboard/customer/chat'
     | '/_authenticated/dashboard/driver/available'
@@ -1332,6 +1345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminUsersRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/security': {
+      id: '/_authenticated/dashboard/admin/security'
+      path: '/security'
+      fullPath: '/dashboard/admin/security'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminSecurityRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/restaurants': {
       id: '/_authenticated/dashboard/admin/restaurants'
       path: '/restaurants'
@@ -1456,6 +1476,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminPayoutsRoute: typeof AuthenticatedDashboardAdminPayoutsRoute
   AuthenticatedDashboardAdminRefundsRoute: typeof AuthenticatedDashboardAdminRefundsRoute
   AuthenticatedDashboardAdminRestaurantsRoute: typeof AuthenticatedDashboardAdminRestaurantsRoute
+  AuthenticatedDashboardAdminSecurityRoute: typeof AuthenticatedDashboardAdminSecurityRoute
   AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
   AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
 }
@@ -1490,6 +1511,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminRefundsRoute,
     AuthenticatedDashboardAdminRestaurantsRoute:
       AuthenticatedDashboardAdminRestaurantsRoute,
+    AuthenticatedDashboardAdminSecurityRoute:
+      AuthenticatedDashboardAdminSecurityRoute,
     AuthenticatedDashboardAdminUsersRoute:
       AuthenticatedDashboardAdminUsersRoute,
     AuthenticatedDashboardAdminIndexRoute:

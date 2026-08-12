@@ -9,7 +9,7 @@ import { formatHTG } from "@/lib/format";
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { sendRefundStatusPush } from "@/lib/send-refund-push.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useReauth } from "@/hooks/useReauth";
+import { useReauth, isStepUpError } from "@/hooks/useReauth";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
@@ -50,7 +50,16 @@ function AdminRefunds() {
 
   const refunds = useQuery({ queryKey: ["admin-refunds"], queryFn: fetchRefunds });
   const sendPush = useServerFn(sendRefundStatusPush);
-  const { withReauth, dialogState } = useReauth();
+  const { withReauth, invalidateStepUp, dialogState } = useReauth();
+
+  function onStepUpAwareError(e: Error) {
+    if (isStepUpError(e)) {
+      invalidateStepUp("standard");
+      toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+      return;
+    }
+    toast.error(e.message);
+  }
 
   const review = useMutation({
     mutationFn: async ({
@@ -78,7 +87,7 @@ function AdminRefunds() {
       toast.success(v.decision === "approved" ? "Ranbousman apwouve" : "Ranbousman rejte");
       qc.invalidateQueries({ queryKey: ["admin-refunds"] });
     },
-    onError: (e) => toast.error(e.message),
+    onError: onStepUpAwareError,
   });
 
   const complete = useMutation({
@@ -95,7 +104,7 @@ function AdminRefunds() {
       toast.success("Ranbousman make trete");
       qc.invalidateQueries({ queryKey: ["admin-refunds"] });
     },
-    onError: (e) => toast.error(e.message),
+    onError: onStepUpAwareError,
   });
 
   const visible = (refunds.data ?? []).filter((r) => tab === "all" || r.status === "requested");
@@ -197,7 +206,9 @@ function AdminRefunds() {
                 <button
                   disabled={review.isPending}
                   onClick={() =>
-                    review.mutate({ id: r.id, decision: "rejected", adminNotes: notes[r.id] })
+                    withReauth(() =>
+                      review.mutate({ id: r.id, decision: "rejected", adminNotes: notes[r.id] }),
+                    )
                   }
                   className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                 >

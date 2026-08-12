@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useReauth, isStepUpError } from "@/hooks/useReauth";
+import { ReauthDialog } from "@/components/reauth-dialog";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
@@ -22,6 +24,7 @@ function AdminPayoutSettings() {
     natcash_account_name: "",
   });
   const [loaded, setLoaded] = useState(false);
+  const { withReauth, invalidateStepUp, dialogState } = useReauth();
 
   const settings = useQuery({
     queryKey: ["platform-payout-settings"],
@@ -62,7 +65,16 @@ function AdminPayoutSettings() {
       toast.success("Paramèt peman anrejistre");
       qc.invalidateQueries({ queryKey: ["platform-payout-settings"] });
     },
-    onError: (e) => toast.error(e.message ?? "Erè"),
+    onError: (e) => {
+      // Global payout configuration — STRICT tier (fresh MFA), see
+      // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md.
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message ?? "Erè");
+    },
   });
 
   return (
@@ -152,11 +164,12 @@ function AdminPayoutSettings() {
         <Button
           className="mt-6"
           disabled={save.isPending || settings.isLoading}
-          onClick={() => save.mutate()}
+          onClick={() => withReauth(() => save.mutate(), "strict")}
         >
           {save.isPending ? "Ap sove…" : "Sove paramèt yo"}
         </Button>
       </section>
+      <ReauthDialog state={dialogState} />
     </div>
   );
 }

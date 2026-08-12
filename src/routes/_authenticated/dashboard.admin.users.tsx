@@ -10,7 +10,7 @@ import { Download, Search, X, Ban, RotateCcw } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { useReauth } from "@/hooks/useReauth";
+import { useReauth, isStepUpError } from "@/hooks/useReauth";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
 const PAGE_SIZE = 50;
@@ -61,7 +61,7 @@ function AdminUsers() {
   const suspendFn = useServerFn(suspendUserAccount);
   const reactivateFn = useServerFn(reactivateUserAccount);
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
-  const { withReauth, dialogState } = useReauth();
+  const { withReauth, invalidateStepUp, dialogState } = useReauth();
 
   const users = useQuery({
     queryKey: ["admin-all-users", search, roleFilter, page],
@@ -128,6 +128,11 @@ function AdminUsers() {
     }
   }
 
+  // Modifying admin/super_admin privileges — STRICT tier (fresh MFA
+  // required, no password/OAuth fallback substitute; see
+  // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). On a STEP_UP_REQUIRED*
+  // rejection, invalidate the locally-cached verification so the very
+  // next click re-prompts instead of failing the same way silently.
   const addRole = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
       const { error } = await supabase.rpc("add_user_role_secure", {
@@ -140,7 +145,14 @@ function AdminUsers() {
       toast.success("Wòl ajoute");
       qc.invalidateQueries({ queryKey: ["admin-all-users"] });
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => {
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message);
+    },
   });
 
   const removeRole = useMutation({
@@ -155,7 +167,14 @@ function AdminUsers() {
       toast.success("Wòl retire");
       qc.invalidateQueries({ queryKey: ["admin-all-users"] });
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => {
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message);
+    },
   });
 
   const suspend = useMutation({
@@ -280,8 +299,9 @@ function AdminUsers() {
                                 requestConfirm(
                                   `Retire wòl ${ROLE_LABEL[r] ?? r} nan men ${u.email}?`,
                                   () =>
-                                    withReauth(() =>
-                                      removeRole.mutate({ userId: u.id, role: r as AppRole }),
+                                    withReauth(
+                                      () => removeRole.mutate({ userId: u.id, role: r as AppRole }),
+                                      "strict",
                                     ),
                                 )
                               }
@@ -311,8 +331,9 @@ function AdminUsers() {
                         </select>
                         <button
                           onClick={() =>
-                            withReauth(() =>
-                              addRole.mutate({ userId: u.id, role: pendingRoleToAdd }),
+                            withReauth(
+                              () => addRole.mutate({ userId: u.id, role: pendingRoleToAdd }),
+                              "strict",
                             )
                           }
                           disabled={addRole.isPending}

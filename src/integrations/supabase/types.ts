@@ -2477,6 +2477,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      check_admin_step_up_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       check_auth_rate_limit_secure: {
         Args: {
           _action: string;
@@ -3575,6 +3579,14 @@ export type Database = {
           role: string;
           user_id: string;
         }[];
+      };
+      log_admin_step_up_event_secure: {
+        Args: { _action: string };
+        Returns: undefined;
+      };
+      log_dashboard_access_denied_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
       };
       log_payment_provider_error_secure: {
         Args: {
