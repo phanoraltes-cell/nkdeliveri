@@ -68,24 +68,24 @@ Production Checkout AFTER:        HTTP 200
 
 ## 5. Before/After Matrix
 
-| Contrôle | BEFORE | AFTER | Résultat |
-|---|---|---|---|
-| Git HEAD | `8f9d5dc` | `8f9d5dc` | PASS (inchangé) |
-| Git status | 16 entrées préexistantes | identique | PASS (aucune dérive) |
-| Browser key Vercel | ABSENT | ABSENT | PASS (déjà résolu avant cette session) |
-| Tracking ID Vercel | ABSENT | ABSENT | PASS (déjà résolu avant cette session) |
-| Références browser key (code/config) | 0 | 0 | PASS |
-| Références tracking ID (code/config) | 0 | 0 | PASS |
-| Google Maps runtime | ABSENT | ABSENT | PASS |
-| Leaflet | PASS | PASS | PASS |
-| OpenStreetMap | PASS | PASS | PASS |
-| OSRM | PASS | PASS | PASS |
-| Typecheck | PASS | PASS (non re-testé, git diff prouve stabilité) | PASS |
-| Lint | PASS | PASS (idem) | PASS |
-| Build | PASS | PASS (idem) | PASS |
-| Homepage | HTTP 200 | HTTP 200 | PASS |
-| Checkout | HTTP 200 | HTTP 200 | PASS |
-| Google Cloud key | UNKNOWN (accès indisponible) | Réinitialisée/révoquée (rapporté par l'opérateur, 2026-08-11) | PASS (évidence opérateur, non outillée) |
+| Contrôle                             | BEFORE                       | AFTER                                                         | Résultat                                |
+| ------------------------------------ | ---------------------------- | ------------------------------------------------------------- | --------------------------------------- |
+| Git HEAD                             | `8f9d5dc`                    | `8f9d5dc`                                                     | PASS (inchangé)                         |
+| Git status                           | 16 entrées préexistantes     | identique                                                     | PASS (aucune dérive)                    |
+| Browser key Vercel                   | ABSENT                       | ABSENT                                                        | PASS (déjà résolu avant cette session)  |
+| Tracking ID Vercel                   | ABSENT                       | ABSENT                                                        | PASS (déjà résolu avant cette session)  |
+| Références browser key (code/config) | 0                            | 0                                                             | PASS                                    |
+| Références tracking ID (code/config) | 0                            | 0                                                             | PASS                                    |
+| Google Maps runtime                  | ABSENT                       | ABSENT                                                        | PASS                                    |
+| Leaflet                              | PASS                         | PASS                                                          | PASS                                    |
+| OpenStreetMap                        | PASS                         | PASS                                                          | PASS                                    |
+| OSRM                                 | PASS                         | PASS                                                          | PASS                                    |
+| Typecheck                            | PASS                         | PASS (non re-testé, git diff prouve stabilité)                | PASS                                    |
+| Lint                                 | PASS                         | PASS (idem)                                                   | PASS                                    |
+| Build                                | PASS                         | PASS (idem)                                                   | PASS                                    |
+| Homepage                             | HTTP 200                     | HTTP 200                                                      | PASS                                    |
+| Checkout                             | HTTP 200                     | HTTP 200                                                      | PASS                                    |
+| Google Cloud key                     | UNKNOWN (accès indisponible) | Réinitialisée/révoquée (rapporté par l'opérateur, 2026-08-11) | PASS (évidence opérateur, non outillée) |
 
 ## 6. Google Cloud status
 
@@ -124,6 +124,7 @@ Aucune régression. Leaflet, OpenStreetMap (tuiles + Nominatim) et OSRM confirm�
 ```
 
 Tous les critères de succès sont satisfaits :
+
 - Ancienne clé non utilisée par le code actuel (vérifié, plusieurs passes, 0 référence).
 - Clé Google Cloud réinitialisée/révoquée — rapporté explicitement par l'opérateur le 2026-08-11 (seule source d'évidence possible pour une action réalisée entièrement hors de cet environnement, aucun outil ne pouvant la vérifier indépendamment ici).
 - Les deux variables Vercel Production sont absentes (vérifié, plusieurs passes).

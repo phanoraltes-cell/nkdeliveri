@@ -11,10 +11,10 @@ Se déclenche sur chaque pull request vers `main` et sur chaque push sur
 limiter le temps d'exécution total au plus lent des deux plutôt qu'à leur
 somme :
 
-| Job | Contenu | Pourquoi |
-|---|---|---|
-| `quality` | `npm ci` → lint → `prettier --check` → typecheck → `check:migrations` → build de production | Le build utilise le même preset Nitro (`vercel`, épinglé dans `vite.config.ts`) que le vrai déploiement — un échec ici signifie que le déploiement échouerait aussi |
-| `migrations-db` | Boot d'une stack Supabase locale complète via la CLI officielle, application de toutes les migrations sur une base fraîche | La validation la plus réaliste possible sans identifiants du projet réel |
+| Job             | Contenu                                                                                                                    | Pourquoi                                                                                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quality`       | `npm ci` → lint → `prettier --check` → typecheck → `check:migrations` → build de production                                | Le build utilise le même preset Nitro (`vercel`, épinglé dans `vite.config.ts`) que le vrai déploiement — un échec ici signifie que le déploiement échouerait aussi |
+| `migrations-db` | Boot d'une stack Supabase locale complète via la CLI officielle, application de toutes les migrations sur une base fraîche | La validation la plus réaliste possible sans identifiants du projet réel                                                                                            |
 
 **Ce workflow ne déploie rien.** Vercel construit et déploie déjà ce même
 commit indépendamment via son intégration GitHub native (production sur
@@ -78,12 +78,12 @@ jour.
 
 ## Résumé des contrôles qualité avant fusion
 
-| Contrôle | Commande locale | Appliqué en CI |
-|---|---|---|
-| Lint (ESLint) | `npm run lint` | ✅ job `quality` |
-| Formatage (Prettier) | `npm run format:check` | ✅ job `quality` |
-| Typecheck (tsc) | `npm run typecheck` | ✅ job `quality` |
-| Build de production | `npm run build` | ✅ job `quality` |
-| Danger de surcharge RPC | `npm run check:migrations` | ✅ job `quality` |
-| Migrations rejouées sur base fraîche | `npx supabase start` | ✅ job `migrations-db` |
-| Tout en une commande | `npm run verify` | — (les jobs CI restent séparés pour un diagnostic plus clair) |
+| Contrôle                             | Commande locale            | Appliqué en CI                                                |
+| ------------------------------------ | -------------------------- | ------------------------------------------------------------- |
+| Lint (ESLint)                        | `npm run lint`             | ✅ job `quality`                                              |
+| Formatage (Prettier)                 | `npm run format:check`     | ✅ job `quality`                                              |
+| Typecheck (tsc)                      | `npm run typecheck`        | ✅ job `quality`                                              |
+| Build de production                  | `npm run build`            | ✅ job `quality`                                              |
+| Danger de surcharge RPC              | `npm run check:migrations` | ✅ job `quality`                                              |
+| Migrations rejouées sur base fraîche | `npx supabase start`       | ✅ job `migrations-db`                                        |
+| Tout en une commande                 | `npm run verify`           | — (les jobs CI restent séparés pour un diagnostic plus clair) |

@@ -10,15 +10,15 @@ dans le code — pas une checklist générique.
 stable (librairies tierces, changent rarement) en chunks nommés et
 long-terme cacheables :
 
-| Chunk | Contenu |
-|---|---|
-| `vendor-leaflet` | `leaflet`, `react-leaflet` |
-| `vendor-charts` | `recharts` et ses dépendances D3/Victory |
-| `vendor-pdf` | `jspdf`, `html2canvas`, `canvg`, `dompurify` |
-| `vendor-motion` | `framer-motion` |
-| `vendor-react` | `react`, `react-dom`, `scheduler` |
-| `vendor-tanstack` | tous les packages `@tanstack/*` |
-| `vendor-supabase` | `@supabase/*` |
+| Chunk             | Contenu                                      |
+| ----------------- | -------------------------------------------- |
+| `vendor-leaflet`  | `leaflet`, `react-leaflet`                   |
+| `vendor-charts`   | `recharts` et ses dépendances D3/Victory     |
+| `vendor-pdf`      | `jspdf`, `html2canvas`, `canvg`, `dompurify` |
+| `vendor-motion`   | `framer-motion`                              |
+| `vendor-react`    | `react`, `react-dom`, `scheduler`            |
+| `vendor-tanstack` | tous les packages `@tanstack/*`              |
+| `vendor-supabase` | `@supabase/*`                                |
 
 Le découpage est volontairement **grossier** (une poignée de chunks
 stables) plutôt qu'un chunk par package — un chunk par package évite les
@@ -68,7 +68,7 @@ coût propre ; ce projet a choisi un compromis délibéré entre les deux.
   `deliveries.driver_id`, etc.) — voir la liste complète dans
   [DATABASE.md § Index](./DATABASE.md#6-index-explicites-au-delà-des-pkunique-automatiques).
 - **Index partiel** sur `newsletter_subscribers` (`WHERE unsubscribed_at
-  IS NULL`) — évite d'indexer les lignes désabonnées, jamais interrogées
+IS NULL`) — évite d'indexer les lignes désabonnées, jamais interrogées
   par la diffusion.
 - **Pagination côté serveur** sur les listes admin volumineuses
   (`get_customers_admin`, `get_all_users_admin`, `get_restaurants_admin`) —

@@ -16,13 +16,13 @@ Date : 2026-08-07 (mission read-only/diagnostic — **aucun fichier du dépôt m
 
 ## 2. Comparaison des 5 sources
 
-| Source | Signature trouvée | Statut |
-|---|---|---|
-| **Frontend** — `src/lib/initiate-collect-payment.logic.ts` (3 sites d'appel `.rpc("create_collect_payment_secure", …)`) | `_payment_id, _external_reference, _status, _error?, _payment_method_requested?, _provider_transaction_id?` (nommés — l'ordre n'a pas d'importance pour PostgREST) | Appelle déjà la signature à 6 paramètres sur le 3ᵉ appel (création de la ligne `pending`/succès) |
-| **Types Supabase** — `src/integrations/supabase/types.ts:2650-2658` | `Args: { _error?, _external_reference, _payment_id, _payment_method_requested?, _provider_transaction_id?, _status? }` | Déjà aligné sur la signature à 6 paramètres |
+| Source                                                                                                                                     | Signature trouvée                                                                                                                                                                               | Statut                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend** — `src/lib/initiate-collect-payment.logic.ts` (3 sites d'appel `.rpc("create_collect_payment_secure", …)`)                    | `_payment_id, _external_reference, _status, _error?, _payment_method_requested?, _provider_transaction_id?` (nommés — l'ordre n'a pas d'importance pour PostgREST)                              | Appelle déjà la signature à 6 paramètres sur le 3ᵉ appel (création de la ligne `pending`/succès)                                                                                                   |
+| **Types Supabase** — `src/integrations/supabase/types.ts:2650-2658`                                                                        | `Args: { _error?, _external_reference, _payment_id, _payment_method_requested?, _provider_transaction_id?, _status? }`                                                                          | Déjà aligné sur la signature à 6 paramètres                                                                                                                                                        |
 | **Migrations (dépôt, source contrôlée)** — dernière définition : `supabase/migrations/20260805140000_stripe_collect_integration.sql:76-83` | `_payment_id uuid, _external_reference text, _status text DEFAULT 'pending', _error text DEFAULT NULL, _payment_method_requested text DEFAULT NULL, _provider_transaction_id text DEFAULT NULL` | Déjà la signature à 6 paramètres — `DROP FUNCTION IF EXISTS (...5 params...)` avant `CREATE FUNCTION` correctement présent (convention du projet respectée, `npm run check:migrations` : 0 hazard) |
-| **PostgreSQL production** (`pg_proc`, interrogé en direct — voir § 3) | `_payment_id uuid, _external_reference text, _status text, _error text, _payment_method_requested text` | **5 paramètres seulement — `_provider_transaction_id` absent** |
-| **`supabase migration list`** (linked, en direct) | — | Confirme : toutes les migrations jusqu'à `20260805130000` sont `remote` appliquées ; **`20260805140000` a `"remote":""` — jamais appliquée** |
+| **PostgreSQL production** (`pg_proc`, interrogé en direct — voir § 3)                                                                      | `_payment_id uuid, _external_reference text, _status text, _error text, _payment_method_requested text`                                                                                         | **5 paramètres seulement — `_provider_transaction_id` absent**                                                                                                                                     |
+| **`supabase migration list`** (linked, en direct)                                                                                          | —                                                                                                                                                                                               | Confirme : toutes les migrations jusqu'à `20260805130000` sont `remote` appliquées ; **`20260805140000` a `"remote":""` — jamais appliquée**                                                       |
 
 **Conclusion** : frontend, types et fichier de migration s'accordent tous les trois sur la signature à 6 paramètres. La production est seule en décalage, et ce décalage a une cause connue et unique (une migration écrite mais jamais poussée), pas une erreur de code.
 
@@ -37,11 +37,13 @@ SELECT pg_get_function_identity_arguments(p.oid)
 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
 WHERE n.nspname = 'public' AND p.proname = 'create_collect_payment_secure';
 ```
+
 → `_payment_id uuid, _external_reference text, _status text, _error text, _payment_method_requested text` (un seul overload, 5 paramètres).
 
 ### 3.2 Sondage PostgREST live (`POST /rest/v1/rpc/create_collect_payment_secure`, clé publique anonyme — appel sûr, sans écriture possible)
 
 **Avec `_provider_transaction_id`** (payload exact utilisé par le frontend déployé) :
+
 ```json
 HTTP 404
 {
@@ -52,10 +54,12 @@ HTTP 404
 ```
 
 **Sans `_provider_transaction_id`** (ancienne forme) :
+
 ```json
 HTTP 401
 { "code": "42501", "message": "permission denied for function create_collect_payment_secure" }
 ```
+
 → La fonction à 5 paramètres existe bel et bien (trouvée par PostgREST, bloquée seulement par le GRANT `authenticated`-only — normal et voulu) ; celle à 6 paramètres n'existe pas du tout côté serveur. C'est une preuve directe, à la lettre, du symptôme décrit par la mission.
 
 ### 3.3 Test transactionnel BEGIN/ROLLBACK (validation de la migration sans l'appliquer)
@@ -90,14 +94,14 @@ La seule action qui résout réellement le P0 est l'**application de la migratio
 
 ## 6. Vérifications exécutées
 
-| Vérification | Résultat |
-|---|---|
-| RPC visible dans PostgREST (signature à 6 paramètres) | ❌ Non — `PGRST202`, confirmé § 3.2 |
-| RPC callable (signature à 5 paramètres, celle actuellement en production) | ✅ Oui — trouvée, bloquée seulement par le GRANT anonyme (comportement normal), confirmé § 3.2 |
-| Schema cache cohérent avec l'état réel de la base | ✅ Oui — le cache PostgREST reflète fidèlement le seul overload à 5 paramètres présent dans `pg_proc`, cohérent avec `supabase migration list` (`20260805140000` non appliquée) |
-| Types régénérés | Non nécessaire — `types.ts` reflète déjà la signature cible à 6 paramètres, aucune dérive à corriger |
-| `npm run verify` (typecheck + lint + check:migrations + tests + build) | ✅ Vert — 0 erreur typecheck, 0 erreur lint (12 warnings pré-existants sans rapport), 122 migrations scannées/0 hazard, 105/105 tests, build production réussi |
-| Test transactionnel BEGIN/ROLLBACK contre la production | ✅ Réalisé — migration validée valide et non-ambiguë, rollback confirmé propre (aucune trace résiduelle) |
+| Vérification                                                              | Résultat                                                                                                                                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RPC visible dans PostgREST (signature à 6 paramètres)                     | ❌ Non — `PGRST202`, confirmé § 3.2                                                                                                                                             |
+| RPC callable (signature à 5 paramètres, celle actuellement en production) | ✅ Oui — trouvée, bloquée seulement par le GRANT anonyme (comportement normal), confirmé § 3.2                                                                                  |
+| Schema cache cohérent avec l'état réel de la base                         | ✅ Oui — le cache PostgREST reflète fidèlement le seul overload à 5 paramètres présent dans `pg_proc`, cohérent avec `supabase migration list` (`20260805140000` non appliquée) |
+| Types régénérés                                                           | Non nécessaire — `types.ts` reflète déjà la signature cible à 6 paramètres, aucune dérive à corriger                                                                            |
+| `npm run verify` (typecheck + lint + check:migrations + tests + build)    | ✅ Vert — 0 erreur typecheck, 0 erreur lint (12 warnings pré-existants sans rapport), 122 migrations scannées/0 hazard, 105/105 tests, build production réussi                  |
+| Test transactionnel BEGIN/ROLLBACK contre la production                   | ✅ Réalisé — migration validée valide et non-ambiguë, rollback confirmé propre (aucune trace résiduelle)                                                                        |
 
 ---
 

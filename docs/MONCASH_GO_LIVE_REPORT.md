@@ -3,8 +3,8 @@
 ## 🔴 GO LIVE REFUSÉ
 
 Arrêt à la **Phase 2 (Sauvegarde)**, conformément à la règle explicite de
-cette mission : *"En cas d'échec : STOP immédiatement. Produire un
-rapport détaillé. Ne jamais appliquer les étapes suivantes."* Aucune
+cette mission : _"En cas d'échec : STOP immédiatement. Produire un
+rapport détaillé. Ne jamais appliquer les étapes suivantes."_ Aucune
 migration n'a été appliquée, aucun commit créé, aucun push effectué —
 les Phases 3 à 13 n'ont pas été tentées.
 
@@ -37,11 +37,11 @@ la validation complète de la session précédente
 ([MONCASH_FINAL_PRODUCTION_VALIDATION.md](./MONCASH_FINAL_PRODUCTION_VALIDATION.md)),
 aucune dérive détectée :
 
-| Élément | État |
-|---|---|
-| Branche locale / distante | `dc780ea` des deux côtés — identiques |
-| Dépôt | 25 fichiers non commités (inchangé depuis la session précédente) |
-| Migrations locales vs Supabase | 4 migrations toujours non appliquées (`110000`, `120000`, `130000`, `20260731100000`) |
+| Élément                                      | État                                                                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Branche locale / distante                    | `dc780ea` des deux côtés — identiques                                                                                   |
+| Dépôt                                        | 25 fichiers non commités (inchangé depuis la session précédente)                                                        |
+| Migrations locales vs Supabase               | 4 migrations toujours non appliquées (`110000`, `120000`, `130000`, `20260731100000`)                                   |
 | Edge Functions / Cron / Webhooks / Dashboard | Inchangés — voir le rapport précédent pour le détail complet (toujours valide, rien n'a changé entre les deux sessions) |
 
 ---
@@ -53,7 +53,7 @@ aucune dérive détectée :
 1. `bash scripts/backup-database.sh` (le script de sauvegarde déjà
    existant dans ce projet, `supabase db dump --schema public,private`)
    → **échec** : `LegacyDockerRunError — Docker Desktop est un
-   prérequis`. Docker n'est pas disponible dans cet environnement
+prérequis`. Docker n'est pas disponible dans cet environnement
    d'exécution (déjà confirmé indisponible lors des sessions
    précédentes — `docker --version` échoue).
 2. Recherche d'une alternative sans Docker :
@@ -61,7 +61,13 @@ aucune dérive détectée :
    (n'utilise pas Docker — appel direct à l'API de gestion Supabase) →
    a fonctionné, résultat :
    ```json
-   {"region":"us-east-2","walg_enabled":true,"pitr_enabled":false,"backups":[],"physical_backup_data":{}}
+   {
+     "region": "us-east-2",
+     "walg_enabled": true,
+     "pitr_enabled": false,
+     "backups": [],
+     "physical_backup_data": {}
+   }
    ```
 
 ### Constat
@@ -101,6 +107,7 @@ Impossible de documenter une procédure de restauration précise tant
 qu'aucune sauvegarde n'existe pour ce projet. Une fois une sauvegarde
 obtenue (voir Recommandations), la procédure de restauration standard
 Supabase s'applique :
+
 - Sauvegarde physique (PITR) : `supabase backups restore --project-ref <ref> --timestamp <t>`.
 - Dump logique (`pg_dump`) : restauration via `psql`/`supabase db reset`
   suivi d'un rejeu du fichier — voir
@@ -131,11 +138,11 @@ n'a été tentée :
 
 ## Recommandations — actions correctives avant de relancer ce GO LIVE
 
-| # | Action | Qui | Bloquant ? |
-|---|---|---|---|
-| 1 | Faire tourner le mot de passe Postgres (incident ci-dessus) | Vous, via le Dashboard Supabase | Non-bloquant pour la suite technique, mais recommandé sans délai |
-| 2 | Obtenir une sauvegarde réelle de la base — deux options : (a) activer PITR sur ce projet Supabase (peut nécessiter un changement de plan tarifaire — à vérifier), ou (b) exécuter `bash scripts/backup-database.sh` depuis un poste où Docker est disponible (votre machine locale, un runner CI) | Vous | **Oui — bloquant, condition de la Phase 2** |
-| 3 | Une fois une sauvegarde obtenue, relancer cette mission GO LIVE depuis la Phase 3 | Moi, sur votre confirmation | — |
+| #   | Action                                                                                                                                                                                                                                                                                            | Qui                             | Bloquant ?                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------- |
+| 1   | Faire tourner le mot de passe Postgres (incident ci-dessus)                                                                                                                                                                                                                                       | Vous, via le Dashboard Supabase | Non-bloquant pour la suite technique, mais recommandé sans délai |
+| 2   | Obtenir une sauvegarde réelle de la base — deux options : (a) activer PITR sur ce projet Supabase (peut nécessiter un changement de plan tarifaire — à vérifier), ou (b) exécuter `bash scripts/backup-database.sh` depuis un poste où Docker est disponible (votre machine locale, un runner CI) | Vous                            | **Oui — bloquant, condition de la Phase 2**                      |
+| 3   | Une fois une sauvegarde obtenue, relancer cette mission GO LIVE depuis la Phase 3                                                                                                                                                                                                                 | Moi, sur votre confirmation     | —                                                                |
 
 **Aucune migration n'a été appliquée, aucun commit n'a été créé, aucun
 push n'a été effectué.** L'état du dépôt et de la base de production

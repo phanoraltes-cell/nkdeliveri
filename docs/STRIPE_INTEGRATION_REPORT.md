@@ -17,6 +17,7 @@ Découvert pendant ce chantier, jamais supposé silencieusement :
 - **HTG (Gourde) n'est presque certainement pas une devise que Stripe règle directement** (non confirmé avec certitude dans un sens ou dans l'autre par la documentation publique consultée — jamais affirmé comme un fait ici). Chaque montant dans cette application est en HTG.
 
 **Conséquence sur l'implémentation** : plutôt que de supposer une devise ou un taux de conversion (ce qui aurait pu sur-facturer ou sous-facturer chaque client), l'intégration est construite pour être **agnostique de la devise** :
+
 - `STRIPE_PRESENTMENT_CURRENCY` (defaut `"usd"`) — la devise réellement facturée à Stripe.
 - `STRIPE_HTG_CONVERSION_RATE` — **aucune valeur par défaut**, doit être définie explicitement (1 HTG = X unité de la devise choisie). Sans cette variable, `isStripeConfigured()` reste `false` et rien ne peut fonctionner.
 - Ce taux est **manuel**, pas un flux de change en direct — à mettre à jour à la main périodiquement (limite connue, pas un flux de change réel).
@@ -29,18 +30,19 @@ Découvert pendant ce chantier, jamais supposé silencieusement :
 
 ### 2.1 Fournisseur Stripe (Collect uniquement)
 
-| Fichier | Rôle |
-|---|---|
-| `stripe-config.server.ts` | Accès validé aux secrets (`STRIPE_SECRET_KEY`/`PUBLISHABLE_KEY`/`WEBHOOK_SECRET`/`PRESENTMENT_CURRENCY`/`HTG_CONVERSION_RATE`) — mêmes conventions que `plop-config.server.ts` |
-| `stripe-client.server.ts` | Wrapper autour du **SDK officiel `stripe`** (v22, installé — `npm install stripe@22`) — Checkout Sessions (création, récupération par ID), vérification de signature webhook via `stripe.webhooks.constructEvent` (jamais une comparaison HMAC réinventée à la main) |
-| `stripe-provider.server.ts` | Implémentation de l'interface `PaymentProvider` partagée — Collect uniquement, refuse `direction: "disburse"` comme tous les autres fournisseurs |
-| `stripe-collect-webhook-handler.server.ts` + `api.webhooks.stripe.collect.ts` | Webhook réel (contrairement à PLOP qui n'en a aucun) — Stripe recommande ce mécanisme comme principal ; mêmes patrons que `moncash-collect-webhook-handler.server.ts` |
+| Fichier                                                                       | Rôle                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stripe-config.server.ts`                                                     | Accès validé aux secrets (`STRIPE_SECRET_KEY`/`PUBLISHABLE_KEY`/`WEBHOOK_SECRET`/`PRESENTMENT_CURRENCY`/`HTG_CONVERSION_RATE`) — mêmes conventions que `plop-config.server.ts`                                                                                       |
+| `stripe-client.server.ts`                                                     | Wrapper autour du **SDK officiel `stripe`** (v22, installé — `npm install stripe@22`) — Checkout Sessions (création, récupération par ID), vérification de signature webhook via `stripe.webhooks.constructEvent` (jamais une comparaison HMAC réinventée à la main) |
+| `stripe-provider.server.ts`                                                   | Implémentation de l'interface `PaymentProvider` partagée — Collect uniquement, refuse `direction: "disburse"` comme tous les autres fournisseurs                                                                                                                     |
+| `stripe-collect-webhook-handler.server.ts` + `api.webhooks.stripe.collect.ts` | Webhook réel (contrairement à PLOP qui n'en a aucun) — Stripe recommande ce mécanisme comme principal ; mêmes patrons que `moncash-collect-webhook-handler.server.ts`                                                                                                |
 
 **Flux choisi** : Stripe Checkout Sessions (page hébergée, redirection) — même forme que le flux PLOP déjà en production (clic → redirection → retour → confirmation automatique), ce qui permet de réutiliser telles quelles l'infrastructure de polling existante (`useCollectPaymentPoll`) et les RPC (`create_collect_payment_secure`/`complete_collect_payment_secure`).
 
 ### 2.2 Écart de conception découvert et corrigé en cours de route
 
 **Stripe n'offre aucun moyen de retrouver une session par une référence arbitraire** (contrairement à PLOP, dont l'API de vérification accepte directement notre propre référence). Seule une recherche par l'identifiant de session propre à Stripe fonctionne. Corrigé en :
+
 - Ajoutant un paramètre `_provider_transaction_id` (optionnel) à `create_collect_payment_secure`, pour stocker l'ID de session Stripe **immédiatement** à la création.
 - Faisant en sorte que `poll-collect-payment.logic.ts` regarde la colonne `provider` de la transaction pour savoir quelle valeur transmettre à quel fournisseur (la référence externe pour PLOP, l'ID de session Stripe pour Stripe) — jamais supposé silencieusement.
 
@@ -67,13 +69,13 @@ Un deuxième bug potentiel a été trouvé et corrigé avant même d'être écri
 
 ## 3. Tests
 
-| Commande | Résultat |
-|---|---|
-| `npm run typecheck` | ✅ Propre |
-| `npm run lint` | ✅ 0 erreur (12 avertissements préexistants) |
-| `npm run check:migrations` | ✅ "122 migrations scanned, 0 unresolved hazards" |
-| `npx vitest run` | ✅ **105/105 tests** (15 nouveaux tests Stripe/dispatch) |
-| `npx vite build` | ✅ Réussi, 253 entrées precache PWA |
+| Commande                   | Résultat                                                 |
+| -------------------------- | -------------------------------------------------------- |
+| `npm run typecheck`        | ✅ Propre                                                |
+| `npm run lint`             | ✅ 0 erreur (12 avertissements préexistants)             |
+| `npm run check:migrations` | ✅ "122 migrations scanned, 0 unresolved hazards"        |
+| `npx vitest run`           | ✅ **105/105 tests** (15 nouveaux tests Stripe/dispatch) |
+| `npx vite build`           | ✅ Réussi, 253 entrées precache PWA                      |
 
 ### Tests unitaires clés ajoutés
 
@@ -93,13 +95,13 @@ Un deuxième bug potentiel a été trouvé et corrigé avant même d'être écri
 
 ## 4. Sécurité
 
-| Contrôle | Résultat |
-|---|---|
-| `STRIPE_SECRET_KEY`/`WEBHOOK_SECRET` hors du bundle client | ✅ Vérifié directement sur la sortie du build (`.vercel/output/static`) — aucune trace |
-| Vérification de signature webhook | ✅ Via le SDK officiel (`stripe.webhooks.constructEvent`), jamais une comparaison HMAC réimplémentée à la main |
-| `.server.ts` sur chaque fichier sensible | ✅ Le build échoue si un composant les importe directement |
-| RLS sur `stripe_api_logs` | ✅ Lecture admin uniquement, écriture service_role uniquement, triggers append-only (réutilise `private.prevent_log_mutation()`) |
-| Grants RPC | ✅ Inchangés pour les rôles déjà en place — `create_collect_payment_secure` reste `authenticated`, `complete_collect_payment_secure` reste `service_role` |
+| Contrôle                                                   | Résultat                                                                                                                                                  |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`/`WEBHOOK_SECRET` hors du bundle client | ✅ Vérifié directement sur la sortie du build (`.vercel/output/static`) — aucune trace                                                                    |
+| Vérification de signature webhook                          | ✅ Via le SDK officiel (`stripe.webhooks.constructEvent`), jamais une comparaison HMAC réimplémentée à la main                                            |
+| `.server.ts` sur chaque fichier sensible                   | ✅ Le build échoue si un composant les importe directement                                                                                                |
+| RLS sur `stripe_api_logs`                                  | ✅ Lecture admin uniquement, écriture service_role uniquement, triggers append-only (réutilise `private.prevent_log_mutation()`)                          |
+| Grants RPC                                                 | ✅ Inchangés pour les rôles déjà en place — `create_collect_payment_secure` reste `authenticated`, `complete_collect_payment_secure` reste `service_role` |
 
 ---
 

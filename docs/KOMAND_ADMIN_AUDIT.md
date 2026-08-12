@@ -35,13 +35,13 @@ public.order_chat_messages (0:N, chat déjà existant par commande)
 
 ## 2. Tous les statuts réellement présents (introspection live, pas une supposition)
 
-| Enum | Valeurs réelles |
-|---|---|
-| `order_status` | `pending, confirmed, preparing, ready, assigned, picked_up, delivered, cancelled, refunded` |
-| `delivery_status` | `assigned, en_route_pickup, picked_up, en_route_dropoff, delivered, cancelled` |
-| `payment_status` | `pending, awaiting_proof, under_review, paid, failed, refunded` |
-| `cash_confirmation_status` | `pending, customer_confirmed, driver_confirmed, validated, disputed` (spécifique au paiement cash à la livraison — double confirmation client+livreur) |
-| `refund_status` | `requested, approved, rejected, completed` |
+| Enum                             | Valeurs réelles                                                                                                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `order_status`                   | `pending, confirmed, preparing, ready, assigned, picked_up, delivered, cancelled, refunded`                                                                                                                                                                                                      |
+| `delivery_status`                | `assigned, en_route_pickup, picked_up, en_route_dropoff, delivered, cancelled`                                                                                                                                                                                                                   |
+| `payment_status`                 | `pending, awaiting_proof, under_review, paid, failed, refunded`                                                                                                                                                                                                                                  |
+| `cash_confirmation_status`       | `pending, customer_confirmed, driver_confirmed, validated, disputed` (spécifique au paiement cash à la livraison — double confirmation client+livreur)                                                                                                                                           |
+| `refund_status`                  | `requested, approved, rejected, completed`                                                                                                                                                                                                                                                       |
 | `dispute_status` (enum existant) | `open, resolved` — **mais la colonne réelle `disputes.status` est typée `text` en pratique**, pas directement cet enum (vérifié par `information_schema.columns` — à confirmer/documenter avant de s'y fier dans du code, écart entre enum déclaré et colonne réelle non expliqué par cet audit) |
 
 **Aucun nouveau statut créé pour cet audit** — conforme à la règle absolue.
@@ -50,15 +50,15 @@ public.order_chat_messages (0:N, chat déjà existant par commande)
 
 ## 3. Pages/RPC admin déjà existantes — non-duplication (Règle §26)
 
-| Existant | Portée | Chevauchement avec Komand |
-|---|---|---|
-| `dashboard.admin.disputes.tsx` + `get_disputes_admin` | Litiges uniquement | Komand **affiche** l'état dispute d'une commande (lecture), ne remplace pas la page de résolution dédiée |
-| `dashboard.admin.payments.tsx` + `review_manual_payment_secure` | Revue des preuves de paiement manuel | Komand **affiche** l'état paiement, le bouton d'action pointe vers ce flux existant, ne le duplique pas |
-| `dashboard.admin.finance.tsx` | Vue financière agrégée (chiffre d'affaires, etc.) | Aucun chevauchement — Komand est opérationnel, pas financier |
-| `dashboard.admin.customers.tsx` | Liste des clients | Komand **lie vers** le profil client, ne réimplémente pas la liste |
-| `dashboard.admin.drivers.tsx` / `.restaurants.tsx` | Gestion des comptes | Idem — liens, pas duplication |
-| `dashboard.admin.refunds.tsx` | Approbation/complétion des remboursements | Idem |
-| `dashboard.restaurant.orders.tsx`, `chat.$orderId.tsx`, `orders.$id.tsx` | Vues **non-admin** (restaurant/client/livreur) des commandes | Patterns UI/RPC à réutiliser comme référence, jamais une seconde logique de statut |
+| Existant                                                                 | Portée                                                       | Chevauchement avec Komand                                                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `dashboard.admin.disputes.tsx` + `get_disputes_admin`                    | Litiges uniquement                                           | Komand **affiche** l'état dispute d'une commande (lecture), ne remplace pas la page de résolution dédiée |
+| `dashboard.admin.payments.tsx` + `review_manual_payment_secure`          | Revue des preuves de paiement manuel                         | Komand **affiche** l'état paiement, le bouton d'action pointe vers ce flux existant, ne le duplique pas  |
+| `dashboard.admin.finance.tsx`                                            | Vue financière agrégée (chiffre d'affaires, etc.)            | Aucun chevauchement — Komand est opérationnel, pas financier                                             |
+| `dashboard.admin.customers.tsx`                                          | Liste des clients                                            | Komand **lie vers** le profil client, ne réimplémente pas la liste                                       |
+| `dashboard.admin.drivers.tsx` / `.restaurants.tsx`                       | Gestion des comptes                                          | Idem — liens, pas duplication                                                                            |
+| `dashboard.admin.refunds.tsx`                                            | Approbation/complétion des remboursements                    | Idem                                                                                                     |
+| `dashboard.restaurant.orders.tsx`, `chat.$orderId.tsx`, `orders.$id.tsx` | Vues **non-admin** (restaurant/client/livreur) des commandes | Patterns UI/RPC à réutiliser comme référence, jamais une seconde logique de statut                       |
 
 **Aucune page admin listant toutes les commandes n'existe aujourd'hui.** Komand comble un vide réel, confirmé par l'absence de fichier `dashboard.admin.orders.tsx` ou équivalent — ce n'est pas une duplication.
 
@@ -95,6 +95,7 @@ KOMAND HEALTH = f(order.status, payment.status, payment.cash_confirmation_status
 ```
 
 ### 🔴 `assistance_required` (priorité la plus haute)
+
 - Un litige existe avec `disputes.status = 'open'` pour cette commande, **OU**
 - Un remboursement est en attente : `refunds.status = 'requested'`, **OU**
 - Un paiement manuel attend une revue humaine : `payments.status = 'under_review'`, **OU**
@@ -103,6 +104,7 @@ KOMAND HEALTH = f(order.status, payment.status, payment.cash_confirmation_status
 Ces 4 conditions ont un point commun réel et vérifiable dans le code existant : **chacune a déjà une RPC d'admin dédiée pour la résoudre** (`resolve_dispute_secure`/`update_dispute_status_secure`, `review_refund_secure`/`complete_refund_secure`, `review_manual_payment_secure`) — Komand ne fait qu'agréger ce qui existe déjà et pointer vers l'action correcte, jamais une nouvelle logique de résolution.
 
 ### 🟠 `blocked`
+
 - La commande n'a **pas progressé** depuis un temps anormal dans un statut non-terminal. Seuils proposés (à valider, même style que `STUCK_PENDING_MINUTES` déjà utilisé dans `dashboard.admin.collect.tsx`) :
   - `pending` depuis > 15 min (le restaurant n'a pas confirmé)
   - `ready` depuis > 30 min sans livreur assigné (`deliveries.driver_id IS NULL`)
@@ -110,15 +112,18 @@ Ces 4 conditions ont un point commun réel et vérifiable dans le code existant 
 - `payments.status = 'failed'` et la commande n'est ni `cancelled` ni `refunded` (paiement mort, rien ne la fait progresser automatiquement)
 
 ### 🟡 `incomplete`
+
 - La commande est dans un statut actif (`pending`…`picked_up`) et une donnée/étape obligatoire manque, **sans** être encore assez ancienne pour être `blocked` :
   - `payments.status IN ('pending','awaiting_proof')` alors que la commande a dépassé `pending`
   - `order.status = 'ready'` sans `deliveries` créée du tout (jamais assignée)
   - `orders.address_id IS NULL` (adresse non liée à une adresse enregistrée — rare, mais réel puisque la colonne est nullable)
 
 ### 🟢 `complete`
+
 - `orders.status = 'delivered'` **ET** `payments.status = 'paid'` **ET** aucun litige `open` **ET** (si `cash_confirmation_status` n'est pas NULL) `= 'validated'`.
 
 ### Buckets terminaux séparés (pas "complete", pas "incomplete")
+
 - `cancelled` : `orders.status = 'cancelled'`
 - `refunded` : `orders.status = 'refunded'` (distinct d'un remboursement encore `requested`, qui lui est `assistance_required`)
 
@@ -128,17 +133,17 @@ Ceci correspond exactement aux filtres demandés en §8 du prompt (`Toutes / Com
 
 ## 6. Vue principale — colonnes et requête
 
-| Colonne demandée | Source |
-|---|---|
-| Commande | `orders.order_number` |
-| Client | `profiles.first_name/last_name` via `customer_id` |
-| Restaurant | `restaurants.name` |
-| Livreur | `drivers.first_name/last_name` via `deliveries.driver_id` (peut être NULL) |
-| Statut | `orders.status` (libellé Kreyòl, même convention que `dashboard.restaurant.orders.tsx`) |
-| Santé | Calculée (§5) |
-| Paiement | `payments.status` + `method` |
-| Dernière activité | `GREATEST(orders.updated_at, deliveries.updated_at, payments.updated_at)` |
-| Action | Lien vers le détail (§10), pas d'action inline dans le tableau |
+| Colonne demandée  | Source                                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Commande          | `orders.order_number`                                                                   |
+| Client            | `profiles.first_name/last_name` via `customer_id`                                       |
+| Restaurant        | `restaurants.name`                                                                      |
+| Livreur           | `drivers.first_name/last_name` via `deliveries.driver_id` (peut être NULL)              |
+| Statut            | `orders.status` (libellé Kreyòl, même convention que `dashboard.restaurant.orders.tsx`) |
+| Santé             | Calculée (§5)                                                                           |
+| Paiement          | `payments.status` + `method`                                                            |
+| Dernière activité | `GREATEST(orders.updated_at, deliveries.updated_at, payments.updated_at)`               |
+| Action            | Lien vers le détail (§10), pas d'action inline dans le tableau                          |
 
 Proposition : nouveau RPC `public.get_orders_admin(_search, _health_filter, _order_status_filter, _payment_status_filter, _restaurant_id, _driver_id, _date_from, _date_to, _limit, _offset)`, `SECURITY DEFINER`, retourne `TABLE(..., total_count bigint)` — **exactement le patron** de `get_disputes_admin`/`get_drivers_admin`. Pagination serveur réelle (Règle §23 — jamais `SELECT *` puis filtrage navigateur).
 
@@ -154,14 +159,14 @@ La raison exacte peut être dérivée directement des mêmes conditions que §5 
 
 **Aucune nouvelle capacité de modification créée.** Komand ne fait qu'orchestrer l'accès aux RPC déjà auditées et déjà step-up-protégées (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md) :
 
-| Action demandée dans le prompt | RPC/mécanisme réel existant | Nouveau ? |
-|---|---|---|
-| Vérifier un paiement | `review_manual_payment_secure` (déjà protégé step-up standard, voir remédiation précédente — à vérifier si couvert) | Non |
-| Résoudre un problème (litige) | `resolve_dispute_secure`, `update_dispute_status_secure` | Non |
-| Approuver/compléter un remboursement | `review_refund_secure`, `complete_refund_secure` (déjà STRICT/STANDARD step-up) | Non |
-| Contacter client/restaurant/livreur | **Aucun mécanisme de messagerie admin→acteur n'existe** pour l'instant en dehors du chat *par commande* déjà existant (`order_chat_messages`, admin peut déjà y participer — `add_dispute_message_secure` équivalent pour le chat général à vérifier) | À confirmer en Phase 2 — probablement réutiliser `order_chat_messages` (l'admin y poste déjà comme dans une conversation à 3, mécanisme confirmé actif dans `dashboard.admin.chat.tsx`) |
-| Ajouter une note interne | **N'existe pas encore** | **Oui — nouvelle table minimale requise**, voir §9 |
-| Marquer "assistance en cours" / "résolu" | **N'existe pas** comme état de supervision séparé du statut métier | **Oui — nouvelle colonne/table de supervision requise**, voir §9 |
+| Action demandée dans le prompt           | RPC/mécanisme réel existant                                                                                                                                                                                                                           | Nouveau ?                                                                                                                                                                               |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vérifier un paiement                     | `review_manual_payment_secure` (déjà protégé step-up standard, voir remédiation précédente — à vérifier si couvert)                                                                                                                                   | Non                                                                                                                                                                                     |
+| Résoudre un problème (litige)            | `resolve_dispute_secure`, `update_dispute_status_secure`                                                                                                                                                                                              | Non                                                                                                                                                                                     |
+| Approuver/compléter un remboursement     | `review_refund_secure`, `complete_refund_secure` (déjà STRICT/STANDARD step-up)                                                                                                                                                                       | Non                                                                                                                                                                                     |
+| Contacter client/restaurant/livreur      | **Aucun mécanisme de messagerie admin→acteur n'existe** pour l'instant en dehors du chat _par commande_ déjà existant (`order_chat_messages`, admin peut déjà y participer — `add_dispute_message_secure` équivalent pour le chat général à vérifier) | À confirmer en Phase 2 — probablement réutiliser `order_chat_messages` (l'admin y poste déjà comme dans une conversation à 3, mécanisme confirmé actif dans `dashboard.admin.chat.tsx`) |
+| Ajouter une note interne                 | **N'existe pas encore**                                                                                                                                                                                                                               | **Oui — nouvelle table minimale requise**, voir §9                                                                                                                                      |
+| Marquer "assistance en cours" / "résolu" | **N'existe pas** comme état de supervision séparé du statut métier                                                                                                                                                                                    | **Oui — nouvelle colonne/table de supervision requise**, voir §9                                                                                                                        |
 
 ---
 
@@ -170,12 +175,14 @@ La raison exacte peut être dérivée directement des mêmes conditions que §5 
 Après audit, **deux** ajouts de schéma sont nécessaires — pas plus :
 
 1. **`public.order_admin_notes`** — note interne liée à une commande, jamais visible client/restaurant/livreur.
+
    ```text
    id, order_id, author_id, note, created_at
    ```
+
    RLS : lecture/écriture admin/super_admin uniquement (`has_role`), jamais de policy pour les autres rôles. Append-only (mêmes triggers `private.prevent_log_mutation()` déjà réutilisés 5 fois dans ce projet) — une note d'assistance a la même exigence d'intégrité qu'un log d'audit.
 
-2. **État de supervision séparé** (Règle §15 : *"ne pas modifier le statut métier de la commande"*) — table `public.order_supervision_state` plutôt qu'une colonne sur `orders` (évite de toucher une table déjà RLS-sensible et déjà impliquée dans la récursion documentée §4) :
+2. **État de supervision séparé** (Règle §15 : _"ne pas modifier le statut métier de la commande"_) — table `public.order_supervision_state` plutôt qu'une colonne sur `orders` (évite de toucher une table déjà RLS-sensible et déjà impliquée dans la récursion documentée §4) :
    ```text
    order_id (PK, FK orders), state ('normal'|'assistance_required'|'assistance_in_progress'|'resolved'),
    set_by, set_at, note
@@ -197,9 +204,11 @@ Confirmé par lecture directe de `handle_new_user()` (trigger `AFTER INSERT ON a
 ### Destinataires (Règle §18)
 
 Patron déjà utilisé **8 fois** dans ce projet (dispute, annulation, paiements automatiques…) :
+
 ```sql
 ARRAY(SELECT ur.user_id FROM public.user_roles ur WHERE ur.role IN ('admin', 'super_admin'))
 ```
+
 Aucun risque de notifier client/restaurant/livreur — c'est le même mécanisme déjà éprouvé.
 
 ### Moteur réutilisé, pas dupliqué (Règle §18, §30)
@@ -213,6 +222,7 @@ Titre : Nouvo kliyan enskri
 Corps : [Prénom] [Nom] fèk kreye yon kont kliyan.
 data: { customer_id: <uuid> }
 ```
+
 Pas d'email/téléphone dans le corps affiché (déjà accessible en un clic via le profil, pas besoin de le dupliquer dans le texte de notification).
 
 ### UI notification — déjà entièrement construite, aucune nouvelle interface nécessaire
@@ -220,12 +230,14 @@ Pas d'email/téléphone dans le corps affiché (déjà accessible en un clic via
 **Découverte majeure de cet audit** : `src/routes/_authenticated/notifications.tsx` + la cloche dans `dashboard-header.tsx` forment **déjà** un système complet — non lues/lues, horodatage, onglets par catégorie, lien vers le contexte, marquer comme lu, mise à jour Realtime (`postgres_changes` sur `notifications`, déjà utilisé pour le badge). Tout ce que demande la Règle §20 existe déjà.
 
 Seuls ajustements nécessaires, tous additifs :
+
 - Ajouter `{ key: "admin", label: "Admin" }` à `CATEGORY_TABS` et une icône à `CATEGORY_ICON` dans `notifications.tsx`.
 - Le lien-vers-contexte actuel ne sait router que `data.order_id` → `/orders/$id` ou `/chat/$orderId`. Il faudra un cas `data.customer_id` → lien vers la fiche client admin (`dashboard.admin.customers.tsx` n'a pas de route de détail dédiée aujourd'hui à confirmer en Phase 2 — potentiellement un paramètre de recherche préremplie plutôt qu'une nouvelle route).
 
 ### Push — limite technique réelle trouvée
 
 Le patron établi (`send-*-push.functions.ts`) est **toujours déclenché par le client dont l'action vient de réussir**, via `requireSupabaseAuth` (JWT valide obligatoire). Pour un nouveau client, au moment exact du `signUp()`, **il n'y a souvent pas encore de session valide** (`mailer_autoconfirm: false`, confirmé lors de l'incident SMTP — `hasSession` peut être `false`). Deux options réelles, à trancher en Phase 2 :
+
 - **(a)** Notification in-app uniquement pour ce déclencheur précis (le badge + `/notifications` suffisent, l'admin les voit à sa prochaine visite ou en direct via Realtime s'il a le dashboard ouvert) — **recommandé pour la Phase 3**, le plus simple et le plus sûr.
 - **(b)** Un nouveau `send-new-customer-admin-push.functions.ts` appelé côté client juste après `signUp()`, en réutilisant le **même patron "pas de session garantie"** déjà validé et en production dans `register-documents.functions.ts` (garde-fous par âge de ligne + rate limit, sans dépendre d'un Bearer token obligatoire).
 
@@ -241,7 +253,7 @@ Le patron établi (`send-*-push.functions.ts`) est **toujours déclenché par le
 
 Réutilise directement `private.log_audit_event(_user_id, _role, _action, _metadata)` déjà en place, déjà utilisé par 10+ RPC. Les actions proposées (`komand_viewed`, `komand_assistance_note_added`, etc.) sont de simples nouvelles valeurs de `_action` — aucune nouvelle table, aucun nouveau mécanisme.
 
-⚠️ `komand_viewed` mérite réflexion : logger *chaque consultation* d'une commande par un admin pourrait générer un volume élevé pour un bénéfice limité — à trancher en Phase 2 (probablement limiter aux actions qui *changent* quelque chose : note ajoutée, statut de supervision modifié — pas la simple lecture).
+⚠️ `komand_viewed` mérite réflexion : logger _chaque consultation_ d'une commande par un admin pourrait générer un volume élevé pour un bénéfice limité — à trancher en Phase 2 (probablement limiter aux actions qui _changent_ quelque chose : note ajoutée, statut de supervision modifié — pas la simple lecture).
 
 ---
 

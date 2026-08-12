@@ -40,7 +40,7 @@ linéaire et véridique de ce qui a réellement tourné en production.
   délicate à annuler — pas un simple `DROP`, ces 3 fonctions doivent
   continuer d'exister (elles portent tout le cycle de vie asynchrone).
 - **Procédure de rollback** : nouvelle migration réappliquant le corps
-  *exact* de la version `20260730100000` pour les 3 fonctions
+  _exact_ de la version `20260730100000` pour les 3 fonctions
   (`CREATE OR REPLACE`, signature inchangée donc pas de `DROP`
   nécessaire pour celles-ci) — copier-coller le corps original de ce
   fichier, disponible dans l'historique Git

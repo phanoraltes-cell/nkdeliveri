@@ -44,7 +44,7 @@ l'audit complet des causes racines), ce script :
   schéma-seul depuis le début ;
 - **vérifie automatiquement le contenu** du dump produit : présence d'au
   moins un `CREATE TABLE`, `CREATE FUNCTION`, `CREATE TRIGGER`, `CREATE
-  POLICY`, et (en mode complet) d'au moins une ligne de données réelle —
+POLICY`, et (en mode complet) d'au moins une ligne de données réelle —
   si l'un de ces éléments manque, **le fichier est supprimé automatiquement**
   et le script s'arrête avec un message expliquant précisément ce qui a
   manqué, jamais silencieusement ;
@@ -111,7 +111,7 @@ Le script `scripts/restore-database.sh` :
 - affiche l'hôte cible (jamais le mot de passe) avant d'agir, pour permettre
   une vérification visuelle ;
 - exige le flag `--confirm` en second argument — sans lui, il s'arrête et
-  affiche seulement ce qu'il *aurait* fait.
+  affiche seulement ce qu'il _aurait_ fait.
 
 **Ne jamais exécuter une restauration directement contre la base de
 production** sans avoir d'abord validé le dump via `db:test-restore`
@@ -141,7 +141,7 @@ fichiers binaires eux-mêmes).
   Dashboard Vercel (Project → Settings → Environment Variables) et le
   Dashboard Supabase (API keys, service role key). Documenter systématiquement
   toute variable ajoutée dans `.env.example` (voir `docs/ENVIRONMENTS.md`) —
-  ce fichier sert de sauvegarde *structurelle* (quelles variables existent),
+  ce fichier sert de sauvegarde _structurelle_ (quelles variables existent),
   jamais de leurs valeurs réelles.
 - **Migrations SQL** : déjà versionnées dans `supabase/migrations/` — c'est
   leur sauvegarde par construction (l'historique Git). Voir
@@ -153,8 +153,8 @@ fichiers binaires eux-mêmes).
 
 ## Fréquence recommandée
 
-| Donnée | Sauvegarde automatique | Sauvegarde manuelle recommandée |
-|---|---|---|
-| Base de données | Quotidienne (Supabase) | Avant toute migration risquée |
+| Donnée          | Sauvegarde automatique      | Sauvegarde manuelle recommandée        |
+| --------------- | --------------------------- | -------------------------------------- |
+| Base de données | Quotidienne (Supabase)      | Avant toute migration risquée          |
 | Storage buckets | Durabilité infra (Supabase) | Mensuelle pour les documents sensibles |
-| Configuration | Git (migrations, code) | À chaque changement de secret/variable |
+| Configuration   | Git (migrations, code)      | À chaque changement de secret/variable |

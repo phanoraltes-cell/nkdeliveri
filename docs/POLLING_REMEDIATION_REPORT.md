@@ -17,9 +17,11 @@ Tout le reste (4 phases dégressives, jitter, pause/reprise sur visibilité, arr
 ## 2. Le bug trouvé — preuve directe
 
 ### Où
+
 `tick()`, appelée soit par le `setTimeout` planifié par `schedule()`, soit immédiatement par `handleVisibilityChange()` au retour de visibilité.
 
 ### Séquence du bug (avant correctif)
+
 1. Onglet caché depuis un moment → aucun tick programmé activement (`tick()` retourne tôt tant que `document.hidden`, sans jamais se reprogrammer pendant qu'il l'est).
 2. Onglet redevient visible → `handleVisibilityChange` efface le timer en attente et appelle `tick()` immédiatement. `tick()` démarre, envoie la requête réseau (`await pollRef.current(...)`) — **en attente**.
 3. **Avant que cette requête ne réponde**, l'onglet est caché puis revisible une seconde fois (bascule rapide, plausible : changement d'app mobile, écran qui se verrouille/déverrouille vite, alt-tab rapide) → `handleVisibilityChange` se déclenche à nouveau et appelle `tick()` **une deuxième fois** — rien ne l'empêchait, aucun verrou de réentrance n'existait.
@@ -28,6 +30,7 @@ Tout le reste (4 phases dégressives, jitter, pause/reprise sur visibilité, arr
 ### Correctif appliqué
 
 Un verrou de réentrance simple (`inFlight`) dans `tick()` :
+
 ```ts
 async function tick() {
   if (cancelled) return;
@@ -42,6 +45,7 @@ async function tick() {
   schedule();
 }
 ```
+
 Un deuxième `handleVisibilityChange` pendant qu'un tick est en vol devient un no-op sûr — le tick légitime, à sa résolution, reprogramme normalement la suite. Aucun autre comportement n'est modifié : le cas courant (un seul retour de visibilité, pas de bascule rapide) n'est jamais affecté par ce verrou.
 
 **Prouvé par un test dédié** (`REGRESSION — rapid hidden→visible→hidden→visible never starts a second overlapping tick...`) : avec un `poll()` dont la résolution est contrôlée manuellement (pour garder un tick "en vol"), le test déclenche exactement la séquence ci-dessus et vérifie que `poll` n'a été appelé **qu'une seule fois** malgré les deux retours de visibilité. Un second test vérifie que `onSettled` n'est jamais appelé plus d'une fois dans le même scénario si le tick en vol se termine par un règlement.
@@ -53,10 +57,16 @@ Un deuxième `handleVisibilityChange` pendant qu'un tick est en vol devient un n
 **Constat vérifié, pas supposé** : `vitest.config.ts` a `environment: "node"` ; ni `jsdom`, ni `happy-dom`, ni `@testing-library/react`, ni `react-test-renderer` ne sont présents dans `node_modules` — ce hook n'avait jamais eu de test unitaire (`src/hooks/__tests__/` n'existait même pas). Ajouter une dépendance de test DOM pour une mission au périmètre strictement limité à cette couche n'était pas justifié.
 
 La machine à états interne (auparavant piégée dans le corps du `useEffect`, dépendant directement des globales `document`/`setTimeout`) a été extraite en une fonction exportée `createPollController({ externalReference, createdAt, poll, onSettled, doc?, now?, setTimeoutFn?, clearTimeoutFn? })`, où `doc`/`now`/les timers sont **optionnels** et retombent sur les vraies globales en production. Le hook React devient un fin wrapper :
+
 ```ts
 useEffect(() => {
   if (!enabled || !externalReference || !createdAt) return;
-  const controller = createPollController({ externalReference, createdAt, poll: (a) => pollRef.current(a), onSettled: () => onSettledRef.current() });
+  const controller = createPollController({
+    externalReference,
+    createdAt,
+    poll: (a) => pollRef.current(a),
+    onSettled: () => onSettledRef.current(),
+  });
   controller.start();
   return () => controller.stop();
 }, [enabled, externalReference, createdAt]);
@@ -68,22 +78,22 @@ useEffect(() => {
 
 ## 4. Vérification, point par point
 
-| Point demandé | Constat | Preuve |
-|---|---|---|
-| **5s** (0–30s) | ✅ Intact | `intervalForElapsed(0..29999)` → 5000ms — testé aux bornes |
-| **10s** (30s–2min) | ✅ Intact | `intervalForElapsed(30000..119999)` → 10000ms — testé aux bornes |
-| **30s** (2–5min) | ✅ Intact | `intervalForElapsed(120000..299999)` → 30000ms — testé aux bornes |
-| **60s** (5–15min) | ✅ Intact | `intervalForElapsed(300000..899999)` → 60000ms — testé aux bornes |
-| **Jitter** | ✅ Intact — ±20%, plancher 1000ms | 200 itérations testées sur chaque borne |
-| **Pause onglet caché** | ✅ Intact — `tick()` ne fait rien tant que `doc.hidden`, jamais de reprogrammation pendant que caché | Test : 5 minutes simulées, onglet caché en permanence → 0 appel réseau |
-| **Reprise** | ✅ Intact — `visibilitychange` (visible) efface le timer en attente et déclenche une vérification immédiate | Test : caché 60s (0 appel), puis visible → 1 appel immédiat |
-| **Timeout** (15 min) | ✅ Intact — au-delà, `intervalForElapsed` renvoie `null`, plus aucune programmation | Test : 20 minutes simulées puis +1h → aucun appel supplémentaire après la fenêtre |
-| **Arrêt immédiat après paiement** | ✅ Intact — un tick non-`pending` appelle `onSettled()` puis ne se reprogramme jamais | Test : réponse `paid` au 1er tick → 1 seul appel, `onSettled` appelé 1 fois, +10 min sans nouvel appel |
-| **Arrêt après Realtime** | ✅ Intact, au niveau `controller.stop()` — le vrai déclencheur (`enabled` passe à `false` dans `orders.$id.tsx` quand Realtime invalide la requête) est hors périmètre de cette couche mais vérifié par lecture : `useRealtimeTableSync("payments", ...)` invalide `["order", id]`, ce qui fait disparaître `pendingCollectTransaction` au rendu suivant, donc `enabled:false`, donc démontage de l'effet | Test : `controller.stop()` puis +10 min → aucun appel supplémentaire |
-| **Polling infini** | ❌ Aucun risque trouvé — arrêt garanti à 15 min | Voir "Timeout" ci-dessus |
-| **Double polling** | 🔴 **Bug réel trouvé et corrigé** | § 2 |
-| **Memory leak** | ❌ Aucun trouvé — `stop()` retire bien le listener `visibilitychange` ET annule le timer en attente | Test : `removeEventListener` appelé avec exactement la même référence que `addEventListener` ; aucun appel réseau possible après `stop()` même si l'événement se déclenche encore |
-| **Duplication** | 🔴 Même cause que "double polling", même correctif | § 2 |
+| Point demandé                     | Constat                                                                                                                                                                                                                                                                                                                                                                                                   | Preuve                                                                                                                                                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **5s** (0–30s)                    | ✅ Intact                                                                                                                                                                                                                                                                                                                                                                                                 | `intervalForElapsed(0..29999)` → 5000ms — testé aux bornes                                                                                                                        |
+| **10s** (30s–2min)                | ✅ Intact                                                                                                                                                                                                                                                                                                                                                                                                 | `intervalForElapsed(30000..119999)` → 10000ms — testé aux bornes                                                                                                                  |
+| **30s** (2–5min)                  | ✅ Intact                                                                                                                                                                                                                                                                                                                                                                                                 | `intervalForElapsed(120000..299999)` → 30000ms — testé aux bornes                                                                                                                 |
+| **60s** (5–15min)                 | ✅ Intact                                                                                                                                                                                                                                                                                                                                                                                                 | `intervalForElapsed(300000..899999)` → 60000ms — testé aux bornes                                                                                                                 |
+| **Jitter**                        | ✅ Intact — ±20%, plancher 1000ms                                                                                                                                                                                                                                                                                                                                                                         | 200 itérations testées sur chaque borne                                                                                                                                           |
+| **Pause onglet caché**            | ✅ Intact — `tick()` ne fait rien tant que `doc.hidden`, jamais de reprogrammation pendant que caché                                                                                                                                                                                                                                                                                                      | Test : 5 minutes simulées, onglet caché en permanence → 0 appel réseau                                                                                                            |
+| **Reprise**                       | ✅ Intact — `visibilitychange` (visible) efface le timer en attente et déclenche une vérification immédiate                                                                                                                                                                                                                                                                                               | Test : caché 60s (0 appel), puis visible → 1 appel immédiat                                                                                                                       |
+| **Timeout** (15 min)              | ✅ Intact — au-delà, `intervalForElapsed` renvoie `null`, plus aucune programmation                                                                                                                                                                                                                                                                                                                       | Test : 20 minutes simulées puis +1h → aucun appel supplémentaire après la fenêtre                                                                                                 |
+| **Arrêt immédiat après paiement** | ✅ Intact — un tick non-`pending` appelle `onSettled()` puis ne se reprogramme jamais                                                                                                                                                                                                                                                                                                                     | Test : réponse `paid` au 1er tick → 1 seul appel, `onSettled` appelé 1 fois, +10 min sans nouvel appel                                                                            |
+| **Arrêt après Realtime**          | ✅ Intact, au niveau `controller.stop()` — le vrai déclencheur (`enabled` passe à `false` dans `orders.$id.tsx` quand Realtime invalide la requête) est hors périmètre de cette couche mais vérifié par lecture : `useRealtimeTableSync("payments", ...)` invalide `["order", id]`, ce qui fait disparaître `pendingCollectTransaction` au rendu suivant, donc `enabled:false`, donc démontage de l'effet | Test : `controller.stop()` puis +10 min → aucun appel supplémentaire                                                                                                              |
+| **Polling infini**                | ❌ Aucun risque trouvé — arrêt garanti à 15 min                                                                                                                                                                                                                                                                                                                                                           | Voir "Timeout" ci-dessus                                                                                                                                                          |
+| **Double polling**                | 🔴 **Bug réel trouvé et corrigé**                                                                                                                                                                                                                                                                                                                                                                         | § 2                                                                                                                                                                               |
+| **Memory leak**                   | ❌ Aucun trouvé — `stop()` retire bien le listener `visibilitychange` ET annule le timer en attente                                                                                                                                                                                                                                                                                                       | Test : `removeEventListener` appelé avec exactement la même référence que `addEventListener` ; aucun appel réseau possible après `stop()` même si l'événement se déclenche encore |
+| **Duplication**                   | 🔴 Même cause que "double polling", même correctif                                                                                                                                                                                                                                                                                                                                                        | § 2                                                                                                                                                                               |
 
 Bonus vérifié en cours d'audit : une valeur `createdAt` malformée (`NaN` après `Date.parse`) ne provoque ni crash ni boucle — `intervalForElapsed(NaN)` retourne `null` (échec fermé, jamais une boucle serrée). Testé explicitement.
 
@@ -103,10 +113,12 @@ Bonus vérifié en cours d'audit : une valeur `createdAt` malformée (`NaN` apr�
 ## 6. Conformité au périmètre imposé
 
 Confirmé via `git status` :
+
 ```
  M src/hooks/useCollectPaymentPoll.ts
 ?? src/hooks/__tests__/useCollectPaymentPoll.test.ts
 ```
+
 Aucun fichier RPC/SQL (`supabase/migrations/*`), aucun fichier PLOP (`plop-*.server.ts`), et `checkout.tsx`/`orders.$id.tsx` n'ont été **ni modifiés ni même effleurés** — `orders.$id.tsx` a été lu pour confirmer le câblage `enabled`/Realtime (§ 4, "Arrêt après Realtime"), jamais édité.
 
 ---

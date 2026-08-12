@@ -15,21 +15,21 @@ public/katkredi.png
 dossier comme le prompt le supposait — c'est un unique fichier `katkredi.png` directement à la
 racine de `public/`. Confirmé par inspection directe plutôt que supposé.
 
-| Propriété | Valeur |
-|---|---|
-| Dimensions | 447×447 px (carré, ratio 1:1) |
-| Format | PNG, RGBA (canal alpha présent) |
-| Poids | 14.8 Ko |
+| Propriété      | Valeur                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dimensions     | 447×447 px (carré, ratio 1:1)                                                                                                                                                               |
+| Format         | PNG, RGBA (canal alpha présent)                                                                                                                                                             |
+| Poids          | 14.8 Ko                                                                                                                                                                                     |
 | Contenu visuel | Illustration générique de deux cartes bancaires empilées (bleu/or) avec un symbole de réseau de paiement stylisé — **aucun logo Visa/Mastercard officiel**, pas de risque de marque déposée |
-| Variantes | Aucune — un seul fichier, pas de version alternative |
+| Variantes      | Aucune — un seul fichier, pas de version alternative                                                                                                                                        |
 
 Comparaison avec les logos de paiement déjà en place (pour contexte, Phase 15) :
 
-| Logo | Poids |
-|---|---|
+| Logo                     | Poids   |
+| ------------------------ | ------- |
 | `katkredi.png` (nouveau) | 14.8 Ko |
-| `moncash-logo-hero.png` | 23.8 Ko |
-| `natcash-logo-new.png` | 77.5 Ko |
+| `moncash-logo-hero.png`  | 23.8 Ko |
+| `natcash-logo-new.png`   | 77.5 Ko |
 
 Le nouvel asset est en fait le plus léger des quatre — aucun impact de performance.
 
@@ -47,14 +47,14 @@ Recherche dans le code : le paiement par carte existe déjà sous le nom **« Ka
 (provider `stripe`), avec sa propre entrée dans `checkout.tsx` (`METHODS`) et son propre logo déjà
 utilisé là-bas (`/stripe-card-logo.svg`).
 
-**Constat initial, avant validation utilisateur** : la valeur *seedée* par la dernière migration
+**Constat initial, avant validation utilisateur** : la valeur _seedée_ par la dernière migration
 touchant `payment_provider_settings` (`20260805140000_stripe_collect_integration.sql`) est
 `('stripe', visible: true, enabled: false, ..., 'Peman ak kat kredi ap disponib byento.')` — et
 aucune migration ultérieure ne modifie cette ligne. Le placeholder client dans `checkout.tsx`
 reflète la même valeur (`enabled: false`), avec le commentaire explicite « mirrors the migration's
 own seed values ».
 
-**Ce que cela signifie concrètement** : la valeur *seedée en base* est `enabled: false` — mais
+**Ce que cela signifie concrètement** : la valeur _seedée en base_ est `enabled: false` — mais
 `payment_provider_settings` a un vrai chemin d'écriture applicatif
 (`update_payment_provider_setting_secure`), c'est-à-dire qu'un administrateur peut l'avoir activé
 depuis, sans qu'aucune migration ne l'enregistre (les migrations ne capturent que l'état initial/
@@ -92,7 +92,7 @@ autres méthodes, toutes traitées en texte simple dans ce contexte. Conforme à
 explicite : « Ne pas afficher le logo partout simplement pour augmenter sa visibilité » /
 « Ne pas ajouter le logo simplement parce qu'il s'agit d'un dashboard ».
 
-*Note hors périmètre, non traitée* : `PAYMENT_METHOD_LABEL` ne contient pas d'entrée pour `stripe`
+_Note hors périmètre, non traitée_ : `PAYMENT_METHOD_LABEL` ne contient pas d'entrée pour `stripe`
 (ni pour `moncash_auto`/`natcash_auto`) — une commande payée par carte y afficherait la clé brute
 `stripe` plutôt qu'un libellé « Kat Kredi ». C'est une lacune de données textuelles préexistante,
 sans rapport avec l'intégration d'un logo — signalée mais non corrigée, hors du périmètre de cette
@@ -102,10 +102,10 @@ mission.
 
 ## 3. Composants modifiés
 
-| Fichier | Changement |
-|---|---|
+| Fichier                                | Changement                                                                                                 |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `src/components/home/hero-section.tsx` | Ajout d'un 4ᵉ item dans le badge « Peman disponib » (section confiance déjà existante, Option B du prompt) |
-| `src/components/site-footer.tsx` | Ajout d'un 4ᵉ item dans le tableau `payments` de la section « Peman » (Option C du prompt) |
+| `src/components/site-footer.tsx`       | Ajout d'un 4ᵉ item dans le tableau `payments` de la section « Peman » (Option C du prompt)                 |
 
 Aucun nouveau composant créé (voir §Phase 12 ci-dessous pour la justification).
 
@@ -151,10 +151,10 @@ incohérence, pas une amélioration.
 
 ## 6. Cohérence avec MonCash/NatCash (Phase 15)
 
-| Emplacement | Traitement MonCash/NatCash | Traitement Kat Kredi (nouveau) |
-|---|---|---|
-| Hero (`hero-section.tsx`) | `32×32`, `rounded`, `object-cover`, alt = nom court | Identique |
-| Footer (`site-footer.tsx`) | `40×40`, `rounded-xl`, `shadow-brand-xs`, alt+title = nom court | Identique |
+| Emplacement                | Traitement MonCash/NatCash                                      | Traitement Kat Kredi (nouveau) |
+| -------------------------- | --------------------------------------------------------------- | ------------------------------ |
+| Hero (`hero-section.tsx`)  | `32×32`, `rounded`, `object-cover`, alt = nom court             | Identique                      |
+| Footer (`site-footer.tsx`) | `40×40`, `rounded-xl`, `shadow-brand-xs`, alt+title = nom court | Identique                      |
 
 Même taille, même traitement d'angle/ombre, même position dans le flux (`flex-wrap`/`flex-nowrap`
 déjà en place, non modifié) — aucun des deux emplacements ne fait paraître la carte

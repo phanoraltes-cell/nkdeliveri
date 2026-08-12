@@ -22,17 +22,17 @@
 
 Confirmé par relecture directe du code, pas supposé :
 
-| Composant | État |
-|---|---|
-| `plop-client.server.ts` | Valide déjà `"natcash"` comme `payment_method` PLOP légitime (`VALID_PAYMENT_METHODS = ["moncash", "kashpaw", "natcash", "all"]`) — aucune modification nécessaire |
-| `plopProvider.initiatePayment()` | Transmet déjà `paymentMethod` tel quel à PLOP, quel que soit le wallet — aucune modification nécessaire |
-| `payment_method` (ENUM Postgres) | Contient déjà `'natcash'` (`CREATE TYPE public.payment_method AS ENUM ('stripe','moncash','natcash','kach')`) — **aucun `ALTER TYPE` nécessaire** |
-| `payment_provider_settings` (schéma de table) | Colonne `provider` en texte libre, sans contrainte `CHECK`/enum — une nouvelle ligne s'ajoute par un simple `INSERT`, pas de migration de schéma |
-| `update_payment_provider_setting_secure` (RPC) | Valide `_provider` contre les lignes existantes de la table, pas contre une liste figée dans le code — fonctionnera avec `natcash_auto` dès que la ligne existe |
-| `useCollectPaymentPoll` (polling client) | 100% agnostique du wallet — aucune modification |
-| `plop-reconcile.server.ts` (cron) | 100% agnostique du wallet — aucune modification |
-| `orders.$id.tsx` (texte "en attente de confirmation") | Déjà rendu générique lors de la remédiation post-incident (ne nomme plus aucun wallet) — aucune modification nécessaire |
-| `payment_transactions`/`plop_api_logs` (schéma) | Déjà génériques (colonnes texte, pas d'enum fournisseur) — aucune nouvelle table |
+| Composant                                             | État                                                                                                                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `plop-client.server.ts`                               | Valide déjà `"natcash"` comme `payment_method` PLOP légitime (`VALID_PAYMENT_METHODS = ["moncash", "kashpaw", "natcash", "all"]`) — aucune modification nécessaire |
+| `plopProvider.initiatePayment()`                      | Transmet déjà `paymentMethod` tel quel à PLOP, quel que soit le wallet — aucune modification nécessaire                                                            |
+| `payment_method` (ENUM Postgres)                      | Contient déjà `'natcash'` (`CREATE TYPE public.payment_method AS ENUM ('stripe','moncash','natcash','kach')`) — **aucun `ALTER TYPE` nécessaire**                  |
+| `payment_provider_settings` (schéma de table)         | Colonne `provider` en texte libre, sans contrainte `CHECK`/enum — une nouvelle ligne s'ajoute par un simple `INSERT`, pas de migration de schéma                   |
+| `update_payment_provider_setting_secure` (RPC)        | Valide `_provider` contre les lignes existantes de la table, pas contre une liste figée dans le code — fonctionnera avec `natcash_auto` dès que la ligne existe    |
+| `useCollectPaymentPoll` (polling client)              | 100% agnostique du wallet — aucune modification                                                                                                                    |
+| `plop-reconcile.server.ts` (cron)                     | 100% agnostique du wallet — aucune modification                                                                                                                    |
+| `orders.$id.tsx` (texte "en attente de confirmation") | Déjà rendu générique lors de la remédiation post-incident (ne nomme plus aucun wallet) — aucune modification nécessaire                                            |
+| `payment_transactions`/`plop_api_logs` (schéma)       | Déjà génériques (colonnes texte, pas d'enum fournisseur) — aucune nouvelle table                                                                                   |
 
 ---
 
@@ -45,9 +45,7 @@ Confirmé par relecture directe du code, pas supposé :
 - **`orderMethod`** : actuellement `method === "moncash_auto" ? "moncash" : method`. Doit devenir :
   ```ts
   const orderMethod =
-    method === "moncash_auto" ? "moncash" :
-    method === "natcash_auto" ? "natcash" :
-    method;
+    method === "moncash_auto" ? "moncash" : method === "natcash_auto" ? "natcash" : method;
   ```
 - **`payNumber`/`payName`** : déjà branchés sur `orderMethod === "moncash"`/`"natcash"` — fonctionneront sans changement une fois `orderMethod` correctement dérivé ci-dessus, MAIS ces variables ne servent qu'à l'affichage du flux **manuel** (numéro à qui envoyer l'argent) — un flux automatique n'en a pas besoin. Vérifier qu'elles ne s'affichent pas par erreur pour `natcash_auto` (actuellement, le bloc qui les affiche est gardé par `method === "moncash" || method === "natcash"`, donc `natcash_auto` n'est déjà pas concerné — à reconfirmer une fois le code écrit).
 - **Encadré explicatif** (actuellement affiché quand `method === "moncash_auto"`, mentionne "Payment Global") : à dupliquer/adapter pour les deux boutons automatiques séparément, avec un texte propre à chacun (ne plus mentionner "plizyè rezo peman" puisque ce n'est plus un seul pòtay multi-wallet du point de vue du client).
@@ -138,13 +136,13 @@ Trois éléments dans une seule migration (ou éventuellement deux, si vous pré
 
 ## 5. Risques identifiés à ce stade (avant tout code)
 
-| Risque | Sévérité | Mitigation prévue |
-|---|---|---|
-| Le garde RPC actuel (`moncash_auto` en dur) bloquerait silencieusement NatCash même une fois activé côté admin, si § 2.4/2.5 sont oubliés | 🔴 Élevé si non corrigé | Corrigé explicitement dans ce plan (§ 2.4, § 2.5) — point de vigilance n°1 de toute revue de code sur ce chantier |
-| Désactiver un des deux boutons (MonCash ou NatCash Automatik) affecterait l'autre par erreur, si le garde reste partagé | 🔴 Élevé si non corrigé | Même correctif que ci-dessus — un seul bug racine couvre les deux risques |
-| Notifications admin ambiguës (ne distinguant pas MonCash de NatCash) après un 3ᵉ changement de libellé | 🟡 Moyen | § 2.5.3 — rendre les 2 messages `notify_secure` dépendants du wallet réel |
-| `public/payment-global/` (36 fichiers, chantier de branding déjà livré) deviendrait orphelin | 🟢 Faible (cosmétique, aucune perte de fonctionnalité) | Signalé § 0 pour votre décision — rien à faire techniquement, aucune suppression proposée |
-| Tests e2e déjà obsolètes (rebranding précédent) accumuleraient une 2ᵉ couche de dette si non mis à jour ici | 🟡 Moyen | § 2.6 — inclus dans ce chantier plutôt que différé une nouvelle fois |
+| Risque                                                                                                                                    | Sévérité                                               | Mitigation prévue                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Le garde RPC actuel (`moncash_auto` en dur) bloquerait silencieusement NatCash même une fois activé côté admin, si § 2.4/2.5 sont oubliés | 🔴 Élevé si non corrigé                                | Corrigé explicitement dans ce plan (§ 2.4, § 2.5) — point de vigilance n°1 de toute revue de code sur ce chantier |
+| Désactiver un des deux boutons (MonCash ou NatCash Automatik) affecterait l'autre par erreur, si le garde reste partagé                   | 🔴 Élevé si non corrigé                                | Même correctif que ci-dessus — un seul bug racine couvre les deux risques                                         |
+| Notifications admin ambiguës (ne distinguant pas MonCash de NatCash) après un 3ᵉ changement de libellé                                    | 🟡 Moyen                                               | § 2.5.3 — rendre les 2 messages `notify_secure` dépendants du wallet réel                                         |
+| `public/payment-global/` (36 fichiers, chantier de branding déjà livré) deviendrait orphelin                                              | 🟢 Faible (cosmétique, aucune perte de fonctionnalité) | Signalé § 0 pour votre décision — rien à faire techniquement, aucune suppression proposée                         |
+| Tests e2e déjà obsolètes (rebranding précédent) accumuleraient une 2ᵉ couche de dette si non mis à jour ici                               | 🟡 Moyen                                               | § 2.6 — inclus dans ce chantier plutôt que différé une nouvelle fois                                              |
 
 Aucun risque de sécurité identifié (RLS, grants, `SECURITY DEFINER` restent inchangés — seule la condition interne d'un garde déjà existant change, pas son existence ni ses permissions).
 

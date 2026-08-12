@@ -12,19 +12,19 @@ comptage live des notifications, workflow Cash) est détaillé en entier.
 
 ## Résumé — statut par catégorie
 
-| Catégorie | Statut | Détail |
-|---|---|---|
-| Migrations | ❌ KO (attendu) | 4 migrations non appliquées, ordre confirmé — § Phase 1 |
-| Edge Functions / fonctions serveur | ⚠️ KO — **rien de nouveau déployé** | Tout le code de durcissement (Phases 3-10 précédentes) n'a jamais été commité — § Phase 2 |
-| Cron | ❌ KO — **n'existe pas en production** | `404` confirmé en direct sur l'URL live — § Phase 3 |
-| Variables d'environnement | ✅ OK (pour ce qui existe) / ⚠️ 1 variable demandée n'existe pas dans ce projet | § Phase 4 |
-| Webhooks | ✅ OK (déployé, fonctionnel) mais version **sans** les durcissements de la session précédente | § Phase 5 |
-| Sécurité | ⚠️ 1 constat déjà connu (R1, correctif écrit mais non appliqué) | § Phase 6 |
-| Dashboard | ⚠️ Version basique déployée (200 OK) ; version étendue (KPI/alertes) non déployée | § Phase 7 |
-| Workflows (MonCash auto/manuel, NatCash, Cash) | ✅ Manuel/NatCash/Cash inchangés et actifs ; MonCash Automatik toujours inerte par construction | § Phase 8 |
-| Notifications | ⚠️ Le moteur `notify_secure` n'est **pas** utilisé partout — constat précis, pas une supposition | § Phase 9 |
-| Performance | ✅ Conception vérifiée, aucune régression possible à mesurer (0 trafic réel) | § Phase 10 |
-| Résilience | ✅ 32/32 tests automatisés repassés avec succès à l'instant | § Phase 11 |
+| Catégorie                                      | Statut                                                                                           | Détail                                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Migrations                                     | ❌ KO (attendu)                                                                                  | 4 migrations non appliquées, ordre confirmé — § Phase 1                                   |
+| Edge Functions / fonctions serveur             | ⚠️ KO — **rien de nouveau déployé**                                                              | Tout le code de durcissement (Phases 3-10 précédentes) n'a jamais été commité — § Phase 2 |
+| Cron                                           | ❌ KO — **n'existe pas en production**                                                           | `404` confirmé en direct sur l'URL live — § Phase 3                                       |
+| Variables d'environnement                      | ✅ OK (pour ce qui existe) / ⚠️ 1 variable demandée n'existe pas dans ce projet                  | § Phase 4                                                                                 |
+| Webhooks                                       | ✅ OK (déployé, fonctionnel) mais version **sans** les durcissements de la session précédente    | § Phase 5                                                                                 |
+| Sécurité                                       | ⚠️ 1 constat déjà connu (R1, correctif écrit mais non appliqué)                                  | § Phase 6                                                                                 |
+| Dashboard                                      | ⚠️ Version basique déployée (200 OK) ; version étendue (KPI/alertes) non déployée                | § Phase 7                                                                                 |
+| Workflows (MonCash auto/manuel, NatCash, Cash) | ✅ Manuel/NatCash/Cash inchangés et actifs ; MonCash Automatik toujours inerte par construction  | § Phase 8                                                                                 |
+| Notifications                                  | ⚠️ Le moteur `notify_secure` n'est **pas** utilisé partout — constat précis, pas une supposition | § Phase 9                                                                                 |
+| Performance                                    | ✅ Conception vérifiée, aucune régression possible à mesurer (0 trafic réel)                     | § Phase 10                                                                                |
+| Résilience                                     | ✅ 32/32 tests automatisés repassés avec succès à l'instant                                      | § Phase 11                                                                                |
 
 **Verdict global : le code est prêt (testé, documenté, sans régression
 détectée) mais rien de la session de durcissement précédente n'est
@@ -37,12 +37,12 @@ production — voir la Checklist (livrable #13) pour la marche à suivre.
 
 ### Comparaison demandée
 
-| Source | État vérifié |
-|---|---|
-| Migrations locales (`supabase/migrations/`) | 111 fichiers, le plus récent : `20260731100000_revoke_anon_create_pending_payout.sql` |
-| Migrations appliquées sur Supabase (`supabase_migrations.schema_migrations`) | La plus récente en date MonCash : `20260730100000` uniquement |
-| Branche Git locale (`main`) | `HEAD = dc780ea` |
-| Branche distante (`origin/main`) | `dc780ea` — **identique**, aucune divergence |
+| Source                                                                       | État vérifié                                                                          |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Migrations locales (`supabase/migrations/`)                                  | 111 fichiers, le plus récent : `20260731100000_revoke_anon_create_pending_payout.sql` |
+| Migrations appliquées sur Supabase (`supabase_migrations.schema_migrations`) | La plus récente en date MonCash : `20260730100000` uniquement                         |
+| Branche Git locale (`main`)                                                  | `HEAD = dc780ea`                                                                      |
+| Branche distante (`origin/main`)                                             | `dc780ea` — **identique**, aucune divergence                                          |
 
 ### Migrations manquantes (non appliquées), ordre et impact
 
@@ -78,11 +78,11 @@ ni poussé.** `git log --oneline -1` = `dc780ea`, le commit de la
 campagne de tests — pas le durcissement. Vérifié en direct par appel
 HTTP réel sur le domaine de production :
 
-| Endpoint | Résultat réel | Interprétation |
-|---|---|---|
-| `POST https://www.nkdeliveri.com/api/webhooks/moncash` | `401` | Existe et fonctionne (rejette une requête non signée, comportement correct) — **version déployée avant la session de durcissement**, donc sans le trigger d'immutabilité ni les dernières notifications |
-| `GET https://www.nkdeliveri.com/api/cron/moncash-reconcile` | `404` | **N'existe pas en production** — le code n'a jamais été déployé |
-| `GET https://www.nkdeliveri.com/dashboard/admin/moncash` | `200` | Existe — **version de base** (statut/historique/erreurs), sans les KPI/alertes ajoutés la session précédente |
+| Endpoint                                                    | Résultat réel | Interprétation                                                                                                                                                                                          |
+| ----------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST https://www.nkdeliveri.com/api/webhooks/moncash`      | `401`         | Existe et fonctionne (rejette une requête non signée, comportement correct) — **version déployée avant la session de durcissement**, donc sans le trigger d'immutabilité ni les dernières notifications |
+| `GET https://www.nkdeliveri.com/api/cron/moncash-reconcile` | `404`         | **N'existe pas en production** — le code n'a jamais été déployé                                                                                                                                         |
+| `GET https://www.nkdeliveri.com/dashboard/admin/moncash`    | `200`         | Existe — **version de base** (statut/historique/erreurs), sans les KPI/alertes ajoutés la session précédente                                                                                            |
 
 Permissions/secrets pour ce qui est réellement déployé : voir Phase 4/6
 ci-dessous, inchangés. Logs : `moncash_api_logs` n'existe pas en
@@ -94,12 +94,12 @@ que supposé.
 
 ## Phase 3 — Cron
 
-| Point demandé | Résultat |
-|---|---|
-| Fréquence configurée (code local) | `*/5 * * * *` dans `vercel.json` |
-| Endpoint | `/api/cron/moncash-reconcile` |
-| Authentification | `Authorization: Bearer <CRON_SECRET>`, vérifié dans le handler |
-| Timeout | Hérite du timeout de fonction Vercel par défaut — aucune limite explicite fixée dans le code ; à confirmer contre le plan Vercel réel (non vérifiable sans y accéder) |
+| Point demandé                                | Résultat                                                                                                                                                                                  |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fréquence configurée (code local)            | `*/5 * * * *` dans `vercel.json`                                                                                                                                                          |
+| Endpoint                                     | `/api/cron/moncash-reconcile`                                                                                                                                                             |
+| Authentification                             | `Authorization: Bearer <CRON_SECRET>`, vérifié dans le handler                                                                                                                            |
+| Timeout                                      | Hérite du timeout de fonction Vercel par défaut — aucune limite explicite fixée dans le code ; à confirmer contre le plan Vercel réel (non vérifiable sans y accéder)                     |
 | **Sera-t-il exécuté toutes les 5 minutes ?** | **Non — impossible aujourd'hui.** `vercel.json` n'est pas sur `origin/main` (rien commité), donc Vercel n'a aucune définition de cron à enregistrer. Confirmé par le `404` de la Phase 2. |
 
 ### Scénario demandé : Webhook jamais reçu → Cron → Réconciliation → Paiement mis à jour
@@ -109,7 +109,7 @@ réelles.** Deux raisons indépendantes, toutes deux confirmées :
 
 1. Le cron n'est pas déployé (ci-dessus).
 2. Même s'il l'était, aucun paiement `provider_code='moncash_api' AND
-   status='pending'` ne peut exister en production (0 ligne `payouts`
+status='pending'` ne peut exister en production (0 ligne `payouts`
    au total, `create_pending_payout_secure` sans appelant vivant tant
    que le décaissement MonCash reste refusé).
 
@@ -129,17 +129,17 @@ identifiants MonCash.
 Vérifié en direct (`vercel env ls production`), aucune valeur affichée
 ci-dessous — seulement présence/absence :
 
-| Variable | Présente en production | Remarque |
-|---|---|---|
-| `MONCASH_CLIENT_ID` | ❌ Non | Attendu — voir MONCASH_SECRETS_AUDIT.md |
-| `MONCASH_CLIENT_SECRET` | ❌ Non | idem |
-| `MONCASH_MERCHANT_ID` | ❌ Non | idem |
-| `MONCASH_API_URL` | ❌ Non | idem |
-| `MONCASH_WEBHOOK_SECRET` | ❌ Non | idem |
-| `APP_URL` | **N'existe pas dans ce projet** | `grep -rn "APP_URL" src/` (hors `VITE_*`) → 0 résultat. L'équivalent réel est `SITE_URL`, une **constante codée en dur** (`src/lib/site-config.ts:11`, `"https://www.nkdeliveri.com"`), pas une variable d'environnement. Rien à vérifier ici — ce n'est pas un oubli, cette variable n'a jamais existé dans ce projet. |
-| `SUPABASE_URL` | ✅ Oui | |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Oui | |
-| `CRON_SECRET` | ❌ Non | Introduit la session précédente, jamais poussé sur Vercel — cohérent avec le cron non déployé (Phase 3) |
+| Variable                    | Présente en production          | Remarque                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MONCASH_CLIENT_ID`         | ❌ Non                          | Attendu — voir MONCASH_SECRETS_AUDIT.md                                                                                                                                                                                                                                                                                 |
+| `MONCASH_CLIENT_SECRET`     | ❌ Non                          | idem                                                                                                                                                                                                                                                                                                                    |
+| `MONCASH_MERCHANT_ID`       | ❌ Non                          | idem                                                                                                                                                                                                                                                                                                                    |
+| `MONCASH_API_URL`           | ❌ Non                          | idem                                                                                                                                                                                                                                                                                                                    |
+| `MONCASH_WEBHOOK_SECRET`    | ❌ Non                          | idem                                                                                                                                                                                                                                                                                                                    |
+| `APP_URL`                   | **N'existe pas dans ce projet** | `grep -rn "APP_URL" src/` (hors `VITE_*`) → 0 résultat. L'équivalent réel est `SITE_URL`, une **constante codée en dur** (`src/lib/site-config.ts:11`, `"https://www.nkdeliveri.com"`), pas une variable d'environnement. Rien à vérifier ici — ce n'est pas un oubli, cette variable n'a jamais existé dans ce projet. |
+| `SUPABASE_URL`              | ✅ Oui                          |                                                                                                                                                                                                                                                                                                                         |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Oui                          |                                                                                                                                                                                                                                                                                                                         |
+| `CRON_SECRET`               | ❌ Non                          | Introduit la session précédente, jamais poussé sur Vercel — cohérent avec le cron non déployé (Phase 3)                                                                                                                                                                                                                 |
 
 **Aucune valeur vide, aucune valeur de test détectée** parmi les
 variables réellement présentes — `vercel env ls` ne montre que
@@ -153,24 +153,24 @@ indiqué clairement comme limite plutôt que supposé correct).
 
 ## Phase 5 — Webhooks
 
-| Contrôle | Résultat |
-|---|---|
-| URL | `/api/webhooks/moncash`, confirmée répondre en production (`401` sur requête non signée) |
-| Méthode | `POST` |
-| Authentification | Aucune session — signature HMAC uniquement (attendu pour un webhook) |
-| Signature | Vérifiée par `moncashProvider.verifyWebhook()` — schéma générique non confirmé par MonCash publiquement (rappel, pas un nouveau constat) |
-| Validation | Idempotence via `UNIQUE(event_id)` sur `moncash_webhook_events` (table live, confirmée) |
-| Retry | Effectué côté MonCash (hors de notre contrôle) ; côté app, `moncash-reconcile.server.ts` compense un webhook qui ne reviendrait jamais — **non déployé** (Phase 3) |
+| Contrôle         | Résultat                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| URL              | `/api/webhooks/moncash`, confirmée répondre en production (`401` sur requête non signée)                                                                           |
+| Méthode          | `POST`                                                                                                                                                             |
+| Authentification | Aucune session — signature HMAC uniquement (attendu pour un webhook)                                                                                               |
+| Signature        | Vérifiée par `moncashProvider.verifyWebhook()` — schéma générique non confirmé par MonCash publiquement (rappel, pas un nouveau constat)                           |
+| Validation       | Idempotence via `UNIQUE(event_id)` sur `moncash_webhook_events` (table live, confirmée)                                                                            |
+| Retry            | Effectué côté MonCash (hors de notre contrôle) ; côté app, `moncash-reconcile.server.ts` compense un webhook qui ne reviendrait jamais — **non déployé** (Phase 3) |
 
 ### Tests demandés
 
-| Scénario | Résultat |
-|---|---|
-| Webhook valide | ✅ `moncash-webhook-handler.test.ts` — dispatch correct vers `complete_pending_payout_secure` |
-| Signature invalide | ✅ `401`, aucune RPC appelée |
-| Webhook en double | ✅ `23505` → `200`, aucun retraitement — **aussi vérifié contre le vrai schéma live** dans la session précédente (MONCASH_TEST_REPORT.md groupe E) |
-| Webhook retardé | ✅ Couvert par la réconciliation (non déployée — voir Phase 3) |
-| Webhook absent | ✅ Idem, `needs_manual_review` après épuisement de l'échéancier |
+| Scénario           | Résultat                                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Webhook valide     | ✅ `moncash-webhook-handler.test.ts` — dispatch correct vers `complete_pending_payout_secure`                                                      |
+| Signature invalide | ✅ `401`, aucune RPC appelée                                                                                                                       |
+| Webhook en double  | ✅ `23505` → `200`, aucun retraitement — **aussi vérifié contre le vrai schéma live** dans la session précédente (MONCASH_TEST_REPORT.md groupe E) |
+| Webhook retardé    | ✅ Couvert par la réconciliation (non déployée — voir Phase 3)                                                                                     |
+| Webhook absent     | ✅ Idem, `needs_manual_review` après épuisement de l'échéancier                                                                                    |
 
 Détail sécurité complet (score, constats classés) déjà produit :
 [MONCASH_WEBHOOK_SECURITY.md](./MONCASH_WEBHOOK_SECURITY.md) — rien de
@@ -182,14 +182,14 @@ changé depuis, reconfirmé par la présence du endpoint en production.
 
 Vérifié en direct, pas une réutilisation :
 
-| Élément | Constat |
-|---|---|
-| `create_pending_payout_secure` | `anon:EXECUTE` toujours présent en production (R1, correctif écrit dans `20260731100000`, **non appliqué**) |
-| `complete_pending_payout_secure`/`fail_pending_payout_secure` | `service_role`/`postgres` uniquement — correct, confirmé inchangé |
-| `moncash_webhook_events` (RLS + grants) | `authenticated: SELECT` seul (filtré ensuite par la policy admin-only), aucun `anon` — confirmé |
-| Buckets de stockage | `payout-proofs`, `payment-proofs`, `driver-documents`, `dispute-attachments`, `order-chat-attachments` : tous `public=false` — confirmé. Seuls `menu-photos`/`restaurant-assets` sont publics (attendu, non sensible) |
-| Secrets (Git/Vercel/local/logs/notifications) | Aucun trouvé — voir [MONCASH_SECRETS_AUDIT.md](./MONCASH_SECRETS_AUDIT.md), reconfirmé par les mêmes commandes à l'instant (Phase 4 ci-dessus) |
-| Logs (`moncash_api_logs`) | N'existe pas encore en production — rien à auditer avant application de `20260730130000` |
+| Élément                                                       | Constat                                                                                                                                                                                                               |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_pending_payout_secure`                                | `anon:EXECUTE` toujours présent en production (R1, correctif écrit dans `20260731100000`, **non appliqué**)                                                                                                           |
+| `complete_pending_payout_secure`/`fail_pending_payout_secure` | `service_role`/`postgres` uniquement — correct, confirmé inchangé                                                                                                                                                     |
+| `moncash_webhook_events` (RLS + grants)                       | `authenticated: SELECT` seul (filtré ensuite par la policy admin-only), aucun `anon` — confirmé                                                                                                                       |
+| Buckets de stockage                                           | `payout-proofs`, `payment-proofs`, `driver-documents`, `dispute-attachments`, `order-chat-attachments` : tous `public=false` — confirmé. Seuls `menu-photos`/`restaurant-assets` sont publics (attendu, non sensible) |
+| Secrets (Git/Vercel/local/logs/notifications)                 | Aucun trouvé — voir [MONCASH_SECRETS_AUDIT.md](./MONCASH_SECRETS_AUDIT.md), reconfirmé par les mêmes commandes à l'instant (Phase 4 ci-dessus)                                                                        |
+| Logs (`moncash_api_logs`)                                     | N'existe pas encore en production — rien à auditer avant application de `20260730130000`                                                                                                                              |
 
 Aucune permission excessive nouvelle, aucune fuite de données trouvée.
 Le seul écart de sécurité connu (R1) a déjà un correctif écrit et prêt,
@@ -200,23 +200,23 @@ migrations".
 
 ## Phase 7 — Dashboard Admin
 
-| Contrôle | Résultat |
-|---|---|
-| Page déployée | `200 OK` en production — **version de base** (statut, historique, erreurs) |
-| Version étendue (KPI, alertes, journal d'appels API) | Écrite, testée localement (build + typecheck), **non déployée** |
-| Correspondance avec les données réelles | Requêtes de la page exécutées en direct contre la base live : `moncash_payouts=0`, `provider_errors=0`, `moncash_active=false` — cohérent avec un canal inerte, aucune divergence trouvée |
+| Contrôle                                                                    | Résultat                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page déployée                                                               | `200 OK` en production — **version de base** (statut, historique, erreurs)                                                                                                                                                                                                                                                                                       |
+| Version étendue (KPI, alertes, journal d'appels API)                        | Écrite, testée localement (build + typecheck), **non déployée**                                                                                                                                                                                                                                                                                                  |
+| Correspondance avec les données réelles                                     | Requêtes de la page exécutées en direct contre la base live : `moncash_payouts=0`, `provider_errors=0`, `moncash_active=false` — cohérent avec un canal inerte, aucune divergence trouvée                                                                                                                                                                        |
 | KPI dépendant de `moncash_api_logs` (temps de réponse moyen, disponibilité) | **Ne peuvent pas être vérifiés contre la production** — la table n'existe pas encore ; si la version étendue du dashboard était déployée AVANT d'appliquer `20260730130000`, cette section précise planterait (requête sur une table inexistante) — **point d'ordre de déploiement à respecter**, déjà couvert par le Runbook mais à souligner explicitement ici |
 
 ---
 
 ## Phase 8 — Workflows
 
-| Flux | Statut | Vérification |
-|---|---|---|
-| MonCash Automatique (création → confirmation → webhook → notification → wallet → commission → audit log) | Code complet et testé unitairement (32 tests) ; **inatteignable en production** (décaissement B2C refusé par construction, 0 identifiant configuré) — le flux complet ne peut être observé qu'en environnement simulé, jamais en conditions réelles aujourd'hui | Tests unitaires + tests transactionnels rollback (session précédente) |
-| MonCash Manuel | Inchangé, actif, chemin de production réel depuis le début du module financier | `initiate_payout_secure` — aucune migration de cette session ne le touche (confirmé par lecture) |
-| NatCash Manuel | Idem | Idem |
-| **Cash** | Existe — pas documenté avant cette phase de validation | Voir ci-dessous |
+| Flux                                                                                                     | Statut                                                                                                                                                                                                                                                          | Vérification                                                                                     |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| MonCash Automatique (création → confirmation → webhook → notification → wallet → commission → audit log) | Code complet et testé unitairement (32 tests) ; **inatteignable en production** (décaissement B2C refusé par construction, 0 identifiant configuré) — le flux complet ne peut être observé qu'en environnement simulé, jamais en conditions réelles aujourd'hui | Tests unitaires + tests transactionnels rollback (session précédente)                            |
+| MonCash Manuel                                                                                           | Inchangé, actif, chemin de production réel depuis le début du module financier                                                                                                                                                                                  | `initiate_payout_secure` — aucune migration de cette session ne le touche (confirmé par lecture) |
+| NatCash Manuel                                                                                           | Idem                                                                                                                                                                                                                                                            | Idem                                                                                             |
+| **Cash**                                                                                                 | Existe — pas documenté avant cette phase de validation                                                                                                                                                                                                          | Voir ci-dessous                                                                                  |
 
 ### Découverte : le workflow Cash existe déjà, avec double confirmation exacte
 
@@ -294,9 +294,9 @@ direct ; la version qui les fait basculer sur `notify_secure`
   statuts de commande/livreur, rôles employés) reste sur des `INSERT`
   directs — décision **délibérée et documentée** dès la création du
   moteur (`20260723090000_notifications_engine_and_gps_sharing.sql`,
-  commentaire d'origine : *"The ~15 existing call sites are left as-is
+  commentaire d'origine : _"The ~15 existing call sites are left as-is
   deliberately — retrofitting an already-audited financial/dispute
-  pipeline is out of scope"*). Ce chantier MonCash n'a jamais eu le
+  pipeline is out of scope"_). Ce chantier MonCash n'a jamais eu le
   mandat de migrer ces 18 fonctions — le faire serait une modification
   de logique métier hors périmètre, explicitement interdite par les
   contraintes de cette mission ("Ne modifier aucun code sans
@@ -358,15 +358,15 @@ construction.
 
 ## Recommandations
 
-| # | Constat | Sévérité | Action |
-|---|---|---|---|
-| 1 | Rien de la session de durcissement précédente n'est commité/déployé | **Critique** (bloque toute mise en production du volet MonCash) | Revoir, committer, pousser — décision qui vous appartient, jamais faite automatiquement dans cette session |
-| 2 | 4 migrations non appliquées (ordre : 110000→120000→130000→R1) | **Critique** | Suivre [MONCASH_DEPLOYMENT_RUNBOOK.md](./MONCASH_DEPLOYMENT_RUNBOOK.md) |
-| 3 | R1 — `anon:EXECUTE` sur `create_pending_payout_secure` | **Moyenne** (non exploitable, défense en profondeur déjà correcte) | Appliquer `20260731100000` |
-| 4 | Dashboard étendu dépend de `moncash_api_logs` — ordre de déploiement à respecter | **Moyenne** | Toujours appliquer `20260730130000` avant de déployer le code du dashboard étendu |
-| 5 | `CRON_SECRET` absent de Vercel | **Moyenne** (bloque le cron même une fois déployé) | Générer et ajouter avant le déploiement du cron |
-| 6 | Le cron nécessite un plan Vercel supportant un intervalle <1/jour | **Faible/à confirmer** — non vérifiable sans accès au plan Vercel réel | Confirmer le plan avant de compter sur `*/5 * * * *` |
-| 7 | 18 fonctions préexistantes hors MonCash n'utilisent pas `notify_secure` | **Faible** (délibéré, documenté, hors périmètre) | Aucune action requise pour ce chantier ; envisager comme chantier séparé si souhaité |
+| #   | Constat                                                                          | Sévérité                                                               | Action                                                                                                     |
+| --- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Rien de la session de durcissement précédente n'est commité/déployé              | **Critique** (bloque toute mise en production du volet MonCash)        | Revoir, committer, pousser — décision qui vous appartient, jamais faite automatiquement dans cette session |
+| 2   | 4 migrations non appliquées (ordre : 110000→120000→130000→R1)                    | **Critique**                                                           | Suivre [MONCASH_DEPLOYMENT_RUNBOOK.md](./MONCASH_DEPLOYMENT_RUNBOOK.md)                                    |
+| 3   | R1 — `anon:EXECUTE` sur `create_pending_payout_secure`                           | **Moyenne** (non exploitable, défense en profondeur déjà correcte)     | Appliquer `20260731100000`                                                                                 |
+| 4   | Dashboard étendu dépend de `moncash_api_logs` — ordre de déploiement à respecter | **Moyenne**                                                            | Toujours appliquer `20260730130000` avant de déployer le code du dashboard étendu                          |
+| 5   | `CRON_SECRET` absent de Vercel                                                   | **Moyenne** (bloque le cron même une fois déployé)                     | Générer et ajouter avant le déploiement du cron                                                            |
+| 6   | Le cron nécessite un plan Vercel supportant un intervalle <1/jour                | **Faible/à confirmer** — non vérifiable sans accès au plan Vercel réel | Confirmer le plan avant de compter sur `*/5 * * * *`                                                       |
+| 7   | 18 fonctions préexistantes hors MonCash n'utilisent pas `notify_secure`          | **Faible** (délibéré, documenté, hors périmètre)                       | Aucune action requise pour ce chantier ; envisager comme chantier séparé si souhaité                       |
 
 Aucune anomalie critique nouvelle trouvée dans le code lui-même — tout
 ce qui précède concerne l'état de déploiement, pas la qualité ou la

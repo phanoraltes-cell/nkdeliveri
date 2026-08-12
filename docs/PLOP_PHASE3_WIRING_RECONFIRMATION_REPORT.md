@@ -17,15 +17,15 @@ Cette mission part du principe que :
 
 **Ce n'est pas exact.** Le branchement réel de PLOP comme moteur Collect a déjà été réalisé, testé, validé par vous, et est en production depuis le 4 août 2026 :
 
-| Preuve | Constat |
-|---|---|
-| `git log` | `9ff9f28 feat(payments): wire PLOP as the MonCash Automatik backend (Collect only)` — commit déjà poussé sur `main` |
-| `docs/PLOP_PHASE3_WIRING_REPORT.md` | Existe déjà sur disque (10 876 octets, écrit le 4 août), fait partie du commit `9ff9f28` — c'est le rapport de *ce même* travail de branchement, déjà livré |
-| Activation | `moncash_auto.enabled` a été passé à `true` par vous-même via le dashboard admin après le commit `b11a433` (rebranding "Peman Otomatik") |
-| Test réel | Une vraie commande a été passée après activation — redirection PLOP confirmée, capturée dans `vercel logs --json` (l'incident `plop_api_logs` manquant, depuis corrigé) |
-| Travail postérieur | `036a186 feat(payments): dynamic PLOP wallet selection per transaction` — une couche *supplémentaire* a même déjà été construite par-dessus ce branchement |
+| Preuve                              | Constat                                                                                                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `git log`                           | `9ff9f28 feat(payments): wire PLOP as the MonCash Automatik backend (Collect only)` — commit déjà poussé sur `main`                                                     |
+| `docs/PLOP_PHASE3_WIRING_REPORT.md` | Existe déjà sur disque (10 876 octets, écrit le 4 août), fait partie du commit `9ff9f28` — c'est le rapport de _ce même_ travail de branchement, déjà livré             |
+| Activation                          | `moncash_auto.enabled` a été passé à `true` par vous-même via le dashboard admin après le commit `b11a433` (rebranding "Peman Otomatik")                                |
+| Test réel                           | Une vraie commande a été passée après activation — redirection PLOP confirmée, capturée dans `vercel logs --json` (l'incident `plop_api_logs` manquant, depuis corrigé) |
+| Travail postérieur                  | `036a186 feat(payments): dynamic PLOP wallet selection per transaction` — une couche _supplémentaire_ a même déjà été construite par-dessus ce branchement              |
 
-**Conséquence** : refaire "Phase 3" depuis zéro serait non seulement redondant, mais risqué — cela reviendrait à retravailler par-dessus du code déjà en production et déjà durci par la Phase de sélection dynamique de wallet, avec un risque réel de régression sur ce qui fonctionne aujourd'hui. Conformément à la propre règle de cette mission ("*En cas de découverte d'une incohérence architecturale, arrêter immédiatement... documenter le problème... avant de poursuivre*"), ce tour a été traité comme une **ré-audit de confirmation** : vérifier, point par point, que l'état réel du code satisfait bien chacune des 10 étapes demandées — pas comme une nouvelle implémentation.
+**Conséquence** : refaire "Phase 3" depuis zéro serait non seulement redondant, mais risqué — cela reviendrait à retravailler par-dessus du code déjà en production et déjà durci par la Phase de sélection dynamique de wallet, avec un risque réel de régression sur ce qui fonctionne aujourd'hui. Conformément à la propre règle de cette mission ("_En cas de découverte d'une incohérence architecturale, arrêter immédiatement... documenter le problème... avant de poursuivre_"), ce tour a été traité comme une **ré-audit de confirmation** : vérifier, point par point, que l'état réel du code satisfait bien chacune des 10 étapes demandées — pas comme une nouvelle implémentation.
 
 Aucun fichier n'a été modifié. Le rapport ci-dessous documente ce qui est **déjà vrai**, avec preuves à l'appui (lecture directe du code, pas une supposition).
 
@@ -33,17 +33,17 @@ Aucun fichier n'a été modifié. Le rapport ci-dessous documente ce qui est **d
 
 ## Étape 1 — Points de branchement identifiés
 
-| Composant | Fichier | Rôle réel constaté |
-|---|---|---|
-| Registry historique | [`src/lib/payment-providers/index.server.ts`](../src/lib/payment-providers/index.server.ts) | `moncash_api → moncashProvider` (Digicel legacy) — **délibérément inchangé**, partagé avec le décaissement (`initiate-provider-payout.functions.ts`) |
-| Injection réelle du provider Collect | [`src/lib/initiate-collect-payment.logic.ts`](../src/lib/initiate-collect-payment.logic.ts) | Importe `plopProvider` directement (`await import("@/lib/payment-providers/plop-provider.server")`), **jamais** via le registry ci-dessus — c'est le seul point d'entrée Collect |
-| Provider PLOP | `src/lib/payment-providers/plop-provider.server.ts` | Implémente `PaymentProvider`, `code: "moncash_api"` conservé |
-| Gate d'activation métier | `src/lib/payment-provider-availability.ts` → `isProviderEnabled()` | Lit `payment_provider_settings.enabled` en base, RLS-scopé, aucune autorité frontend |
-| Gate de configuration secrets | `src/lib/payment-providers/plop-config.server.ts` → `isPlopConfigured()` | Vrai seulement si `PLOP_CLIENT_ID`/`PLOP_CLIENT_SECRET` sont définis |
-| Mapping d'affichage admin | `src/lib/payment-provider-display.ts` | `moncash_api → "PLOP"` — présentation seule, aucune donnée changée |
-| Checkout | `src/routes/checkout.tsx` | 4 méthodes (`moncash_auto`, `moncash`, `natcash`, `kach`) toutes présentes, structure intacte |
-| Poll côté client | `src/hooks/useCollectPaymentPoll.ts` + `src/lib/poll-collect-payment.{logic,functions}.ts` | Mécanisme de confirmation primaire |
-| Cron de réconciliation | `src/lib/payment-providers/plop-reconcile.server.ts` + `src/routes/api.cron.plop-reconcile.ts` | Filet de sécurité quotidien |
+| Composant                            | Fichier                                                                                        | Rôle réel constaté                                                                                                                                                               |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registry historique                  | [`src/lib/payment-providers/index.server.ts`](../src/lib/payment-providers/index.server.ts)    | `moncash_api → moncashProvider` (Digicel legacy) — **délibérément inchangé**, partagé avec le décaissement (`initiate-provider-payout.functions.ts`)                             |
+| Injection réelle du provider Collect | [`src/lib/initiate-collect-payment.logic.ts`](../src/lib/initiate-collect-payment.logic.ts)    | Importe `plopProvider` directement (`await import("@/lib/payment-providers/plop-provider.server")`), **jamais** via le registry ci-dessus — c'est le seul point d'entrée Collect |
+| Provider PLOP                        | `src/lib/payment-providers/plop-provider.server.ts`                                            | Implémente `PaymentProvider`, `code: "moncash_api"` conservé                                                                                                                     |
+| Gate d'activation métier             | `src/lib/payment-provider-availability.ts` → `isProviderEnabled()`                             | Lit `payment_provider_settings.enabled` en base, RLS-scopé, aucune autorité frontend                                                                                             |
+| Gate de configuration secrets        | `src/lib/payment-providers/plop-config.server.ts` → `isPlopConfigured()`                       | Vrai seulement si `PLOP_CLIENT_ID`/`PLOP_CLIENT_SECRET` sont définis                                                                                                             |
+| Mapping d'affichage admin            | `src/lib/payment-provider-display.ts`                                                          | `moncash_api → "PLOP"` — présentation seule, aucune donnée changée                                                                                                               |
+| Checkout                             | `src/routes/checkout.tsx`                                                                      | 4 méthodes (`moncash_auto`, `moncash`, `natcash`, `kach`) toutes présentes, structure intacte                                                                                    |
+| Poll côté client                     | `src/hooks/useCollectPaymentPoll.ts` + `src/lib/poll-collect-payment.{logic,functions}.ts`     | Mécanisme de confirmation primaire                                                                                                                                               |
+| Cron de réconciliation               | `src/lib/payment-providers/plop-reconcile.server.ts` + `src/routes/api.cron.plop-reconcile.ts` | Filet de sécurité quotidien                                                                                                                                                      |
 
 **Aucune modification effectuée à cette étape** — audit en lecture seule, exactement comme demandé.
 
@@ -80,13 +80,13 @@ Les 4 méthodes existent toujours, structure de tableau intacte. Seule `moncash_
 
 Lecture directe de `useCollectPaymentPoll.ts` :
 
-| Exigence de la mission | Constat |
-|---|---|
-| 5s → 10s → 30s → 60s sur 15 min | ✅ `PHASES` (lignes 25–30) : exactement ces 4 paliers |
-| Jitter | ✅ `withJitter()` — ±20 % |
-| Pause onglet caché | ✅ `document.hidden` vérifié à chaque tick, écouteur `visibilitychange` |
-| Reprise après refresh | ✅ Cadencé sur `createdAt` (`payment_transactions.created_at`), jamais sur l'heure de montage du composant — un refresh recalcule le bon palier au lieu de redémarrer à 5s |
-| Arrêt immédiat après confirmation | ✅ `if (result.status !== "pending") { onSettledRef.current(); return; }` |
+| Exigence de la mission            | Constat                                                                                                                                                                    |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5s → 10s → 30s → 60s sur 15 min   | ✅ `PHASES` (lignes 25–30) : exactement ces 4 paliers                                                                                                                      |
+| Jitter                            | ✅ `withJitter()` — ±20 %                                                                                                                                                  |
+| Pause onglet caché                | ✅ `document.hidden` vérifié à chaque tick, écouteur `visibilitychange`                                                                                                    |
+| Reprise après refresh             | ✅ Cadencé sur `createdAt` (`payment_transactions.created_at`), jamais sur l'heure de montage du composant — un refresh recalcule le bon palier au lieu de redémarrer à 5s |
+| Arrêt immédiat après confirmation | ✅ `if (result.status !== "pending") { onSettledRef.current(); return; }`                                                                                                  |
 
 Rien n'a été réécrit — c'est le mécanisme déjà en place depuis la Phase 3 originale.
 
@@ -106,40 +106,40 @@ Lecture directe de `plop-reconcile.server.ts` :
 
 ## Étape 8 — Sécurité
 
-| Vérification | Résultat |
-|---|---|
-| `PLOP_CLIENT_SECRET` jamais dans les logs | ✅ `grep` sur `plop-client.server.ts`/`plop-reconcile.server.ts` : le terme n'apparaît que dans un commentaire, jamais dans un appel `console.*` ou une insertion `plop_api_logs` |
-| `client_id` (seul identifiant que PLOP exige) redacté avant journalisation | ✅ `redactId()` — 4 premiers/derniers caractères seulement, appliqué avant `requestSummary` (lignes 312/405) |
-| Aucun secret envoyé au frontend | ✅ `plop-config.server.ts`/`plop-client.server.ts` sont `.server.ts` — le build échoue si un composant/route les importe directement (règle déjà en place, pas nouvelle) |
-| Aucun token dans les exceptions | ✅ `getPlopConfig()` ne liste, en cas d'échec, que les **noms** de variables manquantes (`PLOP_CLIENT_ID, PLOP_CLIENT_SECRET`), jamais une valeur |
-| Aucune URL sensible dans les réponses API | ✅ `PLOP_BASE_URL` est une constante publique documentée (`plopplop.solutionip.app`), aucune URL de callback/secret à exposer (PLOP n'a pas de webhook, § Contexte) |
+| Vérification                                                               | Résultat                                                                                                                                                                          |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PLOP_CLIENT_SECRET` jamais dans les logs                                  | ✅ `grep` sur `plop-client.server.ts`/`plop-reconcile.server.ts` : le terme n'apparaît que dans un commentaire, jamais dans un appel `console.*` ou une insertion `plop_api_logs` |
+| `client_id` (seul identifiant que PLOP exige) redacté avant journalisation | ✅ `redactId()` — 4 premiers/derniers caractères seulement, appliqué avant `requestSummary` (lignes 312/405)                                                                      |
+| Aucun secret envoyé au frontend                                            | ✅ `plop-config.server.ts`/`plop-client.server.ts` sont `.server.ts` — le build échoue si un composant/route les importe directement (règle déjà en place, pas nouvelle)          |
+| Aucun token dans les exceptions                                            | ✅ `getPlopConfig()` ne liste, en cas d'échec, que les **noms** de variables manquantes (`PLOP_CLIENT_ID, PLOP_CLIENT_SECRET`), jamais une valeur                                 |
+| Aucune URL sensible dans les réponses API                                  | ✅ `PLOP_BASE_URL` est une constante publique documentée (`plopplop.solutionip.app`), aucune URL de callback/secret à exposer (PLOP n'a pas de webhook, § Contexte)               |
 
 ---
 
 ## Compatibilité — aucune régression identifiée
 
-| Domaine | Constat |
-|---|---|
-| Cash | Méthode `kach` intacte dans `checkout.tsx`, ne passe jamais par `initiate-collect-payment.logic.ts` |
-| NatCash Manuel | Méthode `natcash` intacte, provider `natcashProvider` toujours dans le registry, non touché |
-| MonCash Manuel | Méthode `moncash` intacte |
-| Décaissements | `index.server.ts` (registry partagé) confirmé inchangé — `moncash_api → moncashProvider` reste la route de décaissement, jamais `plopProvider` |
+| Domaine                                    | Constat                                                                                                                                                                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cash                                       | Méthode `kach` intacte dans `checkout.tsx`, ne passe jamais par `initiate-collect-payment.logic.ts`                                                                                                          |
+| NatCash Manuel                             | Méthode `natcash` intacte, provider `natcashProvider` toujours dans le registry, non touché                                                                                                                  |
+| MonCash Manuel                             | Méthode `moncash` intacte                                                                                                                                                                                    |
+| Décaissements                              | `index.server.ts` (registry partagé) confirmé inchangé — `moncash_api → moncashProvider` reste la route de décaissement, jamais `plopProvider`                                                               |
 | Dashboard financier / wallets / commission | Aucun de ces fichiers n'apparaît dans le chemin Collect PLOP (`initiate-collect-payment.logic.ts`, `plop-provider.server.ts`, `plop-client.server.ts`, `poll-collect-payment.*`, `plop-reconcile.server.ts`) |
-| Notifications existantes | Non touchées — aucun fichier de notification modifié |
-| Realtime | Non touché |
-| Chat / GPS | Sans rapport avec ce périmètre, non touchés |
+| Notifications existantes                   | Non touchées — aucun fichier de notification modifié                                                                                                                                                         |
+| Realtime                                   | Non touché                                                                                                                                                                                                   |
+| Chat / GPS                                 | Sans rapport avec ce périmètre, non touchés                                                                                                                                                                  |
 
 ---
 
 ## Vérifications techniques — exécutées réellement
 
-| Commande | Résultat |
-|---|---|
-| `npm run typecheck` | ✅ Propre, aucune erreur |
-| `npm run lint` | ✅ 0 erreur (12 avertissements préexistants `react-refresh/only-export-components`, sans rapport avec PLOP) |
-| `npm run check:migrations` | ✅ "117 migrations scanned, 2 historical overload(s) all later cleaned up, no unresolved hazards" |
-| `npx vitest run` | ✅ **98/98 tests**, 9 fichiers |
-| `npx vite build` | ✅ Réussi — 252 entrées precache PWA (inclut les nouveaux assets `public/payment-global/` de la mission précédente, sans rapport avec ce tour) |
+| Commande                   | Résultat                                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`        | ✅ Propre, aucune erreur                                                                                                                       |
+| `npm run lint`             | ✅ 0 erreur (12 avertissements préexistants `react-refresh/only-export-components`, sans rapport avec PLOP)                                    |
+| `npm run check:migrations` | ✅ "117 migrations scanned, 2 historical overload(s) all later cleaned up, no unresolved hazards"                                              |
+| `npx vitest run`           | ✅ **98/98 tests**, 9 fichiers                                                                                                                 |
+| `npx vite build`           | ✅ Réussi — 252 entrées precache PWA (inclut les nouveaux assets `public/payment-global/` de la mission précédente, sans rapport avec ce tour) |
 
 Les 5 commandes de `npm run verify` ont donc chacune été exécutées avec succès (individuellement, pour un diagnostic plus lisible qu'un seul log concaténé).
 
@@ -153,10 +153,10 @@ Aucune modification de code dans ce tour → aucun impact de performance à mesu
 
 ## Risques résiduels
 
-| Niveau | Risque |
-|---|---|
+| Niveau          | Risque                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Négligeable** | Cette mission elle-même repose sur une prémisse obsolète (déjà signalé plus haut) — aucun risque technique, mais un risque de confusion si une future mission répète la même hypothèse sans vérifier l'état réel du dépôt d'abord. Recommandation : toujours confirmer `git log`/l'existence des rapports `docs/PLOP_PHASE*` avant de lancer une nouvelle "phase" de branchement PLOP. |
-| **Aucun autre** | Tous les points du cahier des charges (10 étapes) sont déjà satisfaits par le code existant, revérifiés ligne par ligne dans ce rapport. |
+| **Aucun autre** | Tous les points du cahier des charges (10 étapes) sont déjà satisfaits par le code existant, revérifiés ligne par ligne dans ce rapport.                                                                                                                                                                                                                                               |
 
 Aucun risque bloquant. Aucun bug critique ni incohérence architecturale découvert — seule la prémisse de la mission (pas le code) était erronée.
 

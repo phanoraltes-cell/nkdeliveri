@@ -67,13 +67,13 @@ nkdeliveri/
 
 ## Fichiers d'entrée clés
 
-| Fichier | Rôle |
-|---|---|
-| `src/router.tsx` | Crée le `QueryClient` (staleTime 30s par défaut — volontairement non nul, les données réellement temps réel comme `orders`/`deliveries` sont invalidées explicitement via Realtime, pas par ce staleTime) et le router TanStack à partir de `routeTree.gen.ts` |
-| `src/start.ts` | Enregistre `attachSupabaseAuth` comme middleware client global (nécessaire pour que le bearer token soit attaché à chaque appel `createServerFn`) et un middleware d'erreur serveur qui rend une page HTML de secours (`renderErrorPage`) sur toute exception non gérée |
-| `src/server.ts` | Point d'entrée Nitro ; initialise Sentry côté serveur et capture les erreurs échappées à h3 |
-| `src/sw.ts` | Source du Service Worker PWA (précache + stratégies d'offline) — voir [PWA.md](./PWA.md) |
-| `src/routeTree.gen.ts` | Régénéré à chaque `npm run dev`/`npm run build` par le plugin de routage TanStack — ne jamais l'éditer, il sera écrasé |
+| Fichier                | Rôle                                                                                                                                                                                                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/router.tsx`       | Crée le `QueryClient` (staleTime 30s par défaut — volontairement non nul, les données réellement temps réel comme `orders`/`deliveries` sont invalidées explicitement via Realtime, pas par ce staleTime) et le router TanStack à partir de `routeTree.gen.ts`          |
+| `src/start.ts`         | Enregistre `attachSupabaseAuth` comme middleware client global (nécessaire pour que le bearer token soit attaché à chaque appel `createServerFn`) et un middleware d'erreur serveur qui rend une page HTML de secours (`renderErrorPage`) sur toute exception non gérée |
+| `src/server.ts`        | Point d'entrée Nitro ; initialise Sentry côté serveur et capture les erreurs échappées à h3                                                                                                                                                                             |
+| `src/sw.ts`            | Source du Service Worker PWA (précache + stratégies d'offline) — voir [PWA.md](./PWA.md)                                                                                                                                                                                |
+| `src/routeTree.gen.ts` | Régénéré à chaque `npm run dev`/`npm run build` par le plugin de routage TanStack — ne jamais l'éditer, il sera écrasé                                                                                                                                                  |
 
 ## Dossier `tests/`
 

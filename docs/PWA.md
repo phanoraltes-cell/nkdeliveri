@@ -26,14 +26,14 @@ Source unique, écrite à la main avec les primitives Workbox
 `injectManifest`) — la liste de précache (`self.__WB_MANIFEST`) est
 substituée au build, le reste du fichier est exécuté tel quel.
 
-| Bloc | Comportement |
-|---|---|
-| Précache | `precacheAndRoute(self.__WB_MANIFEST)` + `cleanupOutdatedCaches()` — précharge tous les assets buildés listés dans le manifeste Workbox |
-| Navigation (pages) | `NetworkFirst` (timeout réseau 5s), exclut `/~oauth` et `/api/` |
-| Assets statiques (js/css/woff2/png/svg/jpg/jpeg/webp, même origine) | `CacheFirst`, 200 entrées max, 30 jours d'expiration |
-| Offline | `setCatchHandler` : toute navigation qui échoue à la fois en réseau et en précache retombe sur `/offline.html` (page statique sans dépendance JS, précachée comme le reste) |
-| Mise à jour | Écoute `message` de type `SKIP_WAITING` pour activer immédiatement une nouvelle version sur demande de l'UI |
-| Push | `push` → construit et affiche une `Notification` depuis le payload JSON envoyé par `pushToUsers` (voir [SERVICES.md](./SERVICES.md)) ; `notificationclick` → focus un onglet existant et y navigue, ou en ouvre un nouveau vers `payload.url` (par défaut `/notifications`) |
+| Bloc                                                                | Comportement                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Précache                                                            | `precacheAndRoute(self.__WB_MANIFEST)` + `cleanupOutdatedCaches()` — précharge tous les assets buildés listés dans le manifeste Workbox                                                                                                                                     |
+| Navigation (pages)                                                  | `NetworkFirst` (timeout réseau 5s), exclut `/~oauth` et `/api/`                                                                                                                                                                                                             |
+| Assets statiques (js/css/woff2/png/svg/jpg/jpeg/webp, même origine) | `CacheFirst`, 200 entrées max, 30 jours d'expiration                                                                                                                                                                                                                        |
+| Offline                                                             | `setCatchHandler` : toute navigation qui échoue à la fois en réseau et en précache retombe sur `/offline.html` (page statique sans dépendance JS, précachée comme le reste)                                                                                                 |
+| Mise à jour                                                         | Écoute `message` de type `SKIP_WAITING` pour activer immédiatement une nouvelle version sur demande de l'UI                                                                                                                                                                 |
+| Push                                                                | `push` → construit et affiche une `Notification` depuis le payload JSON envoyé par `pushToUsers` (voir [SERVICES.md](./SERVICES.md)) ; `notificationclick` → focus un onglet existant et y navigue, ou en ouvre un nouveau vers `payload.url` (par défaut `/notifications`) |
 
 ## Enregistrement (`src/lib/pwa-register.ts`)
 
@@ -42,7 +42,7 @@ substituée au build, le reste du fichier est exécuté tel quel.
 - **No-op** en dehors de la production (`import.meta.env.PROD`), en SSR
   (`typeof window === "undefined"`), si `serviceWorker` n'est pas supporté,
   ou si la page tourne **dans une iframe** (détection `window.self !==
-  window.top` — désenregistre même un Service Worker déjà actif dans ce
+window.top` — désenregistre même un Service Worker déjà actif dans ce
   cas, via `unregisterAppSw()`).
 - Un paramètre d'URL `?sw=off` force aussi le désenregistrement — utile en
   debug.
@@ -83,6 +83,7 @@ un jour, ce chemin doit être mis à jour en même temps.
 ## Vérification manuelle
 
 Après un `npm run build`, confirmer :
+
 1. `.vercel/output/static/sw.js` existe et contient une liste
    `precacheAndRoute` non vide.
 2. `.vercel/output/static/manifest.webmanifest` est présent et accessible.

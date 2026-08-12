@@ -9,14 +9,14 @@ l'audit de sécurité du webhook spécifiquement, voir
 
 ## Ce qui est journalisé, et où
 
-| Exigence | Table | Colonne(s) |
-|---|---|---|
-| Requêtes API | `moncash_api_logs` | `endpoint`, `method`, `attempt`, `request_summary` |
-| Réponses | `moncash_api_logs` | `http_status`, `response_summary` |
-| Erreurs | `moncash_api_logs` | `error`, `is_timeout` |
-| Délais | `moncash_api_logs` | `duration_ms` |
-| Webhooks | `moncash_webhook_events` | tout (déjà en place — voir MONCASH_WEBHOOK_SECURITY.md) |
-| Références MonCash | `moncash_api_logs` + `moncash_webhook_events` | `transaction_reference`, `provider_transaction_id` |
+| Exigence           | Table                                         | Colonne(s)                                              |
+| ------------------ | --------------------------------------------- | ------------------------------------------------------- |
+| Requêtes API       | `moncash_api_logs`                            | `endpoint`, `method`, `attempt`, `request_summary`      |
+| Réponses           | `moncash_api_logs`                            | `http_status`, `response_summary`                       |
+| Erreurs            | `moncash_api_logs`                            | `error`, `is_timeout`                                   |
+| Délais             | `moncash_api_logs`                            | `duration_ms`                                           |
+| Webhooks           | `moncash_webhook_events`                      | tout (déjà en place — voir MONCASH_WEBHOOK_SECURITY.md) |
+| Références MonCash | `moncash_api_logs` + `moncash_webhook_events` | `transaction_reference`, `provider_transaction_id`      |
 
 **Une ligne par tentative HTTP**, pas par appel logique — le connecteur
 réessaie automatiquement (timeout, 429, 5xx ; voir PAYMENT_PROVIDERS.md

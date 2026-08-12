@@ -53,29 +53,29 @@ Toute la documentation technique, métier et opérationnelle vit dans
 [`docs/`](./docs/), vérifiée directement contre le code — voir la note en
 tête de chaque document. Points d'entrée principaux :
 
-| Je veux comprendre... | Document |
-|---|---|
-| L'architecture générale et la frontière client/serveur | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
-| L'organisation des fichiers et les conventions de nommage | [PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md) |
-| Le routage (URLs, gardes de rôle) | [ROUTING.md](./docs/ROUTING.md) |
-| Le schéma de base de données (tables, RLS, RPC, triggers, buckets) | [DATABASE.md](./docs/DATABASE.md) |
-| La configuration et l'usage de Supabase | [SUPABASE.md](./docs/SUPABASE.md) |
-| La référence API (RPC + fonctions serveur) | [API.md](./docs/API.md) |
-| Les parcours métier complets, étape par étape | [WORKFLOWS.md](./docs/WORKFLOWS.md) |
-| Les composants React | [COMPONENTS.md](./docs/COMPONENTS.md) |
-| Les hooks personnalisés | [HOOKS.md](./docs/HOOKS.md) |
-| Les services et fonctions serveur | [SERVICES.md](./docs/SERVICES.md) |
-| Comment installer et développer localement | [DEVELOPMENT.md](./docs/DEVELOPMENT.md) |
-| La PWA (Service Worker, manifest, push) | [PWA.md](./docs/PWA.md) |
-| Les optimisations de performance | [PERFORMANCE.md](./docs/PERFORMANCE.md) |
-| La sécurité applicative | [SECURITY.md](./docs/SECURITY.md) |
-| La sécurité infrastructure (en-têtes, permissions, audit RLS) | [SECURITY_INFRASTRUCTURE.md](./docs/SECURITY_INFRASTRUCTURE.md) |
-| Le pipeline CI/CD et l'automatisation | [DEVOPS.md](./docs/DEVOPS.md) |
-| La procédure de migration Supabase | [MIGRATIONS.md](./docs/MIGRATIONS.md) |
-| Les environnements (dev/preprod/prod) | [ENVIRONMENTS.md](./docs/ENVIRONMENTS.md) |
-| L'audit et la mise à jour des dépendances | [DEPENDENCIES.md](./docs/DEPENDENCIES.md) |
-| La sauvegarde et restauration de la base | [BACKUP_RESTORE.md](./docs/BACKUP_RESTORE.md) |
-| La procédure complète de mise en production | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) |
+| Je veux comprendre...                                              | Document                                                        |
+| ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| L'architecture générale et la frontière client/serveur             | [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                       |
+| L'organisation des fichiers et les conventions de nommage          | [PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md)             |
+| Le routage (URLs, gardes de rôle)                                  | [ROUTING.md](./docs/ROUTING.md)                                 |
+| Le schéma de base de données (tables, RLS, RPC, triggers, buckets) | [DATABASE.md](./docs/DATABASE.md)                               |
+| La configuration et l'usage de Supabase                            | [SUPABASE.md](./docs/SUPABASE.md)                               |
+| La référence API (RPC + fonctions serveur)                         | [API.md](./docs/API.md)                                         |
+| Les parcours métier complets, étape par étape                      | [WORKFLOWS.md](./docs/WORKFLOWS.md)                             |
+| Les composants React                                               | [COMPONENTS.md](./docs/COMPONENTS.md)                           |
+| Les hooks personnalisés                                            | [HOOKS.md](./docs/HOOKS.md)                                     |
+| Les services et fonctions serveur                                  | [SERVICES.md](./docs/SERVICES.md)                               |
+| Comment installer et développer localement                         | [DEVELOPMENT.md](./docs/DEVELOPMENT.md)                         |
+| La PWA (Service Worker, manifest, push)                            | [PWA.md](./docs/PWA.md)                                         |
+| Les optimisations de performance                                   | [PERFORMANCE.md](./docs/PERFORMANCE.md)                         |
+| La sécurité applicative                                            | [SECURITY.md](./docs/SECURITY.md)                               |
+| La sécurité infrastructure (en-têtes, permissions, audit RLS)      | [SECURITY_INFRASTRUCTURE.md](./docs/SECURITY_INFRASTRUCTURE.md) |
+| Le pipeline CI/CD et l'automatisation                              | [DEVOPS.md](./docs/DEVOPS.md)                                   |
+| La procédure de migration Supabase                                 | [MIGRATIONS.md](./docs/MIGRATIONS.md)                           |
+| Les environnements (dev/preprod/prod)                              | [ENVIRONMENTS.md](./docs/ENVIRONMENTS.md)                       |
+| L'audit et la mise à jour des dépendances                          | [DEPENDENCIES.md](./docs/DEPENDENCIES.md)                       |
+| La sauvegarde et restauration de la base                           | [BACKUP_RESTORE.md](./docs/BACKUP_RESTORE.md)                   |
+| La procédure complète de mise en production                        | [DEPLOYMENT.md](./docs/DEPLOYMENT.md)                           |
 
 ## Contribuer
 

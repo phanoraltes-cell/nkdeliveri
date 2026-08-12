@@ -17,10 +17,10 @@ Composants dans le périmètre : Timeline, Kanban, StatusBadge, Button.
 (calcul manuel de luminance relative WCAG à partir des valeurs oklch, plus confirmation
 axe-core) du contraste entre `--status-bad` et son fond `--status-bad-soft` :
 
-| Mode  | Avant                       | Ratio avant | Après                        | Ratio après |
-|-------|------------------------------|-------------|-------------------------------|-------------|
-| Light | `var(--destructive)`         | 3.53:1 ❌ (seuil AA texte : 4.5:1) | `oklch(0.44 0.19 25)` | ~6.63:1 ✅ |
-| Dark  | `var(--destructive)`         | 4.50:1 ⚠️ (tout juste à la limite) | `oklch(0.75 0.19 25)` | ~4.95:1 ✅ |
+| Mode  | Avant                | Ratio avant                        | Après                 | Ratio après |
+| ----- | -------------------- | ---------------------------------- | --------------------- | ----------- |
+| Light | `var(--destructive)` | 3.53:1 ❌ (seuil AA texte : 4.5:1) | `oklch(0.44 0.19 25)` | ~6.63:1 ✅  |
+| Dark  | `var(--destructive)` | 4.50:1 ⚠️ (tout juste à la limite) | `oklch(0.75 0.19 25)` | ~4.95:1 ✅  |
 
 `--destructive` lui-même **n'a pas été modifié** — c'est un token beaucoup plus large et
 déjà en production (boutons destructifs, texte blanc dessus, déjà ≥4.5:1 dans tous ses
@@ -101,12 +101,12 @@ hors du périmètre d'une phase d'accessibilité front. J'ai :
 
 ## Findings classés
 
-| # | Sévérité | Constat | Action |
-|---|----------|---------|--------|
-| 1 | Réel, corrigé | `--status-bad` sous le seuil AA (3.53:1 light) | ✅ Corrigé |
-| 2 | Réel, corrigé | Timeline sans état accessible (lecteurs d'écran) | ✅ Corrigé |
-| 3 | Hors périmètre, déjà connu | Contraste `text-brand`/`text-brand-deep` (marque) | ❌ Non touché (contrainte marque) |
-| 4 | Hors périmètre, infra | SSR mock auth non session-aware — affecte plus de tests qu'identifié jusqu'ici | 📋 Recommandation de suivi, non corrigé |
+| #   | Sévérité                   | Constat                                                                        | Action                                  |
+| --- | -------------------------- | ------------------------------------------------------------------------------ | --------------------------------------- |
+| 1   | Réel, corrigé              | `--status-bad` sous le seuil AA (3.53:1 light)                                 | ✅ Corrigé                              |
+| 2   | Réel, corrigé              | Timeline sans état accessible (lecteurs d'écran)                               | ✅ Corrigé                              |
+| 3   | Hors périmètre, déjà connu | Contraste `text-brand`/`text-brand-deep` (marque)                              | ❌ Non touché (contrainte marque)       |
+| 4   | Hors périmètre, infra      | SSR mock auth non session-aware — affecte plus de tests qu'identifié jusqu'ici | 📋 Recommandation de suivi, non corrigé |
 
 ## Recommandation
 

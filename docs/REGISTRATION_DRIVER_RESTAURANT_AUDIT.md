@@ -25,21 +25,25 @@ Résultat observable pour l'utilisateur : il clique "Kreye kont restoran"/"Kreye
 
 **Méthode** : appel direct, en Node, de la fonction `baseSignUp()` telle qu'elle existe réellement dans `src/components/auth/register-shared.logic.ts` (RPC de rate-limit + `supabase.auth.signUp()`), avec la clé publique anon (jamais la service role), avec le payload exact que `driver-form.tsx:36-44` construit.
 
-| Étape | Attendu | Réel observé |
-|---|---|---|
-| `check_auth_rate_limit_secure` RPC | `true` | ✅ `true` |
-| `supabase.auth.signUp()` | `{data:{user,session}, error:null}` | ❌ `data:{user:null,session:null}`, `error` = `AuthRetryableFetchError`, `status:500` |
-| Message affiché à l'utilisateur (`translateAuthError`) | message clair | ❌ **`{}`** (littéral) |
-| Ligne créée dans `public.drivers` ? | 1 nouvelle | ❌ Aucune — compte jamais créé (§5) |
+| Étape                                                  | Attendu                             | Réel observé                                                                          |
+| ------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `check_auth_rate_limit_secure` RPC                     | `true`                              | ✅ `true`                                                                             |
+| `supabase.auth.signUp()`                               | `{data:{user,session}, error:null}` | ❌ `data:{user:null,session:null}`, `error` = `AuthRetryableFetchError`, `status:500` |
+| Message affiché à l'utilisateur (`translateAuthError`) | message clair                       | ❌ **`{}`** (littéral)                                                                |
+| Ligne créée dans `public.drivers` ?                    | 1 nouvelle                          | ❌ Aucune — compte jamais créé (§5)                                                   |
 
 Payload utilisé (non sensible) :
+
 ```json
 {
   "email": "clubcodinggonaives+driver<timestamp>@gmail.com",
   "account_type": "driver",
-  "first_name": "Audit", "last_name": "Driver",
-  "phone": "+50987654321", "address": "456 Audit Ave, Gonaïves",
-  "vehicle_type": "moto", "license_plate": "AUDIT-001"
+  "first_name": "Audit",
+  "last_name": "Driver",
+  "phone": "+50987654321",
+  "address": "456 Audit Ave, Gonaïves",
+  "vehicle_type": "moto",
+  "license_plate": "AUDIT-001"
 }
 ```
 
@@ -48,14 +52,17 @@ Payload utilisé (non sensible) :
 ## 3. Reproduction — Restaurant
 
 Identique, avec le payload de `restaurant-form.tsx:45-54` :
+
 ```json
 {
   "email": "clubcodinggonaives+restaurant<timestamp>@gmail.com",
   "account_type": "restaurant",
-  "first_name": "Audit Owner", "phone": "+50912345678",
+  "first_name": "Audit Owner",
+  "phone": "+50912345678",
   "restaurant_name": "Audit Test Resto",
   "restaurant_description": "Audit reproduction — safe to delete",
-  "restaurant_cuisine": "Kreyòl", "restaurant_address": "123 Audit St, Gonaïves"
+  "restaurant_cuisine": "Kreyòl",
+  "restaurant_address": "123 Audit St, Gonaïves"
 }
 ```
 
@@ -73,6 +80,7 @@ x-sb-error-code: unexpected_failure
 Résultat identique au Livreur : le SDK (`@supabase/auth-js`) transforme cette réponse pourtant explicite en `AuthRetryableFetchError` avec `.message === "{}"`.
 
 **Retest immédiat avec le même email** (pour vérifier si un compte fantôme a été créé au 1er essai) → **même erreur 500 "Error sending confirmation email"**, pas de "user already exists" :
+
 ```
 {"code":500,"error_code":"unexpected_failure","msg":"Error sending confirmation email", ...}
 ```
@@ -132,9 +140,10 @@ UI : toast.error("{}")  ⟵⟵⟵ **CE QUE L'UTILISATEUR VOIT LITTÉRALEMENT**
 
 ## 5. Différenciation des 3 cas (§12 de la mission)
 
-**✅ CAS A confirmé** : *Opération échoue → erreur masquée → `{}`.*
+**✅ CAS A confirmé** : _Opération échoue → erreur masquée → `{}`._
 
 Preuve que c'est bien un **rollback complet**, pas un cas B (succès partiel sans donnée) ni C (étape intermédiaire réussie) :
+
 - Retest du `signup` avec le **même email** → toujours `"Error sending confirmation email"`, jamais `"user_already_exists"`/`email_exists`.
 - Test décisif : `POST /auth/v1/token?grant_type=password` avec cet email+password → `400 invalid_credentials` ("Invalid login credentials"), **pas** `email_not_confirmed`. Si un compte non-confirmé existait réellement, GoTrue répondrait `email_not_confirmed`, pas `invalid_credentials`. Ceci prouve qu'**aucun utilisateur n'a été créé**, donc aucune ligne `restaurants`/`drivers`/`profiles`/`user_roles` (qui dépendent toutes du trigger `handle_new_user()` sur `auth.users`) n'a pu être insérée non plus.
 - Confirmé côté base : `supabase inspect db vacuum-stats --linked`, avant/après les 3 tentatives de cette session : `public.restaurants` reste à **1**, `public.drivers` reste à **2**, `public.profiles` reste à **7**, `public.user_roles` reste à **10** — aucune variation.
@@ -145,13 +154,13 @@ Preuve que c'est bien un **rollback complet**, pas un cas B (succès partiel san
 
 ## 6. Cause racine — classement
 
-| Composant | Rôle dans le bug |
-|---|---|
-| **Supabase Auth (GoTrue) — configuration SMTP/mailer du projet** | 🔴 **Cause racine primaire.** L'envoi de l'email de confirmation échoue systématiquement (`msg: "Error sending confirmation email"`). Ce réglage vit dans Supabase Dashboard → Authentication → Emails/SMTP (ou l'intégration mailer par défaut du projet) — **hors du code de ce dépôt**, non lisible via les outils disponibles dans cette session (pas d'accès Dashboard/Management API Auth-config). |
-| **`@supabase/auth-js` (dépendance tierce, v2.110.6)** | 🟠 **Cause racine secondaire, dans le code.** `handleError()` (fetch.js) ignore le corps JSON pour tout statut 500-530 et fabrique `"{}"` via `JSON.stringify(Response)`. Comportement de la librairie, pas de ce projet, mais directement responsable du symptôme visuel exact rapporté. |
-| **`src/lib/auth-errors.ts` (`translateAuthError`)** | 🟠 **Aggravant applicatif.** Aucun cas ne traite spécifiquement une erreur "réseau/serveur" (5xx, `AuthRetryableFetchError`) — elle retombe sur le message brut au lieu d'un message générique clair ("problème temporaire, réessayez"). C'est la seule pièce de ce bug qui est du code du projet et directement corrigible. |
-| Frontend (formulaires, `baseSignUp`, `handle_new_user()`, RLS, RPC métier) | ✅ **Non impliqués.** Toute la chaîne applicative métier fonctionne correctement — le blocage survient **avant** qu'elle ne soit jamais atteinte. |
-| `opening_hours` / `buildRestaurantHoursMetadata` (`{}` intentionnel) | ✅ **Vérifié, non impliqué.** `restaurant-form.logic.ts:17` retourne bien `{}` quand l'owner ne touche pas les horaires — mais c'est un objet de métadonnées interne jamais affiché à l'utilisateur, comportement voulu et déjà audité/corrigé le 2026-08-09 (ne produit plus `opening_hours` toujours vide, seulement quand réellement non renseigné). Sans rapport avec le `{}` visible aujourd'hui. |
+| Composant                                                                  | Rôle dans le bug                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Supabase Auth (GoTrue) — configuration SMTP/mailer du projet**           | 🔴 **Cause racine primaire.** L'envoi de l'email de confirmation échoue systématiquement (`msg: "Error sending confirmation email"`). Ce réglage vit dans Supabase Dashboard → Authentication → Emails/SMTP (ou l'intégration mailer par défaut du projet) — **hors du code de ce dépôt**, non lisible via les outils disponibles dans cette session (pas d'accès Dashboard/Management API Auth-config). |
+| **`@supabase/auth-js` (dépendance tierce, v2.110.6)**                      | 🟠 **Cause racine secondaire, dans le code.** `handleError()` (fetch.js) ignore le corps JSON pour tout statut 500-530 et fabrique `"{}"` via `JSON.stringify(Response)`. Comportement de la librairie, pas de ce projet, mais directement responsable du symptôme visuel exact rapporté.                                                                                                                |
+| **`src/lib/auth-errors.ts` (`translateAuthError`)**                        | 🟠 **Aggravant applicatif.** Aucun cas ne traite spécifiquement une erreur "réseau/serveur" (5xx, `AuthRetryableFetchError`) — elle retombe sur le message brut au lieu d'un message générique clair ("problème temporaire, réessayez"). C'est la seule pièce de ce bug qui est du code du projet et directement corrigible.                                                                             |
+| Frontend (formulaires, `baseSignUp`, `handle_new_user()`, RLS, RPC métier) | ✅ **Non impliqués.** Toute la chaîne applicative métier fonctionne correctement — le blocage survient **avant** qu'elle ne soit jamais atteinte.                                                                                                                                                                                                                                                        |
+| `opening_hours` / `buildRestaurantHoursMetadata` (`{}` intentionnel)       | ✅ **Vérifié, non impliqué.** `restaurant-form.logic.ts:17` retourne bien `{}` quand l'owner ne touche pas les horaires — mais c'est un objet de métadonnées interne jamais affiché à l'utilisateur, comportement voulu et déjà audité/corrigé le 2026-08-09 (ne produit plus `opening_hours` toujours vide, seulement quand réellement non renseigné). Sans rapport avec le `{}` visible aujourd'hui.   |
 
 ---
 
@@ -186,14 +195,16 @@ Aucun risque de régression identifié pour une correction du problème SMTP cô
 
 ---
 
-## 10. Recommandation de remédiation *(non implémentée — recommandation uniquement)*
+## 10. Recommandation de remédiation _(non implémentée — recommandation uniquement)_
 
 **Priorité 1 — Cause racine réelle (hors code, config Supabase Dashboard)** :
+
 - Vérifier Supabase Dashboard → Authentication → Emails / SMTP Settings du projet `dcsnmvbtsmdbwrwbutph`. Le pattern déjà rencontré deux fois sur ce projet (incident Stripe `mk_`, incident `RESEND_API_KEY` du 2026-08-09, voir mémoire `project_newsletter_email_remediation`) est une **clé API invalide/expirée/mal collée** — très probablement la même classe de problème ici, mais sur une **surface de configuration différente** (le SMTP de GoTrue est réglé dans le Dashboard Supabase, indépendamment de la variable d'environnement `RESEND_API_KEY` de l'app Vercel qui, elle, a déjà été corrigée le 2026-08-09 pour un usage différent — la newsletter). Il est très plausible que la clé SMTP de GoTrue n'ait jamais été mise à jour lors de cette rotation.
 - Vérifier aussi les quotas d'envoi du projet Supabase (le mailer par défaut de Supabase a des limites basses, pensé pour le développement, pas la production).
 
 **Priorité 2 — Filet de sécurité applicatif (`src/lib/auth-errors.ts`)** :
-- Ajouter, avant le fallback final, un cas explicite pour les erreurs réseau/serveur (`error instanceof AuthRetryableFetchError` ou `status >= 500`, ou une chaîne de message qui ressemble à du JSON vide/illisible) → retourner un message générique clair en Kreyòl (ex. *"Sèvè a gen yon pwoblèm tanporè. Tanpri eseye ankò nan kèk minit."*) au lieu de laisser passer le message brut tel quel.
+
+- Ajouter, avant le fallback final, un cas explicite pour les erreurs réseau/serveur (`error instanceof AuthRetryableFetchError` ou `status >= 500`, ou une chaîne de message qui ressemble à du JSON vide/illisible) → retourner un message générique clair en Kreyòl (ex. _"Sèvè a gen yon pwoblèm tanporè. Tanpri eseye ankò nan kèk minit."_) au lieu de laisser passer le message brut tel quel.
 - Optionnellement, journaliser côté client (Sentry, déjà présent dans le projet — `@sentry/react`) le message brut original (`"{}"`, status, etc.) pour garder la visibilité technique tout en montrant un message propre à l'utilisateur — évite de reproduire l'aveuglement qui avait ralenti le diagnostic de l'incident newsletter avant l'ajout de `newsletter_send_log`.
 
 **Ne pas faire** : activer `mailer_autoconfirm` comme contournement permanent — cela supprimerait la vérification d'email pour tous les comptes (risque sécurité/anti-abus), ce n'est pas un correctif, seulement un masquage du symptôme.
@@ -212,7 +223,7 @@ Aucun risque de régression identifié pour une correction du problème SMTP cô
 
 ## 12. Limitations de l'audit
 
-- **Pas d'accès à Supabase Dashboard / Management API Auth-config** dans cette session (aucun token de gestion trouvé permettant de lire `GET /v1/projects/{ref}/config/auth`) — impossible de confirmer à distance *lequel* des réglages SMTP (host, clé API, quota) est en cause précisément. La preuve que c'est bien un échec d'envoi d'email côté GoTrue est en revanche **directe et certaine** (message d'erreur explicite du serveur, deux fois, sur deux emails différents).
+- **Pas d'accès à Supabase Dashboard / Management API Auth-config** dans cette session (aucun token de gestion trouvé permettant de lire `GET /v1/projects/{ref}/config/auth`) — impossible de confirmer à distance _lequel_ des réglages SMTP (host, clé API, quota) est en cause précisément. La preuve que c'est bien un échec d'envoi d'email côté GoTrue est en revanche **directe et certaine** (message d'erreur explicite du serveur, deux fois, sur deux emails différents).
 - Le flux Client (customer) n'a pas été testé en direct (seulement audité par lecture de code) pour éviter de créer un 3ᵉ compte de test inutile — le mécanisme partagé rend la conclusion "probablement affecté aussi" solide mais non vérifiée par preuve HTTP directe comme pour Restaurant/Livreur.
 - `auth/v1/recover` et les autres flux email (invitation, magic link) n'ont pas été testés — hors périmètre strict de la mission (inscription uniquement).
 - Les 2 comptes de test créés via `clubcodinggonaives@gmail.com` (`+restaurant<timestamp>`, `+driver<timestamp>`) **n'ont abouti à aucune création de compte** (confirmé §5) — rien à nettoyer côté base de données. Aucun email n'a donc été réellement envoyé à cette adresse par ces tentatives (c'est précisément l'échec d'envoi qui a fait échouer tout le reste).
@@ -238,6 +249,7 @@ Aucun risque de régression identifié pour une correction du problème SMTP cô
 **La cause est-elle commune aux deux workflows ?** Oui, à 100 % — et au workflow Client également (même fonction partagée, non spécifique à un `account_type`).
 
 **Quel fichier/fonction doit être corrigé ?**
+
 1. Configuration SMTP du projet Supabase (Dashboard Authentication → Emails) — hors dépôt de code, cause racine réelle.
 2. `src/lib/auth-errors.ts` (`translateAuthError`) — filet de sécurité applicatif pour ne plus jamais afficher un message brut de type `{}`/JSON illisible à l'utilisateur, quelle que soit la cause sous-jacente future.
 

@@ -6,12 +6,12 @@ Date : 2026-08-07
 
 ## Phase 1 — Vérifications préalables
 
-| Prérequis | Résultat |
-|---|---|
-| Branche `main` | ✅ `git branch --show-current` → `main` |
-| Origin synchronisé | ✅ `git fetch origin` + `git rev-list --left-right --count origin/main...HEAD` → `0 0` |
+| Prérequis                     | Résultat                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branche `main`                | ✅ `git branch --show-current` → `main`                                                                                                                                               |
+| Origin synchronisé            | ✅ `git fetch origin` + `git rev-list --left-right --count origin/main...HEAD` → `0 0`                                                                                                |
 | Migration toujours en attente | ✅ `supabase migration list --linked` → seule `20260805140000` a `"remote":""`, toutes les précédentes (jusqu'à `20260805130000`) sont appliquées. Aucune autre migration en attente. |
-| **Backup valide existant** | 🔴 **ÉCHEC** — voir détail ci-dessous |
+| **Backup valide existant**    | 🔴 **ÉCHEC** — voir détail ci-dessous                                                                                                                                                 |
 
 ### Détail — absence de backup valide
 

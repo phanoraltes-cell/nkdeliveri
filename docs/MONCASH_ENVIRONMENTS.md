@@ -34,11 +34,11 @@ Reprend exactement la règle déjà établie pour Supabase dans
 Vercel permet une valeur différente par **portée** (Production / Preview
 / Development) pour un même nom de variable.
 
-| Portée Vercel | `MONCASH_API_URL` attendue | `MONCASH_CLIENT_ID`/etc. |
-|---|---|---|
-| Production | URL sandbox **jusqu'à** confirmation du contrat B2C (voir PAYMENT_PROVIDERS.md) ; ensuite, l'URL de production réelle | Identifiants correspondants |
-| Preview | URL sandbox, toujours | Identifiants sandbox |
-| Development (`.env.local`) | URL sandbox, toujours | Identifiants sandbox |
+| Portée Vercel              | `MONCASH_API_URL` attendue                                                                                            | `MONCASH_CLIENT_ID`/etc.    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| Production                 | URL sandbox **jusqu'à** confirmation du contrat B2C (voir PAYMENT_PROVIDERS.md) ; ensuite, l'URL de production réelle | Identifiants correspondants |
+| Preview                    | URL sandbox, toujours                                                                                                 | Identifiants sandbox        |
+| Development (`.env.local`) | URL sandbox, toujours                                                                                                 | Identifiants sandbox        |
 
 **Ne jamais mettre les identifiants de production MonCash en portée
 Preview** — même risque déjà documenté pour Supabase : un déploiement de

@@ -20,10 +20,10 @@ Itilizatè a te mande: nan sistèm otantifikasyon a doub fakte (2FA) pou admin, 
 
 ## 3. Desizyon konfime ak itilizatè a (AskUserQuestion)
 
-| Kesyon | Desizyon |
-|---|---|
+| Kesyon                                                                      | Desizyon                                                                                                                |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | Kòd sekou ka debloke aksyon STRICT yo (wòl, dekesman, konfigirasyon peman)? | **Non — sèlman STANDARD** (revizyon/konplete ranbousman, deblokaj tablo admin). STRICT rete TOTP sèlman, san eksepsyon. |
-| Jenerasyon kòd sekou mande TOTP deja aktive? | **Non — endepandan konplètman.** Yon admin ka jenere/itilize kòd sekou menm si li pa janm anrejistre TOTP. |
+| Jenerasyon kòd sekou mande TOTP deja aktive?                                | **Non — endepandan konplètman.** Yon admin ka jenere/itilize kòd sekou menm si li pa janm anrejistre TOTP.              |
 
 ## 4. Arkitekti
 
@@ -39,15 +39,18 @@ private.admin_step_up_status(_max_age, _allow_fallback)
 ## 5. Migration — `supabase/migrations/20260813100000_admin_backup_codes.sql`
 
 ### Schema
+
 - **`public.admin_backup_codes`** — yon liy pa kòd emèt, `code_hash` (bcrypt, `extensions.crypt()`), `used_at`/`revoked_at`. Okenn grant dirèk — RPC `SECURITY DEFINER` sèlman. Append-only (`private.prevent_log_mutation()` sou DELETE/TRUNCATE, UPDATE toujou pèmèt pou `used_at`/`revoked_at`).
 - **`public.admin_backup_code_state`** — yon liy pa admin, `last_verified_at` (li pa `admin_step_up_status()`), `codes_remaining`.
 
 ### RPC (SECURITY DEFINER, wòl reverifye endepandamman nan chak)
+
 - **`generate_admin_backup_codes_secure()`** — mande step-up STANDARD, revoke ansyen kòd ki pa itilize, jenere 10 kòd (fòma `XXXXX-XXXXX`, alfabè Crockford Base32), retounen yo an klè **yon sèl fwa**.
 - **`verify_admin_backup_code_secure(_code)`** — rate-limited (5 tantativ/10 min, menm mekanis ak `initiate_payout_secure`), konsome yon kòd yon sèl fwa.
 - **`get_admin_backup_codes_status_secure()`** — li sèlman, jamè `code_hash`.
 
 ### Antropi ak jenerasyon
+
 Kòd yo jenere ak `extensions.gen_random_bytes()` (pgcrypto, CSPRNG reyèl) — **pa** fonksyon `random()` plpgsql la, ki pa yon jeneratè kriptografikman sekirize. Sa te korije apre yon revizyon pandan konsepsyon an, paske sa yo se vrè sekrè otantifikasyon, pa jis yon idantifyan itilizatè entèfas.
 
 ## 6. Bug reyèl jwenn ak korije pandan tès la
@@ -58,19 +61,21 @@ Tès inisyal la te dekouvri yon pwoblèm reyèl: `verify_admin_backup_code_secur
 
 ## 7. Frontend
 
-| Fichye | Wòl |
-|---|---|
-| `src/hooks/useBackupCodes.ts` (nouvo) | Menm fòm ak `useTotpFactor.ts` — `generate()`, `verify()`, estati |
+| Fichye                                                   | Wòl                                                                                                               |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/useBackupCodes.ts` (nouvo)                    | Menm fòm ak `useTotpFactor.ts` — `generate()`, `verify()`, estati                                                 |
 | `src/routes/_authenticated/dashboard.admin.security.tsx` | Nouvo seksyon "Kòd sekou" — jenerasyon, modal "montre yon sèl fwa" ak checkbox konfimasyon, konpteur "N kòd rete" |
-| `src/hooks/useReauth.ts` | Nouvo mòd `"backup"`, `confirmBackup()` (satisfè `"standard"` sèlman) |
-| `src/components/reauth-dialog.tsx` | Katriyèm fòm pou antre kòd sekou, lyen switch ant TOTP/kòd sekou |
-| `src/components/dashboard/admin/admin-idle-lock.tsx` | Kòd sekou ofri kòm yon opsyon separe, endepandan de si TOTP aktive |
-| `src/integrations/supabase/types.ts` | 3 nouvo siyati RPC ajoute alfabetikman |
+| `src/hooks/useReauth.ts`                                 | Nouvo mòd `"backup"`, `confirmBackup()` (satisfè `"standard"` sèlman)                                             |
+| `src/components/reauth-dialog.tsx`                       | Katriyèm fòm pou antre kòd sekou, lyen switch ant TOTP/kòd sekou                                                  |
+| `src/components/dashboard/admin/admin-idle-lock.tsx`     | Kòd sekou ofri kòm yon opsyon separe, endepandan de si TOTP aktive                                                |
+| `src/integrations/supabase/types.ts`                     | 3 nouvo siyati RPC ajoute alfabetikman                                                                            |
 
 ## 8. Tès
 
 ### Tès transaksyonèl (BEGIN/ROLLBACK, sou pwodiksyon, via Management API)
+
 11 asèsyon, tou de pas reyisi apre korije 2 bug (fòma hash ak rate-limit rollback — wè §6), zewo rezidi konfime apre:
+
 1. Non-admin rejte sou tou de RPC ekriti.
 2. Jenerasyon reyisi **san TOTP** (konfime pa gen prerekizit).
 3. 10 kòd inik, fòma korèk, `code_hash` diferan de tout kòd an klè.
@@ -83,6 +88,7 @@ Tès inisyal la te dekouvri yon pwoblèm reyèl: `verify_admin_backup_code_secur
 10. `DELETE`/`TRUNCATE` rejte, `UPDATE` toujou pèmèt.
 
 ### `npm run verify`
+
 ✅ Vèt — typecheck, lint, `check:migrations`, **173/173 tès** (pa gen nouvo tès pi lojik ajoute — `useBackupCodes.ts` se yon wrapper fen sou `supabase.rpc()`, menm jan ak `useTotpFactor.ts` ki li menm pa gen tès dedye, lojik reyèl la se nan SQL, deja kouvri pa §8), build pwodiksyon reyisi.
 
 ## 9. Sekirite — rezime

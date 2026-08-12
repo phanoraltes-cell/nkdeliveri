@@ -1,4 +1,5 @@
 # Phase 2.1 — Rapport de remédiation
+
 ## Correction des deux anomalies bloquantes (Suivi de commande)
 
 **Portée respectée :** exclusivement les deux anomalies identifiées dans `docs/PHASE2_PUSH_DECISION_REPORT.md`. Aucun refactoring, aucune logique métier modifiée, aucun composant protégé (les 8 sections) touché, aucun changement Supabase/API/Edge Function/migration.
@@ -32,8 +33,8 @@ Remplit les 3 exigences demandées : informe clairement qu'un litige est en cour
 
 ## 2. Fichiers modifiés
 
-| Fichier | Nature du changement |
-|---|---|
+| Fichier                     | Nature du changement                                                                                                                                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/routes/orders.$id.tsx` | +65 / -3 lignes : 1 import (`AlertTriangle`), 1 import (`DISPUTE_TERMINAL_STATUSES`), 1 hook `useQuery` (dédupliqué avec celui de `DisputeSection`), 2 blocs de bannière, 1 `<div id="dispute">` enveloppant l'appel existant à `<DisputeSection>`. |
 
 Aucun autre fichier du dépôt n'a été touché — confirmé par `git status` (seul `orders.$id.tsx` apparaît modifié parmi les fichiers suivis liés à cette session).
@@ -42,22 +43,22 @@ Aucun autre fichier du dépôt n'a été touché — confirmé par `git status` 
 
 Relecture ligne à ligne du fichier final contre chacun des 13 états demandés (pas d'exécution visuelle disponible dans cet environnement — vérification structurelle/logique, comme pour les rapports précédents).
 
-| État | Timeline | Bannière | Une seule action visible | État silencieux | Conflit de bannières | Accordéon |
-|---|---|---|---|---|---|---|
-| pending (kach) | ✅ | Aucune (à raison) | ✅ | Non | — | Fermé, Anile visible |
-| confirmed | ✅ | Aucune | ✅ | Non | — | Fermé, Anile visible |
-| preparing | ✅ | Aucune (litige pas encore éligible) | ✅ | Non | — | Fermé |
-| ready | ✅ | Litige si actif (**corrigé**) | ✅ | **Non — corrigé** | Non (voir §5) | Fermé, lien `#dispute` fonctionnel |
-| delivering | ✅ (assigned/picked_up fusionnés) | Litige si actif (**corrigé**) | ✅ | **Non — corrigé** | Non | Fermé, carte + chat visibles |
-| delivered | ✅ (badge vert) | Aucune (accordéon déjà ouvert) | ✅ | Non | — | **Ouvert automatiquement**, litige visible directement |
-| cancelled | ✅ (état plat rouge) | Aucune (accordéon déjà ouvert) | ✅ | Non | — | Ouvert automatiquement |
-| payment pending (manuel) | ✅ | — (formulaire = action directe) | ✅ | Non | — | Fermé |
-| payment pending (auto) | ✅ | « N ap tann konfimasyon… » | ✅ | Non | — | Fermé |
-| **under_review** | ✅ | « Nou resevwa prèv peman ou a… » (**corrigé**) | ✅ | **Non — corrigé** | Non | Fermé, détail redondant mais cohérent si ouvert |
-| paid | ✅ | Légende « Peman konfime » | ✅ | Non | — | Fermé |
-| payment rejected (manuel/auto) | ✅ | Formulaire ou « pa t reyisi » | ✅ | Non | — | Fermé |
-| dispute active (non terminal) | ✅ | Bannière ambre + lien (**corrigé**) | ✅ | **Non — corrigé** | Non | Fermé, ouverture auto au clic |
-| dispute resolved | ✅ | Aucune (exclue explicitement) | ✅ | Non | — | Selon statut de la commande |
+| État                           | Timeline                          | Bannière                                       | Une seule action visible | État silencieux   | Conflit de bannières | Accordéon                                              |
+| ------------------------------ | --------------------------------- | ---------------------------------------------- | ------------------------ | ----------------- | -------------------- | ------------------------------------------------------ |
+| pending (kach)                 | ✅                                | Aucune (à raison)                              | ✅                       | Non               | —                    | Fermé, Anile visible                                   |
+| confirmed                      | ✅                                | Aucune                                         | ✅                       | Non               | —                    | Fermé, Anile visible                                   |
+| preparing                      | ✅                                | Aucune (litige pas encore éligible)            | ✅                       | Non               | —                    | Fermé                                                  |
+| ready                          | ✅                                | Litige si actif (**corrigé**)                  | ✅                       | **Non — corrigé** | Non (voir §5)        | Fermé, lien `#dispute` fonctionnel                     |
+| delivering                     | ✅ (assigned/picked_up fusionnés) | Litige si actif (**corrigé**)                  | ✅                       | **Non — corrigé** | Non                  | Fermé, carte + chat visibles                           |
+| delivered                      | ✅ (badge vert)                   | Aucune (accordéon déjà ouvert)                 | ✅                       | Non               | —                    | **Ouvert automatiquement**, litige visible directement |
+| cancelled                      | ✅ (état plat rouge)              | Aucune (accordéon déjà ouvert)                 | ✅                       | Non               | —                    | Ouvert automatiquement                                 |
+| payment pending (manuel)       | ✅                                | — (formulaire = action directe)                | ✅                       | Non               | —                    | Fermé                                                  |
+| payment pending (auto)         | ✅                                | « N ap tann konfimasyon… »                     | ✅                       | Non               | —                    | Fermé                                                  |
+| **under_review**               | ✅                                | « Nou resevwa prèv peman ou a… » (**corrigé**) | ✅                       | **Non — corrigé** | Non                  | Fermé, détail redondant mais cohérent si ouvert        |
+| paid                           | ✅                                | Légende « Peman konfime »                      | ✅                       | Non               | —                    | Fermé                                                  |
+| payment rejected (manuel/auto) | ✅                                | Formulaire ou « pa t reyisi »                  | ✅                       | Non               | —                    | Fermé                                                  |
+| dispute active (non terminal)  | ✅                                | Bannière ambre + lien (**corrigé**)            | ✅                       | **Non — corrigé** | Non                  | Fermé, ouverture auto au clic                          |
+| dispute resolved               | ✅                                | Aucune (exclue explicitement)                  | ✅                       | Non               | —                    | Selon statut de la commande                            |
 
 Les deux lignes en gras sont les anomalies du rapport précédent — désormais couvertes.
 

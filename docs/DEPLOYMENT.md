@@ -96,7 +96,7 @@ pas encore ne l'est jamais.
       erreur de test et confirmer qu'elle apparaît dans le tableau de bord
       Sentry sous quelques minutes.
 - [ ] Les en-têtes de sécurité sont bien présents (`curl -I
-      https://<domaine-prod>` — vérifier `content-security-policy`,
+https://<domaine-prod>` — vérifier `content-security-policy`,
       `strict-transport-security`).
 
 ## 6. Procédure de rollback
@@ -132,7 +132,7 @@ Pas de rollback automatique — voir la section "Procédure — rollback" de
 2. Évaluer si la base de données a besoin d'un correctif/restauration
    séparé — l'ancien code redéployé doit rester compatible avec le schéma
    actuel de la base (c'est pour cela que l'ordre de déploiement à l'étape
-   4 recommande de migrer la base *avant* de déployer du code qui en
+   4 recommande de migrer la base _avant_ de déployer du code qui en
    dépend : ça garantit qu'un rollback applicatif seul reste toujours
    compatible avec la base telle qu'elle est).
 
@@ -193,7 +193,7 @@ actuel (à adapter selon la charge réelle de l'équipe) :
 
 - **Dépendances applicatives** (`package.json`) — suivre la procédure
   [DEPENDENCIES.md](./DEPENDENCIES.md) ; toujours faire passer `npm run
-  verify` après une mise à jour, avant de merger.
+verify` après une mise à jour, avant de merger.
 - **Version de Node** — pinnée dans `.nvmrc` (actuellement 22) et
   utilisée à l'identique par la CI (`.github/workflows/ci.yml`) ; toute
   mise à jour de version doit changer les deux ensemble, jamais l'un sans

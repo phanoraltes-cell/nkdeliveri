@@ -21,21 +21,21 @@ Supabase Postgres/Auth/Storage   Fonctions serveur (Node, Vercel)
 
 ## Stack technique
 
-| Couche | Choix | Version (voir `package.json`) |
-|---|---|---|
-| Framework | TanStack Start (React 19) | `@tanstack/react-start` ^1.168 |
-| Routage | TanStack Router, basé fichiers | `@tanstack/react-router` ^1.170 |
-| État serveur | TanStack Query | `@tanstack/react-query` ^5.101 |
-| Build/dev | Vite 8 + Nitro (preset `vercel`) | `vite` ^8, `nitro` 3.0.260603-beta |
-| Style | Tailwind CSS 4 + shadcn/ui (Radix) | `tailwindcss` ^4.2 |
-| Backend | Supabase (Postgres, Auth, Storage, Realtime) | `@supabase/supabase-js` ^2.110 |
-| Cartographie | Leaflet + react-leaflet, routage OSRM | `leaflet` ^1.9 |
-| PWA | vite-plugin-pwa (Workbox) | `vite-plugin-pwa` ^1.3 |
-| Push web | `@block65/webcrypto-web-push` (VAPID) | ^1.0 |
-| Observabilité | Sentry (`@sentry/react` + `@sentry/node`) | ^10.65 |
-| PDF | jsPDF (bons de cuisine) | `jspdf` ^4.2 |
-| Validation | Zod | ^3.24 |
-| Déploiement | Vercel (intégration GitHub native) | — |
+| Couche        | Choix                                        | Version (voir `package.json`)      |
+| ------------- | -------------------------------------------- | ---------------------------------- |
+| Framework     | TanStack Start (React 19)                    | `@tanstack/react-start` ^1.168     |
+| Routage       | TanStack Router, basé fichiers               | `@tanstack/react-router` ^1.170    |
+| État serveur  | TanStack Query                               | `@tanstack/react-query` ^5.101     |
+| Build/dev     | Vite 8 + Nitro (preset `vercel`)             | `vite` ^8, `nitro` 3.0.260603-beta |
+| Style         | Tailwind CSS 4 + shadcn/ui (Radix)           | `tailwindcss` ^4.2                 |
+| Backend       | Supabase (Postgres, Auth, Storage, Realtime) | `@supabase/supabase-js` ^2.110     |
+| Cartographie  | Leaflet + react-leaflet, routage OSRM        | `leaflet` ^1.9                     |
+| PWA           | vite-plugin-pwa (Workbox)                    | `vite-plugin-pwa` ^1.3             |
+| Push web      | `@block65/webcrypto-web-push` (VAPID)        | ^1.0                               |
+| Observabilité | Sentry (`@sentry/react` + `@sentry/node`)    | ^10.65                             |
+| PDF           | jsPDF (bons de cuisine)                      | `jspdf` ^4.2                       |
+| Validation    | Zod                                          | ^3.24                              |
+| Déploiement   | Vercel (intégration GitHub native)           | —                                  |
 
 Le wrapper `@lovable.dev/vite-tanstack-config` assemble TanStack Start,
 Vite React, Tailwind, `vite-tsconfig-paths` et Nitro dans `vite.config.ts` ;

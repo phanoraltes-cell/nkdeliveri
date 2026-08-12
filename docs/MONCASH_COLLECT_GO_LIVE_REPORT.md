@@ -27,14 +27,14 @@ Aucune étape n'a été ignorée ou contournée.
 migration serait poussée, puis `supabase db push --linked` l'a
 appliquée sans erreur. Vérifié en direct après application :
 
-| Élément | Résultat |
-|---|---|
-| Table `payment_transactions` | ✅ existe (`to_regclass` non NULL) |
-| Index | ✅ 5 : `pkey`, `external_reference` (unique), `order_id`, `payment_id`, `created_at` |
-| RLS | ✅ activée, 2 policies `SELECT` (`admin read`, `own read`) |
-| RPC `create_collect_payment_secure` | ✅ existe, `authenticated`=EXECUTE oui, `service_role`=oui |
+| Élément                               | Résultat                                                                                                    |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Table `payment_transactions`          | ✅ existe (`to_regclass` non NULL)                                                                          |
+| Index                                 | ✅ 5 : `pkey`, `external_reference` (unique), `order_id`, `payment_id`, `created_at`                        |
+| RLS                                   | ✅ activée, 2 policies `SELECT` (`admin read`, `own read`)                                                  |
+| RPC `create_collect_payment_secure`   | ✅ existe, `authenticated`=EXECUTE oui, `service_role`=oui                                                  |
 | RPC `complete_collect_payment_secure` | ✅ existe, `authenticated`=EXECUTE **non**, `service_role`=oui (conforme à la conception service_role-only) |
-| Publication Realtime | ✅ `payments` présente aux côtés de `orders` dans `supabase_realtime` |
+| Publication Realtime                  | ✅ `payments` présente aux côtés de `orders` dans `supabase_realtime`                                       |
 
 ## 3. `npm run verify`
 
@@ -44,15 +44,16 @@ Relancé intégralement après application de la migration :
 
 ## 4. Tests fonctionnels (transactionnels, `BEGIN…ROLLBACK`, contre les vrais objets désormais appliqués)
 
-| Test | Résultat |
-|---|---|
-| Création paiement collect | ✅ ligne `payment_transactions` créée, `status='pending'`, montant correct |
-| Webhook (`complete_collect_payment_secure`) | ✅ `payment_transactions.status='paid'` **et** `payments.status='paid'` |
-| Confirmation commande | ✅ la condition qui bloque `update_order_status_secure` (restaurant, `pending`→`confirmed`) tant qu'un paiement moncash/natcash n'est pas `paid` est levée par le paiement collect |
-| Notification client/restaurant | ✅ `trg_notify_payment_status` (existant, non modifié) déclenché — 1 notification insérée |
-| Notification admin sur échec | ✅ `collect_payment_admin_error` insérée deux fois (échec d'initiation + échec webhook), comme conçu |
+| Test                                        | Résultat                                                                                                                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Création paiement collect                   | ✅ ligne `payment_transactions` créée, `status='pending'`, montant correct                                                                                                         |
+| Webhook (`complete_collect_payment_secure`) | ✅ `payment_transactions.status='paid'` **et** `payments.status='paid'`                                                                                                            |
+| Confirmation commande                       | ✅ la condition qui bloque `update_order_status_secure` (restaurant, `pending`→`confirmed`) tant qu'un paiement moncash/natcash n'est pas `paid` est levée par le paiement collect |
+| Notification client/restaurant              | ✅ `trg_notify_payment_status` (existant, non modifié) déclenché — 1 notification insérée                                                                                          |
+| Notification admin sur échec                | ✅ `collect_payment_admin_error` insérée deux fois (échec d'initiation + échec webhook), comme conçu                                                                               |
 
 **Absence de régression** — vérifiée directement, pas supposée :
+
 - Signatures RPC de `submit_payment_proof_secure`, `review_manual_payment_secure`,
   `initiate_payout_secure`, `complete_pending_payout_secure`,
   `fail_pending_payout_secure`, `create_order_secure`,
@@ -102,13 +103,13 @@ Status: ● Ready — Production
 
 ## 8. Tests en production
 
-| Vérification | Résultat |
-|---|---|
-| `https://www.nkdeliveri.com/` | ✅ HTTP 200 |
-| `https://www.nkdeliveri.com/checkout` | ✅ HTTP 200 |
+| Vérification                                                                     | Résultat                                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `https://www.nkdeliveri.com/`                                                    | ✅ HTTP 200                                                                                                                                                                                                                                            |
+| `https://www.nkdeliveri.com/checkout`                                            | ✅ HTTP 200                                                                                                                                                                                                                                            |
 | Texte "MonCash Automatik" dans le bundle client déployé (`checkout-BA90f0_5.js`) | ✅ présent (confirme que la nouvelle option de paiement a bien été livrée — la page en elle-même affiche l'état "panier vide" pour une requête `curl` sans état client, donc vérifié directement dans le bundle plutôt que dans le HTML rendu serveur) |
-| `POST /api/webhooks/moncash/collect` (nouvelle route) | ✅ HTTP 401 — rejette correctement une requête non signée, exactement le comportement attendu |
-| `POST /api/webhooks/moncash` (route décaissement existante) | ✅ HTTP 401 — inchangée, aucune régression |
+| `POST /api/webhooks/moncash/collect` (nouvelle route)                            | ✅ HTTP 401 — rejette correctement une requête non signée, exactement le comportement attendu                                                                                                                                                          |
+| `POST /api/webhooks/moncash` (route décaissement existante)                      | ✅ HTTP 401 — inchangée, aucune régression                                                                                                                                                                                                             |
 
 Aucun test avec de vrais identifiants MonCash (webhook réel signé,
 paiement réel) n'a été possible — toujours vrai, comme documenté en

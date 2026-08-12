@@ -10,11 +10,11 @@ le nouveau flux d'encaissement automatique.
 `src/routes/checkout.tsx` — 3 méthodes de paiement proposées au client,
 toutes explicitement "manuelles" aujourd'hui :
 
-| Méthode | Libellé actuel | Comportement |
-|---|---|---|
-| `moncash` | "MonCash — Peman manyèl ak prèv" | Le client envoie l'argent lui-même, upload une preuve |
-| `natcash` | "NatCash — Peman manyèl ak prèv" | Idem |
-| `kach` | "Kach nan livrezon" | Paiement à la livraison, double confirmation client+livreur (déjà existant, hors périmètre) |
+| Méthode   | Libellé actuel                   | Comportement                                                                                |
+| --------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
+| `moncash` | "MonCash — Peman manyèl ak prèv" | Le client envoie l'argent lui-même, upload une preuve                                       |
+| `natcash` | "NatCash — Peman manyèl ak prèv" | Idem                                                                                        |
+| `kach`    | "Kach nan livrezon"              | Paiement à la livraison, double confirmation client+livreur (déjà existant, hors périmètre) |
 
 Le numéro de réception affiché au client (`platformPayout.data.moncash_number`/
 `moncash_account_name`) est celui **de la plateforme elle-même**
@@ -53,10 +53,10 @@ failed, refunded`. Table liée : `payment_proofs` (preuves uploadées,
 
 ## 4. RPC de paiement manuel existantes
 
-| RPC | Rôle | Appelant |
-|---|---|---|
-| `submit_payment_proof_secure(_payment_id, _file_url, _transaction_ref, _sender_phone, _notes)` | Client uploade sa preuve — insère `payment_proofs`, fait passer `payments.status` : `awaiting_proof`/`pending` → `under_review` | `authenticated` (le client, propriétaire de la commande) |
-| `review_manual_payment_secure(_payment_id, _decision, _note)` | Admin décide `paid`/`failed` — refuse tout statut source autre que `awaiting_proof`/`under_review` (protection double-clic/double-onglet déjà en place) | `authenticated`, mais garde interne `has_role(admin\|super_admin)` |
+| RPC                                                                                            | Rôle                                                                                                                                                    | Appelant                                                           |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `submit_payment_proof_secure(_payment_id, _file_url, _transaction_ref, _sender_phone, _notes)` | Client uploade sa preuve — insère `payment_proofs`, fait passer `payments.status` : `awaiting_proof`/`pending` → `under_review`                         | `authenticated` (le client, propriétaire de la commande)           |
+| `review_manual_payment_secure(_payment_id, _decision, _note)`                                  | Admin décide `paid`/`failed` — refuse tout statut source autre que `awaiting_proof`/`under_review` (protection double-clic/double-onglet déjà en place) | `authenticated`, mais garde interne `has_role(admin\|super_admin)` |
 
 **Aucune des deux n'est appelable par un processus serveur non
 authentifié** (webhook) — la seconde exige explicitly un rôle admin
@@ -111,7 +111,7 @@ commandes `kach`/`stripe` ne sont pas concernées par ce verrou.
 **Conséquence** : aucune modification de `update_order_status_secure`
 n'est nécessaire pour ce chantier — le verrou existant fonctionnera
 identiquement pour un paiement collect confirmé automatiquement,
-puisqu'il ne regarde que `payments.status`, jamais *comment* ce statut a
+puisqu'il ne regarde que `payments.status`, jamais _comment_ ce statut a
 été atteint.
 
 ## 7. Ce qui existe déjà côté connecteur MonCash (réutilisable tel quel)
@@ -153,12 +153,12 @@ ligne `payments`, la route webhook dédiée, et l'UI checkout.
 
 ## Risques identifiés
 
-| # | Risque | Sévérité |
-|---|---|---|
-| 1 | Le contrat MonCash Collect (CreatePayment/redirect) est documenté publiquement et déjà implémenté — **risque nettement plus faible que le décaissement**, mais toujours jamais testé contre un vrai compte marchand MonCash (aucun identifiant réel, inchangé depuis le tout premier audit) | Moyenne — bloquant pour un vrai test, pas pour écrire le code |
-| 2 | Le trigger de notification existant (`notify_payment_status_change`) n'a **pas de branche `under_review`→notification pour le restaurant**, seulement le client — à confirmer si c'est voulu pour le flux automatique (probablement oui, `under_review` n'a pas vraiment de sens pour un paiement automatique qui passe direct `pending`→`paid`/`failed`) | Faible |
-| 3 | `review_manual_payment_secure` interdit `_decision NOT IN ('paid','failed')` — le nouveau RPC automatique doit répliquer cette même restriction, pas l'étendre | Faible, à respecter en conception |
-| 4 | Le webhook collect devra résoudre quelle commande/paiement correspond à un `orderId` MonCash — utiliser le même `payments.id` (ou un id dédié) comme référence, jamais deviner par montant/date | À concevoir soigneusement |
+| #   | Risque                                                                                                                                                                                                                                                                                                                                                    | Sévérité                                                      |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1   | Le contrat MonCash Collect (CreatePayment/redirect) est documenté publiquement et déjà implémenté — **risque nettement plus faible que le décaissement**, mais toujours jamais testé contre un vrai compte marchand MonCash (aucun identifiant réel, inchangé depuis le tout premier audit)                                                               | Moyenne — bloquant pour un vrai test, pas pour écrire le code |
+| 2   | Le trigger de notification existant (`notify_payment_status_change`) n'a **pas de branche `under_review`→notification pour le restaurant**, seulement le client — à confirmer si c'est voulu pour le flux automatique (probablement oui, `under_review` n'a pas vraiment de sens pour un paiement automatique qui passe direct `pending`→`paid`/`failed`) | Faible                                                        |
+| 3   | `review_manual_payment_secure` interdit `_decision NOT IN ('paid','failed')` — le nouveau RPC automatique doit répliquer cette même restriction, pas l'étendre                                                                                                                                                                                            | Faible, à respecter en conception                             |
+| 4   | Le webhook collect devra résoudre quelle commande/paiement correspond à un `orderId` MonCash — utiliser le même `payments.id` (ou un id dédié) comme référence, jamais deviner par montant/date                                                                                                                                                           | À concevoir soigneusement                                     |
 
 ## Dépendances
 

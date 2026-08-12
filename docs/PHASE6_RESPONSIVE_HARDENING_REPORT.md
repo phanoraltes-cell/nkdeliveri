@@ -1,4 +1,5 @@
 # Phase 6 — Rapport de clôture
+
 ## Durcissement responsive (Refonte Frontend Premium NK Deliveri)
 
 **Statut :** ✅ Exécutée, vérifiée, commitée localement (`d919070`). **En attente de votre validation avant push.**
@@ -17,9 +18,11 @@
 ## 2. Deux bugs réels trouvés et corrigés
 
 ### Bug 1 — « Anile kòmand » invisible pour une commande en attente
+
 Le bouton d'annulation (Phase 2) se trouvait à l'intérieur de l'accordéon « Detay ak sipò », fermé par défaut — exactement pendant la fenêtre `pending`/`confirmed` où annuler est possible. Le test existant `e2e/client/order-lifecycle-customer.spec.ts` (« cancels a pending order ») a expiré en cherchant le bouton : un vrai client aurait rencontré exactement le même mur. **Corrigé** : le bouton est sorti de l'accordéon, au même titre que `PaymentProofSection` quand elle est l'action principale.
 
 ### Bug 2 — Badge d'urgence Kanban illisible
+
 Repéré uniquement en ouvrant la capture d'écran : le badge d'urgence de la Phase 3 affichait « 315007 min ap tann » (calcul mathématiquement correct, mais provenant d'une date de fixture de test ancienne — sans borne d'affichage). **Corrigé** : `formatWaitTime()` bascule en heures puis en jours au-delà d'une heure, pour rester lisible quelle que soit l'ancienneté réelle d'une commande.
 
 ## 3. Durcissement des tests eux-mêmes
@@ -53,12 +56,12 @@ e2e responsive (28 tests × 4 profils) : 28/28 passés (run à un worker — un 
 
 ## 7. Fichiers modifiés
 
-| Fichier | Nature |
-|---|---|
-| `src/routes/orders.$id.tsx` | Bug 1 — bouton Anile sorti de l'accordéon |
-| `src/components/dashboard/restaurant/order-kanban-board.tsx` | Bug 2 — `formatWaitTime()` |
-| `e2e/responsive/order-tracking.spec.ts` | Nouveau — couverture `/orders/$id` |
-| `e2e/responsive/navigation-and-layout.spec.ts` | Durcissement de 2 des 3 tests existants |
+| Fichier                                                      | Nature                                    |
+| ------------------------------------------------------------ | ----------------------------------------- |
+| `src/routes/orders.$id.tsx`                                  | Bug 1 — bouton Anile sorti de l'accordéon |
+| `src/components/dashboard/restaurant/order-kanban-board.tsx` | Bug 2 — `formatWaitTime()`                |
+| `e2e/responsive/order-tracking.spec.ts`                      | Nouveau — couverture `/orders/$id`        |
+| `e2e/responsive/navigation-and-layout.spec.ts`               | Durcissement de 2 des 3 tests existants   |
 
 ## 8. Recommandation
 

@@ -11,12 +11,12 @@ avant de passer à la suivante.
 
 ## Migrations appliquées
 
-| # | Migration | Appliquée | Enregistrée dans `schema_migrations` |
-|---|---|---|---|
-| 1 | `20260730110000_log_payment_provider_error.sql` | ✅ | ✅ |
-| 2 | `20260730120000_moncash_provider_notifications.sql` | ✅ | ✅ |
-| 3 | `20260730130000_moncash_financial_audit_log.sql` | ✅ | ✅ |
-| 4 | `20260731100000_revoke_anon_create_pending_payout.sql` | ✅ | ✅ |
+| #   | Migration                                              | Appliquée | Enregistrée dans `schema_migrations` |
+| --- | ------------------------------------------------------ | --------- | ------------------------------------ |
+| 1   | `20260730110000_log_payment_provider_error.sql`        | ✅        | ✅                                   |
+| 2   | `20260730120000_moncash_provider_notifications.sql`    | ✅        | ✅                                   |
+| 3   | `20260730130000_moncash_financial_audit_log.sql`       | ✅        | ✅                                   |
+| 4   | `20260731100000_revoke_anon_create_pending_payout.sql` | ✅        | ✅                                   |
 
 ## Vérifications après chaque migration (résultats réels, pas supposés)
 

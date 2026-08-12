@@ -17,12 +17,12 @@ Exit code: 0
 
 ## 2. Cash / MonCash Manuel / NatCash Manuel
 
-| Test | Résultat |
-|---|---|
-| `checkout-cash.spec.ts` — commande complète en Cash | ✅ |
-| `checkout-cash.spec.ts` — validation adresse/téléphone sans appel RPC | ✅ |
-| Sélection manuelle de "MonCash Manyèl" (nouveau test dédié) | ✅ activable, sélectionnable |
-| Sélection manuelle de "NatCash" (nouveau test dédié) | ✅ activable, sélectionnable |
+| Test                                                                  | Résultat                     |
+| --------------------------------------------------------------------- | ---------------------------- |
+| `checkout-cash.spec.ts` — commande complète en Cash                   | ✅                           |
+| `checkout-cash.spec.ts` — validation adresse/téléphone sans appel RPC | ✅                           |
+| Sélection manuelle de "MonCash Manyèl" (nouveau test dédié)           | ✅ activable, sélectionnable |
+| Sélection manuelle de "NatCash" (nouveau test dédié)                  | ✅ activable, sélectionnable |
 
 ## 3. Checkout — comportement du nouveau désactivage
 
@@ -60,12 +60,12 @@ Pas de seuil SEO appliqué à cette page (délibéré, `checkout.tsx` utilise `n
 
 ## 8. Suite complète par rôle (régression globale)
 
-| Rôle | Résultat |
-|---|---|
-| Client | 15/15 (14 existants + le nouveau test dédié) |
-| Restaurant | 4/4 |
-| Livreur | 6/6 |
-| Admin | 12/12 |
+| Rôle       | Résultat                                     |
+| ---------- | -------------------------------------------- |
+| Client     | 15/15 (14 existants + le nouveau test dédié) |
+| Restaurant | 4/4                                          |
+| Livreur    | 6/6                                          |
+| Admin      | 12/12                                        |
 
 ## 9. Incident méthodologique rencontré et résolu (transparence)
 

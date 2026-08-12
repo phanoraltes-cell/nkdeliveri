@@ -13,18 +13,18 @@
 
 Comparaison ligne par ligne des trois versions de `create_collect_payment_secure` (`20260731130000` original → `20260803130000` hardening production → `20260804130000` remédiation actuelle) :
 
-| Élément | 08-03 (production, référence) | 08-04 (remédié, actuel) | Identique ? |
-|---|---|---|---|
-| Condition de déclenchement | `IF _status = 'pending' THEN` | `IF _status = 'pending' THEN` | ✅ |
-| Requête de vérification | `SELECT 1 FROM public.payment_provider_settings WHERE provider = 'moncash_auto' AND enabled = true` | Identique caractère pour caractère | ✅ |
-| Message d'erreur | `'MonCash Automatik pa disponib pou kounye a.'` | Identique | ✅ |
-| Code d'exception | `USING ERRCODE = '42501'` | Identique | ✅ |
-| Position dans le corps | Après la vérification de doublon `pending`, immédiatement avant l'`INSERT` | Identique | ✅ |
-| Portée (`pending` uniquement) | Ne s'applique jamais à `_status='failed'` | Identique | ✅ |
+| Élément                       | 08-03 (production, référence)                                                                       | 08-04 (remédié, actuel)            | Identique ? |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------- |
+| Condition de déclenchement    | `IF _status = 'pending' THEN`                                                                       | `IF _status = 'pending' THEN`      | ✅          |
+| Requête de vérification       | `SELECT 1 FROM public.payment_provider_settings WHERE provider = 'moncash_auto' AND enabled = true` | Identique caractère pour caractère | ✅          |
+| Message d'erreur              | `'MonCash Automatik pa disponib pou kounye a.'`                                                     | Identique                          | ✅          |
+| Code d'exception              | `USING ERRCODE = '42501'`                                                                           | Identique                          | ✅          |
+| Position dans le corps        | Après la vérification de doublon `pending`, immédiatement avant l'`INSERT`                          | Identique                          | ✅          |
+| Portée (`pending` uniquement) | Ne s'applique jamais à `_status='failed'`                                                           | Identique                          | ✅          |
 
 **Aucune simplification, aucune reformulation, aucune altération.** Le bloc a été réinséré verbatim.
 
-**Note sur l'ordre des vérifications** — le diagramme "Ordre attendu" de cette mission (`Validation sécurité provider → Check duplicate pending → ...`) place le contrôle provider *avant* le contrôle de doublon. **L'ordre réel dans le fichier — identique entre la version 08-03 (production) et la version 08-04 (remédiée) — est l'inverse** : doublon `pending` vérifié en premier, contrôle provider ensuite, tous deux avant l'`INSERT`. Ce n'est pas un écart introduit par la remédiation : c'est l'ordre exact déjà en production depuis le 3 août, préservé à l'identique. Sur le plan sécurité, l'ordre entre ces deux gardes n'a pas d'incidence : ce sont deux `RAISE EXCEPTION` indépendants et inconditionnels — n'importe lequel des deux, seul, empêche déjà l'`INSERT` d'être atteint. Aucune action requise.
+**Note sur l'ordre des vérifications** — le diagramme "Ordre attendu" de cette mission (`Validation sécurité provider → Check duplicate pending → ...`) place le contrôle provider _avant_ le contrôle de doublon. **L'ordre réel dans le fichier — identique entre la version 08-03 (production) et la version 08-04 (remédiée) — est l'inverse** : doublon `pending` vérifié en premier, contrôle provider ensuite, tous deux avant l'`INSERT`. Ce n'est pas un écart introduit par la remédiation : c'est l'ordre exact déjà en production depuis le 3 août, préservé à l'identique. Sur le plan sécurité, l'ordre entre ces deux gardes n'a pas d'incidence : ce sont deux `RAISE EXCEPTION` indépendants et inconditionnels — n'importe lequel des deux, seul, empêche déjà l'`INSERT` d'être atteint. Aucune action requise.
 
 **Vérification de la porte pré-existante** (non touchée par le hardening ni par cette remédiation, revérifiée pour complétude) : `IF EXISTS (SELECT 1 FROM payment_transactions WHERE payment_id = _payment_id AND status = 'pending')` — protection anti-doublon, présente et inchangée dans les trois versions.
 
@@ -32,14 +32,14 @@ Comparaison ligne par ligne des trois versions de `create_collect_payment_secure
 
 ## Vérification wallet traceability
 
-| Point de contrôle | Constat |
-|---|---|
-| Paramètre RPC `_payment_method_requested text DEFAULT NULL` | Présent, 5ᵉ paramètre de `create_collect_payment_secure` |
-| Paramètre RPC `_payment_method_used text DEFAULT NULL` | Présent, 6ᵉ paramètre de `complete_collect_payment_secure` |
-| Colonnes table | `payment_transactions.payment_method_requested text`, `payment_method_used text` — présentes, additives, `NULL` par défaut |
-| `INSERT` dans `create_collect_payment_secure` | Colonne et valeur `payment_method_requested` correctement alignées positionnellement (7 colonnes / 7 valeurs, vérifié) |
-| `UPDATE` dans `complete_collect_payment_secure` | `payment_method_used = COALESCE(_payment_method_used, payment_method_used)` — cohérent avec le pattern déjà utilisé pour `provider_transaction_id`/`webhook_data` |
-| `log_audit_event` (les deux fonctions) | Les deux nouvelles valeurs sont incluses dans le `jsonb_build_object` de l'audit trail |
+| Point de contrôle                                                                   | Constat                                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Paramètre RPC `_payment_method_requested text DEFAULT NULL`                         | Présent, 5ᵉ paramètre de `create_collect_payment_secure`                                                                                                                                                     |
+| Paramètre RPC `_payment_method_used text DEFAULT NULL`                              | Présent, 6ᵉ paramètre de `complete_collect_payment_secure`                                                                                                                                                   |
+| Colonnes table                                                                      | `payment_transactions.payment_method_requested text`, `payment_method_used text` — présentes, additives, `NULL` par défaut                                                                                   |
+| `INSERT` dans `create_collect_payment_secure`                                       | Colonne et valeur `payment_method_requested` correctement alignées positionnellement (7 colonnes / 7 valeurs, vérifié)                                                                                       |
+| `UPDATE` dans `complete_collect_payment_secure`                                     | `payment_method_used = COALESCE(_payment_method_used, payment_method_used)` — cohérent avec le pattern déjà utilisé pour `provider_transaction_id`/`webhook_data`                                            |
+| `log_audit_event` (les deux fonctions)                                              | Les deux nouvelles valeurs sont incluses dans le `jsonb_build_object` de l'audit trail                                                                                                                       |
 | Appelants applicatifs (TypeScript, non modifiés dans cette remédiation, revérifiés) | `initiate-collect-payment.logic.ts` (4 appels, `_payment_method_requested`), `plop-reconcile.server.ts` + `poll-collect-payment.logic.ts` (`_payment_method_used`) — tous cohérents avec la signature finale |
 
 **Aucune régression sur la traçabilité wallet.**
@@ -50,10 +50,10 @@ Comparaison ligne par ligne des trois versions de `create_collect_payment_secure
 
 ### Fonctions modifiées par cette migration
 
-| Fonction | Signature finale | Permissions | `SECURITY DEFINER` |
-|---|---|---|---|
-| `create_collect_payment_secure` | `(uuid, text, text, text, text)` — `_payment_id, _external_reference, _status, _error, _payment_method_requested` | `REVOKE ALL FROM PUBLIC, anon` / `GRANT EXECUTE TO authenticated` | ✅ Préservé |
-| `complete_collect_payment_secure` | `(text, text, text, text, jsonb, text)` — `_external_reference, _decision, _provider_transaction_id, _error, _webhook_data, _payment_method_used` | `REVOKE ALL FROM PUBLIC, anon, authenticated` / `GRANT EXECUTE TO service_role` | ✅ Préservé |
+| Fonction                          | Signature finale                                                                                                                                  | Permissions                                                                     | `SECURITY DEFINER` |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------ |
+| `create_collect_payment_secure`   | `(uuid, text, text, text, text)` — `_payment_id, _external_reference, _status, _error, _payment_method_requested`                                 | `REVOKE ALL FROM PUBLIC, anon` / `GRANT EXECUTE TO authenticated`               | ✅ Préservé        |
+| `complete_collect_payment_secure` | `(text, text, text, text, jsonb, text)` — `_external_reference, _decision, _provider_transaction_id, _error, _webhook_data, _payment_method_used` | `REVOKE ALL FROM PUBLIC, anon, authenticated` / `GRANT EXECUTE TO service_role` | ✅ Préservé        |
 
 Permissions identiques, rôle pour rôle, à celles déjà en place avant cette migration — seule la liste de types dans le `REVOKE`/`GRANT` a été mise à jour pour refléter la nouvelle signature (obligatoire en PostgreSQL, une révocation doit cibler la signature exacte).
 
@@ -63,9 +63,9 @@ Cette fonction n'a **qu'une seule définition antérieure** à cette phase (`202
 
 ### Appelants réels (recherche exhaustive, hors tests)
 
-| RPC | Appelants |
-|---|---|
-| `create_collect_payment_secure` | `initiate-collect-payment.logic.ts` (3 emplacements de gestion d'échec + 1 de création réussie) |
+| RPC                               | Appelants                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `create_collect_payment_secure`   | `initiate-collect-payment.logic.ts` (3 emplacements de gestion d'échec + 1 de création réussie)                                            |
 | `complete_collect_payment_secure` | `plop-reconcile.server.ts`, `poll-collect-payment.logic.ts`, `moncash-collect-webhook-handler.server.ts` (dormant, jamais appelé par PLOP) |
 
 **Aucun appel existant cassé** — tous les nouveaux paramètres sont optionnels (`DEFAULT NULL`), tout appelant qui les omet (ex. `moncash-collect-webhook-handler.server.ts`) continue de fonctionner sans modification.
@@ -78,13 +78,13 @@ Cette fonction n'a **qu'une seule définition antérieure** à cette phase (`202
 
 ## Vérification tests
 
-| Commande | Résultat (ré-exécutée indépendamment dans cette revalidation) |
-|---|---|
+| Commande                   | Résultat (ré-exécutée indépendamment dans cette revalidation)                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run check:migrations` | ✅ 117 migrations scannées, 0 hazard de surcharge non résolu — **complété par la revue manuelle ci-dessus**, non traité comme preuve suffisante à lui seul |
-| `npm run typecheck` | ✅ Propre |
-| `npm run lint` | ✅ 0 erreur (12 avertissements préexistants, sans rapport, fichiers non touchés) |
-| `npx vitest run` | ✅ **98/98 tests**, 9 fichiers |
-| `npx vite build` | ✅ Réussi |
+| `npm run typecheck`        | ✅ Propre                                                                                                                                                  |
+| `npm run lint`             | ✅ 0 erreur (12 avertissements préexistants, sans rapport, fichiers non touchés)                                                                           |
+| `npx vitest run`           | ✅ **98/98 tests**, 9 fichiers                                                                                                                             |
+| `npx vite build`           | ✅ Réussi                                                                                                                                                  |
 
 Résultats strictement identiques à ceux de la remédiation précédente — cohérent avec le fait qu'aucun fichier TypeScript/test n'a été modifié depuis (confirmé par `git status` : la liste des fichiers `.ts`/`.tsx` modifiés est inchangée).
 
@@ -92,11 +92,11 @@ Résultats strictement identiques à ceux de la remédiation précédente — co
 
 ## Risques restants
 
-| Niveau | Risque |
-|---|---|
-| **Faible** | Absence de contrainte `CHECK` sur `payment_method_requested`/`payment_method_used` limitant aux 4 valeurs PLOP documentées — défense en profondeur manquante, pas un vecteur d'attaque réel (seul du code serveur déjà validé écrit ces colonnes). Non bloquant. |
-| **Faible** | Aucun test SQL direct (transaction `BEGIN`/`ROLLBACK` contre une vraie base) des deux scénarios critiques — création normale et tentative de contournement avec `moncash_auto.enabled=false` — avant application réelle. Recommandé en complément, pas requis pour ce GO. |
-| **Négligeable** | Message d'erreur `'MonCash Automatik disponib sèlman pou peman MonCash'` (à l'intérieur de la fonction, sur le rail non-moncash) non renommé en "Peman Otomatik" — cosmétique, déjà noté deux fois, sans impact fonctionnel ou sécurité. |
+| Niveau          | Risque                                                                                                                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Faible**      | Absence de contrainte `CHECK` sur `payment_method_requested`/`payment_method_used` limitant aux 4 valeurs PLOP documentées — défense en profondeur manquante, pas un vecteur d'attaque réel (seul du code serveur déjà validé écrit ces colonnes). Non bloquant.          |
+| **Faible**      | Aucun test SQL direct (transaction `BEGIN`/`ROLLBACK` contre une vraie base) des deux scénarios critiques — création normale et tentative de contournement avec `moncash_auto.enabled=false` — avant application réelle. Recommandé en complément, pas requis pour ce GO. |
+| **Négligeable** | Message d'erreur `'MonCash Automatik disponib sèlman pou peman MonCash'` (à l'intérieur de la fonction, sur le rail non-moncash) non renommé en "Peman Otomatik" — cosmétique, déjà noté deux fois, sans impact fonctionnel ou sécurité.                                  |
 
 Aucun risque bloquant identifié.
 

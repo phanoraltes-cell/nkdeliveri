@@ -1,4 +1,5 @@
 # Phase 3 — Rapport de clôture
+
 ## Kanban restaurant tactile (Refonte Frontend Premium NK Deliveri)
 
 **Statut :** ✅ Exécutée, vérifiée, commitée localement. **En attente de votre validation avant push.**
@@ -9,7 +10,7 @@
 
 ## 0. Correction de l'audit initial
 
-Le dossier d'audit (6 août 2026) affirmait, sur la base de la lecture des 60 premières lignes de `order-kanban-board.tsx` : *« le tableau kanban du dashboard restaurant repose sur le glisser-déposer HTML5 natif, sans fallback tactile »* — classé priorité **Élevée**, tête de liste des corrections.
+Le dossier d'audit (6 août 2026) affirmait, sur la base de la lecture des 60 premières lignes de `order-kanban-board.tsx` : _« le tableau kanban du dashboard restaurant repose sur le glisser-déposer HTML5 natif, sans fallback tactile »_ — classé priorité **Élevée**, tête de liste des corrections.
 
 En relisant le fichier **en entier** au démarrage de cette phase (jusqu'à la ligne 274, jamais atteinte lors de l'audit), ce constat s'avère **incomplet** : chaque carte a toujours eu, en plus du glisser-déposer, un bouton **« Konfime »**/**« Refize »** (commandes en attente) ou **« Avanse »** (autres statuts) — de vrais éléments `<button>`/`<Button>` cliquables au doigt, présents depuis le commit `b82371a` (bien avant cette session). Vérifié par `git diff` contre `532eb1c` (dernier commit avant le début de cette session) : **aucune différence** sur ce fichier avant mon intervention d'aujourd'hui — ces boutons n'ont pas été ajoutés récemment par quelqu'un d'autre, ils existaient déjà au moment de l'audit.
 
@@ -48,9 +49,9 @@ Ajout d'un badge « X min ap tann » et d'une bordure gauche colorée (`--status
 
 ## 3. Fichiers modifiés
 
-| Fichier | Nature |
-|---|---|
-| `src/components/ui/button.tsx` | Correction du bug de régression §1 |
+| Fichier                                                      | Nature                                 |
+| ------------------------------------------------------------ | -------------------------------------- |
+| `src/components/ui/button.tsx`                               | Correction du bug de régression §1     |
 | `src/components/dashboard/restaurant/order-kanban-board.tsx` | Boutons unifiés + indicateur d'urgence |
 
 Aucun autre fichier touché — le glisser-déposer, les colonnes, `NEXT_COLUMN`, `isValidDrop` restent strictement inchangés, comme prévu par la spécification (« glisser-déposer conservé pour desktop »).

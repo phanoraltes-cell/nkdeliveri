@@ -17,18 +17,18 @@ Le plan a été exécuté intégralement : retour à deux boutons séparés ("Mo
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/routes/checkout.tsx` | `METHODS` : `moncash_auto` renommé "MonCash Otomatik" (logo MonCash Manyèl) ; nouvelle entrée `natcash_auto` ("NatCash Otomatik", logo NatCash) ; `orderMethod` étendu ; `submit()` gère les deux ids ; encadré explicatif dédoublé et rendu spécifique à chaque wallet ; `PLACEHOLDER_PROVIDER_SETTINGS` complété |
-| `src/lib/payment-provider-availability.ts` | `CheckoutProviderId` += `"natcash_auto"` |
-| `src/routes/_authenticated/dashboard.admin.payment-providers.tsx` | `PROVIDER_LABELS` : `moncash_auto` → "MonCash Otomatik", + `natcash_auto` → "NatCash Otomatik" |
-| `src/lib/initiate-collect-payment.logic.ts` | **Le vrai correctif** : gate de méthode élargi (`moncash`/`natcash`) ; `providerKey`/`providerLabel` dérivés dynamiquement de `payment.method` au lieu du hardcode `"moncash_auto"` ; messages d'erreur génériques mis à jour |
-| `src/lib/payment-providers/plop-provider.server.ts` | Commentaire d'en-tête mis à jour (aucune logique touchée) |
-| `supabase/migrations/20260805120000_natcash_automatik_integration.sql` | **Nouveau** — seed `natcash_auto` (désactivé par défaut) ; `create_collect_payment_secure` : même généralisation côté SQL (gate de méthode + gate de provider dynamique) ; notifications admin des deux RPC rendues spécifiques au wallet |
-| `src/lib/__tests__/initiate-collect-payment.test.ts` | Fixtures + 2 nouveaux tests clés (voir § Tests) |
-| `e2e/fixtures/data.ts` | + ligne `natcash_auto` dans `paymentProviderSettings` |
-| `e2e/client/moncash-auto-disabled.spec.ts` | Réécrit pour les deux boutons ; sélecteurs corrigés (voir § Anomalie trouvée) |
-| `e2e/admin/payment-providers.spec.ts` | Réécrit pour 5 lignes ; 2 nouveaux tests (activation indépendante de chaque méthode) |
+| Fichier                                                                | Changement                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/routes/checkout.tsx`                                              | `METHODS` : `moncash_auto` renommé "MonCash Otomatik" (logo MonCash Manyèl) ; nouvelle entrée `natcash_auto` ("NatCash Otomatik", logo NatCash) ; `orderMethod` étendu ; `submit()` gère les deux ids ; encadré explicatif dédoublé et rendu spécifique à chaque wallet ; `PLACEHOLDER_PROVIDER_SETTINGS` complété |
+| `src/lib/payment-provider-availability.ts`                             | `CheckoutProviderId` += `"natcash_auto"`                                                                                                                                                                                                                                                                           |
+| `src/routes/_authenticated/dashboard.admin.payment-providers.tsx`      | `PROVIDER_LABELS` : `moncash_auto` → "MonCash Otomatik", + `natcash_auto` → "NatCash Otomatik"                                                                                                                                                                                                                     |
+| `src/lib/initiate-collect-payment.logic.ts`                            | **Le vrai correctif** : gate de méthode élargi (`moncash`/`natcash`) ; `providerKey`/`providerLabel` dérivés dynamiquement de `payment.method` au lieu du hardcode `"moncash_auto"` ; messages d'erreur génériques mis à jour                                                                                      |
+| `src/lib/payment-providers/plop-provider.server.ts`                    | Commentaire d'en-tête mis à jour (aucune logique touchée)                                                                                                                                                                                                                                                          |
+| `supabase/migrations/20260805120000_natcash_automatik_integration.sql` | **Nouveau** — seed `natcash_auto` (désactivé par défaut) ; `create_collect_payment_secure` : même généralisation côté SQL (gate de méthode + gate de provider dynamique) ; notifications admin des deux RPC rendues spécifiques au wallet                                                                          |
+| `src/lib/__tests__/initiate-collect-payment.test.ts`                   | Fixtures + 2 nouveaux tests clés (voir § Tests)                                                                                                                                                                                                                                                                    |
+| `e2e/fixtures/data.ts`                                                 | + ligne `natcash_auto` dans `paymentProviderSettings`                                                                                                                                                                                                                                                              |
+| `e2e/client/moncash-auto-disabled.spec.ts`                             | Réécrit pour les deux boutons ; sélecteurs corrigés (voir § Anomalie trouvée)                                                                                                                                                                                                                                      |
+| `e2e/admin/payment-providers.spec.ts`                                  | Réécrit pour 5 lignes ; 2 nouveaux tests (activation indépendante de chaque méthode)                                                                                                                                                                                                                               |
 
 Aucun autre fichier touché — confirmé par `git status` (le reste de l'arbre correspond exactement à l'état déjà connu avant ce chantier : travail de rebranding/remédiation antérieur, toujours non commité, non ré-ouvert ici).
 
@@ -48,14 +48,14 @@ En écrivant `e2e/client/moncash-auto-disabled.spec.ts`, un test a échoué : `g
 
 ## Vérifications
 
-| Commande | Résultat |
-|---|---|
-| `npm run typecheck` | ✅ Propre |
-| `npm run lint` | ✅ 0 erreur (12 avertissements préexistants, sans rapport ; 8 erreurs prettier introduites par mes propres modifications ont été trouvées et corrigées via `npx prettier --write` avant ce résultat final) |
-| `npm run check:migrations` | ✅ "120 migrations scanned, 2 historical overload(s) all later cleaned up, no unresolved hazards" |
-| `npx vitest run` | ✅ **101/101 tests**, 9 fichiers (1 échec transitoire sur un test de concurrence sans rapport avec ce chantier, `moncash-client.test.ts`, reconfirmé stable en ré-exécution isolée puis en suite complète) |
-| `npx vite build` | ✅ Réussi, 252 entrées precache PWA |
-| `npx playwright test` (4 fichiers liés au paiement) | ✅ **8/8 tests** après correction de l'anomalie ci-dessus |
+| Commande                                            | Résultat                                                                                                                                                                                                   |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`                                 | ✅ Propre                                                                                                                                                                                                  |
+| `npm run lint`                                      | ✅ 0 erreur (12 avertissements préexistants, sans rapport ; 8 erreurs prettier introduites par mes propres modifications ont été trouvées et corrigées via `npx prettier --write` avant ce résultat final) |
+| `npm run check:migrations`                          | ✅ "120 migrations scanned, 2 historical overload(s) all later cleaned up, no unresolved hazards"                                                                                                          |
+| `npx vitest run`                                    | ✅ **101/101 tests**, 9 fichiers (1 échec transitoire sur un test de concurrence sans rapport avec ce chantier, `moncash-client.test.ts`, reconfirmé stable en ré-exécution isolée puis en suite complète) |
+| `npx vite build`                                    | ✅ Réussi, 252 entrées precache PWA                                                                                                                                                                        |
+| `npx playwright test` (4 fichiers liés au paiement) | ✅ **8/8 tests** après correction de l'anomalie ci-dessus                                                                                                                                                  |
 
 ### Tests unitaires nouveaux/modifiés (les plus importants)
 
@@ -72,25 +72,25 @@ En écrivant `e2e/client/moncash-auto-disabled.spec.ts`, un test a échoué : `g
 
 ## Compatibilité — confirmé inchangé
 
-| Domaine | Statut |
-|---|---|
-| Cash | 🟢 Intact |
-| MonCash Manyèl / NatCash Manyèl (preuve manuelle) | 🟢 Intacts — aucun de ces flux ne passe par `initiate-collect-payment.logic.ts` |
-| Décaissements / `index.server.ts` (registre) | 🟢 Non touché |
-| `plop-client.server.ts`/`plopProvider` | 🟢 Non touchés — déjà prêts pour NatCash avant ce chantier |
-| Polling / Cron | 🟢 Non touchés — déjà agnostiques du wallet |
-| `orders.$id.tsx` | 🟢 Non touché — déjà générique depuis la remédiation post-incident |
-| RLS / grants / `SECURITY DEFINER` | 🟢 Inchangés — seule la condition interne des gates change, jamais leur existence ni permissions |
+| Domaine                                           | Statut                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Cash                                              | 🟢 Intact                                                                                        |
+| MonCash Manyèl / NatCash Manyèl (preuve manuelle) | 🟢 Intacts — aucun de ces flux ne passe par `initiate-collect-payment.logic.ts`                  |
+| Décaissements / `index.server.ts` (registre)      | 🟢 Non touché                                                                                    |
+| `plop-client.server.ts`/`plopProvider`            | 🟢 Non touchés — déjà prêts pour NatCash avant ce chantier                                       |
+| Polling / Cron                                    | 🟢 Non touchés — déjà agnostiques du wallet                                                      |
+| `orders.$id.tsx`                                  | 🟢 Non touché — déjà générique depuis la remédiation post-incident                               |
+| RLS / grants / `SECURITY DEFINER`                 | 🟢 Inchangés — seule la condition interne des gates change, jamais leur existence ni permissions |
 
 ---
 
 ## Risques résiduels
 
-| Niveau | Risque |
-|---|---|
-| Faible | `natcash_auto` est seedé désactivé — aucun trafic réel possible tant qu'un admin ne l'active pas explicitement (même précaution que `moncash_auto` à l'origine) |
-| Faible | Migration non encore appliquée — la ligne `natcash_auto` n'existe pas encore en base réelle ; le code déployé sans cette migration afficherait le bouton NatCash Otomatik comme "Byento disponib" en permanence (aucune ligne trouvée = `enabled: false` par défaut côté `isProviderEnabled`), un état sûr, pas une erreur |
-| Négligeable | `public/payment-global/` (chantier de branding antérieur) reste orphelin de tout point d'usage — déjà signalé dans le plan, décision assumée |
+| Niveau      | Risque                                                                                                                                                                                                                                                                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Faible      | `natcash_auto` est seedé désactivé — aucun trafic réel possible tant qu'un admin ne l'active pas explicitement (même précaution que `moncash_auto` à l'origine)                                                                                                                                                            |
+| Faible      | Migration non encore appliquée — la ligne `natcash_auto` n'existe pas encore en base réelle ; le code déployé sans cette migration afficherait le bouton NatCash Otomatik comme "Byento disponib" en permanence (aucune ligne trouvée = `enabled: false` par défaut côté `isProviderEnabled`), un état sûr, pas une erreur |
+| Négligeable | `public/payment-global/` (chantier de branding antérieur) reste orphelin de tout point d'usage — déjà signalé dans le plan, décision assumée                                                                                                                                                                               |
 
 Aucun risque de sécurité, aucune régression identifiée.
 

@@ -21,16 +21,16 @@ L'audit (Phase 1) avait trouvé que `src/hooks/useReauth.ts` (le dialogue de ré
 - **23 lectures** (`get_*_admin`, `get_admin_*`, etc.) — non modifiées, voir §9 pour la justification.
 - **~24 mutations**, classées par ce qu'elles font réellement :
 
-| Niveau | RPC | Justification |
-|---|---|---|
-| 🔴 **STRICT** (5 min, MFA fraîche obligatoire, aucun repli) | `add_user_role_secure` | modifie des rôles/privilèges |
-| | `remove_user_role_secure` | modifie des rôles/privilèges |
-| | `initiate_payout_secure` | argent réel quitte la plateforme |
-| | `update_payment_provider_setting_secure` | configuration financière/sécurité globale |
-| | `update_platform_payout_settings_secure` | configuration financière globale |
-| 🟠 **STANDARD** (15 min, repli mot de passe/OAuth accepté) | `review_refund_secure` | déjà wrappé par `useReauth`, workflow d'approbation propre |
-| | `complete_refund_secure` | déjà wrappé par `useReauth`, workflow d'approbation propre |
-| ⚪ Non modifiées (~17 autres mutations + 23 lectures) | `charge_restaurant_monthly_fee_secure`, `execute_commission_backfill_secure`, `recompute_wallet_secure`, `update_driver_status_secure`, `update_restaurant_status_secure`, `resolve_dispute_secure`, etc. | Décision de périmètre délibérée, documentée §9 — pas un oubli |
+| Niveau                                                      | RPC                                                                                                                                                                                                       | Justification                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 🔴 **STRICT** (5 min, MFA fraîche obligatoire, aucun repli) | `add_user_role_secure`                                                                                                                                                                                    | modifie des rôles/privilèges                                  |
+|                                                             | `remove_user_role_secure`                                                                                                                                                                                 | modifie des rôles/privilèges                                  |
+|                                                             | `initiate_payout_secure`                                                                                                                                                                                  | argent réel quitte la plateforme                              |
+|                                                             | `update_payment_provider_setting_secure`                                                                                                                                                                  | configuration financière/sécurité globale                     |
+|                                                             | `update_platform_payout_settings_secure`                                                                                                                                                                  | configuration financière globale                              |
+| 🟠 **STANDARD** (15 min, repli mot de passe/OAuth accepté)  | `review_refund_secure`                                                                                                                                                                                    | déjà wrappé par `useReauth`, workflow d'approbation propre    |
+|                                                             | `complete_refund_secure`                                                                                                                                                                                  | déjà wrappé par `useReauth`, workflow d'approbation propre    |
+| ⚪ Non modifiées (~17 autres mutations + 23 lectures)       | `charge_restaurant_monthly_fee_secure`, `execute_commission_backfill_secure`, `recompute_wallet_secure`, `update_driver_status_secure`, `update_restaurant_status_secure`, `resolve_dispute_secure`, etc. | Décision de périmètre délibérée, documentée §9 — pas un oubli |
 
 ---
 
@@ -61,7 +61,7 @@ Deux mécanismes, zéro nouvelle table :
 
 ## 5. Durée — 15 minutes (standard) / 5 minutes (strict)
 
-Conforme à la validation. Un point important découvert **en testant** (voir §11) : journaliser l'échec *depuis l'intérieur* de la RPC qui `RAISE EXCEPTION` ne fonctionne pas — PostgREST exécute chaque appel RPC comme une seule transaction, et une exception non interceptée annule tout ce qui a été écrit avant elle dans cette même transaction, y compris un `INSERT` dans `audit_log`. Corrigé en déplaçant la journalisation des échecs vers un appel RPC **séparé** (`log_admin_step_up_event_secure`), déclenché par le frontend après avoir intercepté l'erreur — sa propre transaction indépendante, qui survit bien au rollback du premier appel.
+Conforme à la validation. Un point important découvert **en testant** (voir §11) : journaliser l'échec _depuis l'intérieur_ de la RPC qui `RAISE EXCEPTION` ne fonctionne pas — PostgREST exécute chaque appel RPC comme une seule transaction, et une exception non interceptée annule tout ce qui a été écrit avant elle dans cette même transaction, y compris un `INSERT` dans `audit_log`. Corrigé en déplaçant la journalisation des échecs vers un appel RPC **séparé** (`log_admin_step_up_event_secure`), déclenché par le frontend après avoir intercepté l'erreur — sa propre transaction indépendante, qui survit bien au rollback du premier appel.
 
 L'expiration ne déconnecte jamais — elle déclenche une nouvelle demande MFA seulement au moment où une action protégée est retentée (`isStepUpError()` + `invalidateStepUp()` dans chaque `onError` de mutation).
 
@@ -69,14 +69,14 @@ L'expiration ne déconnecte jamais — elle déclenche une nouvelle demande MFA 
 
 ## 6. Protections Superadmin — matrice réelle
 
-| Action | Admin | Superadmin | MFA | MFA fraîche |
-|---|---|---|---|---|
-| Accès dashboard | Oui (gate frontend, voir §9) | Oui | Recommandée | Non (15 min) |
-| Approuver/compléter un remboursement | Oui | Oui | Si enrollée | Non (15 min, repli accepté) |
-| Ajouter/retirer un rôle (y compris admin/super_admin) | Non pour admin/super_admin lui-même (RPC l'interdit déjà), Oui pour les autres rôles | Oui | **Obligatoire** | **Oui (5 min, aucun repli)** |
-| Décaissement (`initiate_payout_secure`) | Oui | Oui | **Obligatoire** | **Oui (5 min, aucun repli)** |
-| Configuration fournisseur de paiement | Oui | Oui | **Obligatoire** | **Oui (5 min, aucun repli)** |
-| Configuration paiement plateforme (fallback MonCash/NatCash) | Oui | Oui | **Obligatoire** | **Oui (5 min, aucun repli)** |
+| Action                                                       | Admin                                                                                | Superadmin | MFA             | MFA fraîche                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ---------- | --------------- | ---------------------------- |
+| Accès dashboard                                              | Oui (gate frontend, voir §9)                                                         | Oui        | Recommandée     | Non (15 min)                 |
+| Approuver/compléter un remboursement                         | Oui                                                                                  | Oui        | Si enrollée     | Non (15 min, repli accepté)  |
+| Ajouter/retirer un rôle (y compris admin/super_admin)        | Non pour admin/super_admin lui-même (RPC l'interdit déjà), Oui pour les autres rôles | Oui        | **Obligatoire** | **Oui (5 min, aucun repli)** |
+| Décaissement (`initiate_payout_secure`)                      | Oui                                                                                  | Oui        | **Obligatoire** | **Oui (5 min, aucun repli)** |
+| Configuration fournisseur de paiement                        | Oui                                                                                  | Oui        | **Obligatoire** | **Oui (5 min, aucun repli)** |
+| Configuration paiement plateforme (fallback MonCash/NatCash) | Oui                                                                                  | Oui        | **Obligatoire** | **Oui (5 min, aucun repli)** |
 
 Aucune permission métier existante modifiée — seule une couche de vérification supplémentaire ajoutée. Un `admin` qui n'a pas encore enrollé de TOTP sera bloqué sur les 5 actions STRICT jusqu'à l'enrôlement — comportement voulu, documenté dans la migration.
 
@@ -84,23 +84,23 @@ Aucune permission métier existante modifiée — seule une couche de vérificat
 
 ## 7. Changements frontend
 
-| Fichier | Nature |
-|---|---|
-| `src/hooks/useTotpFactor.ts` | **Nouveau** — wrapper partagé autour de `supabase.auth.mfa.*` |
-| `src/lib/admin-step-up.ts` | **Nouveau** — `isStepUpError()`, `logStepUpEvent()`, `logDashboardAccessDenied()`, partagés entre `useReauth` et `AdminIdleLock` |
-| `src/hooks/useReauth.ts` | Modifié — `tier` (`standard`/`strict`), TOTP en priorité, `prompt: "consent"` sur l'OAuth (corrige R3), `invalidateStepUp()` |
-| `src/components/reauth-dialog.tsx` | Modifié — mode TOTP (saisie du code à 6 chiffres) en plus de mot de passe/OAuth |
-| `src/routes/_authenticated/dashboard.admin.security.tsx` | **Nouveau** — auto-enrôlement/désenrôlement TOTP (QR code, `supabase.auth.mfa.enroll`) |
-| `src/components/dashboard/admin/admin-idle-lock.tsx` | Modifié — vérifie `check_admin_step_up_secure()` **au montage**, pas seulement après inactivité ; déverrouillage TOTP-first |
-| `src/routes/_authenticated/dashboard.admin.tsx` | Modifié — message explicite + `log_dashboard_access_denied_secure()` avant la redirection |
-| `src/routes/_authenticated/dashboard.admin.users.tsx` | Modifié — `withReauth(..., "strict")` sur ajout/retrait de rôle |
-| `src/routes/_authenticated/dashboard.admin.refunds.tsx` | Modifié — gestion d'erreur step-up-aware ; **correction d'une incohérence pré-existante** : le bouton "Rejte" ne passait jamais par `withReauth`, maintenant corrigé (la RPC l'exige désormais inconditionnellement) |
-| `src/components/dashboard/payouts/payout-pay-modal.tsx` | Modifié — `withReauth(..., "strict")` |
-| `src/routes/_authenticated/dashboard.admin.payment-providers.tsx` | Modifié — **premier ajout** de `useReauth`/`ReauthDialog` (n'en avait aucun avant) |
-| `src/routes/_authenticated/dashboard.admin.payout-settings.tsx` | Modifié — **premier ajout** de `useReauth`/`ReauthDialog` |
-| `src/components/dashboard/sidebar/nav-items.ts` | Modifié — lien "Sekirite kont" (admin + super_admin) |
-| `src/integrations/supabase/types.ts` | Modifié — 3 nouvelles signatures RPC ajoutées à la main (à régénérer pour de vrai après application) |
-| `src/lib/__tests__/admin-step-up.test.ts` | **Nouveau** — 6 tests |
+| Fichier                                                           | Nature                                                                                                                                                                                                               |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/useTotpFactor.ts`                                      | **Nouveau** — wrapper partagé autour de `supabase.auth.mfa.*`                                                                                                                                                        |
+| `src/lib/admin-step-up.ts`                                        | **Nouveau** — `isStepUpError()`, `logStepUpEvent()`, `logDashboardAccessDenied()`, partagés entre `useReauth` et `AdminIdleLock`                                                                                     |
+| `src/hooks/useReauth.ts`                                          | Modifié — `tier` (`standard`/`strict`), TOTP en priorité, `prompt: "consent"` sur l'OAuth (corrige R3), `invalidateStepUp()`                                                                                         |
+| `src/components/reauth-dialog.tsx`                                | Modifié — mode TOTP (saisie du code à 6 chiffres) en plus de mot de passe/OAuth                                                                                                                                      |
+| `src/routes/_authenticated/dashboard.admin.security.tsx`          | **Nouveau** — auto-enrôlement/désenrôlement TOTP (QR code, `supabase.auth.mfa.enroll`)                                                                                                                               |
+| `src/components/dashboard/admin/admin-idle-lock.tsx`              | Modifié — vérifie `check_admin_step_up_secure()` **au montage**, pas seulement après inactivité ; déverrouillage TOTP-first                                                                                          |
+| `src/routes/_authenticated/dashboard.admin.tsx`                   | Modifié — message explicite + `log_dashboard_access_denied_secure()` avant la redirection                                                                                                                            |
+| `src/routes/_authenticated/dashboard.admin.users.tsx`             | Modifié — `withReauth(..., "strict")` sur ajout/retrait de rôle                                                                                                                                                      |
+| `src/routes/_authenticated/dashboard.admin.refunds.tsx`           | Modifié — gestion d'erreur step-up-aware ; **correction d'une incohérence pré-existante** : le bouton "Rejte" ne passait jamais par `withReauth`, maintenant corrigé (la RPC l'exige désormais inconditionnellement) |
+| `src/components/dashboard/payouts/payout-pay-modal.tsx`           | Modifié — `withReauth(..., "strict")`                                                                                                                                                                                |
+| `src/routes/_authenticated/dashboard.admin.payment-providers.tsx` | Modifié — **premier ajout** de `useReauth`/`ReauthDialog` (n'en avait aucun avant)                                                                                                                                   |
+| `src/routes/_authenticated/dashboard.admin.payout-settings.tsx`   | Modifié — **premier ajout** de `useReauth`/`ReauthDialog`                                                                                                                                                            |
+| `src/components/dashboard/sidebar/nav-items.ts`                   | Modifié — lien "Sekirite kont" (admin + super_admin)                                                                                                                                                                 |
+| `src/integrations/supabase/types.ts`                              | Modifié — 3 nouvelles signatures RPC ajoutées à la main (à régénérer pour de vrai après application)                                                                                                                 |
+| `src/lib/__tests__/admin-step-up.test.ts`                         | **Nouveau** — 6 tests                                                                                                                                                                                                |
 
 ---
 
@@ -121,34 +121,36 @@ Aucune RLS existante modifiée, aucune permission métier retirée, aucun rôle 
 
 ## 9. Décision de périmètre — pourquoi seulement 7 RPC sur 47
 
-Conformément à *"ne pas élargir arbitrairement cette catégorie"* : les ~40 RPC restantes (23 lectures `get_*_admin`, ~17 mutations opérationnelles comme `update_driver_status_secure`, `resolve_dispute_secure`, `create_sponsored_placement_secure`) ne modifient ni privilège, ni configuration de sécurité globale, ni ne déplacent d'argent hors plateforme de façon aussi directe qu'un décaissement. Le Tier 0 (accès au dashboard lui-même) reste une passerelle **frontend** (`AdminIdleLock`, désormais aussi vérifiée au montage, pas seulement après inactivité) — cohérent avec la posture déjà documentée du projet ("RLS est la vraie frontière pour les lectures", `_authenticated/route.tsx`). Étendre STRICT/STANDARD aux ~40 autres RPC est documenté ici comme **extension future proportionnée**, pas empaqueté dans cette migration pour garder un rayon d'impact vérifiable.
+Conformément à _"ne pas élargir arbitrairement cette catégorie"_ : les ~40 RPC restantes (23 lectures `get_*_admin`, ~17 mutations opérationnelles comme `update_driver_status_secure`, `resolve_dispute_secure`, `create_sponsored_placement_secure`) ne modifient ni privilège, ni configuration de sécurité globale, ni ne déplacent d'argent hors plateforme de façon aussi directe qu'un décaissement. Le Tier 0 (accès au dashboard lui-même) reste une passerelle **frontend** (`AdminIdleLock`, désormais aussi vérifiée au montage, pas seulement après inactivité) — cohérent avec la posture déjà documentée du projet ("RLS est la vraie frontière pour les lectures", `_authenticated/route.tsx`). Étendre STRICT/STANDARD aux ~40 autres RPC est documenté ici comme **extension future proportionnée**, pas empaqueté dans cette migration pour garder un rayon d'impact vérifiable.
 
 ---
 
 ## 10. Tests
 
 ### `npm run verify`
-| Étape | Résultat |
-|---|---|
-| `typecheck` | ✅ 0 erreur |
-| `lint` | ✅ 0 erreur (3 warnings pré-existants, sans rapport) |
-| `check:migrations` | ✅ 131 migrations, 0 danger |
-| `test` | ✅ **166/166** (160 avant + 6 nouveaux) |
-| `build` | ✅ build production réussi |
+
+| Étape              | Résultat                                             |
+| ------------------ | ---------------------------------------------------- |
+| `typecheck`        | ✅ 0 erreur                                          |
+| `lint`             | ✅ 0 erreur (3 warnings pré-existants, sans rapport) |
+| `check:migrations` | ✅ 131 migrations, 0 danger                          |
+| `test`             | ✅ **166/166** (160 avant + 6 nouveaux)              |
+| `build`            | ✅ build production réussi                           |
 
 ### Tests transactionnels (BEGIN/ROLLBACK contre la production réelle, méthode déjà établie sur ce projet — `SET LOCAL request.jwt.claims`)
+
 Migration entière appliquée + testée + **annulée** dans une seule transaction, avec le vrai compte `super_admin` (`phanoraltes@gmail.com`) :
 
-| Cas | Résultat |
-|---|---|
-| Aucun facteur, aucune session fraîche | `missing` ✅ |
-| Aucun facteur, session fraîche (< 15 min) — repli standard | `ok` ✅ |
-| Même état, tier strict (repli désactivé) | `missing` ✅ |
-| Aucun facteur, session de 20 min | `expired` ✅ |
-| Facteur vérifié existe, mais JWT toujours `aal1` (challenge jamais fait dans cette session) | `missing` ✅ |
-| `aal2` + challenge à l'instant — standard ET strict | `ok` / `ok` ✅ |
-| `aal2` + challenge il y a 20 min | `expired` (les deux tiers) ✅ |
-| `aal2` + challenge il y a 7 min | standard `ok`, strict `expired` ✅ |
+| Cas                                                                                         | Résultat                           |
+| ------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Aucun facteur, aucune session fraîche                                                       | `missing` ✅                       |
+| Aucun facteur, session fraîche (< 15 min) — repli standard                                  | `ok` ✅                            |
+| Même état, tier strict (repli désactivé)                                                    | `missing` ✅                       |
+| Aucun facteur, session de 20 min                                                            | `expired` ✅                       |
+| Facteur vérifié existe, mais JWT toujours `aal1` (challenge jamais fait dans cette session) | `missing` ✅                       |
+| `aal2` + challenge à l'instant — standard ET strict                                         | `ok` / `ok` ✅                     |
+| `aal2` + challenge il y a 20 min                                                            | `expired` (les deux tiers) ✅      |
+| `aal2` + challenge il y a 7 min                                                             | standard `ok`, strict `expired` ✅ |
 
 Après `ROLLBACK` : **0 résidu confirmé** (0 facteur MFA, 0 log d'audit, 0 fonction créée, rôle `restaurant_staff` ajouté pendant le test absent — seuls les 3 rôles réels `customer/admin/super_admin` restent).
 
@@ -157,22 +159,26 @@ Après `ROLLBACK` : **0 résidu confirmé** (0 facteur MFA, 0 log d'audit, 0 fon
 ## 11. Tests de bypass (Étape 5/10)
 
 **Scénario 1 — appel RPC direct sans step-up** (simule DevTools/`curl` avec un JWT admin `aal1`, aucune session fraîche) :
+
 ```
 PERFORM public.add_user_role_secure(v_admin, 'customer');
 → REJETÉ : "STEP_UP_REQUIRED_MFA: Verifikasyon MFA fre obligatwa..."
 ```
+
 ✅ **Confirmé : impossible de contourner en appelant la RPC directement, même avec un rôle admin/super_admin valide.**
 
 **Scénario 2 — même appel, avec un step-up MFA valide et frais** :
+
 ```
 PERFORM public.add_user_role_secure(v_admin, 'restaurant_staff');
 → RÉUSSI, ligne insérée dans user_roles
 ```
+
 ✅ **Confirmé : l'action légitime passe normalement.**
 
 **Scénario 3 — tier STANDARD accepte le repli (pas de MFA enrollée), tier STRICT le refuse, sur le même état exact** — ✅ Confirmé (§10, avant-dernière ligne du tableau).
 
-**Bug réel trouvé pendant ces tests** (§5) : la tentative initiale de journaliser l'échec *depuis l'intérieur* de la RPC rejetée ne fonctionnait pas — corrigé avant la version finale.
+**Bug réel trouvé pendant ces tests** (§5) : la tentative initiale de journaliser l'échec _depuis l'intérieur_ de la RPC rejetée ne fonctionnait pas — corrigé avant la version finale.
 
 **Non testé en conditions réelles** (limite honnête, voir §13) : un appel HTTP direct (`curl`/Postman) contre l'API REST réellement déployée, puisque la migration n'est pas encore appliquée en production — les tests ci-dessus exercent exactement le même code SQL, avec les mêmes claims JWT simulées, contre le vrai schéma (`auth.mfa_factors`, `auth.sessions`, vrai compte super_admin), donc le comportement en production sera identique une fois la migration appliquée — mais ce n'est pas, à la lettre, un `curl` contre `/rest/v1/rpc/...`.
 
@@ -182,14 +188,14 @@ PERFORM public.add_user_role_secure(v_admin, 'restaurant_staff');
 
 Fait sur un compte jetable réel (`nkdeliveri-totp-test-…@gmail.com`, email confirmé directement en base pour éviter d'utiliser une vraie boîte mail, supprimé après coup) — **pas une simulation**, le vrai flux `supabase.auth.mfa.enroll()`/`challengeAndVerify()` de bout en bout, avec un générateur de code TOTP (RFC 6238, HMAC-SHA1) écrit à la main, sans librairie, pour prouver la compréhension exacte du mécanisme :
 
-| Étape | Résultat |
-|---|---|
-| `mfa.enroll({factorType:"totp"})` | ✅ secret + QR code réels retournés |
-| Code généré à la main à partir du secret, accepté du premier coup par GoTrue | ✅ (`challengeAndVerify` réussi) |
-| `auth.mfa_factors.status` après enrôlement | ✅ `'verified'` |
-| `auth.mfa_factors.last_challenged_at` | ✅ posé à l'enrôlement, **mis à jour à nouveau** lors d'un second challenge simulant une future vérification — confirme en conditions réelles l'hypothèse centrale de `private.admin_step_up_status()` |
-| `getAuthenticatorAssuranceLevel()` après verify | ✅ `currentLevel: "aal2"` |
-| **JWT réel décodé** | ✅ `aal: "aal2"`, `session_id` présent — les deux exactement ce que `auth.jwt()->>'aal'`/`->>'session_id'` lisent dans la migration |
+| Étape                                                                        | Résultat                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mfa.enroll({factorType:"totp"})`                                            | ✅ secret + QR code réels retournés                                                                                                                                                                    |
+| Code généré à la main à partir du secret, accepté du premier coup par GoTrue | ✅ (`challengeAndVerify` réussi)                                                                                                                                                                       |
+| `auth.mfa_factors.status` après enrôlement                                   | ✅ `'verified'`                                                                                                                                                                                        |
+| `auth.mfa_factors.last_challenged_at`                                        | ✅ posé à l'enrôlement, **mis à jour à nouveau** lors d'un second challenge simulant une future vérification — confirme en conditions réelles l'hypothèse centrale de `private.admin_step_up_status()` |
+| `getAuthenticatorAssuranceLevel()` après verify                              | ✅ `currentLevel: "aal2"`                                                                                                                                                                              |
+| **JWT réel décodé**                                                          | ✅ `aal: "aal2"`, `session_id` présent — les deux exactement ce que `auth.jwt()->>'aal'`/`->>'session_id'` lisent dans la migration                                                                    |
 
 **Ceci lève la limitation notée en §13** ("comportement exact de l'`aal` en conditions réelles... non testé avec une vraie app TOTP") — le mécanisme est maintenant confirmé à la fois par simulation SQL (§10-11) et par un vrai flux d'enrôlement/challenge de bout en bout contre la production. Rien n'a été appliqué en base par cette étape au-delà du compte de test lui-même, supprimé immédiatement après.
 
@@ -197,8 +203,8 @@ Fait sur un compte jetable réel (`nkdeliveri-totp-test-…@gmail.com`, email co
 
 ## 12. Résultats
 
-- Le scénario interdit (*session admin volée → DevTools → RPC sensible → accès sans MFA*) est **prouvé impossible** pour les 5 RPC STRICT et 2 RPC STANDARD.
-- Le scénario voulu (*admin légitime → MFA TOTP → RPC → action autorisée*) est **prouvé fonctionnel**.
+- Le scénario interdit (_session admin volée → DevTools → RPC sensible → accès sans MFA_) est **prouvé impossible** pour les 5 RPC STRICT et 2 RPC STANDARD.
+- Le scénario voulu (_admin légitime → MFA TOTP → RPC → action autorisée_) est **prouvé fonctionnel**.
 - Le frontend affiche maintenant un vrai dialogue de vérification — **mais ce n'est plus lui l'autorité** : chaque RPC re-vérifie indépendamment, prouvé en l'appelant directement sans jamais passer par le composant React.
 
 ---

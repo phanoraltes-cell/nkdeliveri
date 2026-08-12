@@ -47,10 +47,10 @@ restent exactement comme avant.
 
 ## 3. RPC
 
-| RPC | Rôle | Appelant |
-|---|---|---|
-| `create_collect_payment_secure(_payment_id, _external_reference, _status, _error)` | Enregistre une tentative (succès d'initiation → `'pending'`, ou rejet immédiat → `'failed'` + notifie admin) | `authenticated`, le client propriétaire de la commande uniquement |
-| `complete_collect_payment_secure(_external_reference, _decision, ...)` | Seul point qui finalise un paiement collect — `UPDATE payment_transactions` puis `UPDATE payments.status` (déclenche le trigger existant) | `service_role` **exclusivement** — jamais appelable depuis une session cliente |
+| RPC                                                                                | Rôle                                                                                                                                      | Appelant                                                                       |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `create_collect_payment_secure(_payment_id, _external_reference, _status, _error)` | Enregistre une tentative (succès d'initiation → `'pending'`, ou rejet immédiat → `'failed'` + notifie admin)                              | `authenticated`, le client propriétaire de la commande uniquement              |
+| `complete_collect_payment_secure(_external_reference, _decision, ...)`             | Seul point qui finalise un paiement collect — `UPDATE payment_transactions` puis `UPDATE payments.status` (déclenche le trigger existant) | `service_role` **exclusivement** — jamais appelable depuis une session cliente |
 
 **"Aucune confirmation frontend"** satisfait structurellement : rien
 d'accessible au client ne peut jamais faire passer un paiement à
@@ -68,10 +68,10 @@ success"`).
 
 ## 4. RLS
 
-| Table | Policy | Portée |
-|---|---|---|
-| `payment_transactions` | `payment_transactions admin read` | Admin/super_admin, toutes les lignes |
-| `payment_transactions` | `payment_transactions own read` | Client, uniquement les lignes de ses propres commandes (`orders.customer_id = auth.uid()`) — nécessaire pour que la page commande distingue "paiement automatique" de "paiement manuel" (voir § UI checkout) |
+| Table                  | Policy                            | Portée                                                                                                                                                                                                       |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `payment_transactions` | `payment_transactions admin read` | Admin/super_admin, toutes les lignes                                                                                                                                                                         |
+| `payment_transactions` | `payment_transactions own read`   | Client, uniquement les lignes de ses propres commandes (`orders.customer_id = auth.uid()`) — nécessaire pour que la page commande distingue "paiement automatique" de "paiement manuel" (voir § UI checkout) |
 
 Aucun `INSERT`/`UPDATE`/`DELETE` accordé à `anon`/`authenticated` — les
 deux seuls chemins d'écriture sont les 2 RPC ci-dessus.
@@ -121,14 +121,14 @@ existant, `PAY_STATUS_LABEL`). Mise à jour automatique de la page via
 **39/39 tests passent** (32 précédents + 7 nouveaux pour le webhook
 collect), `npm run verify` intégralement vert.
 
-| Scénario demandé | Couverture |
-|---|---|
-| Succès | ✅ `"a valid success event calls complete_collect_payment_secure with decision 'paid'"` |
-| Refus | ✅ `"a valid failed event calls complete_collect_payment_secure with decision 'failed'"` |
-| Timeout | ✅ Couvert au niveau du connecteur (`moncash-client.test.ts`, déjà existant, réutilisé sans changement — `direction:"collect"` passe par le même `createPayment()` instrumenté) |
-| Webhook invalide | ✅ `"rejects an invalid signature with 401 and never calls an RPC"` |
-| Webhook doublé | ✅ `"a replayed delivery for an already-decided transaction is idempotent, not an error"` |
-| Retry | ✅ Couvert au niveau du connecteur (backoff exponentiel déjà testé, générique à toute direction) |
+| Scénario demandé | Couverture                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Succès           | ✅ `"a valid success event calls complete_collect_payment_secure with decision 'paid'"`                                                                                         |
+| Refus            | ✅ `"a valid failed event calls complete_collect_payment_secure with decision 'failed'"`                                                                                        |
+| Timeout          | ✅ Couvert au niveau du connecteur (`moncash-client.test.ts`, déjà existant, réutilisé sans changement — `direction:"collect"` passe par le même `createPayment()` instrumenté) |
+| Webhook invalide | ✅ `"rejects an invalid signature with 401 and never calls an RPC"`                                                                                                             |
+| Webhook doublé   | ✅ `"a replayed delivery for an already-decided transaction is idempotent, not an error"`                                                                                       |
+| Retry            | ✅ Couvert au niveau du connecteur (backoff exponentiel déjà testé, générique à toute direction)                                                                                |
 
 **Non testé unitairement, par cohérence avec le reste du projet** :
 `initiate-collect-payment.functions.ts` (la fonction serveur
@@ -147,14 +147,14 @@ une fois la migration appliquée : rejouer le même type de script
 
 ## 8. Rapport sécurité
 
-| Contrôle | Résultat |
-|---|---|
-| Secrets absents du frontend | Structurel — `moncash-provider.server.ts`/`moncash-client.server.ts` réutilisés tels quels, mêmes garanties `.server.ts` déjà en place |
-| RLS | Client limité à ses propres lignes ; `service_role` seul peut écrire une décision terminale |
-| Permissions RPC | `create_collect_payment_secure` : `authenticated` avec vérification `orders.customer_id = auth.uid()` interne ; `complete_collect_payment_secure` : `service_role` exclusivement, aucun accès `authenticated`/`anon` |
-| Logs nettoyés | `webhook_data` filtré par liste blanche, jamais le payload brut |
-| Rate limiting | `create_collect_payment_secure` : `check_rate_limit_secure('create_collect_payment', 10, 600)` — nouveau, cohérent avec le reste du projet |
-| Confirmation frontend | Structurellement impossible — voir §3 |
+| Contrôle                    | Résultat                                                                                                                                                                                                             |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secrets absents du frontend | Structurel — `moncash-provider.server.ts`/`moncash-client.server.ts` réutilisés tels quels, mêmes garanties `.server.ts` déjà en place                                                                               |
+| RLS                         | Client limité à ses propres lignes ; `service_role` seul peut écrire une décision terminale                                                                                                                          |
+| Permissions RPC             | `create_collect_payment_secure` : `authenticated` avec vérification `orders.customer_id = auth.uid()` interne ; `complete_collect_payment_secure` : `service_role` exclusivement, aucun accès `authenticated`/`anon` |
+| Logs nettoyés               | `webhook_data` filtré par liste blanche, jamais le payload brut                                                                                                                                                      |
+| Rate limiting               | `create_collect_payment_secure` : `check_rate_limit_secure('create_collect_payment', 10, 600)` — nouveau, cohérent avec le reste du projet                                                                           |
+| Confirmation frontend       | Structurellement impossible — voir §3                                                                                                                                                                                |
 
 ## 9. Rapport performance
 

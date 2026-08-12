@@ -53,57 +53,57 @@ Cartographie construite à partir du code réel (`src/routes/**`), pas supposée
 
 ### 3.1 Zone publique (sans authentification)
 
-| Route | Fichier | `head()`/SEO | État |
-|---|---|---|---|
-| `/` | `index.tsx` | ✅ pageMeta | Active |
-| `/restaurants` | `restaurants.index.tsx` | ✅ | Active |
-| `/restaurants/$slug` | `restaurants.$slug.tsx` | ✅ (dynamique via loaderData) | Active |
-| `/about` | `about.tsx` | ✅ | Active |
-| `/contact` | `contact.tsx` | ✅ | Active |
-| `/faq` | `faq.tsx` | ✅ | Active |
-| `/terms` | `terms.tsx` | ✅ | Active |
-| `/privacy` | `privacy.tsx` | ✅ | Active |
-| `/auth` | `auth.index.tsx` | — | Active |
-| `/auth/register` | `auth.register.tsx` | `noIndexMeta` | Active |
-| `/auth/forgot-password` | `auth.forgot-password.tsx` | — | Active |
-| `/auth/reset-password` | `auth.reset-password.tsx` | — | Active |
-| `/checkout` | `checkout.tsx` | `noIndexMeta` | Active — accessible sans compte (panier), auth exigée seulement à la soumission |
-| `/orders` | `orders.index.tsx` | `noIndexMeta` | Active — accessible sans compte, état "connecte-toi" inline si non connecté |
-| `/orders/$id` | `orders.$id.tsx` | `noIndexMeta` | Active — **redirection dure** vers `/auth` si non connecté (`beforeLoad`), `ssr: false` |
-| `/profile` | `profile.tsx` | `noIndexMeta` | Active — accessible sans compte, état "connecte-toi" inline |
-| `/robots.txt` | `robots[.]txt.ts` | — | Actif, exclut `/dashboard /admin /api /private /auth /checkout /orders /profile` |
-| `/sitemap.xml` | `sitemap[.]xml.ts` | — | Actif, pages statiques + restaurants approuvés dynamiques |
-| `/api/webhooks/moncash`, `/collect`, `/api/webhooks/stripe/collect`, `/api/cron/moncash-reconcile`, `/api/cron/plop-reconcile` | `api.*.ts` | — | Endpoints serveur, hors périmètre UI |
+| Route                                                                                                                          | Fichier                    | `head()`/SEO                  | État                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `/`                                                                                                                            | `index.tsx`                | ✅ pageMeta                   | Active                                                                                  |
+| `/restaurants`                                                                                                                 | `restaurants.index.tsx`    | ✅                            | Active                                                                                  |
+| `/restaurants/$slug`                                                                                                           | `restaurants.$slug.tsx`    | ✅ (dynamique via loaderData) | Active                                                                                  |
+| `/about`                                                                                                                       | `about.tsx`                | ✅                            | Active                                                                                  |
+| `/contact`                                                                                                                     | `contact.tsx`              | ✅                            | Active                                                                                  |
+| `/faq`                                                                                                                         | `faq.tsx`                  | ✅                            | Active                                                                                  |
+| `/terms`                                                                                                                       | `terms.tsx`                | ✅                            | Active                                                                                  |
+| `/privacy`                                                                                                                     | `privacy.tsx`              | ✅                            | Active                                                                                  |
+| `/auth`                                                                                                                        | `auth.index.tsx`           | —                             | Active                                                                                  |
+| `/auth/register`                                                                                                               | `auth.register.tsx`        | `noIndexMeta`                 | Active                                                                                  |
+| `/auth/forgot-password`                                                                                                        | `auth.forgot-password.tsx` | —                             | Active                                                                                  |
+| `/auth/reset-password`                                                                                                         | `auth.reset-password.tsx`  | —                             | Active                                                                                  |
+| `/checkout`                                                                                                                    | `checkout.tsx`             | `noIndexMeta`                 | Active — accessible sans compte (panier), auth exigée seulement à la soumission         |
+| `/orders`                                                                                                                      | `orders.index.tsx`         | `noIndexMeta`                 | Active — accessible sans compte, état "connecte-toi" inline si non connecté             |
+| `/orders/$id`                                                                                                                  | `orders.$id.tsx`           | `noIndexMeta`                 | Active — **redirection dure** vers `/auth` si non connecté (`beforeLoad`), `ssr: false` |
+| `/profile`                                                                                                                     | `profile.tsx`              | `noIndexMeta`                 | Active — accessible sans compte, état "connecte-toi" inline                             |
+| `/robots.txt`                                                                                                                  | `robots[.]txt.ts`          | —                             | Actif, exclut `/dashboard /admin /api /private /auth /checkout /orders /profile`        |
+| `/sitemap.xml`                                                                                                                 | `sitemap[.]xml.ts`         | —                             | Actif, pages statiques + restaurants approuvés dynamiques                               |
+| `/api/webhooks/moncash`, `/collect`, `/api/webhooks/stripe/collect`, `/api/cron/moncash-reconcile`, `/api/cron/plop-reconcile` | `api.*.ts`                 | —                             | Endpoints serveur, hors périmètre UI                                                    |
 
-**Observation (§3, non notée comme anomalie)** : `/checkout`, `/orders`, `/orders/$id` et `/profile` sont *en dehors* de `_authenticated/` alors qu'elles nécessitent fonctionnellement un compte pour être utiles. C'est un choix architectural cohérent et documenté dans le code (permettre au panier/à la navigation publique de fonctionner sans compte), mais avec **trois comportements différents** face à un visiteur non connecté : redirection dure (`/orders/$id`), message inline avec lien (`/orders`, `/profile`), ou action différée jusqu'à la soumission (`/checkout`). Voir finding F-06.
+**Observation (§3, non notée comme anomalie)** : `/checkout`, `/orders`, `/orders/$id` et `/profile` sont _en dehors_ de `_authenticated/` alors qu'elles nécessitent fonctionnellement un compte pour être utiles. C'est un choix architectural cohérent et documenté dans le code (permettre au panier/à la navigation publique de fonctionner sans compte), mais avec **trois comportements différents** face à un visiteur non connecté : redirection dure (`/orders/$id`), message inline avec lien (`/orders`, `/profile`), ou action différée jusqu'à la soumission (`/checkout`). Voir finding F-06.
 
 ### 3.2 Zone Client (`/_authenticated/dashboard/customer/*`)
 
 Aucun garde de rôle sur `dashboard.customer.tsx` — **volontaire et documenté dans le code** : "any authenticated role may view the customer dashboard family."
 
-| Route | État |
-|---|---|
-| `/dashboard/customer` | Active — Dashboard (Byenveni, Favori, Istwa resan, Pwomosyon, Restoran popilè) |
-| `/dashboard/customer/chat` | Active |
-| `/_authenticated/chat/$orderId` | Active |
-| `/_authenticated/notifications` | Active |
+| Route                           | État                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `/dashboard/customer`           | Active — Dashboard (Byenveni, Favori, Istwa resan, Pwomosyon, Restoran popilè) |
+| `/dashboard/customer/chat`      | Active                                                                         |
+| `/_authenticated/chat/$orderId` | Active                                                                         |
+| `/_authenticated/notifications` | Active                                                                         |
 
 ### 3.3 Zone Restaurant (`/_authenticated/dashboard/restaurant/*`)
 
 Garde large (`restaurant_owner`, `restaurant_staff`, `admin`, `super_admin`) sur le layout ; garde **plus étroite** (owner/admin seulement, staff exclu) sur 6 sous-routes : `revenue`, `commissions`, `promotions`, `profile`, `payouts`, `employees`.
 
-| Route | Garde | État |
-|---|---|---|
-| `/dashboard/restaurant` | Large | Dashboard — Active |
-| `/dashboard/restaurant/orders` | Large | Kanban + vue Liste — Active |
-| `/dashboard/restaurant/menu` | Large | Active |
-| `/dashboard/restaurant/employees` | **Étroit** | Active |
-| `/dashboard/restaurant/payouts` | **Étroit** | Active |
-| `/dashboard/restaurant/promotions` | **Étroit** | Active |
-| `/dashboard/restaurant/revenue` | **Étroit** | Active |
-| `/dashboard/restaurant/commissions` | **Étroit** | Active |
-| `/dashboard/restaurant/profile` | **Étroit** | Active |
-| `/dashboard/restaurant/disputes` | Large | Active |
+| Route                               | Garde      | État                        |
+| ----------------------------------- | ---------- | --------------------------- |
+| `/dashboard/restaurant`             | Large      | Dashboard — Active          |
+| `/dashboard/restaurant/orders`      | Large      | Kanban + vue Liste — Active |
+| `/dashboard/restaurant/menu`        | Large      | Active                      |
+| `/dashboard/restaurant/employees`   | **Étroit** | Active                      |
+| `/dashboard/restaurant/payouts`     | **Étroit** | Active                      |
+| `/dashboard/restaurant/promotions`  | **Étroit** | Active                      |
+| `/dashboard/restaurant/revenue`     | **Étroit** | Active                      |
+| `/dashboard/restaurant/commissions` | **Étroit** | Active                      |
+| `/dashboard/restaurant/profile`     | **Étroit** | Active                      |
+| `/dashboard/restaurant/disputes`    | Large      | Active                      |
 
 **Observation mineure** : le commentaire du code dans `dashboard.restaurant.tsx` dit "Five children ... apply a NARROWER guard" — le code réel en compte **6** (`commissions` a été ajouté après ce commentaire). Dérive de documentation interne, sans impact fonctionnel — signalé pour hygiène.
 
@@ -111,41 +111,41 @@ Garde large (`restaurant_owner`, `restaurant_staff`, `admin`, `super_admin`) sur
 
 Garde uniforme (`driver`, `admin`, `super_admin`) sur tout le sous-arbre.
 
-| Route | État |
-|---|---|
-| `/dashboard/driver` | Dashboard — Active |
-| `/dashboard/driver/available` | Active |
-| `/dashboard/driver/history` | Active |
-| `/dashboard/driver/earnings` | Active |
-| `/dashboard/driver/payouts` | Active |
-| `/dashboard/driver/commissions` | Active |
-| `/dashboard/driver/disputes` | Active |
-| `/dashboard/driver/chat` | Active |
-| `/dashboard/driver/profile` | Active |
+| Route                           | État               |
+| ------------------------------- | ------------------ |
+| `/dashboard/driver`             | Dashboard — Active |
+| `/dashboard/driver/available`   | Active             |
+| `/dashboard/driver/history`     | Active             |
+| `/dashboard/driver/earnings`    | Active             |
+| `/dashboard/driver/payouts`     | Active             |
+| `/dashboard/driver/commissions` | Active             |
+| `/dashboard/driver/disputes`    | Active             |
+| `/dashboard/driver/chat`        | Active             |
+| `/dashboard/driver/profile`     | Active             |
 
 ### 3.5 Zone Admin (`/_authenticated/dashboard/admin/*`)
 
 Garde uniforme (`admin`, `super_admin`), plus `AdminIdleLock` appliqué à toute la famille depuis un point unique (verrouillage de session par inactivité — durcissement Phase 3).
 
-| Route | État |
-|---|---|
-| `/dashboard/admin` | Dashboard monitoring — Active |
-| `/dashboard/admin/users` | Active |
-| `/dashboard/admin/customers` | Active |
-| `/dashboard/admin/restaurants` | Active |
-| `/dashboard/admin/drivers` | Active |
-| `/dashboard/admin/disputes` | Active |
-| `/dashboard/admin/refunds` | Active |
-| `/dashboard/admin/payments` | Active |
-| `/dashboard/admin/payouts` | Active |
-| `/dashboard/admin/payout-settings` | Active |
-| `/dashboard/admin/payout-migration` | Active |
-| `/dashboard/admin/commissions` | Active |
-| `/dashboard/admin/finance` | Active |
-| `/dashboard/admin/collect` | Active |
-| `/dashboard/admin/payment-providers` | Active |
-| `/dashboard/admin/ads` | Active |
-| `/dashboard/admin/chat` | Active |
+| Route                                | État                          |
+| ------------------------------------ | ----------------------------- |
+| `/dashboard/admin`                   | Dashboard monitoring — Active |
+| `/dashboard/admin/users`             | Active                        |
+| `/dashboard/admin/customers`         | Active                        |
+| `/dashboard/admin/restaurants`       | Active                        |
+| `/dashboard/admin/drivers`           | Active                        |
+| `/dashboard/admin/disputes`          | Active                        |
+| `/dashboard/admin/refunds`           | Active                        |
+| `/dashboard/admin/payments`          | Active                        |
+| `/dashboard/admin/payouts`           | Active                        |
+| `/dashboard/admin/payout-settings`   | Active                        |
+| `/dashboard/admin/payout-migration`  | Active                        |
+| `/dashboard/admin/commissions`       | Active                        |
+| `/dashboard/admin/finance`           | Active                        |
+| `/dashboard/admin/collect`           | Active                        |
+| `/dashboard/admin/payment-providers` | Active                        |
+| `/dashboard/admin/ads`               | Active                        |
+| `/dashboard/admin/chat`              | Active                        |
 
 18 items de navigation au total dans la sidebar admin (voir §11 pour l'analyse desktop).
 
@@ -204,9 +204,11 @@ Vérifié par capture desktop (Dashboard). Très dense en information mais bien 
 ## 10. UX
 
 ### Hiérarchie / Navigation
+
 Cohérente sur tout le site : header public unique (`SiteHeader`), sidebar dashboard **unique et partagée par les 4 rôles** (`DashboardSidebar`, `nav-items.ts` pilote le contenu par rôle) — un vrai point fort, pas de duplication de sidebar par rôle.
 
 ### Actions
+
 Actions principales toujours visuellement dominantes (bouton plein `bg-brand`), actions secondaires en outline, actions destructives (suppression, annulation) systématiquement derrière une confirmation (`useConfirmDialog`) — bon pattern observé de manière répétée (Kanban annulation, suppression produit menu, nettoyage historique).
 
 ### Feedback — États silencieux identifiés
@@ -228,16 +230,16 @@ Cohérence visuelle globale forte : palette de marque, typographie (`Bricolage G
 
 ## 12. Design System
 
-| Composant | Standardisé | Variantes locales | Hardcoded | Recommandation |
-|---|---:|---:|---:|---|
-| Button (`ui/button.tsx`) | ✅ | Non | Non | RAS |
-| Card (`ui/card.tsx`) | ✅ | Quelques cartes ad hoc en dashboard (ex. stats admin) | Non | Acceptable — cartes stats ont des besoins de layout différents |
-| Badge / StatusBadge | ✅ | Non | Non | RAS |
-| Sidebar dashboard | ✅ (unique, partagée 4 rôles) | Non | Non | Point fort à préserver |
-| **EmptyState** | 🟡 Partiel (~15 pages) | ~10 pages avec texte brut ad hoc | Non | **Standardiser** — faible risque, gain de cohérence réel (F-01) |
-| Table (`ui/table.tsx`) | 🟡 | Plusieurs tables dashboard spécifiques (finance-history, commission-history, payout-history) | Non | Volontaire, pas de "DataTable" générique forcé — cohérent avec la règle YAGNI du prompt |
-| Formulaires | ❌ (pas de lib) | Chaque formulaire réimplémente `useState` + validation manuelle | Non | Pas nécessairement un problème (pas de sur-ingénierie), mais explique F-04 (pas d'auto-wiring `aria-invalid`) |
-| Shadow | 🟡 | 19 usages arbitraires vs 107 tokens (F-02) | Non | Polish uniquement |
+| Composant                |                   Standardisé |                                                                            Variantes locales | Hardcoded | Recommandation                                                                                                |
+| ------------------------ | ----------------------------: | -------------------------------------------------------------------------------------------: | --------: | ------------------------------------------------------------------------------------------------------------- |
+| Button (`ui/button.tsx`) |                            ✅ |                                                                                          Non |       Non | RAS                                                                                                           |
+| Card (`ui/card.tsx`)     |                            ✅ |                                        Quelques cartes ad hoc en dashboard (ex. stats admin) |       Non | Acceptable — cartes stats ont des besoins de layout différents                                                |
+| Badge / StatusBadge      |                            ✅ |                                                                                          Non |       Non | RAS                                                                                                           |
+| Sidebar dashboard        | ✅ (unique, partagée 4 rôles) |                                                                                          Non |       Non | Point fort à préserver                                                                                        |
+| **EmptyState**           |        🟡 Partiel (~15 pages) |                                                             ~10 pages avec texte brut ad hoc |       Non | **Standardiser** — faible risque, gain de cohérence réel (F-01)                                               |
+| Table (`ui/table.tsx`)   |                            🟡 | Plusieurs tables dashboard spécifiques (finance-history, commission-history, payout-history) |       Non | Volontaire, pas de "DataTable" générique forcé — cohérent avec la règle YAGNI du prompt                       |
+| Formulaires              |               ❌ (pas de lib) |                              Chaque formulaire réimplémente `useState` + validation manuelle |       Non | Pas nécessairement un problème (pas de sur-ingénierie), mais explique F-04 (pas d'auto-wiring `aria-invalid`) |
+| Shadow                   |                            🟡 |                                                   19 usages arbitraires vs 107 tokens (F-02) |       Non | Polish uniquement                                                                                             |
 
 **Ne pas sur-abstraire** : conformément à la règle du prompt, la diversité des tables dashboard (finance/commission/payout) n'est **pas** recommandée en fusion — chacune a des colonnes et filtres réellement différents ; le gain de maintenance serait faible et le risque de régression réel.
 
@@ -275,11 +277,13 @@ Audit WCAG 2.2 AA via axe-core (`e2e/cross-cutting/accessibility.spec.ts`), exé
 **Contexte important — ceci n'est pas une découverte nouvelle** : le choix de garder l'orange de marque vif (`#F97316`/`#EA580C`) plutôt que de l'assombrir pour satisfaire le contraste WCAG a déjà été discuté et **délibérément tranché par vous** (mémoire de session : garder la couleur vive, ne pas la réassombrir sans demander). Ce rapport documente donc la **mesure exacte et actuelle** de ce compromis pour que la décision reste informée, pas pour la remettre en cause unilatéralement.
 
 **IMPORTANT — séparation preuve automatisée / limitation**, conformément à la règle du prompt :
+
 - Preuve automatisée fiable : les 85 violations `color-contrast` ci-dessus (axe-core, données exactes).
 - Limitation connue et non retenue comme preuve : la page "checkout (cash flow)" échoue habituellement dans ce même test pour un timeout SSR/auth du harnais de mock (déjà documenté depuis les phases précédentes, pas une vraie violation d'accessibilité) — dans cette exécution spécifique, l'échec de la page checkout provenait bien de `color-contrast` réel (même cause que les autres), pas du timeout SSR habituel ; les deux causes possibles existent et ne doivent pas être confondues.
 - Vérification manuelle : non réalisée avec un lecteur d'écran réel dans le cadre de cet audit (hors périmètre du temps disponible) — recommandée en complément si une remédiation de contraste est engagée.
 
 Autres observations (lecture de code, §7 et §17) :
+
 - Aucune police < 12px détectée dans les composants examinés.
 - `target="_blank"` : les 3 usages trouvés dans le code (`order-chat-thread.tsx`, `proof-thumb.tsx`, `site-footer.tsx`) ont tous un `rel="noreferrer"`/`rel="noopener"` correctement posé — pas de faille `window.opener`.
 
@@ -306,17 +310,17 @@ Autres observations (lecture de code, §7 et §17) :
 
 Recherche systématique par page (échantillon capturé + code) :
 
-| État | Couverture observée |
-|---|---|
-| Loading | ✅ largement présent (`Skeleton` — 28 fichiers, spinners inline) |
-| Empty | ✅ mais deux implémentations (F-01) |
-| Error | ✅ toast + pages d'erreur globales (`__root.tsx`) ; **pas d'erreur inline par champ** (F-04) |
-| Success | ✅ toast succès systématique après action |
-| Disabled | ✅ observé sur boutons pendant soumission (`disabled={submitting}`) |
-| Pending/Processing | ✅ (ex. statuts de commande, badges "DISPONIB"/statuts colorés) |
-| Cancelled | ✅ (colonne Kanban dédiée, statut visible partout) |
+| État                   | Couverture observée                                                                                                                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                | ✅ largement présent (`Skeleton` — 28 fichiers, spinners inline)                                                                                                                                                                                            |
+| Empty                  | ✅ mais deux implémentations (F-01)                                                                                                                                                                                                                         |
+| Error                  | ✅ toast + pages d'erreur globales (`__root.tsx`) ; **pas d'erreur inline par champ** (F-04)                                                                                                                                                                |
+| Success                | ✅ toast succès systématique après action                                                                                                                                                                                                                   |
+| Disabled               | ✅ observé sur boutons pendant soumission (`disabled={submitting}`)                                                                                                                                                                                         |
+| Pending/Processing     | ✅ (ex. statuts de commande, badges "DISPONIB"/statuts colorés)                                                                                                                                                                                             |
+| Cancelled              | ✅ (colonne Kanban dédiée, statut visible partout)                                                                                                                                                                                                          |
 | Unauthorized/Forbidden | 🟡 géré côté route (`requireRole` → redirection), pas de page 403 dédiée visible à l'utilisateur — une tentative d'accès à un dashboard non autorisé redirige silencieusement plutôt que d'expliquer pourquoi (P3, non vérifié visuellement dans cet audit) |
-| Offline | ✅ shell applicatif dédié (voir §17) |
+| Offline                | ✅ shell applicatif dédié (voir §17)                                                                                                                                                                                                                        |
 
 ---
 
@@ -355,16 +359,16 @@ Aucune vulnérabilité Critique ou Haute trouvée côté frontend dans le périm
 
 ## 23. Cohérence inter-rôles
 
-| Pattern | Client | Restaurant | Livreur | Admin |
-|---|---|---|---|---|
-| Header | `SiteHeader` (public) / `DashboardHeader` (dashboard) — commun aux 4 rôles | idem | idem | idem |
-| Sidebar | `DashboardSidebar` unique, contenu piloté par `nav-items.ts` | idem | idem | idem |
-| Empty state | Mixte (`EmptyState` + texte brut) | Mixte | Texte brut dominant | Mixte |
-| Loading | `Skeleton` | `Skeleton` | `Skeleton` | `Skeleton` |
-| Erreur (formulaire) | Toast uniquement | Toast uniquement | Toast uniquement | Toast uniquement |
-| Modal/confirmation | `useConfirmDialog` partagé | idem | idem | idem |
-| Notifications | Page partagée `_authenticated/notifications.tsx` | idem | idem | idem |
-| Libellé méthode de paiement | Logo (Hero/Footer public) | **Texte seul**, incomplet (F-07) | n/a | Logo (Collect monitoring) |
+| Pattern                     | Client                                                                     | Restaurant                       | Livreur             | Admin                     |
+| --------------------------- | -------------------------------------------------------------------------- | -------------------------------- | ------------------- | ------------------------- |
+| Header                      | `SiteHeader` (public) / `DashboardHeader` (dashboard) — commun aux 4 rôles | idem                             | idem                | idem                      |
+| Sidebar                     | `DashboardSidebar` unique, contenu piloté par `nav-items.ts`               | idem                             | idem                | idem                      |
+| Empty state                 | Mixte (`EmptyState` + texte brut)                                          | Mixte                            | Texte brut dominant | Mixte                     |
+| Loading                     | `Skeleton`                                                                 | `Skeleton`                       | `Skeleton`          | `Skeleton`                |
+| Erreur (formulaire)         | Toast uniquement                                                           | Toast uniquement                 | Toast uniquement    | Toast uniquement          |
+| Modal/confirmation          | `useConfirmDialog` partagé                                                 | idem                             | idem                | idem                      |
+| Notifications               | Page partagée `_authenticated/notifications.tsx`                           | idem                             | idem                | idem                      |
+| Libellé méthode de paiement | Logo (Hero/Footer public)                                                  | **Texte seul**, incomplet (F-07) | n/a                 | Logo (Collect monitoring) |
 
 **F-07 (P3, déjà connu, reconfirmé)** : `PAYMENT_METHOD_LABEL` dans `order-kanban-board.tsx` et `dashboard.restaurant.orders.tsx` ne couvre que `moncash`/`natcash`/`kach` — une commande payée par `stripe` (Kat Kredi, désormais actif en production) ou `moncash_auto`/`natcash_auto` y afficherait la clé technique brute plutôt qu'un libellé lisible.
 
@@ -380,41 +384,41 @@ Recherche exhaustive de fautes de mélange linguistique (anglais/français au mi
 
 ## 25. Findings — Matrice complète
 
-| ID | Rôle | Route/Zone | Problème | Catégorie | Gravité | Impact | Evidence | Recommandation |
-|---|---|---|---|---|---|---|---|---|
-| F-01 | Tous (dashboards) | ~10 pages dashboard | Deux implémentations d'empty state (composant riche vs texte brut) | Design System | 🟡 P3 | Incohérence visuelle pour la même situation | Grep exhaustif : 15 pages avec `EmptyState`, 10 sans | Migrer les pages restantes vers `EmptyState` |
-| F-02 | Tous (marketing) | `components/home/*` | Ombres arbitraires Tailwind non tokenisées (19 usages) | Design System | 🟢 P4 | Dérive potentielle si l'échelle de marque change | Grep : 19 `shadow-[...]` vs 107 `shadow-brand-*` | Optionnel — évaluer migration vers tokens si retouche de ces sections |
-| F-03 | Restaurant | `/dashboard/restaurant/orders` | Vue Kanban (drag-and-drop) par défaut y compris mobile, malgré une vue Liste existante | UX / Mobile-first | 🟠 P2 | Interaction moins adaptée au tactile sur l'écran opérationnel le plus utilisé quotidiennement | Code lu : `useState<"kanban"\|"list">("kanban")`, aucune détection de largeur | Défaut conditionnel à la largeur d'écran (`< md` → Liste) |
-| F-04 | Tous | Tous formulaires | Erreurs de validation exclusivement via toast, sans `aria-invalid`/erreur inline | Accessibilité / UX | 🟠 P2 | Utilisateur (surtout lecteur d'écran) sans indice sur le champ fautif si le toast est manqué | Grep exhaustif : 0 `aria-invalid` dans `src/routes`, `src/components/auth` | Ajouter erreur inline + `aria-invalid`/`aria-describedby` sur les champs invalides |
-| F-05 | Tous | Chat, statuts temps réel, Kanban | Aucune région `aria-live` pour les mises à jour dynamiques hors toast | Accessibilité | 🟡 P3 | Lecteur d'écran non averti des changements de statut/messages en direct | Grep exhaustif : 0 `aria-live` dans `src/` (toasts couverts en interne par `sonner`) | Ajouter `aria-live="polite"` sur le fil de chat et le badge de statut de commande |
-| F-06 | Client | `/checkout`, `/orders`, `/orders/$id`, `/profile` | 3 comportements différents face à un visiteur non connecté (redirection dure / message inline / report à la soumission) | UX / Cohérence | 🟡 P3 | Expérience imprévisible selon la page d'entrée | Lecture de code des 4 fichiers | Documenter le choix comme volontaire, ou harmoniser vers un seul pattern |
-| F-07 | Restaurant | `order-kanban-board.tsx`, `dashboard.restaurant.orders.tsx` | `PAYMENT_METHOD_LABEL` sans entrée pour `stripe`/`moncash_auto`/`natcash_auto` | Content / Functional feedback | 🟡 P3 | Clé technique brute affichée au lieu d'un libellé lisible pour ces méthodes | Lecture de code (déjà noté lors d'une tâche précédente, reconfirmé) | Ajouter les 3 entrées manquantes au mapping |
-| F-08 | Tous (WCAG) | Header/nav (toutes pages), badge panier | Contraste insuffisant de l'orange de marque (14 motifs d'éléments) | Accessibilité | 🟠 P2 (techniquement ; **connu et accepté par vous**) | Échec mesuré WCAG 2 AA (2.79–3.17:1 vs 3:1–4.5:1 requis) | axe-core, 85 occurrences, 5 pages testées | Décision déjà actée : ne pas modifier sans validation explicite (voir §15) |
-| F-09 | Public | 404 (`__root.tsx`) | Pas de lien vers `/restaurants` sur la page 404, uniquement retour accueil | UX | 🟢 P4 | Occasion manquée, pas un blocage | Lecture de code | Ajouter un second CTA "Wè restoran yo" |
-| F-10 | Restaurant | `/dashboard/restaurant/menu` (375px) | Placeholder de champ tronqué visuellement | Responsive | 🟢 P4 | Cosmétique uniquement | Capture d'écran 375px | Raccourcir le texte de placeholder |
-| F-11 | Tous | Guards de rôle | Pas de page 403 dédiée visible — redirection silencieuse en cas d'accès non autorisé | UX / Content | 🟡 P3 | Utilisateur sans explication du pourquoi | Lecture de code (`requireRole`) | Page/état "Accès non autorisé" explicite avant redirection |
+| ID   | Rôle              | Route/Zone                                                  | Problème                                                                                                                | Catégorie                     | Gravité                                               | Impact                                                                                        | Evidence                                                                             | Recommandation                                                                     |
+| ---- | ----------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| F-01 | Tous (dashboards) | ~10 pages dashboard                                         | Deux implémentations d'empty state (composant riche vs texte brut)                                                      | Design System                 | 🟡 P3                                                 | Incohérence visuelle pour la même situation                                                   | Grep exhaustif : 15 pages avec `EmptyState`, 10 sans                                 | Migrer les pages restantes vers `EmptyState`                                       |
+| F-02 | Tous (marketing)  | `components/home/*`                                         | Ombres arbitraires Tailwind non tokenisées (19 usages)                                                                  | Design System                 | 🟢 P4                                                 | Dérive potentielle si l'échelle de marque change                                              | Grep : 19 `shadow-[...]` vs 107 `shadow-brand-*`                                     | Optionnel — évaluer migration vers tokens si retouche de ces sections              |
+| F-03 | Restaurant        | `/dashboard/restaurant/orders`                              | Vue Kanban (drag-and-drop) par défaut y compris mobile, malgré une vue Liste existante                                  | UX / Mobile-first             | 🟠 P2                                                 | Interaction moins adaptée au tactile sur l'écran opérationnel le plus utilisé quotidiennement | Code lu : `useState<"kanban"\|"list">("kanban")`, aucune détection de largeur        | Défaut conditionnel à la largeur d'écran (`< md` → Liste)                          |
+| F-04 | Tous              | Tous formulaires                                            | Erreurs de validation exclusivement via toast, sans `aria-invalid`/erreur inline                                        | Accessibilité / UX            | 🟠 P2                                                 | Utilisateur (surtout lecteur d'écran) sans indice sur le champ fautif si le toast est manqué  | Grep exhaustif : 0 `aria-invalid` dans `src/routes`, `src/components/auth`           | Ajouter erreur inline + `aria-invalid`/`aria-describedby` sur les champs invalides |
+| F-05 | Tous              | Chat, statuts temps réel, Kanban                            | Aucune région `aria-live` pour les mises à jour dynamiques hors toast                                                   | Accessibilité                 | 🟡 P3                                                 | Lecteur d'écran non averti des changements de statut/messages en direct                       | Grep exhaustif : 0 `aria-live` dans `src/` (toasts couverts en interne par `sonner`) | Ajouter `aria-live="polite"` sur le fil de chat et le badge de statut de commande  |
+| F-06 | Client            | `/checkout`, `/orders`, `/orders/$id`, `/profile`           | 3 comportements différents face à un visiteur non connecté (redirection dure / message inline / report à la soumission) | UX / Cohérence                | 🟡 P3                                                 | Expérience imprévisible selon la page d'entrée                                                | Lecture de code des 4 fichiers                                                       | Documenter le choix comme volontaire, ou harmoniser vers un seul pattern           |
+| F-07 | Restaurant        | `order-kanban-board.tsx`, `dashboard.restaurant.orders.tsx` | `PAYMENT_METHOD_LABEL` sans entrée pour `stripe`/`moncash_auto`/`natcash_auto`                                          | Content / Functional feedback | 🟡 P3                                                 | Clé technique brute affichée au lieu d'un libellé lisible pour ces méthodes                   | Lecture de code (déjà noté lors d'une tâche précédente, reconfirmé)                  | Ajouter les 3 entrées manquantes au mapping                                        |
+| F-08 | Tous (WCAG)       | Header/nav (toutes pages), badge panier                     | Contraste insuffisant de l'orange de marque (14 motifs d'éléments)                                                      | Accessibilité                 | 🟠 P2 (techniquement ; **connu et accepté par vous**) | Échec mesuré WCAG 2 AA (2.79–3.17:1 vs 3:1–4.5:1 requis)                                      | axe-core, 85 occurrences, 5 pages testées                                            | Décision déjà actée : ne pas modifier sans validation explicite (voir §15)         |
+| F-09 | Public            | 404 (`__root.tsx`)                                          | Pas de lien vers `/restaurants` sur la page 404, uniquement retour accueil                                              | UX                            | 🟢 P4                                                 | Occasion manquée, pas un blocage                                                              | Lecture de code                                                                      | Ajouter un second CTA "Wè restoran yo"                                             |
+| F-10 | Restaurant        | `/dashboard/restaurant/menu` (375px)                        | Placeholder de champ tronqué visuellement                                                                               | Responsive                    | 🟢 P4                                                 | Cosmétique uniquement                                                                         | Capture d'écran 375px                                                                | Raccourcir le texte de placeholder                                                 |
+| F-11 | Tous              | Guards de rôle                                              | Pas de page 403 dédiée visible — redirection silencieuse en cas d'accès non autorisé                                    | UX / Content                  | 🟡 P3                                                 | Utilisateur sans explication du pourquoi                                                      | Lecture de code (`requireRole`)                                                      | Page/état "Accès non autorisé" explicite avant redirection                         |
 
-**0 P0 (Bloquant), 0 P1 (Critique), 4 P2 (Important : F-03, F-04, F-08*), 6 P3 (Amélioration), 3 P4 (Polish).**
+_*0 P0 (Bloquant), 0 P1 (Critique), 4 P2 (Important : F-03, F-04, F-08*), 6 P3 (Amélioration), 3 P4 (Polish)._*
 *F-08 techniquement P2 selon WCAG mais reclassé "connu/accepté" — ne compte pas comme dette nouvelle.
 
 ---
 
 ## 26. Scores par domaine
 
-| Domaine | Score /10 | Justification |
-|---|---:|---|
-| Public UX | 8.5 | Parcours clair, cohérent, capturé propre à 2 largeurs |
-| Client UX | 8 | Riche, `EmptyState` bien utilisé sur le dashboard, F-06 mineur |
-| Restaurant UX | 7 | Kanban puissant mais F-03 (défaut mobile) pèse sur l'usage quotidien |
-| Livreur UX | 8.5 | Mobile-first réussi, lisible, gros CTA |
-| Admin UX | 7.5 | Riche et fonctionnel, densité de navigation à surveiller |
-| UI | 8 | Cohérence visuelle forte, F-01/F-02 mineurs |
-| Responsive | 8 | Aucun débordement détecté sur l'échantillon capturé, F-10 cosmétique |
-| Accessibilité | 6.5 | Structure/ARIA saine (0 violation hors contraste), mais F-04/F-05/F-08 réels |
-| Performance | 8 | Discipline de lazy-load/precache cohérente, chunking déjà optimisé |
-| PWA | 9 | Manifest complet, SW fonctionnel, offline vérifié, 3/3 tests verts |
-| Design System | 7.5 | Sidebar/Button/Badge exemplaires ; EmptyState/shadows à standardiser |
-| Cohérence globale | 8 | Terminologie 100% cohérente, patterns partagés dominants, F-07 isolé |
+| Domaine           | Score /10 | Justification                                                                |
+| ----------------- | --------: | ---------------------------------------------------------------------------- |
+| Public UX         |       8.5 | Parcours clair, cohérent, capturé propre à 2 largeurs                        |
+| Client UX         |         8 | Riche, `EmptyState` bien utilisé sur le dashboard, F-06 mineur               |
+| Restaurant UX     |         7 | Kanban puissant mais F-03 (défaut mobile) pèse sur l'usage quotidien         |
+| Livreur UX        |       8.5 | Mobile-first réussi, lisible, gros CTA                                       |
+| Admin UX          |       7.5 | Riche et fonctionnel, densité de navigation à surveiller                     |
+| UI                |         8 | Cohérence visuelle forte, F-01/F-02 mineurs                                  |
+| Responsive        |         8 | Aucun débordement détecté sur l'échantillon capturé, F-10 cosmétique         |
+| Accessibilité     |       6.5 | Structure/ARIA saine (0 violation hors contraste), mais F-04/F-05/F-08 réels |
+| Performance       |         8 | Discipline de lazy-load/precache cohérente, chunking déjà optimisé           |
+| PWA               |         9 | Manifest complet, SW fonctionnel, offline vérifié, 3/3 tests verts           |
+| Design System     |       7.5 | Sidebar/Button/Badge exemplaires ; EmptyState/shadows à standardiser         |
+| Cohérence globale |         8 | Terminologie 100% cohérente, patterns partagés dominants, F-07 isolé         |
 
 **Score global pondéré : ≈ 7.9 / 10.**
 
@@ -425,14 +429,17 @@ Comparaison avec le score du rapport précédent le plus proche (`docs/SITE_AUDI
 ## 27. Backlog recommandé
 
 ### 🔴 Priorité immédiate
-*Aucun élément* — aucune anomalie P0/P1 trouvée.
+
+_Aucun élément_ — aucune anomalie P0/P1 trouvée.
 
 ### 🟠 Prochaine phase
+
 - F-03 : défaut Liste sur mobile pour le Kanban restaurant.
 - F-04 : erreurs de formulaire inline + `aria-invalid`/`aria-describedby`.
 - F-08 : rester une décision produit explicite (déjà actée) — à ne rouvrir que si vous le souhaitez.
 
 ### 🟢 Backlog
+
 - F-01 : migrer les ~10 pages restantes vers `EmptyState`.
 - F-05 : `aria-live` sur chat et statuts temps réel.
 - F-06 : harmoniser (ou documenter comme volontaire) le comportement "non connecté" sur `/checkout`/`/orders`/`/orders/$id`/`/profile`.

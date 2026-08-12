@@ -23,26 +23,26 @@ src/lib/__tests__/initiate-collect-payment.test.ts        ← test backend exist
 
 ## 2. Classification — un seul fichier client-facing concerné
 
-| Fichier | Nature | Concerné par cette mission ? |
-|---|---|---|
-| `src/routes/checkout.tsx` | Page de checkout client, sélection de méthode de paiement | **Oui — seul fichier à modifier** |
-| `src/components/dashboard/payouts/payout-pay-modal.tsx` | Modale admin de décaissement (paiement plateforme → restaurant/livreur) — un `provider_code: "moncash_api"` distinct, flux de **décaissement**, pas de **collecte** client | Non — hors périmètre (mission scope = "Checkout" client) |
-| `dashboard.admin.finance.tsx`, `dashboard.admin.moncash.tsx` | Monitoring admin en lecture seule | Non — aucune action utilisateur, pas de sélection de méthode |
-| `initiate-collect-payment.functions.ts` / `.logic.ts` | Backend — appelle `moncashProvider.isConfigured()` | Non — protection déjà en place, voir Phase 5 |
-| `moncash-reconcile.server.ts`, `api.cron.moncash-reconcile.ts` | Backend — réconciliation décaissement | Non — flux distinct (décaissement, pas collecte) |
-| `initiate-collect-payment.test.ts` | Test backend existant | Non modifié — testé en Phase 6 pour confirmer l'absence de régression |
+| Fichier                                                        | Nature                                                                                                                                                                     | Concerné par cette mission ?                                          |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `src/routes/checkout.tsx`                                      | Page de checkout client, sélection de méthode de paiement                                                                                                                  | **Oui — seul fichier à modifier**                                     |
+| `src/components/dashboard/payouts/payout-pay-modal.tsx`        | Modale admin de décaissement (paiement plateforme → restaurant/livreur) — un `provider_code: "moncash_api"` distinct, flux de **décaissement**, pas de **collecte** client | Non — hors périmètre (mission scope = "Checkout" client)              |
+| `dashboard.admin.finance.tsx`, `dashboard.admin.moncash.tsx`   | Monitoring admin en lecture seule                                                                                                                                          | Non — aucune action utilisateur, pas de sélection de méthode          |
+| `initiate-collect-payment.functions.ts` / `.logic.ts`          | Backend — appelle `moncashProvider.isConfigured()`                                                                                                                         | Non — protection déjà en place, voir Phase 5                          |
+| `moncash-reconcile.server.ts`, `api.cron.moncash-reconcile.ts` | Backend — réconciliation décaissement                                                                                                                                      | Non — flux distinct (décaissement, pas collecte)                      |
+| `initiate-collect-payment.test.ts`                             | Test backend existant                                                                                                                                                      | Non modifié — testé en Phase 6 pour confirmer l'absence de régression |
 
 **Conclusion : l'intégralité de la surface client-facing de "MonCash Automatik" tient dans un seul fichier, `src/routes/checkout.tsx`.**
 
 ## 3. `checkout.tsx` — détail exact des 5 occurrences
 
-| Ligne | Code | Rôle |
-|---|---|---|
-| 24–39 | `const METHODS = [...]` | Tableau des 4 méthodes affichées — `moncash_auto` est le premier élément |
-| 47 | `useState<CheckoutMethod>("moncash_auto")` | **État initial — méthode sélectionnée par défaut au chargement de la page** |
-| 119 | `const orderMethod = method === "moncash_auto" ? "moncash" : method` | Traduit le choix UI vers l'énumération `payment_method` de la commande (`moncash`/`natcash`/`kach`) — `create_order_secure` ne connaît que ces 3 valeurs, jamais `moncash_auto` lui-même |
-| 171–207 | `if (method === "moncash_auto") { ... }` | Bloc `submit()` — appelle `initiateCollect()`, gère redirection plein-navigateur |
-| 404–420 | `{method === "moncash_auto" && (...)}` | Encart informatif affiché sous les boutons quand cette méthode est sélectionnée |
+| Ligne   | Code                                                                 | Rôle                                                                                                                                                                                     |
+| ------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 24–39   | `const METHODS = [...]`                                              | Tableau des 4 méthodes affichées — `moncash_auto` est le premier élément                                                                                                                 |
+| 47      | `useState<CheckoutMethod>("moncash_auto")`                           | **État initial — méthode sélectionnée par défaut au chargement de la page**                                                                                                              |
+| 119     | `const orderMethod = method === "moncash_auto" ? "moncash" : method` | Traduit le choix UI vers l'énumération `payment_method` de la commande (`moncash`/`natcash`/`kach`) — `create_order_secure` ne connaît que ces 3 valeurs, jamais `moncash_auto` lui-même |
+| 171–207 | `if (method === "moncash_auto") { ... }`                             | Bloc `submit()` — appelle `initiateCollect()`, gère redirection plein-navigateur                                                                                                         |
+| 404–420 | `{method === "moncash_auto" && (...)}`                               | Encart informatif affiché sous les boutons quand cette méthode est sélectionnée                                                                                                          |
 
 ## 4. Validations concernées
 

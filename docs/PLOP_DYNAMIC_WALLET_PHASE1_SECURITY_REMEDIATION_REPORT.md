@@ -57,14 +57,14 @@ Signature : `(_payment_id uuid, _external_reference text, _status text DEFAULT '
 
 ## Hardening restauré
 
-| Aspect | Version 08-03 (production) | Version corrigée (cette remédiation) | Identique ? |
-|---|---|---|---|
-| Condition de déclenchement | `_status = 'pending'` | `_status = 'pending'` | ✅ |
-| Requête de vérification | `SELECT 1 FROM payment_provider_settings WHERE provider = 'moncash_auto' AND enabled = true` | Identique | ✅ |
-| Message d'erreur | `'MonCash Automatik pa disponib pou kounye a.'` | Identique | ✅ |
-| Code d'erreur | `ERRCODE = '42501'` | Identique | ✅ |
-| Position dans la fonction | Immédiatement avant l'`INSERT` | Identique | ✅ |
-| Portée (`pending` seulement, jamais `failed`) | ✅ | ✅ | ✅ |
+| Aspect                                        | Version 08-03 (production)                                                                   | Version corrigée (cette remédiation) | Identique ? |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------ | ----------- |
+| Condition de déclenchement                    | `_status = 'pending'`                                                                        | `_status = 'pending'`                | ✅          |
+| Requête de vérification                       | `SELECT 1 FROM payment_provider_settings WHERE provider = 'moncash_auto' AND enabled = true` | Identique                            | ✅          |
+| Message d'erreur                              | `'MonCash Automatik pa disponib pou kounye a.'`                                              | Identique                            | ✅          |
+| Code d'erreur                                 | `ERRCODE = '42501'`                                                                          | Identique                            | ✅          |
+| Position dans la fonction                     | Immédiatement avant l'`INSERT`                                                               | Identique                            | ✅          |
+| Portée (`pending` seulement, jamais `failed`) | ✅                                                                                           | ✅                                   | ✅          |
 
 ---
 
@@ -77,6 +77,7 @@ Signature : `(_payment_id uuid, _external_reference text, _status text DEFAULT '
 **Migration** : ✅ `npm run check:migrations` → 117 migrations scannées, 0 hazard de surcharge non résolu — **complété par la revue manuelle ci-dessus**, non traité comme suffisant à lui seul, conformément à l'instruction
 
 **Vérification manuelle additionnelle** (au-delà des outils automatisés, puisque c'est précisément leur angle mort qui a causé le problème initial) :
+
 - Comparaison ligne par ligne du bloc restauré contre `20260803130000_harden_create_collect_payment_provider_check.sql:68-82` → identique caractère pour caractère (hors commentaires).
 - Confirmation que `complete_collect_payment_secure` n'a aucune régression équivalente possible : recherche exhaustive (`grep`) confirme qu'elle n'a jamais été définie qu'une seule fois avant cette phase (`20260731130000`), jamais retouchée depuis — aucun hardening à perdre pour cette fonction.
 - Confirmation qu'aucun fichier TypeScript ni test n'a été modifié dans cette remédiation (`git status` avant/après identique sur tous les fichiers `.ts`/`.tsx`).
@@ -101,14 +102,14 @@ Signature : `(_payment_id uuid, _external_reference text, _status text DEFAULT '
 
 ## Critères de réussite
 
-| Critère | Statut |
-|---|---|
-| Le bloc de hardening du 03 août est restauré | ✅ |
-| La traçabilité wallet reste fonctionnelle | ✅ |
-| Les signatures RPC restent compatibles | ✅ |
-| Les permissions restent intactes | ✅ |
-| Aucun changement TypeScript nécessaire | ✅ — confirmé, zéro fichier `.ts`/`.tsx` modifié |
-| Tous les tests passent | ✅ 98/98 |
+| Critère                                      | Statut                                           |
+| -------------------------------------------- | ------------------------------------------------ |
+| Le bloc de hardening du 03 août est restauré | ✅                                               |
+| La traçabilité wallet reste fonctionnelle    | ✅                                               |
+| Les signatures RPC restent compatibles       | ✅                                               |
+| Les permissions restent intactes             | ✅                                               |
+| Aucun changement TypeScript nécessaire       | ✅ — confirmé, zéro fichier `.ts`/`.tsx` modifié |
+| Tous les tests passent                       | ✅ 98/98                                         |
 
 ---
 

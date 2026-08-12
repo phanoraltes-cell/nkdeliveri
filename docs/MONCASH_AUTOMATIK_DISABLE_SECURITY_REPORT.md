@@ -10,6 +10,7 @@
 ### 1.1 Le bouton est un vrai `<button disabled>`, pas une simulation visuelle
 
 `src/routes/checkout.tsx` — le bouton "MonCash Automatik" reçoit l'attribut HTML natif `disabled` (et `aria-disabled="true"`) quand `getPaymentMethodAvailability("moncash_auto").enabled === false`. Un `<button disabled>` :
+
 - ne déclenche **aucun** événement `click` (vérifié : `page.locator(...).click({ force: true })` en E2E ne change pas la sélection, voir `e2e/client/moncash-auto-disabled.spec.ts`) ;
 - n'est **pas atteignable au clavier** via Tab dans la plupart des navigateurs — cohérent avec "cette option ne peut pas être utilisée maintenant", pas juste visuellement grisée.
 
@@ -32,6 +33,7 @@ if (!moncashProvider.isConfigured()) { return { outcome: "failed", ... }; }
 ## 2. Limite honnête de cette protection — à ne pas ignorer
 
 **Le désactivage frontend et la protection backend ne sont pas couplés.** Si les 5 variables `MONCASH_*` étaient un jour restaurées en production (par exemple par erreur, ou parce que quelqu'un ne sait pas que cette désactivation est volontaire) **sans** que ce changement frontend soit également retiré, alors :
+
 - Le bouton resterait désactivé pour un utilisateur normal → **aucun risque dans l'usage normal**.
 - Mais un utilisateur manipulant le frontend (DevTools, requête directe vers la fonction serveur) **pourrait** alors réellement déclencher un paiement MonCash Automatik, puisque le backend n'a plus de raison de le refuser.
 

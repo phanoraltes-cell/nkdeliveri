@@ -44,29 +44,29 @@ orders.status ──────────────────────
 
 Calculée entièrement en SQL dans `get_orders_admin`, jamais stockée. Sept buckets, priorité décroissante :
 
-| Bucket | Condition (résumé) |
-|---|---|
-| 🔴 `assistance_required` | Assistance admin `required`/`in_progress`, **OU** litige non résolu/rejeté, **OU** remboursement `requested`, **OU** paiement `under_review`, **OU** confirmation cash `disputed` |
-| ⬛ `cancelled` / `refunded` | Statuts terminaux de `orders.status`, buckets séparés (jamais fondus dans "complete"/"incomplete") |
-| 🟠 `blocked` | Staleness réelle par étape — voir §4 pour la provenance de chaque seuil |
-| 🟡 `incomplete` | Étape obligatoire manquante, pas encore assez ancienne pour être `blocked` |
-| 🟢 `complete` | `delivered` + `paid` + aucune confirmation cash en attente |
-| 🔵 `en_cours` | Tout le reste, actif et dans les temps |
+| Bucket                      | Condition (résumé)                                                                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 `assistance_required`    | Assistance admin `required`/`in_progress`, **OU** litige non résolu/rejeté, **OU** remboursement `requested`, **OU** paiement `under_review`, **OU** confirmation cash `disputed` |
+| ⬛ `cancelled` / `refunded` | Statuts terminaux de `orders.status`, buckets séparés (jamais fondus dans "complete"/"incomplete")                                                                                |
+| 🟠 `blocked`                | Staleness réelle par étape — voir §4 pour la provenance de chaque seuil                                                                                                           |
+| 🟡 `incomplete`             | Étape obligatoire manquante, pas encore assez ancienne pour être `blocked`                                                                                                        |
+| 🟢 `complete`               | `delivered` + `paid` + aucune confirmation cash en attente                                                                                                                        |
+| 🔵 `en_cours`               | Tout le reste, actif et dans les temps                                                                                                                                            |
 
 ## 4. Seuils de staleness — provenance de chacun, aucun inventé en silence
 
 Conformément à la décision explicite (« ne pas inventer de règles métier »), chaque seuil est étiqueté par sa source réelle :
 
-| Seuil | Source | Statut |
-|---|---|---|
-| Préparation restaurant (`confirmed`/`preparing`) | `restaurants.avg_prep_time` (réel, par restaurant, déjà utilisé côté client) + 20 min de marge | Ancré sur une donnée réelle |
-| Paiement automatique MonCash/NatCash (24h) | `STUCK_PENDING_MINUTES.moncash/natcash` — **valeur exacte déjà en production** dans `dashboard.admin.collect.tsx` | Réutilisé, pas réinventé |
-| Paiement automatique Stripe (2h) | `STUCK_PENDING_MINUTES.stripe` — **valeur exacte déjà en production** | Réutilisé, pas réinventé |
-| `pending` sans confirmation restaurant (20 min) | Aucun précédent dans le code | **Provisoire — à valider opérationnellement** |
-| `ready` sans livreur assigné (30 min) | Aucun précédent | **Provisoire** |
-| `assigned`/`picked_up` sans livraison (90 min) | Aucun précédent | **Provisoire** |
-| Preuve de paiement manuelle en attente (60 min) | Aucun précédent | **Provisoire** |
-| Confirmation cash non validée après livraison (60 min) | Aucun précédent | **Provisoire** |
+| Seuil                                                  | Source                                                                                                            | Statut                                        |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Préparation restaurant (`confirmed`/`preparing`)       | `restaurants.avg_prep_time` (réel, par restaurant, déjà utilisé côté client) + 20 min de marge                    | Ancré sur une donnée réelle                   |
+| Paiement automatique MonCash/NatCash (24h)             | `STUCK_PENDING_MINUTES.moncash/natcash` — **valeur exacte déjà en production** dans `dashboard.admin.collect.tsx` | Réutilisé, pas réinventé                      |
+| Paiement automatique Stripe (2h)                       | `STUCK_PENDING_MINUTES.stripe` — **valeur exacte déjà en production**                                             | Réutilisé, pas réinventé                      |
+| `pending` sans confirmation restaurant (20 min)        | Aucun précédent dans le code                                                                                      | **Provisoire — à valider opérationnellement** |
+| `ready` sans livreur assigné (30 min)                  | Aucun précédent                                                                                                   | **Provisoire**                                |
+| `assigned`/`picked_up` sans livraison (90 min)         | Aucun précédent                                                                                                   | **Provisoire**                                |
+| Preuve de paiement manuelle en attente (60 min)        | Aucun précédent                                                                                                   | **Provisoire**                                |
+| Confirmation cash non validée après livraison (60 min) | Aucun précédent                                                                                                   | **Provisoire**                                |
 
 Les valeurs « Provisoire » sont des points de départ opérationnels, pas des règles métier validées — chacune est un littéral SQL isolé dans `get_orders_admin`, donc ajustable en une seule `CREATE OR REPLACE FUNCTION` sans migration de schéma.
 
@@ -96,15 +96,15 @@ Plus une extension additive mineure : `notifications.category` accepte désormai
 
 ## 7. Frontend — fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `src/lib/komand-status.ts` (nouveau) | Libellés/tons Kreyòl partagés pour santé/assistance/sous-statuts |
-| `src/routes/_authenticated/dashboard.admin.komand.tsx` (nouveau) | Liste : KPI, recherche, filtre santé, pagination, temps réel |
+| Fichier                                                             | Rôle                                                                                                                          |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/komand-status.ts` (nouveau)                                | Libellés/tons Kreyòl partagés pour santé/assistance/sous-statuts                                                              |
+| `src/routes/_authenticated/dashboard.admin.komand.tsx` (nouveau)    | Liste : KPI, recherche, filtre santé, pagination, temps réel                                                                  |
 | `src/components/dashboard/admin/komand-detail-dialog.tsx` (nouveau) | Détail : client/restaurant/livreur, paiement/livraison, litige/remboursement, notes internes, contrôles d'assistance, contact |
-| `src/components/dashboard/sidebar/nav-items.ts` | Ajout de l'entrée « Komand » (admin + super_admin) |
-| `src/routes/_authenticated/notifications.tsx` | Onglet/icône `admin`, lien `data.customer_id` |
-| `src/routes/_authenticated/dashboard.admin.customers.tsx` | `validateSearch` + `_customer_id`, ouverture auto de la fiche |
-| `src/integrations/supabase/types.ts` | Signatures des 5 nouvelles RPC + `get_customers_admin` mise à jour |
+| `src/components/dashboard/sidebar/nav-items.ts`                     | Ajout de l'entrée « Komand » (admin + super_admin)                                                                            |
+| `src/routes/_authenticated/notifications.tsx`                       | Onglet/icône `admin`, lien `data.customer_id`                                                                                 |
+| `src/routes/_authenticated/dashboard.admin.customers.tsx`           | `validateSearch` + `_customer_id`, ouverture auto de la fiche                                                                 |
+| `src/integrations/supabase/types.ts`                                | Signatures des 5 nouvelles RPC + `get_customers_admin` mise à jour                                                            |
 
 **Réutilisation, pas duplication** : `useRealtimeTableSync` (déjà utilisé 5×), `DataTable`/`KpiCard`/`EmptyState`/`PaginationControls`/`StatusBadge` (composants partagés existants), motif `get_*_admin` (recherche/pagination/`total_count`) identique à `get_disputes_admin`/`get_customers_admin`/`get_drivers_admin`.
 
@@ -160,13 +160,13 @@ Voir §11 pour le résultat détaillé.
 
 **Vert, exit code 0**, exécution complète :
 
-| Étape | Résultat |
-|---|---|
-| `typecheck` (`tsc --noEmit`) | ✅ Aucune erreur |
-| `lint` (`eslint .`) | ✅ 0 erreur (3 warnings `react-refresh` pré-existants, fichiers non touchés par ce travail) |
-| `check:migrations` | ✅ 132 migrations scannées, aucun hazard non résolu |
-| `test` (`vitest run`) | ✅ **173/173 tests**, 16 fichiers (dont les 7 nouveaux de `komand-status.test.ts`) |
-| `build` (`vite build`) | ✅ Build production complet réussi, `dashboard.admin.komand-*.mjs` généré |
+| Étape                        | Résultat                                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| `typecheck` (`tsc --noEmit`) | ✅ Aucune erreur                                                                            |
+| `lint` (`eslint .`)          | ✅ 0 erreur (3 warnings `react-refresh` pré-existants, fichiers non touchés par ce travail) |
+| `check:migrations`           | ✅ 132 migrations scannées, aucun hazard non résolu                                         |
+| `test` (`vitest run`)        | ✅ **173/173 tests**, 16 fichiers (dont les 7 nouveaux de `komand-status.test.ts`)          |
+| `build` (`vite build`)       | ✅ Build production complet réussi, `dashboard.admin.komand-*.mjs` généré                   |
 
 ---
 

@@ -27,13 +27,13 @@ de filtrage.
 
 ## Réserves volontairement laissées, et pourquoi
 
-| Réserve | Décision | Raison résumée (détail complet dans l'audit) |
-|---|---|---|
-| Mode sombre | 🟡 Phase dédiée recommandée, non implémenté | 105 fichiers utilisent `bg-white` littéral (non thémable), 0 usage de `dark:` nulle part dans l'app — une vraie phase de design, pas une case à cocher. Décision produit nécessaire (voir ci-dessous). |
-| Admin grand écran | 🟡 Dette technique | Marge périphérique réelle seulement à partir de ~1600-1920px (~500px cumulés, calculé précisément à partir des classes Tailwind), audience étroite (équipe admin), un vrai correctif est un redesign contenu/aside, pas un simple élargissement — refusé de « remplir l'espace pour remplir l'espace ». |
-| `DataTable` généralisé (vue Liste restaurant) | 🟢 Backlog, explicitement écarté | La carte actuelle porte une vraie densité d'information (liste d'articles imbriquée, impression de bon de cuisine) que le modèle colonnes/cellules de `DataTable` ne peut pas absorber sans redesign — risque de dégrader l'usage réel des restaurateurs pour un bénéfice de code seul. |
-| Échelle typographique fermée | 🟢 Backlog | Seulement 5 occurrences quasi-identiques (0.70-0.72rem) dans toute l'app, différence imperceptible — construire un système de tokens à 9 paliers pour ça est l'abstraction disproportionnée que cette phase devait éviter. |
-| Fil d'ariane dashboards | 🟢 Backlog, explicitement écarté | Profondeur de route faible (1-2 niveaux), sidebar déjà persistante et indiquant la position — aucun gain de navigation démontré ; ajouté mécaniquement, ça aurait été une troisième source d'information redondante. |
+| Réserve                                       | Décision                                    | Raison résumée (détail complet dans l'audit)                                                                                                                                                                                                                                                            |
+| --------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mode sombre                                   | 🟡 Phase dédiée recommandée, non implémenté | 105 fichiers utilisent `bg-white` littéral (non thémable), 0 usage de `dark:` nulle part dans l'app — une vraie phase de design, pas une case à cocher. Décision produit nécessaire (voir ci-dessous).                                                                                                  |
+| Admin grand écran                             | 🟡 Dette technique                          | Marge périphérique réelle seulement à partir de ~1600-1920px (~500px cumulés, calculé précisément à partir des classes Tailwind), audience étroite (équipe admin), un vrai correctif est un redesign contenu/aside, pas un simple élargissement — refusé de « remplir l'espace pour remplir l'espace ». |
+| `DataTable` généralisé (vue Liste restaurant) | 🟢 Backlog, explicitement écarté            | La carte actuelle porte une vraie densité d'information (liste d'articles imbriquée, impression de bon de cuisine) que le modèle colonnes/cellules de `DataTable` ne peut pas absorber sans redesign — risque de dégrader l'usage réel des restaurateurs pour un bénéfice de code seul.                 |
+| Échelle typographique fermée                  | 🟢 Backlog                                  | Seulement 5 occurrences quasi-identiques (0.70-0.72rem) dans toute l'app, différence imperceptible — construire un système de tokens à 9 paliers pour ça est l'abstraction disproportionnée que cette phase devait éviter.                                                                              |
+| Fil d'ariane dashboards                       | 🟢 Backlog, explicitement écarté            | Profondeur de route faible (1-2 niveaux), sidebar déjà persistante et indiquant la position — aucun gain de navigation démontré ; ajouté mécaniquement, ça aurait été une troisième source d'information redondante.                                                                                    |
 
 Aucune de ces décisions n'a été prise par défaut — chacune est documentée avec preuve chiffrée ou
 lue directement dans le code, dans `docs/PHASE10_REMEDIATION_AUDIT.md`.
@@ -82,7 +82,7 @@ Confirmé par `git show --stat ece73a7` — aucun autre fichier touché.
   d'un lien change conditionnellement — aucun impact responsive, aucune nouvelle classe de mise en
   page.
 - `Chip` : composant déjà vérifié accessible et responsive ailleurs dans l'app (`restaurants.
-  index.tsx`, `restaurants.$slug.tsx`) — même composant, mêmes garanties, gain net d'`aria-pressed`
+index.tsx`, `restaurants.$slug.tsx`) — même composant, mêmes garanties, gain net d'`aria-pressed`
   sur cet écran spécifiquement.
 
 ---

@@ -12,18 +12,18 @@ MD5 calculé sur les 11 fichiers — aucun doublon, aucun fichier corrompu ou à
 
 ### Images — 10 fichiers `.webp`
 
-| Fichier | Dimensions | Ratio | Taille |
-|---|---|---|---|
-| `haiti-1-soup-joumou-symbole-de-liberte-1739209611.webp` | 1332×1332 | 1:1 | 349.1 Ko |
-| `haiti-2-diri-blan-sos-pwa-legim-l039essence-du-quotidien-1739209664.webp` | 714×952 | 3:4 | 99.8 Ko |
-| `haiti-7-ragou-un-plat-reconfortant-et-epice-1739210329.webp` | 660×660 | 1:1 | 113.0 Ko |
-| `haiti-9-diri-sos-pwa-kongo-un-mariage-parfait-de-saveurs--1739210578.webp` | 1280×720 | 16:9 | 134.1 Ko |
-| `haiti-10-mayi-moulen-ak-sos-pwa-un-plat-reconfortant--1739210703.webp` | 3642×3642 | 1:1 | 541.4 Ko |
-| `haiti-11-fritay-le-snack-incontournable-des-rues-haitiennes--1739210736.webp` | 512×512 | 1:1 | 91.8 Ko |
-| `haiti-12-tonmtonm-ak-sos-kalalou-une-specialite-du-grand-sud--1739210770.webp` | 1400×934 | ~3:2 | 239.6 Ko |
-| `haiti-16-lalo-l-epinard-haitien--1739211070.webp` | 1440×1080 | 4:3 | 237.0 Ko |
-| `haiti-17-pate-kode-le-street-food-par-excellence--1739211190.webp` | 2048×2048 | 1:1 | 757.7 Ko |
-| `haiti-21-pwason-gro-sel-l-authenticite-des-saveurs-de-la-mer--1739211784.webp` | 1600×1600 | 1:1 | 756.6 Ko |
+| Fichier                                                                         | Dimensions | Ratio | Taille   |
+| ------------------------------------------------------------------------------- | ---------- | ----- | -------- |
+| `haiti-1-soup-joumou-symbole-de-liberte-1739209611.webp`                        | 1332×1332  | 1:1   | 349.1 Ko |
+| `haiti-2-diri-blan-sos-pwa-legim-l039essence-du-quotidien-1739209664.webp`      | 714×952    | 3:4   | 99.8 Ko  |
+| `haiti-7-ragou-un-plat-reconfortant-et-epice-1739210329.webp`                   | 660×660    | 1:1   | 113.0 Ko |
+| `haiti-9-diri-sos-pwa-kongo-un-mariage-parfait-de-saveurs--1739210578.webp`     | 1280×720   | 16:9  | 134.1 Ko |
+| `haiti-10-mayi-moulen-ak-sos-pwa-un-plat-reconfortant--1739210703.webp`         | 3642×3642  | 1:1   | 541.4 Ko |
+| `haiti-11-fritay-le-snack-incontournable-des-rues-haitiennes--1739210736.webp`  | 512×512    | 1:1   | 91.8 Ko  |
+| `haiti-12-tonmtonm-ak-sos-kalalou-une-specialite-du-grand-sud--1739210770.webp` | 1400×934   | ~3:2  | 239.6 Ko |
+| `haiti-16-lalo-l-epinard-haitien--1739211070.webp`                              | 1440×1080  | 4:3   | 237.0 Ko |
+| `haiti-17-pate-kode-le-street-food-par-excellence--1739211190.webp`             | 2048×2048  | 1:1   | 757.7 Ko |
+| `haiti-21-pwason-gro-sel-l-authenticite-des-saveurs-de-la-mer--1739211784.webp` | 1600×1600  | 1:1   | 756.6 Ko |
 
 **Constat fiable** : chaque nom de fichier suit le motif `haiti-<N>-<nom-du-plat>-<timestamp>.webp`
 et contient un vrai nom de plat haïtien plus une courte description — aucune catégorie n'a dû être
@@ -64,6 +64,7 @@ SiteFooter
 
 Deux mécanismes de « catégorie » préexistaient déjà, tous deux **purement côté client** (état React
 local, aucun paramètre d'URL, aucune nouvelle requête Supabase) :
+
 - `cuisine` (`PopularRestaurantsSection`) : `["Tout","Manje Kreyòl","Soup Joumou","Ragou","Lalo","Fritay"]`.
 - `dishType` (`PopularDishesSection`) : `DISH_TYPES` réel, aligné sur la colonne `products.dish_type`
   (`diri_sos`, `griyo`, `fritay`, `soup`, `pwason`, `sandwich`, `pizza`, `bwason`).
@@ -87,13 +88,13 @@ Chacune des 10 images a été mise en correspondance avec un nom de plat en krey
 du nom de fichier (traduit dans le ton du site, pas inventé). **5 des 10** correspondent en plus à
 une vraie valeur `dish_type` déjà existante dans `PopularDishesSection` :
 
-| Carte | `dish_type` réel utilisé |
-|---|---|
-| Soup Joumou | `soup` |
-| Diri Blan ak Sòs Pwa | `diri_sos` |
-| Diri ak Sòs Pwa Kongo | `diri_sos` |
-| Fritay | `fritay` |
-| Pwason Gro Sèl | `pwason` |
+| Carte                 | `dish_type` réel utilisé |
+| --------------------- | ------------------------ |
+| Soup Joumou           | `soup`                   |
+| Diri Blan ak Sòs Pwa  | `diri_sos`               |
+| Diri ak Sòs Pwa Kongo | `diri_sos`               |
+| Fritay                | `fritay`                 |
+| Pwason Gro Sèl        | `pwason`                 |
 
 Les 5 autres (Ragou, Mayi Moulen ak Sòs Pwa, Tonmtonm ak Sòs Kalalou, Lalo, Patè Kòde) n'ont **aucune**
 correspondance fiable dans la taxonomie `dish_type` existante — **aucune catégorie n'a été inventée
@@ -117,8 +118,9 @@ nombre réel d'images (10, largeur cumulée > tout conteneur raisonnable, donc u
 disposition qui s'impose naturellement, cohérent avec la mise en garde de ne pas appliquer une
 grille mécaniquement). Boutons précédent/suivant visibles uniquement à partir de `md:` (le swipe
 tactile suffit sur mobile). Cartes : image carrée (`aspect-square`, `object-cover`, jamais déformée)
-+ nom + courte étiquette, `rounded-3xl`/`shadow-brand-xs`/`ring-brand-soft/40` — mêmes tokens que
-`PopularDishesSection`/`PopularRestaurantsSection`, pas de nouveau vocabulaire visuel.
+
+- nom + courte étiquette, `rounded-3xl`/`shadow-brand-xs`/`ring-brand-soft/40` — mêmes tokens que
+  `PopularDishesSection`/`PopularRestaurantsSection`, pas de nouveau vocabulaire visuel.
 
 ### Responsive
 
@@ -201,14 +203,14 @@ tous des `<button>` natifs avec `aria-label` en kreyòl, cohérent avec le reste
 
 Mesuré sur un vrai `npm run build` (comme en Phase 8), avant/après :
 
-| Métrique | Avant | Après | Delta |
-|---|---|---|---|
-| Chunk `routes-*.js` (contient les 2 nouveaux composants) | 20.15 Ko / gzip 5.86 Ko | 30.74 Ko / gzip 8.76 Ko | +10.59 Ko / **+2.9 Ko gzip** |
-| Précache service worker | 193 entrées / ~2110 Ko | 193 entrées / 2114.73 Ko | **quasi nul** |
-| Poids vidéo téléchargé par défaut | — | **0 octet** (jusqu'au clic Play) | — |
+| Métrique                                                 | Avant                   | Après                            | Delta                        |
+| -------------------------------------------------------- | ----------------------- | -------------------------------- | ---------------------------- |
+| Chunk `routes-*.js` (contient les 2 nouveaux composants) | 20.15 Ko / gzip 5.86 Ko | 30.74 Ko / gzip 8.76 Ko          | +10.59 Ko / **+2.9 Ko gzip** |
+| Précache service worker                                  | 193 entrées / ~2110 Ko  | 193 entrées / 2114.73 Ko         | **quasi nul**                |
+| Poids vidéo téléchargé par défaut                        | —                       | **0 octet** (jusqu'au clic Play) | —                            |
 
 **Décision de precache prise pendant l'implémentation** : le premier build montrait les 10 images
-Kategori (~3.4 Mo) balayées dans le précache *eager* du service worker — en contradiction directe
+Kategori (~3.4 Mo) balayées dans le précache _eager_ du service worker — en contradiction directe
 avec le `loading="lazy"` posé sur 6 des 10 cartes dans le composant lui-même. Corrigé en excluant
 `kategori/*.webp` du glob de précache (`vite.config.ts`, même mécanisme déjà utilisé en Phase 8 pour
 `payment-global/**` et les chunks admin) — la règle `CacheFirst` déjà en place dans `src/sw.ts` met
@@ -228,7 +230,7 @@ Captures Playwright réelles prises et inspectées visuellement (pas seulement c
 - Rail Kategori Pla : cartes bien proportionnées à toutes les largeurs, défilement tactile fluide
   sur mobile, boutons précédent/suivant nets sur desktop, aucun écrasement de contenu.
 - **Aucun scroll horizontal global** confirmé par un test dédié (`document.documentElement.
-  scrollWidth` vs `clientWidth`), pas seulement par inspection visuelle.
+scrollWidth` vs `clientWidth`), pas seulement par inspection visuelle.
 - Popup : pastille et carte ouverte correctement contenues sur mobile (largeur `calc(100vw - 2rem)`
   max), ne recouvrent ni la bottom-nav ni aucun CTA — vérifié visuellement à 390px.
 - **Bug réel trouvé et corrigé** (pas seulement documenté) : chevauchement popup/badge Hero sur

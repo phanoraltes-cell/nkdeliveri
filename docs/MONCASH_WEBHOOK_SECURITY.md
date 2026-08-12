@@ -138,7 +138,7 @@ comme un gap en soi.
   erreur 500 non gérée).
 - **Idempotence à deux niveaux indépendants** : `UNIQUE(event_id)` sur
   `moncash_webhook_events` (atomique, résiste aux livraisons concurrentes
-  dupliquées) *et* `IF v_row.status <> 'pending' THEN RETURN v_row` dans
+  dupliquées) _et_ `IF v_row.status <> 'pending' THEN RETURN v_row` dans
   chacune des deux RPC de finalisation — une seconde application du même
   évènement (ou un bug dans la couche d'idempotence applicative) ne peut
   pas créditer/débiter deux fois un wallet.
@@ -162,7 +162,7 @@ comme un gap en soi.
 - **Aucune donnée sensible dans les réponses d'erreur** — les messages
   renvoyés au client HTTP (`401`/`500`) ne contiennent jamais de valeur
   de secret, de token, ni de détail interne de la base (comparer à
-  `getMonCashConfig()`, qui ne journalise déjà que les *noms* de
+  `getMonCashConfig()`, qui ne journalise déjà que les _noms_ de
   variables manquantes, jamais leurs valeurs).
 - **Validation stricte du payload** avant tout usage — `JSON.parse` dans
   un `try/catch`, chaque champ revérifié par `typeof` avant lecture,
@@ -171,7 +171,7 @@ comme un gap en soi.
   concaténation de chaîne SQL nulle part dans ce flux).
 - **Séparation notification bénéficiaire / notification admin** :
   `create_pending_payout_secure` ne notifie personne (rien n'a encore été
-  envoyé) ; seule une confirmation *réelle* déclenche la notification
+  envoyé) ; seule une confirmation _réelle_ déclenche la notification
   "vous avez reçu un paiement" au bénéficiaire ; un échec notifie l'admin
   qui a initié le paiement, jamais le bénéficiaire (qui n'a jamais été
   informé d'un paiement qui n'a finalement pas eu lieu).

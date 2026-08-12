@@ -16,16 +16,16 @@ rendu réel. C'est explicité pour chaque point plutôt que présenté comme un 
 
 ### Bundle JavaScript (client, build de production réel)
 
-| Chunk | Taille brute | Gzip | Chargement |
-|---|---|---|---|
-| `vendor-pdf` (jspdf+html2canvas+canvg+dompurify) | 779.7 kB | 235.6 kB | ✅ déjà en `import()` dynamique — jamais dans le chemin critique |
-| `vendor-charts` (recharts+d3+victory) | 358.9 kB | 104.4 kB | ✅ déjà isolé par route (dashboards admin/restaurant uniquement) |
-| `index-*.js` (app shell partagé) | 340.6 kB | 100.4 kB | ⚠️ chargé sur **toutes** les pages, y compris celles qui n'utilisent ni Sentry ni animation |
-| `vendor-supabase` | 204.0 kB | 52.3 kB | Nécessaire partout (client Supabase) |
-| `vendor-react` | 200.3 kB | 64.5 kB | Incompressible (React 19 + ReactDOM) |
-| `vendor-leaflet` (+15 kB CSS) | 153.7 kB | 45.0 kB | ✅ déjà isolé par route (carte de suivi livreur uniquement) |
-| `vendor-motion` (framer-motion) | 121.6 kB | 39.5 kB | ⚠️ chargé sur toutes les pages via `MotionConfig` racine, utilisé dans seulement 4 fichiers |
-| `routes-*.js` (manifeste de routes TanStack Router) | 20.2 kB | 5.9 kB | Nécessaire partout |
+| Chunk                                               | Taille brute | Gzip     | Chargement                                                                                  |
+| --------------------------------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------- |
+| `vendor-pdf` (jspdf+html2canvas+canvg+dompurify)    | 779.7 kB     | 235.6 kB | ✅ déjà en `import()` dynamique — jamais dans le chemin critique                            |
+| `vendor-charts` (recharts+d3+victory)               | 358.9 kB     | 104.4 kB | ✅ déjà isolé par route (dashboards admin/restaurant uniquement)                            |
+| `index-*.js` (app shell partagé)                    | 340.6 kB     | 100.4 kB | ⚠️ chargé sur **toutes** les pages, y compris celles qui n'utilisent ni Sentry ni animation |
+| `vendor-supabase`                                   | 204.0 kB     | 52.3 kB  | Nécessaire partout (client Supabase)                                                        |
+| `vendor-react`                                      | 200.3 kB     | 64.5 kB  | Incompressible (React 19 + ReactDOM)                                                        |
+| `vendor-leaflet` (+15 kB CSS)                       | 153.7 kB     | 45.0 kB  | ✅ déjà isolé par route (carte de suivi livreur uniquement)                                 |
+| `vendor-motion` (framer-motion)                     | 121.6 kB     | 39.5 kB  | ⚠️ chargé sur toutes les pages via `MotionConfig` racine, utilisé dans seulement 4 fichiers |
+| `routes-*.js` (manifeste de routes TanStack Router) | 20.2 kB      | 5.9 kB   | Nécessaire partout                                                                          |
 
 **174 chunks JS route-splittés au total** — la séparation par route (chaque `dashboard.*.tsx`,
 `checkout.tsx`, etc. produit son propre petit chunk, ex. `checkout-*.js` 13.8 kB,
@@ -46,7 +46,7 @@ bloquante). `font-display: swap` déjà présent par défaut dans le CSS génér
 ### PWA — manifest, service worker, offline
 
 - `public/manifest.webmanifest` : complet et correct — `display: standalone`, `orientation:
-  portrait`, icônes 192/512 + variante `maskable`, `shortcuts`, `theme_color`/`background_color`
+portrait`, icônes 192/512 + variante `maskable`, `shortcuts`, `theme_color`/`background_color`
   cohérents avec la marque.
 - `src/sw.ts` : stratégie `NetworkFirst` (5 s de timeout) pour la navigation, `CacheFirst` +
   expiration (30 jours, 200 entrées max) pour les assets statiques, fallback hors-ligne
@@ -96,6 +96,7 @@ bloquante). `font-display: swap` déjà présent par défaut dans le CSS génér
 **Preuve** : le manifeste de précache généré (`injectManifest`, glob
 `**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,json,webmanifest,woff2}` sur tout
 `.vercel/output/static`) contient 256 entrées / 5.65 Mo, dont :
+
 - Les 174 chunks JS de **toutes** les routes, y compris les 40 chunks admin/livreur/restaurant
   qu'un client final ne visitera jamais, et les chunks lourds `vendor-pdf` (779.7 kB) et
   `vendor-charts` (358.9 kB) qui ne servent qu'aux tableaux de bord.
@@ -115,6 +116,7 @@ l'installation du service worker, complique le nettoyage lors des mises à jour.
 la portion routes admin/livreur est plus nuancée, voir solution).
 **Difficulté** : Faible.
 **Solution proposée** :
+
 - Exclure `public/payment-global/**` du glob de précache (`workbox.injectManifest.globIgnores`
   dans `vite.config.ts`) — n'affecte en rien la disponibilité de ces fichiers sur leur URL directe
   (utile si un service externe — réseau social, WhatsApp Business — les référence encore par

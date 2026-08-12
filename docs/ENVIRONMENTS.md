@@ -2,11 +2,11 @@
 
 ## Vue d'ensemble
 
-| Environnement | Où il tourne | Déclenché par | Base de données |
-|---|---|---|---|
-| **Développement** | Poste local (`npm run dev`) | Manuel | `.env.local` — pointe vers le projet Supabase configuré par le développeur |
-| **Aperçu (Preview)** | Vercel, une URL par PR | Chaque push sur une PR | Voir "Base de données partagée" ci-dessous |
-| **Production** | Vercel, domaine de production | Chaque merge/push sur `main` | Projet Supabase de production |
+| Environnement        | Où il tourne                  | Déclenché par                | Base de données                                                            |
+| -------------------- | ----------------------------- | ---------------------------- | -------------------------------------------------------------------------- |
+| **Développement**    | Poste local (`npm run dev`)   | Manuel                       | `.env.local` — pointe vers le projet Supabase configuré par le développeur |
+| **Aperçu (Preview)** | Vercel, une URL par PR        | Chaque push sur une PR       | Voir "Base de données partagée" ci-dessous                                 |
+| **Production**       | Vercel, domaine de production | Chaque merge/push sur `main` | Projet Supabase de production                                              |
 
 Il n'existe pas d'environnement de "préproduction" distinct et durable — les
 déploiements Preview de Vercel (un par pull request, recréé à chaque push)
@@ -56,14 +56,14 @@ par commit. Ne jamais les redéfinir manuellement dans `.env.local`.
 
 ## Différences de configuration par environnement
 
-| Aspect | Développement | Preview | Production |
-|---|---|---|---|
-| Build Nitro | `preset: "vercel"` (voir `vite.config.ts`) | Idem | Idem |
-| Sentry | Généralement désactivé (`SENTRY_DSN` non défini) | Recommandé activé, environnement `preview` | Activé, environnement `production` |
-| Service Worker / PWA | `devOptions: { enabled: false }` — désactivé en dev | Actif | Actif |
-| CSP (`vercel.json`) | N/A (headers Vercel non appliqués en local) | Appliqué | Appliqué |
-| Migrations Supabase | Appliquées manuellement (`supabase db push`) ou via CI (`supabase start`, réplique locale) | Idem projet Preview | Appliquées manuellement suivant `docs/MIGRATIONS.md` |
-| Rate limiting RPC | Actif (c'est une règle serveur, pas un flag d'environnement) | Actif | Actif |
+| Aspect               | Développement                                                                              | Preview                                    | Production                                           |
+| -------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------------- |
+| Build Nitro          | `preset: "vercel"` (voir `vite.config.ts`)                                                 | Idem                                       | Idem                                                 |
+| Sentry               | Généralement désactivé (`SENTRY_DSN` non défini)                                           | Recommandé activé, environnement `preview` | Activé, environnement `production`                   |
+| Service Worker / PWA | `devOptions: { enabled: false }` — désactivé en dev                                        | Actif                                      | Actif                                                |
+| CSP (`vercel.json`)  | N/A (headers Vercel non appliqués en local)                                                | Appliqué                                   | Appliqué                                             |
+| Migrations Supabase  | Appliquées manuellement (`supabase db push`) ou via CI (`supabase start`, réplique locale) | Idem projet Preview                        | Appliquées manuellement suivant `docs/MIGRATIONS.md` |
+| Rate limiting RPC    | Actif (c'est une règle serveur, pas un flag d'environnement)                               | Actif                                      | Actif                                                |
 
 ## Checklist pour un nouveau développeur
 

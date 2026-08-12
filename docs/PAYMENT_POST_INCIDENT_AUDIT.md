@@ -7,7 +7,7 @@
 
 ## Résumé exécutif
 
-L'infrastructure de paiement Collect (PLOP derrière "Payment Global") est **stable, saine et conforme à ce qu'elle prétend faire**. Aucun bug critique ou majeur n'a été trouvé. Tous les tests automatisés pertinents passent (98 tests unitaires, 6/7 tests Playwright de paiement — le 7ᵉ échoue *parce que* le rebranding a réussi, pas à cause d'une régression). La production répond normalement (logs récents 100% `200`), les secrets PLOP sont bien configurés côté Vercel, et le dernier déploiement est `Ready`.
+L'infrastructure de paiement Collect (PLOP derrière "Payment Global") est **stable, saine et conforme à ce qu'elle prétend faire**. Aucun bug critique ou majeur n'a été trouvé. Tous les tests automatisés pertinents passent (98 tests unitaires, 6/7 tests Playwright de paiement — le 7ᵉ échoue _parce que_ le rebranding a réussi, pas à cause d'une régression). La production répond normalement (logs récents 100% `200`), les secrets PLOP sont bien configurés côté Vercel, et le dernier déploiement est `Ready`.
 
 Cinq écarts réels et vérifiés ont été trouvés — **tous de sévérité Faible, aucun bloquant** : deux textes obsolètes ("MonCash Automatik" au lieu de "Payment Global", un en base de données, un en SQL admin), un contrôle admin ("Kache") qui ne fait rien aujourd'hui côté client (déjà documenté comme volontairement différé dans l'architecture d'origine), une notification push manquante pour un type d'événement (gap déjà connu), et un texte client codé en dur qui deviendra trompeur le jour où NatCash sera activé via PLOP.
 
@@ -19,20 +19,20 @@ Le passage à NatCash est **architecturalement prêt à ~80 %** : l'interface `P
 
 ### 🟢 96 / 100 — CONFORME, prêt pour production, aucune action requise dans l'immédiat
 
-| Domaine | Score | Statut |
-|---|---|---|
-| Checkout | 95/100 | 🟢 |
-| Paiement Collect (création, doublons) | 100/100 | 🟢 |
-| Polling | 100/100 | 🟢 |
-| Cron | 100/100 | 🟢 |
-| RPC (permissions/grants/RLS) | 100/100 | 🟢 |
-| Logs | 90/100 | 🟡 (textes obsolètes, jamais un secret) |
-| Frontend (secrets/bundle) | 100/100 | 🟢 |
-| NatCash Readiness | 80/100 | 🟡 (prêt, 2 verrous SQL/code à lever) |
-| Sécurité | 98/100 | 🟢 |
-| Performance | 92/100 | 🟢 (mesurée partiellement, voir limites) |
-| Compatibilité | 100/100 | 🟢 |
-| Tests | 95/100 | 🟢 (1 assertion e2e obsolète, sans rapport avec l'app) |
+| Domaine                               | Score   | Statut                                                 |
+| ------------------------------------- | ------- | ------------------------------------------------------ |
+| Checkout                              | 95/100  | 🟢                                                     |
+| Paiement Collect (création, doublons) | 100/100 | 🟢                                                     |
+| Polling                               | 100/100 | 🟢                                                     |
+| Cron                                  | 100/100 | 🟢                                                     |
+| RPC (permissions/grants/RLS)          | 100/100 | 🟢                                                     |
+| Logs                                  | 90/100  | 🟡 (textes obsolètes, jamais un secret)                |
+| Frontend (secrets/bundle)             | 100/100 | 🟢                                                     |
+| NatCash Readiness                     | 80/100  | 🟡 (prêt, 2 verrous SQL/code à lever)                  |
+| Sécurité                              | 98/100  | 🟢                                                     |
+| Performance                           | 92/100  | 🟢 (mesurée partiellement, voir limites)               |
+| Compatibilité                         | 100/100 | 🟢                                                     |
+| Tests                                 | 95/100  | 🟢 (1 assertion e2e obsolète, sans rapport avec l'app) |
 
 ---
 
@@ -69,7 +69,7 @@ Aucun bug **Critique** ou **Haut**. 5 écarts réels, tous **Faible**, avec preu
 
 - **Reproduction** : état réel en production (requête ci-dessus) : `moncash_auto.visible = false` **et pourtant** "Payment Global" reste sélectionnable sur `/checkout` — confirmé par lecture directe de `checkout.tsx` : `grep ".visible" src/routes/checkout.tsx` → **aucun résultat**. Le rendu de `METHODS.map()` ne calcule `isDisabled` qu'à partir de `.enabled`, jamais de `.visible`.
 - **Fichiers concernés** : `src/routes/checkout.tsx` (rendu), `src/lib/payment-provider-availability.ts` (le champ est bien lu et exposé, juste jamais consommé pour cacher quoi que ce soit).
-- **Cause racine** : déjà documentée dans `docs/PAYMENT_PROVIDER_HARDENING_ARCHITECTURE.md` ligne 90 : *"`visible` — Affiché dans la grille checkout (non utilisé aujourd'hui, `true` partout — prévu pour un futur 'masquer entièrement')"*. C'est une fonctionnalité sciemment différée depuis la conception d'origine, pas une régression.
+- **Cause racine** : déjà documentée dans `docs/PAYMENT_PROVIDER_HARDENING_ARCHITECTURE.md` ligne 90 : _"`visible` — Affiché dans la grille checkout (non utilisé aujourd'hui, `true` partout — prévu pour un futur 'masquer entièrement')"_. C'est une fonctionnalité sciemment différée depuis la conception d'origine, pas une régression.
 - **Ce qui est nouveau dans cet audit** : ce flag est **actuellement exploité en production** pour `moncash_auto` (`visible=false`) sans aucun effet, et le panneau admin ne prévient pas l'administrateur que "Kache" est un no-op aujourd'hui — un admin pourrait raisonnablement croire que la méthode est masquée alors qu'elle est toujours pleinement sélectionnable.
 - **Gravité** : Faible — pas de risque financier ou de sécurité, seulement un risque de confusion opérationnelle.
 - **Correctif proposé** (non appliqué) : soit implémenter le filtrage `.visible` dans `checkout.tsx` (feature réelle), soit a minima désactiver/annoter le bouton "Kache" dans le dashboard admin avec un texte du type "Fonctionnalité pas encore active côté client".
@@ -92,13 +92,13 @@ Aucun bug **Critique** ou **Haut**. 5 écarts réels, tous **Faible**, avec preu
 
 ## Faux positifs — hypothèses écartées après vérification réelle
 
-| Hypothèse initialement plausible | Vérification effectuée | Conclusion |
-|---|---|---|
-| L'échec de 7 tests Playwright liés au paiement indique une régression applicative | Diagnostic : le build avait été fait en mode production (`vite build`) au lieu de `vite build --mode e2e`, donc les tests SSR tapaient la vraie base de production au lieu du mock. Après `npm run build:e2e`, **6/7 passent**. | **Faux positif** — problème d'exécution du test, pas de l'application. |
-| Le seul test Playwright encore rouge (`payment-providers.spec.ts:22`, cherche "MonCash Automatik") indique que le rebranding n'a pas été déployé | Lu le code réel de `dashboard.admin.payment-providers.tsx` : `PROVIDER_LABELS.moncash_auto = "Payment Global"` — le rebranding est bien réel et actif. | **Faux positif** — le test échoue *parce que* le renommage a réussi ; c'est le test (non maintenu) qui est obsolète, pas l'app. |
-| Une commande créée sans ligne `payments` correspondante pourrait laisser le client bloqué (`checkout.tsx` gère ce cas défensivement) | Lu `create_order_secure` (migration `20260723090000`) : l'`INSERT INTO orders` et l'`INSERT INTO payments` sont dans la **même fonction PL/pgSQL**, donc la même transaction — ce cas ne peut pas se produire en pratique aujourd'hui. | **Faux positif** — garde défensive saine, mais le scénario qu'elle couvre n'est pas atteignable avec le code actuel. |
-| Un double-clic sur "Konfime kòmand" pourrait créer deux commandes / deux tentatives de paiement en parallèle | Le bouton est désactivé via `disabled={submitting}` pendant l'appel ; côté base, `create_collect_payment_secure` verrouille la ligne `payments` via `FOR UPDATE OF p`, sérialisant toute tentative concurrente pour le même paiement. | **Faux positif** — protégé à deux niveaux (UI + verrou SQL). |
-| Le fournisseur PLOP pourrait avoir été branché à la place de Digicel dans le registre partagé, risquant le décaissement | Lu `index.server.ts` : `moncash_api: moncashProvider` (legacy Digicel) — inchangé, documenté comme partagé avec `initiate-provider-payout.functions.ts`. `plopProvider` n'est importé que directement dans `initiate-collect-payment.logic.ts`. | **Faux positif** — déjà vérifié dans un audit précédent, reconfirmé ici. |
+| Hypothèse initialement plausible                                                                                                                 | Vérification effectuée                                                                                                                                                                                                                          | Conclusion                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| L'échec de 7 tests Playwright liés au paiement indique une régression applicative                                                                | Diagnostic : le build avait été fait en mode production (`vite build`) au lieu de `vite build --mode e2e`, donc les tests SSR tapaient la vraie base de production au lieu du mock. Après `npm run build:e2e`, **6/7 passent**.                 | **Faux positif** — problème d'exécution du test, pas de l'application.                                                          |
+| Le seul test Playwright encore rouge (`payment-providers.spec.ts:22`, cherche "MonCash Automatik") indique que le rebranding n'a pas été déployé | Lu le code réel de `dashboard.admin.payment-providers.tsx` : `PROVIDER_LABELS.moncash_auto = "Payment Global"` — le rebranding est bien réel et actif.                                                                                          | **Faux positif** — le test échoue _parce que_ le renommage a réussi ; c'est le test (non maintenu) qui est obsolète, pas l'app. |
+| Une commande créée sans ligne `payments` correspondante pourrait laisser le client bloqué (`checkout.tsx` gère ce cas défensivement)             | Lu `create_order_secure` (migration `20260723090000`) : l'`INSERT INTO orders` et l'`INSERT INTO payments` sont dans la **même fonction PL/pgSQL**, donc la même transaction — ce cas ne peut pas se produire en pratique aujourd'hui.          | **Faux positif** — garde défensive saine, mais le scénario qu'elle couvre n'est pas atteignable avec le code actuel.            |
+| Un double-clic sur "Konfime kòmand" pourrait créer deux commandes / deux tentatives de paiement en parallèle                                     | Le bouton est désactivé via `disabled={submitting}` pendant l'appel ; côté base, `create_collect_payment_secure` verrouille la ligne `payments` via `FOR UPDATE OF p`, sérialisant toute tentative concurrente pour le même paiement.           | **Faux positif** — protégé à deux niveaux (UI + verrou SQL).                                                                    |
+| Le fournisseur PLOP pourrait avoir été branché à la place de Digicel dans le registre partagé, risquant le décaissement                          | Lu `index.server.ts` : `moncash_api: moncashProvider` (legacy Digicel) — inchangé, documenté comme partagé avec `initiate-provider-payout.functions.ts`. `plopProvider` n'est importé que directement dans `initiate-collect-payment.logic.ts`. | **Faux positif** — déjà vérifié dans un audit précédent, reconfirmé ici.                                                        |
 
 ---
 
@@ -162,28 +162,29 @@ Le rendu (`METHODS.map()`) est déjà générique — ajouter une méthode ne de
 
 ### Matrice de préparation NatCash
 
-| Élément | Réutilisable | À modifier | Nouveau |
-|---|---|---|---|
-| `PaymentProvider` interface | ✅ | | |
-| `plopProvider`/`plop-client.server.ts` | ✅ (déjà valide `"natcash"`) | | |
-| Provider Registry (`index.server.ts`) | ✅ | | |
-| Client poll (`useCollectPaymentPoll`) | ✅ | | |
-| Cron (`plop-reconcile.server.ts`) | ✅ | | |
-| `payment_method` ENUM Postgres | ✅ (`natcash` existe déjà) | | |
-| `payment_provider_settings` (schéma) | ✅ (colonne texte libre) | | (1 nouvelle ligne si bouton dédié) |
-| `update_payment_provider_setting_secure` | ✅ | | |
-| `payment_transactions`/`plop_api_logs` (schéma) | ✅ | | |
-| Checkout — rendu `METHODS.map()` | ✅ | | (1 entrée si bouton dédié) |
-| Checkout — gate business (`.logic.ts`) | | ✏️ ligne 54 | |
-| RPC `create_collect_payment_secure` | | ✏️ ligne 80-82 (migration requise) | |
-| Notifications SQL (admin) | | ✏️ textes n°2 | |
-| `orders.$id.tsx` (texte client) | | ✏️ texte n°4 | |
-| Dashboard admin (`PROVIDER_LABELS`) | ✅ | ✏️ (1 ligne ajoutée) | |
-| Tests unitaires/e2e | | | (cas NatCash à ajouter) |
+| Élément                                         | Réutilisable                 | À modifier                         | Nouveau                            |
+| ----------------------------------------------- | ---------------------------- | ---------------------------------- | ---------------------------------- |
+| `PaymentProvider` interface                     | ✅                           |                                    |                                    |
+| `plopProvider`/`plop-client.server.ts`          | ✅ (déjà valide `"natcash"`) |                                    |                                    |
+| Provider Registry (`index.server.ts`)           | ✅                           |                                    |                                    |
+| Client poll (`useCollectPaymentPoll`)           | ✅                           |                                    |                                    |
+| Cron (`plop-reconcile.server.ts`)               | ✅                           |                                    |                                    |
+| `payment_method` ENUM Postgres                  | ✅ (`natcash` existe déjà)   |                                    |                                    |
+| `payment_provider_settings` (schéma)            | ✅ (colonne texte libre)     |                                    | (1 nouvelle ligne si bouton dédié) |
+| `update_payment_provider_setting_secure`        | ✅                           |                                    |                                    |
+| `payment_transactions`/`plop_api_logs` (schéma) | ✅                           |                                    |                                    |
+| Checkout — rendu `METHODS.map()`                | ✅                           |                                    | (1 entrée si bouton dédié)         |
+| Checkout — gate business (`.logic.ts`)          |                              | ✏️ ligne 54                        |                                    |
+| RPC `create_collect_payment_secure`             |                              | ✏️ ligne 80-82 (migration requise) |                                    |
+| Notifications SQL (admin)                       |                              | ✏️ textes n°2                      |                                    |
+| `orders.$id.tsx` (texte client)                 |                              | ✏️ texte n°4                       |                                    |
+| Dashboard admin (`PROVIDER_LABELS`)             | ✅                           | ✏️ (1 ligne ajoutée)               |                                    |
+| Tests unitaires/e2e                             |                              |                                    | (cas NatCash à ajouter)            |
 
 ### Question ouverte (non tranchée ici, décision produit)
 
 Le texte déjà présent dans `checkout.tsx` ("Payment Global — yon sèl pòtay pou plizyè rezo peman... lòt rezo tankou NatCash pi devan") laisse deux architectures possibles, non départagées par cet audit :
+
 - **(A)** Un seul bouton "Payment Global" existant, qui deviendrait multi-wallet — nécessiterait un sélecteur de wallet à l'intérieur du même flux (n'existe pas aujourd'hui).
 - **(B)** Un nouveau bouton dédié "NatCash Otomatik", parallèle à "Payment Global" — plus simple à câbler avec l'architecture actuelle (une ligne `payment_provider_settings` de plus, une entrée `METHODS` de plus), mais moins fidèle au message marketing déjà écrit dans le checkout.
 
@@ -191,14 +192,14 @@ Le texte déjà présent dans `checkout.tsx` ("Payment Global — yon sèl pòta
 
 ## PLOP Health Check
 
-| Vérification | Résultat |
-|---|---|
-| Secrets Vercel (`PLOP_CLIENT_ID`/`SECRET`/`PAYMENT_METHOD`) | ✅ Présents, chiffrés, Preview + Production (`vercel env ls`) |
-| Dernier déploiement | ✅ `Ready`, Production, il y a 19h (`vercel ls`) |
-| État live `payment_provider_settings.moncash_auto` | `enabled: true`, `visible: false` (sans effet, voir Bug n°3), `maintenance_message` obsolète (Bug n°1) |
-| Logs production récents | ✅ 100% `200` sur la fenêtre observée (~50 dernières minutes) — aucune erreur PLOP visible |
-| Cron `plop-reconcile` | ✅ Enregistré (`vercel.json`, `15 3 * * *`, décalé de 15 min après `moncash-reconcile` pour éviter tout chevauchement) |
-| `plop_api_logs` | ✅ Table existante, RLS admin-only, append-only (triggers), `client_id` toujours redacté avant écriture |
+| Vérification                                                | Résultat                                                                                                               |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Secrets Vercel (`PLOP_CLIENT_ID`/`SECRET`/`PAYMENT_METHOD`) | ✅ Présents, chiffrés, Preview + Production (`vercel env ls`)                                                          |
+| Dernier déploiement                                         | ✅ `Ready`, Production, il y a 19h (`vercel ls`)                                                                       |
+| État live `payment_provider_settings.moncash_auto`          | `enabled: true`, `visible: false` (sans effet, voir Bug n°3), `maintenance_message` obsolète (Bug n°1)                 |
+| Logs production récents                                     | ✅ 100% `200` sur la fenêtre observée (~50 dernières minutes) — aucune erreur PLOP visible                             |
+| Cron `plop-reconcile`                                       | ✅ Enregistré (`vercel.json`, `15 3 * * *`, décalé de 15 min après `moncash-reconcile` pour éviter tout chevauchement) |
+| `plop_api_logs`                                             | ✅ Table existante, RLS admin-only, append-only (triggers), `client_id` toujours redacté avant écriture                |
 
 **Limite honnête** : `vercel logs` ne renvoie qu'une fenêtre récente/en direct, pas un historique complet interrogeable — aucun incident n'a été détecté sur la fenêtre observée, mais cette vérification ne couvre pas rétroactivement toute la période depuis l'activation.
 
@@ -206,22 +207,22 @@ Le texte déjà présent dans `checkout.tsx` ("Payment Global — yon sèl pòta
 
 ## Sécurité
 
-| Contrôle | Résultat |
-|---|---|
-| RLS activée (`payment_transactions`, `plop_api_logs`, `payment_provider_settings`) | 🟢 Oui, sur les 3 tables |
-| `REVOKE ALL ... FROM PUBLIC, anon` | 🟢 Appliqué systématiquement |
-| `create_collect_payment_secure` — grants | 🟢 `authenticated` uniquement |
-| `complete_collect_payment_secure` — grants | 🟢 `service_role` uniquement |
-| `SECURITY DEFINER` + `SET search_path = public` | 🟢 Sur les deux RPC (protège contre le détournement de `search_path`) |
-| Contrainte anti-doublon | 🟢 `UNIQUE (external_reference)` en base + verrou `FOR UPDATE OF p` empêchant toute double création concurrente |
-| Anti-double-confirmation | 🟢 `WHERE ... AND status = 'pending'` dans `complete_collect_payment_secure` — un paiement déjà décidé ne peut plus être réécrit |
-| Injection SQL | 🟢 Aucune requête dynamique (`EXECUTE format`/`EXECUTE '...'`) trouvée dans les migrations de paiement |
-| XSS | 🟢 Aucun `dangerouslySetInnerHTML` dans les routes de paiement |
-| CSRF | 🟢 Modèle d'authentification par Bearer token (`Authorization: Bearer <jwt>`), jamais par cookie ambiant — une requête forgée cross-origin ne peut pas porter le token de la victime |
-| Secrets dans les logs | 🟢 `client_secret` jamais journalisé (absent de tout `console.*`/insertion `plop_api_logs`) ; `client_id` toujours tronqué (`redactId`, 4 premiers/derniers caractères) avant stockage |
-| Secrets dans le frontend | 🟢 Recherche directe dans `.vercel/output/static` (bundle client) et `.vercel/output/functions` (bundle serveur) — aucune valeur de secret trouvée dans les deux |
-| `client_secret`/`client_id` hors du bundle client | 🟢 `plop-config.server.ts`/`plop-client.server.ts` en `.server.ts` — le build échoue si un composant les importe |
-| Headers HTTP (`vercel.json`) | 🟢 HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy (dont `payment=()`, désactivant délibérément l'API Payment Request native — non utilisée ici) |
+| Contrôle                                                                           | Résultat                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RLS activée (`payment_transactions`, `plop_api_logs`, `payment_provider_settings`) | 🟢 Oui, sur les 3 tables                                                                                                                                                                         |
+| `REVOKE ALL ... FROM PUBLIC, anon`                                                 | 🟢 Appliqué systématiquement                                                                                                                                                                     |
+| `create_collect_payment_secure` — grants                                           | 🟢 `authenticated` uniquement                                                                                                                                                                    |
+| `complete_collect_payment_secure` — grants                                         | 🟢 `service_role` uniquement                                                                                                                                                                     |
+| `SECURITY DEFINER` + `SET search_path = public`                                    | 🟢 Sur les deux RPC (protège contre le détournement de `search_path`)                                                                                                                            |
+| Contrainte anti-doublon                                                            | 🟢 `UNIQUE (external_reference)` en base + verrou `FOR UPDATE OF p` empêchant toute double création concurrente                                                                                  |
+| Anti-double-confirmation                                                           | 🟢 `WHERE ... AND status = 'pending'` dans `complete_collect_payment_secure` — un paiement déjà décidé ne peut plus être réécrit                                                                 |
+| Injection SQL                                                                      | 🟢 Aucune requête dynamique (`EXECUTE format`/`EXECUTE '...'`) trouvée dans les migrations de paiement                                                                                           |
+| XSS                                                                                | 🟢 Aucun `dangerouslySetInnerHTML` dans les routes de paiement                                                                                                                                   |
+| CSRF                                                                               | 🟢 Modèle d'authentification par Bearer token (`Authorization: Bearer <jwt>`), jamais par cookie ambiant — une requête forgée cross-origin ne peut pas porter le token de la victime             |
+| Secrets dans les logs                                                              | 🟢 `client_secret` jamais journalisé (absent de tout `console.*`/insertion `plop_api_logs`) ; `client_id` toujours tronqué (`redactId`, 4 premiers/derniers caractères) avant stockage           |
+| Secrets dans le frontend                                                           | 🟢 Recherche directe dans `.vercel/output/static` (bundle client) et `.vercel/output/functions` (bundle serveur) — aucune valeur de secret trouvée dans les deux                                 |
+| `client_secret`/`client_id` hors du bundle client                                  | 🟢 `plop-config.server.ts`/`plop-client.server.ts` en `.server.ts` — le build échoue si un composant les importe                                                                                 |
+| Headers HTTP (`vercel.json`)                                                       | 🟢 HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy (dont `payment=()`, désactivant délibérément l'API Payment Request native — non utilisée ici) |
 
 **Score sécurité : 98/100** — les 2 points retirés correspondent aux Bugs n°1/n°2 (textes obsolètes), sans impact de sécurité réel, classés ici uniquement par souci d'exhaustivité de la checklist demandée.
 
@@ -229,16 +230,16 @@ Le texte déjà présent dans `checkout.tsx` ("Payment Global — yon sèl pòta
 
 ## Performance
 
-| Mesure | Résultat | Méthode |
-|---|---|---|
-| Cadence de polling | 5s → 10s → 30s → 60s, jitter ±20 %, pause onglet caché | Lecture directe de `useCollectPaymentPoll.ts` |
-| Volume réseau max par session de polling | ≤ 31 requêtes sur 15 min (6 @5s + 9 @10s + 6 @30s + 10 @60s) | Calcul à partir des `PHASES` réelles du code |
-| Appels PLOP par tentative de paiement | 1 (+ jusqu'à 2 relances internes du client HTTP, `MAX_ATTEMPTS = 3`) + 1 vérification de réconciliation si la création échoue (A1) | Lecture de `plop-client.server.ts`/`plop-provider.server.ts` |
-| Requêtes SQL de `create_collect_payment_secure` | 1 `SELECT ... FOR UPDATE` (jointure indexée) + 1 `EXISTS` (indexé sur `payment_id`) + 1 `INSERT` | Lecture directe de la migration ; index confirmés (`payment_transactions_order_id_idx`, `_payment_id_idx`, `_created_at_idx`) |
-| Bundle client — chunk `checkout` | 12.29 kB (4.27 kB gzip) | Mesuré sur un vrai build (`vite build`) |
-| Code PLOP dans le bundle client | 0 kB — `plop-provider.server.ts` (15.70 kB), `plop-client.server.ts`, `plop-reconcile.server.ts` n'apparaissent que sous `_ssr`/`__server.func`, jamais sous `static/assets` | Mesuré directement sur la sortie du build |
-| Build PWA precache | 252 entrées (5633 KiB) | Mesuré sur le dernier build |
-| Realtime | 1 canal `postgres_changes` par page commande, filtré `order_id=eq.<id>` — léger | Lecture de `orders.$id.tsx` |
+| Mesure                                          | Résultat                                                                                                                                                                     | Méthode                                                                                                                       |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Cadence de polling                              | 5s → 10s → 30s → 60s, jitter ±20 %, pause onglet caché                                                                                                                       | Lecture directe de `useCollectPaymentPoll.ts`                                                                                 |
+| Volume réseau max par session de polling        | ≤ 31 requêtes sur 15 min (6 @5s + 9 @10s + 6 @30s + 10 @60s)                                                                                                                 | Calcul à partir des `PHASES` réelles du code                                                                                  |
+| Appels PLOP par tentative de paiement           | 1 (+ jusqu'à 2 relances internes du client HTTP, `MAX_ATTEMPTS = 3`) + 1 vérification de réconciliation si la création échoue (A1)                                           | Lecture de `plop-client.server.ts`/`plop-provider.server.ts`                                                                  |
+| Requêtes SQL de `create_collect_payment_secure` | 1 `SELECT ... FOR UPDATE` (jointure indexée) + 1 `EXISTS` (indexé sur `payment_id`) + 1 `INSERT`                                                                             | Lecture directe de la migration ; index confirmés (`payment_transactions_order_id_idx`, `_payment_id_idx`, `_created_at_idx`) |
+| Bundle client — chunk `checkout`                | 12.29 kB (4.27 kB gzip)                                                                                                                                                      | Mesuré sur un vrai build (`vite build`)                                                                                       |
+| Code PLOP dans le bundle client                 | 0 kB — `plop-provider.server.ts` (15.70 kB), `plop-client.server.ts`, `plop-reconcile.server.ts` n'apparaissent que sous `_ssr`/`__server.func`, jamais sous `static/assets` | Mesuré directement sur la sortie du build                                                                                     |
+| Build PWA precache                              | 252 entrées (5633 KiB)                                                                                                                                                       | Mesuré sur le dernier build                                                                                                   |
+| Realtime                                        | 1 canal `postgres_changes` par page commande, filtré `order_id=eq.<id>` — léger                                                                                              | Lecture de `orders.$id.tsx`                                                                                                   |
 
 **Limite honnête** : aucune mesure Lighthouse n'a été exécutée dans cet audit — lancer un audit Lighthouse réel contre `www.nkdeliveri.com` (production) constituerait une charge non sollicitée sur le site live, hors du périmètre strictement "lecture/audit" demandé ; le lancer contre un aperçu local aurait nécessité un budget de temps supplémentaire pour un chantier déjà volumineux. Recommandation : si un score Lighthouse chiffré est souhaité, le demander comme mission dédiée avec `npx playwright test` + `playwright-lighthouse` (déjà en dépendance, jamais invoqué ici) contre un aperçu local, jamais contre la production. De même, aucune mesure de "temps moyen" de confirmation n'a pu être établie — `vercel logs` n'expose pas de colonne de durée exploitable pour ce calcul et aucun APM dédié n'est configuré.
 
@@ -248,28 +249,28 @@ Le texte déjà présent dans `checkout.tsx` ("Payment Global — yon sèl pòta
 
 Aucune régression trouvée sur les domaines suivants (vérifiés par lecture directe du code, pas par supposition) :
 
-| Domaine | Statut |
-|---|---|
-| Cash | 🟢 Intact — jamais acheminé par le chemin PLOP |
-| MonCash Manyèl / NatCash Manyèl | 🟢 Intacts — flux de preuve manuelle inchangé |
-| Décaissements (`initiate-provider-payout.functions.ts`) | 🟢 Registre (`index.server.ts`) confirmé non modifié |
-| Dashboard financier / wallets / commission | 🟢 Aucun fichier de ces domaines dans le chemin Collect PLOP |
-| Notifications existantes (hors les 2 textes obsolètes ci-dessus) | 🟢 |
-| Realtime | 🟢 Souscription `payments` intacte, complémentaire au polling |
-| Chat / GPS | 🟢 Sans rapport, non touchés |
+| Domaine                                                          | Statut                                                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| Cash                                                             | 🟢 Intact — jamais acheminé par le chemin PLOP                |
+| MonCash Manyèl / NatCash Manyèl                                  | 🟢 Intacts — flux de preuve manuelle inchangé                 |
+| Décaissements (`initiate-provider-payout.functions.ts`)          | 🟢 Registre (`index.server.ts`) confirmé non modifié          |
+| Dashboard financier / wallets / commission                       | 🟢 Aucun fichier de ces domaines dans le chemin Collect PLOP  |
+| Notifications existantes (hors les 2 textes obsolètes ci-dessus) | 🟢                                                            |
+| Realtime                                                         | 🟢 Souscription `payments` intacte, complémentaire au polling |
+| Chat / GPS                                                       | 🟢 Sans rapport, non touchés                                  |
 
 ---
 
 ## Risques résiduels
 
-| Niveau | Risque |
-|---|---|
-| Faible | Message de maintenance "Payment Global" obsolète en base — visible seulement si le fournisseur est désactivé |
-| Faible | Notifications admin SQL toujours au nom "MonCash Automatik" |
-| Faible | Toggle admin "Kache" sans effet client — déjà documenté comme différé, mais l'UI admin ne le signale pas |
-| Faible | Texte client `orders.$id.tsx` deviendra trompeur le jour où NatCash-via-PLOP est activé |
-| Faible/Moyen | Pas de push pour `collect_payment_admin_error` — l'admin dépend de la notification in-app |
-| Faible | Hypothèse antérieure ("NatCash = code-only") à corriger : le garde SQL de `create_collect_payment_secure` nécessite bien une migration |
+| Niveau       | Risque                                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Faible       | Message de maintenance "Payment Global" obsolète en base — visible seulement si le fournisseur est désactivé                           |
+| Faible       | Notifications admin SQL toujours au nom "MonCash Automatik"                                                                            |
+| Faible       | Toggle admin "Kache" sans effet client — déjà documenté comme différé, mais l'UI admin ne le signale pas                               |
+| Faible       | Texte client `orders.$id.tsx` deviendra trompeur le jour où NatCash-via-PLOP est activé                                                |
+| Faible/Moyen | Pas de push pour `collect_payment_admin_error` — l'admin dépend de la notification in-app                                              |
+| Faible       | Hypothèse antérieure ("NatCash = code-only") à corriger : le garde SQL de `create_collect_payment_secure` nécessite bien une migration |
 
 **Aucun risque Critique ou Haut.**
 

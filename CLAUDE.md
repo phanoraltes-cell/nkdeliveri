@@ -28,8 +28,6 @@ Ensuite :
 - Réduis la duplication.
 - Supprime le code mort.
 
-
-
 Maintenant tu agis comme un Debugger IA.
 
 Analyse absolument tout le projet.
@@ -65,7 +63,6 @@ Pour chaque problème :
 - explique le risque
 - propose le correctif
 - applique le correctif
-
 
 Tu es maintenant Security Engineer.
 
@@ -145,7 +142,6 @@ Faible
 
 Puis corrige automatiquement.
 
-
 Analyse :
 
 Architecture
@@ -195,7 +191,6 @@ Explique pourquoi.
 Propose une meilleure architecture.
 
 Réorganise le projet si nécessaire.
-
 
 Analyse :
 
@@ -257,7 +252,6 @@ Lighthouse
 
 Optimise automatiquement.
 
-
 Avant de terminer :
 
 Refais une deuxième revue complète.
@@ -271,7 +265,6 @@ Puis recommence.
 Continue jusqu'à ce que plus aucune erreur ne soit détectée.
 
 Ne termine jamais avec un bug connu.
-
 
 ==============================
 
@@ -351,10 +344,8 @@ Status
 
 READY FOR PRODUCTION
 
-
-
-
 Workflow Recommande
+
 1. Implémenter la fonctionnalité.
 
 ↓

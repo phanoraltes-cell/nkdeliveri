@@ -38,16 +38,16 @@ type explicite, cohérent avec `git log` :
 <type>: <description au présent, impératif, courte>
 ```
 
-| Type | Usage |
-|---|---|
-| `feat` | Nouvelle fonctionnalité |
-| `fix` | Correction de bug |
+| Type       | Usage                                                   |
+| ---------- | ------------------------------------------------------- |
+| `feat`     | Nouvelle fonctionnalité                                 |
+| `fix`      | Correction de bug                                       |
 | `refactor` | Changement de structure sans changement de comportement |
-| `perf` | Optimisation de performance |
-| `security` | Correctif ou renforcement de sécurité |
-| `docs` | Documentation uniquement |
-| `chore` | Maintenance (dépendances, config, scripts) |
-| `style` | Formatage uniquement (ex. passage de Prettier) |
+| `perf`     | Optimisation de performance                             |
+| `security` | Correctif ou renforcement de sécurité                   |
+| `docs`     | Documentation uniquement                                |
+| `chore`    | Maintenance (dépendances, config, scripts)              |
+| `style`    | Formatage uniquement (ex. passage de Prettier)          |
 
 Exemples réels du projet : `fix: pin Nitro's Vercel preset, resolving the
 Cloudflare/Vercel build ambiguity`, `feat: add customer refund request +

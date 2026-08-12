@@ -31,14 +31,14 @@ Date : 2026-08-08 · Mission diagnostique — **`scripts/backup-database.sh` non
 
 Commande exacte du script : `npx supabase db dump --linked --schema public,private -f <fichier>`
 
-| | Résultat |
-|---|---|
-| Exit code | `0` |
-| Taille | 393 182 octets |
-| `CREATE TABLE` | 46 |
-| `CREATE FUNCTION` | 127 |
-| Premières lignes | `SET statement_timeout = 0;` … puis `CREATE SCHEMA IF NOT EXISTS "private";`, types ENUM, etc. |
-| Dernières lignes | `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES TO "service_role";` |
+|                   | Résultat                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Exit code         | `0`                                                                                            |
+| Taille            | 393 182 octets                                                                                 |
+| `CREATE TABLE`    | 46                                                                                             |
+| `CREATE FUNCTION` | 127                                                                                            |
+| Premières lignes  | `SET statement_timeout = 0;` … puis `CREATE SCHEMA IF NOT EXISTS "private";`, types ENUM, etc. |
+| Dernières lignes  | `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES TO "service_role";`                          |
 
 **Complet et valide** en exécution directe.
 
@@ -46,13 +46,13 @@ Commande exacte du script : `npx supabase db dump --linked --schema public,priva
 
 Commande exacte : `npx supabase db dump --linked --schema public,private --data-only -f <fichier>`
 
-| | Résultat |
-|---|---|
-| Exit code | `0` |
-| Taille | 119 660 octets |
-| `INSERT INTO` | 27 |
+|                  | Résultat                                                                                        |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Exit code        | `0`                                                                                             |
+| Taille           | 119 660 octets                                                                                  |
+| `INSERT INTO`    | 27                                                                                              |
 | Premières lignes | en-tête `pg_dump` standard (`-- PostgreSQL database dump`, `Dumped from database version 17.6`) |
-| Dernières lignes | `RESET ALL;` |
+| Dernières lignes | `RESET ALL;`                                                                                    |
 
 **Complet et valide** en exécution directe.
 
@@ -62,10 +62,10 @@ Commande exacte : `npx supabase db dump --linked --schema public,private --data-
 
 **Preuve directe, la plus importante de ce rapport** : les deux fichiers temporaires nommés dans le journal fourni par l'utilisateur existent toujours sur disque, sous `C:\tmp\` :
 
-| Fichier (du journal utilisateur) | Taille réelle sur disque | Contenu |
-|---|---|---|
-| `C:\tmp\tmp.1b2MBBtput` (pass schéma) | **393 182 octets** | 46 `CREATE TABLE` — dump complet |
-| `C:\tmp\tmp.djBjrTFIYs` (pass données) | **119 660 octets** | 27 `INSERT INTO` — dump complet |
+| Fichier (du journal utilisateur)       | Taille réelle sur disque | Contenu                          |
+| -------------------------------------- | ------------------------ | -------------------------------- |
+| `C:\tmp\tmp.1b2MBBtput` (pass schéma)  | **393 182 octets**       | 46 `CREATE TABLE` — dump complet |
+| `C:\tmp\tmp.djBjrTFIYs` (pass données) | **119 660 octets**       | 27 `INSERT INTO` — dump complet  |
 
 SHA-256 : `0943aec0…b7f0ade8` (schéma) / `2f00ad9a…65da300a8` (données) — capturés pour traçabilité.
 
@@ -114,13 +114,15 @@ Tous les seuils largement dépassés (min. 35/90/15/50/1/200000).
 ### **Catégorie H — Autre : incohérence de résolution de chemin `/tmp` entre Git Bash/MSYS et le binaire natif Windows invoqué**
 
 **Preuves à l'appui, aucune supposition** :
+
 1. `mount` (bash) résout `/tmp` vers `C:\Users\DALPHE\AppData\Local\Temp` dans cette session — confirmé par `mount`, `cygpath -w`, et par le message que `supabase.exe` lui-même a imprimé lors de mes tests (`Dumped schema to C:\Users\DALPHE\AppData\Local\Temp\tmp.2VG2SHaBEF.`).
 2. Mais le journal fourni par l'utilisateur montre `supabase.exe` annonçant `Dumped schema to C:\tmp\tmp.1b2MBBtput.` — une résolution **différente** de `/tmp/tmp.1b2MBBtput` pour ce même genre de chemin, lors de cette exécution-là.
 3. **Les deux fichiers réels, à cet emplacement `C:\tmp\`, existent encore et sont complets** (§ 5) — la preuve que `pg_dump`, via `supabase.exe`, a réellement et intégralement réussi son travail, à l'endroit où l'argument `-f` a été résolu côté processus natif.
 4. Le script, lui, fait ensuite `cat "$SCHEMA_TMP"` / `mv` en utilisant la chaîne de chemin **côté bash** (`/tmp/tmp.1b2MBBtput`) — qui, elle, résout vers l'emplacement `AppData\Local\Temp` où `mktemp` avait créé un fichier **vide**, jamais écrit par personne d'autre (le vrai écrivain ayant, lui, atterri à `C:\tmp\`).
-5. Ce comportement est **intermittent d'une invocation shell à l'autre** (mes deux tests manuels du jour, utilisant `mktemp` de la même façon que le script, ont résolu correctement et de façon cohérente ; celui de l'utilisateur, quelques minutes plus tôt, ne l'a pas fait) — cohérent avec un fait déjà documenté dans ce projet (mémoire de session du 2026-08-05) : *"cet environnement Git Bash — `/tmp` ne pointe pas de façon fiable vers un chemin Windows réel ouvrable par les binaires natifs — utiliser `/c/tmp` à la place."* Ce diagnostic **confirme et précise** ce fait déjà connu : ce n'est pas que `/tmp` "ne marche jamais", c'est que sa traduction pour un **argument passé à un sous-processus natif** peut diverger de sa résolution interne côté bash, de façon non déterministe.
+5. Ce comportement est **intermittent d'une invocation shell à l'autre** (mes deux tests manuels du jour, utilisant `mktemp` de la même façon que le script, ont résolu correctement et de façon cohérente ; celui de l'utilisateur, quelques minutes plus tôt, ne l'a pas fait) — cohérent avec un fait déjà documenté dans ce projet (mémoire de session du 2026-08-05) : _"cet environnement Git Bash — `/tmp` ne pointe pas de façon fiable vers un chemin Windows réel ouvrable par les binaires natifs — utiliser `/c/tmp` à la place."_ Ce diagnostic **confirme et précise** ce fait déjà connu : ce n'est pas que `/tmp` "ne marche jamais", c'est que sa traduction pour un **argument passé à un sous-processus natif** peut diverger de sa résolution interne côté bash, de façon non déterministe.
 
 **Catégories explicitement écartées, avec preuve** :
+
 - **A. Docker** — fonctionnel (§ 6), image exacte déjà en cache.
 - **B. CLI Supabase** — version cohérente, dry-run propre, commande `pg_dump` générée correcte.
 - **C. pg_dump** — version 17.6 strictement identique au serveur distant (§ 7).
@@ -140,15 +142,18 @@ Le risque de récidive (une incohérence intermittente et déjà observée deux 
 **Changement** : `SCHEMA_TMP="$(mktemp)"` / `DATA_TMP="$(mktemp)"` → `SCHEMA_TMP="$(mktemp -p "$OUT_DIR")"` / `DATA_TMP="$(mktemp -p "$OUT_DIR")"`. Les fichiers temporaires sont désormais créés **dans `backups/`** (déjà un chemin relatif au projet, résolu de façon strictement identique par bash et par tout sous-processus natif — aucune traversée `/tmp` en jeu) au lieu du répertoire temporaire système. `backups/` est déjà gitignored, déjà le répertoire de sortie final, et déjà nettoyé par le `trap cleanup` existant (`rm -f "$SCHEMA_TMP" "$DATA_TMP"` inconditionnel) — aucune autre ligne du script n'a été modifiée.
 
 **Test avec fixture (échec provoqué)** : `BACKUP_MIN_TABLES=999999 bash scripts/backup-database.sh` — un vrai dump complet a bien été produit (`tables=46 functions=127 triggers=28 policies=67 data_rows=27`), mais rejeté par le seuil délibérément impossible. Confirmé :
+
 - Les nouveaux fichiers temporaires (`backups/tmp.1SzgNnVOHL`, `backups/tmp.QG61XyvdIn`) ont bien été créés **dans `backups/`**, avec la résolution de chemin bash et celle du binaire natif désormais **identiques** (`Dumped schema to C:\...\backups\tmp.1SzgNnVOHL.` — plus de `/tmp` en jeu).
 - `[backup] FAILED — removing incomplete/unverified output` : le fichier `full_*.sql` invalide a été supprimé.
 - Le `trap cleanup` a bien supprimé les deux fichiers temporaires `tmp.*` — `ls backups/` après coup ne montre plus rien de résiduel, seulement les backups légitimes déjà présents. Aucune régression de la logique de vérification/nettoyage.
 
 **Retest avec la vraie base (succès)** : `bash scripts/backup-database.sh` ré-exécuté sans le seuil forcé — résultat valide, deuxième backup complet obtenu avec le script corrigé :
+
 ```
 [backup] Content check: tables=46 functions=127 triggers=28 policies=67 data_rows=27 size=513173B
 [backup] OK — valid backup written: backups/full_20260808T180538Z.sql (504K)
 ```
+
 Les deux backups valides du jour (`full_20260808T175736Z.sql`, obtenu avant la correction, et `full_20260808T180538Z.sql`, obtenu après) coexistent dans `backups/` — tous deux légitimes, tous deux gitignorés.
 
 `git status` confirme que **seul** `scripts/backup-database.sh` a changé (2 lignes), aucun autre fichier touché. Non commité, non poussé, conformément à la consigne de la mission.

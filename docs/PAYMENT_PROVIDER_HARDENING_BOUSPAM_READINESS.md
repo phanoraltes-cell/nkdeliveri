@@ -29,9 +29,9 @@ Aujourd'hui, `src/lib/payment-providers/moncash-provider.server.ts` appelle touj
 
 ## Ce qui est vraiment prêt dès aujourd'hui
 
-| Composant | Statut |
-|---|---|
-| Contrôle d'activation (`payment_provider_settings`, RPC, page admin) | ✅ Construit, testé, en production |
-| Le contrôle est agnostique de l'implémentation sous-jacente | ✅ Vérifié — aucune référence à Digicel ou Bouspam dans `payment-provider-availability.ts`, `checkout.tsx`, ou la table elle-même |
-| Backend refuse toute tentative tant que `enabled=false`, quel que soit le moyen d'appel | ✅ Vérifié en direct en production (§ Rapport Sécurité) |
-| Implémentation Bouspam elle-même | ❌ Non commencée — en pause, hors périmètre de cette mission |
+| Composant                                                                               | Statut                                                                                                                            |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Contrôle d'activation (`payment_provider_settings`, RPC, page admin)                    | ✅ Construit, testé, en production                                                                                                |
+| Le contrôle est agnostique de l'implémentation sous-jacente                             | ✅ Vérifié — aucune référence à Digicel ou Bouspam dans `payment-provider-availability.ts`, `checkout.tsx`, ou la table elle-même |
+| Backend refuse toute tentative tant que `enabled=false`, quel que soit le moyen d'appel | ✅ Vérifié en direct en production (§ Rapport Sécurité)                                                                           |
+| Implémentation Bouspam elle-même                                                        | ❌ Non commencée — en pause, hors périmètre de cette mission                                                                      |

@@ -1,4 +1,5 @@
 # Phase 2 — Rapport de clôture
+
 ## Suivi de commande — timeline unique (Refonte Frontend Premium NK Deliveri)
 
 **Statut :** ✅ Exécutée, vérifiée, commitée sur `main`. **En attente de votre validation avant push et avant ouverture de P3.**
@@ -11,17 +12,17 @@ Périmètre : le point faible n°1 identifié par l'audit (« la page de suivi d
 
 ## 1. Ce qui a changé
 
-| Fichier | Changement |
-|---|---|
-| `src/components/order/order-status-timeline.tsx` (nouveau) | Timeline horizontale à 6 étapes (An atant → Konfime → Ap prepare → Prè → An livrezon → Livre), consomme les tokens `--status-*` de P1. Commande annulée/remboursée : état plat distinct plutôt qu'une barre de progression figée. |
-| `src/routes/orders.$id.tsx` | Remplace la grille à 2 cartes (« Estati kòmand » / « Estati peman ») par la timeline + une légende de confiance discrète (paiement confirmé/remboursé) + au plus une bannière contextuelle (paiement automatique en attente/échoué). Le formulaire de preuve de paiement s'affiche directement quand c'est l'action attendue ; sinon il rejoint un accordéon « Detay kòmand ak sipò » avec le détail de la commande, l'annulation, le remboursement, la confirmation cash, le litige et l'avis — fermé par défaut tant que la commande est active, ouvert par défaut une fois un statut terminal atteint. |
+| Fichier                                                    | Changement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/order/order-status-timeline.tsx` (nouveau) | Timeline horizontale à 6 étapes (An atant → Konfime → Ap prepare → Prè → An livrezon → Livre), consomme les tokens `--status-*` de P1. Commande annulée/remboursée : état plat distinct plutôt qu'une barre de progression figée.                                                                                                                                                                                                                                                                                                                                                                         |
+| `src/routes/orders.$id.tsx`                                | Remplace la grille à 2 cartes (« Estati kòmand » / « Estati peman ») par la timeline + une légende de confiance discrète (paiement confirmé/remboursé) + au plus une bannière contextuelle (paiement automatique en attente/échoué). Le formulaire de preuve de paiement s'affiche directement quand c'est l'action attendue ; sinon il rejoint un accordéon « Detay kòmand ak sipò » avec le détail de la commande, l'annulation, le remboursement, la confirmation cash, le litige et l'avis — fermé par défaut tant que la commande est active, ouvert par défaut une fois un statut terminal atteint. |
 
 **Aucun des 8 composants de section n'a été réécrit** (`DeliveryTrackingSection`, `PaymentProofSection`, `CancelOrderSection`, `RefundSection`, `CashConfirmationSection`, `DisputeSection`, `OrderReviewSection`, `CustomerLocationToggle`) — tous lus intégralement avant de commencer, puis réutilisés tels quels avec exactement les mêmes props qu'avant. Seul leur emplacement dans la page a changé.
 
 ## 2. Décisions de conception, avec justification
 
 - **Pas de bannière dédiée pour « Voye prèv peman ou a » :** `PaymentProofSection` porte déjà son propre titre d'action clair (icône + « Voye prèv peman ou a »). Ajouter une bannière au-dessus aurait dupliqué le même message — contraire à la règle « une action à la fois » du plan.
-- **Accordéon ouvert par défaut sur commande terminale :** une fois la commande livrée/annulée/remboursée, il n'y a plus de suivi à afficher — le contenu de l'accordéon (avis, remboursement, litige) *devient* le contenu principal de la page, donc il n'a plus de raison d'être replié. Piloté par `TERMINAL_ORDER_STATUSES`, déjà partagé avec `orders.index.tsx` et le dashboard restaurant.
+- **Accordéon ouvert par défaut sur commande terminale :** une fois la commande livrée/annulée/remboursée, il n'y a plus de suivi à afficher — le contenu de l'accordéon (avis, remboursement, litige) _devient_ le contenu principal de la page, donc il n'a plus de raison d'être replié. Piloté par `TERMINAL_ORDER_STATUSES`, déjà partagé avec `orders.index.tsx` et le dashboard restaurant.
 - **Fond légèrement grisé (`bg-cream/50`) à l'intérieur de l'accordéon :** les sections qu'il contient ont chacune leur propre carte blanche avec ombre — les empiler directement sur un fond blanc aurait rendu les séparations peu visibles. Décision purement visuelle, aucune section modifiée pour ça.
 - **Timeline sans numéro de commande dans son propre en-tête :** le `<h1>` de la page l'affiche déjà juste au-dessus — je l'ai délibérément omis dans le composant pour éviter une répétition, plutôt que de suivre au pied de la lettre la maquette du dossier de spécification (qui l'incluait).
 
@@ -45,11 +46,11 @@ En relisant le diff, la bannière « N ap tann konfimasyon peman an » se retrou
 
 ## 5. Risques de la Phase 0 — statut de clôture pour ce qui concerne P2
 
-| Risque identifié en Phase 0 | Statut |
-|---|---|
+| Risque identifié en Phase 0                                                    | Statut                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Écran à fort trafic, tester tous les statuts de commande possibles (§ plan P2) | Chaque statut (`pending`, `confirmed`, `preparing`, `ready`, `assigned`/`picked_up`, `delivered`, `cancelled`, `refunded`) a une branche explicite dans `OrderStatusTimeline` — vérifié par lecture, pas par exécution visuelle (hors périmètre outillé de cette session) |
-| Absence de test de régression visuelle automatisé (déjà signalé en clôture P1) | Toujours vrai — reste la limite la plus importante de cette vérification : je ne peux pas confirmer visuellement le rendu, seulement sa correction structurelle/logique |
-| Dérive de portée | Non matérialisée — seuls les 2 fichiers annoncés ont été touchés |
+| Absence de test de régression visuelle automatisé (déjà signalé en clôture P1) | Toujours vrai — reste la limite la plus importante de cette vérification : je ne peux pas confirmer visuellement le rendu, seulement sa correction structurelle/logique                                                                                                   |
+| Dérive de portée                                                               | Non matérialisée — seuls les 2 fichiers annoncés ont été touchés                                                                                                                                                                                                          |
 
 ## 6. Prochaine étape
 

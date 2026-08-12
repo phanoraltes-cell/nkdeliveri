@@ -33,4 +33,4 @@ Toute modification (via cette page ou via un appel direct à la RPC) écrit une 
 
 1. Cliquer "Dezaktive" sur la méthode concernée.
 2. Optionnel : mettre à jour le message de maintenance pour expliquer la situation aux clients.
-3. Vérifier `payment_transactions`/le dashboard MonCash (`/dashboard/admin/moncash`) pour toute transaction déjà en cours au moment de la désactivation — elle ne sera pas annulée rétroactivement, seules les *nouvelles* tentatives sont bloquées.
+3. Vérifier `payment_transactions`/le dashboard MonCash (`/dashboard/admin/moncash`) pour toute transaction déjà en cours au moment de la désactivation — elle ne sera pas annulée rétroactivement, seules les _nouvelles_ tentatives sont bloquées.

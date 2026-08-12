@@ -11,10 +11,12 @@ Faz 1 pa "rezoud" echèk anvwa yo — li fè yo **dyagnostikab**. Anvan chanjman
 ## Sa ki chanje
 
 ### 1. Nouvo migrasyon — `supabase/migrations/20260809100000_newsletter_send_log.sql`
+
 Nouvo tab `newsletter_send_log`, menm patwon ak `plop_api_logs`/`stripe_api_logs` (append-only via `private.prevent_log_mutation()`, lekti rezève pou admin/super_admin via `private.has_role`, ekriti rezève pou `service_role` sèlman). Chak liy = yon tantativ Resend endividyèl: `recipient_email`, `success`, `http_status`, `error` (mesaj Resend lan oswa tèks brit si se pa JSON), `duration_ms`, `broadcast_id` (pou gwoupe tout liy yon menm anvwa), `subject`, `triggered_by`.
 `npm run check:migrations` konfime: 125 migrasyon, 0 danje.
 
 ### 2. `src/lib/send-newsletter.functions.ts`
+
 - Nouvo fonksyon `sendOne()` — yon sèl apèl Resend ki **pa janm voye eksepsyon**: chak rezilta (siksè, erè HTTP, erè rezo) retounen kòm done olye pwopaje kòm yon throw. Sa a se fiks Pwen A nan odit la.
 - Prekosyon repete espre sou lekti kò repons lan: `.text()` yon sèl fwa, apre sa `JSON.parse` sou tèks kaptire a — menm bug "disturbed body" ki te deja koute Faz P1 PLOP la (`docs/PLOP_CLIENT_REMEDIATION_REPORT.md`) pa repwodwi isit la.
 - Chak gwoup (`BATCH_SIZE=10`, **pa chanje** — throttling se Faz 2/3, pa Faz 1) ekri liy log li yo **imedyatman apre li fini**, pa nan fen tout apèl la — konsa menm si tout apèl la ta rive fè timeout (Pwen C nan odit la), gwoup ki te deja fini yo kite yon tras.
@@ -22,17 +24,18 @@ Nouvo tab `newsletter_send_log`, menm patwon ak `plop_api_logs`/`stripe_api_logs
 - Repons `sendNewsletterBroadcast` a kounye a gen ladan `broadcastId` ak `failureSamples` (jiska 3 rezon distenk, tou kaptire tou de nan JS ak nan baz done a).
 
 ### 3. `src/routes/_authenticated/dashboard.admin.customers.tsx`
+
 Lè `failed > 0`, `toast.warning` (olye `toast.success`) montre rezon yo dirèkteman (`failureSamples`) — admin lan wè "poukisa" san bezwen chèche nan baz done a.
 
 ## Verifikasyon
 
-| Etap | Rezilta |
-|---|---|
-| `npm run typecheck` | ✅ Klè |
-| `npm run lint` | ✅ 0 erè (13 avètisman pre-egzistan ki pa gen rapò, tout nan fichye mwen pa t touche) |
-| `npm run check:migrations` | ✅ 125 migrasyon, 0 danje |
-| `npx vitest run` | ✅ **137/137** (130 avan + 7 nouvo pou `sendOne`) |
-| `npx vite build` | ✅ siksè |
+| Etap                       | Rezilta                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| `npm run typecheck`        | ✅ Klè                                                                                |
+| `npm run lint`             | ✅ 0 erè (13 avètisman pre-egzistan ki pa gen rapò, tout nan fichye mwen pa t touche) |
+| `npm run check:migrations` | ✅ 125 migrasyon, 0 danje                                                             |
+| `npx vitest run`           | ✅ **137/137** (130 avan + 7 nouvo pou `sendOne`)                                     |
+| `npx vite build`           | ✅ siksè                                                                              |
 
 7 nouvo tès (`src/lib/__tests__/send-newsletter.test.ts`) kouvri: siksè, peyload egzat voye bay Resend, erè HTTP ak mesaj JSON Resend lan, erè HTTP ak kò non-JSON (prèv fiks "disturbed body" la), erè HTTP ak kò vid, erè rezo (fetch rejte), ak twonkaj yon mesaj erè twò long.
 

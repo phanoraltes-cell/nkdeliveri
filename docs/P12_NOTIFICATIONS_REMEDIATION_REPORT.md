@@ -12,27 +12,27 @@ Lu intégralement avant toute modification : `docs/NOTIFICATIONS_PAGE_AUDIT.md`.
 
 ## 1. Findings traités
 
-| Finding (audit) | Statut |
-|---|---|
-| Header mobile — chevauchement titre/PushToggle (P2) | ✅ Corrigé |
-| Onglets catégorie — boutons bruts sans `aria-pressed` (P3) | ✅ Corrigé (migré vers `Chip`) |
-| Préférences — cases natives non stylées, tap target trop petit (P3) | ✅ Corrigé (cases natives conservées, habillage + tap target agrandis) |
-| État vide — texte brut au lieu de `EmptyState` (P3) | ✅ Corrigé |
-| Icônes — 3 catégories seulement sur 9 (P4) | ✅ Amélioré (6 catégories de plus, 1 conservée en fallback documenté) |
-| Notifications cliquables vs informatives indiscernables (P3) | ✅ Corrigé |
-| `color-contrast` (F-08, compromis de marque site-large) | **Non touché**, décision globale non rouverte (voir §8) |
+| Finding (audit)                                                       | Statut                                                                                                                  |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Header mobile — chevauchement titre/PushToggle (P2)                   | ✅ Corrigé                                                                                                              |
+| Onglets catégorie — boutons bruts sans `aria-pressed` (P3)            | ✅ Corrigé (migré vers `Chip`)                                                                                          |
+| Préférences — cases natives non stylées, tap target trop petit (P3)   | ✅ Corrigé (cases natives conservées, habillage + tap target agrandis)                                                  |
+| État vide — texte brut au lieu de `EmptyState` (P3)                   | ✅ Corrigé                                                                                                              |
+| Icônes — 3 catégories seulement sur 9 (P4)                            | ✅ Amélioré (6 catégories de plus, 1 conservée en fallback documenté)                                                   |
+| Notifications cliquables vs informatives indiscernables (P3)          | ✅ Corrigé                                                                                                              |
+| `color-contrast` (F-08, compromis de marque site-large)               | **Non touché**, décision globale non rouverte (voir §8)                                                                 |
 | Onglets sur 2-3 lignes mobile (P4, "piste" optionnelle #3 de l'audit) | **Non traité** — hors périmètre des 8 sections numérotées du prompt P12 (rail horizontal explicitement non demandé ici) |
-| Liste mono-colonne sur très large écran (P4) | **Non traité** — même raison, non listé dans les 8 problèmes numérotés de P12 |
+| Liste mono-colonne sur très large écran (P4)                          | **Non traité** — même raison, non listé dans les 8 problèmes numérotés de P12                                           |
 
 ---
 
 ## 2. Fichiers modifiés
 
-| Fichier | Nature du changement |
-|---|---|
-| `src/routes/_authenticated/notifications.tsx` | Header responsive (§3), onglets → `Chip` (§4), état vide → `EmptyState` (§6), icônes par catégorie (§7), affordance cliquable/informative (§8) |
-| `src/components/notification-preferences-panel.tsx` | Habillage des cases à cocher + agrandissement du tap target (§5) |
-| `e2e/responsive/notifications-mobile.spec.ts` | **Nouveau** — test de non-régression permanent (§13) |
+| Fichier                                             | Nature du changement                                                                                                                           |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/_authenticated/notifications.tsx`       | Header responsive (§3), onglets → `Chip` (§4), état vide → `EmptyState` (§6), icônes par catégorie (§7), affordance cliquable/informative (§8) |
+| `src/components/notification-preferences-panel.tsx` | Habillage des cases à cocher + agrandissement du tap target (§5)                                                                               |
+| `e2e/responsive/notifications-mobile.spec.ts`       | **Nouveau** — test de non-régression permanent (§13)                                                                                           |
 
 Aucun autre fichier touché. `Chip` et `EmptyState` ont été **consommés**, pas modifiés — zéro risque pour les ~15 autres pages qui les utilisent déjà.
 
@@ -43,14 +43,16 @@ Aucun autre fichier touché. `Chip` et `EmptyState` ont été **consommés**, pa
 **Cause exacte** (confirmée dans le code, pas supposée) : `<div className="flex items-center justify-between">` sans `flex-wrap` forçait `<h1>` et `<PushToggle />` sur une seule ligne, quelle que soit la largeur réelle du contenu de `PushToggle`.
 
 **Solution retenue** :
+
 ```tsx
 <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center">
 ```
+
 - `flex-wrap` : seul changement structurellement nécessaire — dès qu'un des deux blocs ne tient plus sur la ligne, il passe naturellement à la ligne suivante, sans jamais chevaucher, **quelle que soit la largeur réelle du contenu** (pas de seuil `sm:`/`md:` codé en dur pour décider QUAND empiler — le navigateur le décide lui-même selon le contenu réel, conformément à la contrainte "fonctionner avec du contenu réellement variable").
 - `items-start` par défaut (empilé : chaque bloc s'aligne proprement en haut), `sm:items-center` seulement pour recentrer verticalement une fois que les deux tiennent côte à côte.
 - `gap-3` pour un espacement propre dans les deux configurations.
 
-**Pourquoi cette solution couvre tous les états de `PushToggle`, pas seulement "denied"** : `PushToggle` a 3 rendus possibles — bouton compact, message "navigateur non supporté", ou `NotificationPermissionDeniedHelp`. Les deux derniers sont des blocs larges de forme identique (texte + liste/bouton). La correction n'a ciblé aucun état spécifiquement — elle rend la ligne d'en-tête robuste à *n'importe quel* contenu large, ce qui a été confirmé utile en pratique : le test automatisé (§13) montre que Chromium affiche l'état "denied" tandis que WebKit affiche "non supporté" (l'API Push n'y est pas exposée de la même façon dans l'environnement Playwright) — **les deux cas passent avec la même correction, sans code spécifique à l'un ou l'autre**.
+**Pourquoi cette solution couvre tous les états de `PushToggle`, pas seulement "denied"** : `PushToggle` a 3 rendus possibles — bouton compact, message "navigateur non supporté", ou `NotificationPermissionDeniedHelp`. Les deux derniers sont des blocs larges de forme identique (texte + liste/bouton). La correction n'a ciblé aucun état spécifiquement — elle rend la ligne d'en-tête robuste à _n'importe quel_ contenu large, ce qui a été confirmé utile en pratique : le test automatisé (§13) montre que Chromium affiche l'état "denied" tandis que WebKit affiche "non supporté" (l'API Push n'y est pas exposée de la même façon dans l'environnement Playwright) — **les deux cas passent avec la même correction, sans code spécifique à l'un ou l'autre**.
 
 Ni réduction de texte, ni masquage du message, ni largeur fixe — conforme aux contraintes du prompt.
 
@@ -74,7 +76,7 @@ Les 9 `<button>` bruts ont été remplacés par le composant `Chip` déjà utili
 
 Aucun composant `Checkbox`/`Switch` n'existe dans le Design System (vérifié, §0) — conformément à la contrainte de ne pas ajouter de dépendance ni de composant lourd pour cette phase, **les `<input type="checkbox">` natifs sont conservés tels quels** (sémantique et clavier déjà corrects). Deux changements seulement :
 
-1. Chaque `<label>` — qui enveloppait déjà nativement son `<input>` (donc déjà cliquable sur toute sa surface au niveau HTML) — reçoit maintenant `rounded-lg px-2 py-2.5 hover:bg-brand-soft/30`, ce qui rend cette zone déjà-cliquable *visible* et confortable (~44px de hauteur au lieu de ~20px). Conforme à la consigne : *"Éviter de rendre uniquement le petit carré de checkbox cliquable. Lorsque pertinent, rendre la ligne/label suffisamment interactive."*
+1. Chaque `<label>` — qui enveloppait déjà nativement son `<input>` (donc déjà cliquable sur toute sa surface au niveau HTML) — reçoit maintenant `rounded-lg px-2 py-2.5 hover:bg-brand-soft/30`, ce qui rend cette zone déjà-cliquable _visible_ et confortable (~44px de hauteur au lieu de ~20px). Conforme à la consigne : _"Éviter de rendre uniquement le petit carré de checkbox cliquable. Lorsque pertinent, rendre la ligne/label suffisamment interactive."_
 2. `accent-brand` sur chaque case — teinte la coche en orange de marque au lieu du bleu par défaut du navigateur, seul point d'alignement visuel possible sans introduire de nouveau composant.
 
 Logique des préférences (opt-out uniquement pour les promos, sauvegarde via `update_notification_preferences_secure`) **non touchée**.
@@ -84,10 +86,13 @@ Logique des préférences (opt-out uniquement pour les promos, sauvegarde via `u
 ## 6. État vide → `EmptyState`
 
 ```tsx
-{!isLoading && visible.length === 0 && (
-  <EmptyState icon={Bell} title="Pa gen notifikasyon isit la." />
-)}
+{
+  !isLoading && visible.length === 0 && (
+    <EmptyState icon={Bell} title="Pa gen notifikasyon isit la." />
+  );
+}
 ```
+
 Même message, même condition d'affichage. `Bell` (déjà importé pour l'icône de repli) réutilisé plutôt qu'une nouvelle icône.
 
 ---
@@ -96,17 +101,17 @@ Même message, même condition d'affichage. `Bell` (déjà importé pour l'icôn
 
 Correspondance construite à partir des icônes **déjà assignées au même concept ailleurs dans l'app** (`nav-items.ts`, sidebars des 4 dashboards), pas inventée :
 
-| Catégorie | Icône | Déjà utilisée pour |
-|---|---|---|
-| `order` | `ShoppingBag` | "Kòmand" (client, restaurant) |
-| `delivery` | `Bike` | "Livrè" (admin) |
-| `payment` | `CreditCard` | "Peman Kliyan" / "Peman" (driver) |
-| `commission` | `Percent` | "Komisyon" (restaurant, driver, admin) |
-| `promotion` | `Megaphone` | "Pwomosyon" / "Piblisite" (restaurant, admin) |
-| `dispute` | `AlertTriangle` | "Litij" (les 3 rôles) |
-| `system` | *(non mappée — Bell générique conservé)* | Aucune destination de nav équivalente à emprunter |
+| Catégorie    | Icône                                    | Déjà utilisée pour                                |
+| ------------ | ---------------------------------------- | ------------------------------------------------- |
+| `order`      | `ShoppingBag`                            | "Kòmand" (client, restaurant)                     |
+| `delivery`   | `Bike`                                   | "Livrè" (admin)                                   |
+| `payment`    | `CreditCard`                             | "Peman Kliyan" / "Peman" (driver)                 |
+| `commission` | `Percent`                                | "Komisyon" (restaurant, driver, admin)            |
+| `promotion`  | `Megaphone`                              | "Pwomosyon" / "Piblisite" (restaurant, admin)     |
+| `dispute`    | `AlertTriangle`                          | "Litij" (les 3 rôles)                             |
+| `system`     | _(non mappée — Bell générique conservé)_ | Aucune destination de nav équivalente à emprunter |
 
-`system` documenté et volontairement laissé au fallback générique, conformément à la consigne *"Sinon : conserver le fallback générique et documenter pourquoi."* — inventer une icône pour ce seul cas aurait été la seule option arbitraire du lot.
+`system` documenté et volontairement laissé au fallback générique, conformément à la consigne _"Sinon : conserver le fallback générique et documenter pourquoi."_ — inventer une icône pour ce seul cas aurait été la seule option arbitraire du lot.
 
 Priorité conservée : les 3 icônes spécifiques au `type` de paiement (`payment_paid`/`failed`/`under_review`) restent prioritaires sur l'icône de catégorie — elles portent une information plus fine (résultat) que la simple catégorie.
 
@@ -133,6 +138,7 @@ PREFS OPEN:    [{"id":"color-contrast","impact":"serious","n":13}]
 **Une seule règle en violation, dans les deux états : `color-contrast`** — aucune violation de labels, ARIA, landmarks ou structure introduite ni préexistante en dehors de ça. Conformément à la consigne, **ce finding n'a pas été touché** — c'est le compromis de marque déjà documenté et accepté à l'échelle du site (`docs/FRONTEND_GLOBAL_AUDIT.md`, F-08), et la décision globale n'a pas été rouverte ici.
 
 `aria-pressed` vérifié programmatiquement (pas seulement par lecture de code) :
+
 ```
 Tout   → aria-pressed="true"   (état initial)
 Kòmand → aria-pressed="false"  (état initial)
@@ -177,6 +183,7 @@ npx playwright test e2e/cross-cutting/accessibility.spec.ts
 Test Files  13 passed (13)
      Tests  143 passed (143)
 ```
+
 Typecheck, lint, garde-fou migrations, tests unitaires, build — tous verts, exit code 0.
 
 ---
@@ -208,15 +215,15 @@ Aucun chevauchement, aucun débordement horizontal, aucun bouton inaccessible à
 
 ## 15. Non-régression
 
-| Fonctionnalité | Statut |
-|---|---|
-| Filtrage par catégorie/onglet | ✅ intact (`e2e/client/notifications.spec.ts` vert) |
-| Marquage lu/non lu | ✅ intact (`e2e/client/notifications.spec.ts` "marks a notification as read" vert) |
-| Masquage (`hideOne`/`hideAllVisible`) | ✅ intact, code non touché |
-| Préférences (sauvegarde RPC) | ✅ intacte, seule la présentation des cases a changé |
-| Navigation vers commande/chat | ✅ intacte, `Link`/`to`/`params` non touchés, seul le `className` a changé |
-| `PushToggle` (activer/désactiver push) | ✅ intact, composant non modifié — seul son conteneur parent gère mieux sa largeur |
-| Backend notifications, Supabase, RPC, Edge Functions, push infra, auth | ✅ non touchés (aucun fichier hors frontend modifié) |
+| Fonctionnalité                                                         | Statut                                                                             |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Filtrage par catégorie/onglet                                          | ✅ intact (`e2e/client/notifications.spec.ts` vert)                                |
+| Marquage lu/non lu                                                     | ✅ intact (`e2e/client/notifications.spec.ts` "marks a notification as read" vert) |
+| Masquage (`hideOne`/`hideAllVisible`)                                  | ✅ intact, code non touché                                                         |
+| Préférences (sauvegarde RPC)                                           | ✅ intacte, seule la présentation des cases a changé                               |
+| Navigation vers commande/chat                                          | ✅ intacte, `Link`/`to`/`params` non touchés, seul le `className` a changé         |
+| `PushToggle` (activer/désactiver push)                                 | ✅ intact, composant non modifié — seul son conteneur parent gère mieux sa largeur |
+| Backend notifications, Supabase, RPC, Edge Functions, push infra, auth | ✅ non touchés (aucun fichier hors frontend modifié)                               |
 
 ---
 

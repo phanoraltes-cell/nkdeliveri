@@ -8,18 +8,18 @@ fichiers local.
 
 ## Résultat
 
-| Catégorie | Où | Trouvé ? |
-|---|---|---|
-| `MONCASH_CLIENT_SECRET` | Git (tout l'historique) | ❌ Non — seule une valeur de test explicite (`"test-client-secret"`) dans les fichiers Vitest |
-| `MONCASH_CLIENT_SECRET` | Vercel Production | ❌ Non — `vercel env ls production` : 10 variables, aucune `MONCASH_*` |
-| `MONCASH_CLIENT_SECRET` | `.env.local` | ❌ Non |
-| `MONCASH_MERCHANT_ID`/`MONCASH_CLIENT_ID` | Git/Vercel/local | ❌ Non, mêmes vérifications |
-| `MONCASH_WEBHOOK_SECRET` | Git/Vercel/local | ❌ Non, mêmes vérifications |
-| Access Token OAuth2 (`access_token` MonCash) | Code source | ❌ Jamais retourné par aucune fonction exportée — reste privé à `moncash-client.server.ts` (variable de module `cachedToken`, jamais exportée) |
-| Access Token OAuth2 | `moncash_api_logs` (journal d'audit) | ❌ Non — `request_summary`/`response_summary` sont construits à la main par endpoit, `has_access_token: true/false` seulement, jamais la valeur — voir test dédié ci-dessous |
-| Access Token OAuth2 | React / bundle client | ❌ Structurellement impossible — `moncash-client.server.ts` n'est accessible que par import dynamique depuis un autre `.server.ts`, jamais depuis un composant (vérifié après build, voir ci-dessous) |
-| Payment token MonCash (`payment_token.token`, différent de l'access token) | `moncash_api_logs` | ⚠️ Tronqué (4 premiers + 4 derniers caractères, `redactToken()`), jamais en clair — voir MONCASH_FINANCIAL_AUDIT.md |
-| Tout secret | Notifications (`private.notify_secure`) | ❌ Non — les corps de notification n'interpolent que `amount`/`provider_code`/`reason` textuel, jamais un champ contenant un token ou secret (vérifié par lecture des 3 migrations qui appellent `notify_secure`) |
+| Catégorie                                                                  | Où                                      | Trouvé ?                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MONCASH_CLIENT_SECRET`                                                    | Git (tout l'historique)                 | ❌ Non — seule une valeur de test explicite (`"test-client-secret"`) dans les fichiers Vitest                                                                                                                     |
+| `MONCASH_CLIENT_SECRET`                                                    | Vercel Production                       | ❌ Non — `vercel env ls production` : 10 variables, aucune `MONCASH_*`                                                                                                                                            |
+| `MONCASH_CLIENT_SECRET`                                                    | `.env.local`                            | ❌ Non                                                                                                                                                                                                            |
+| `MONCASH_MERCHANT_ID`/`MONCASH_CLIENT_ID`                                  | Git/Vercel/local                        | ❌ Non, mêmes vérifications                                                                                                                                                                                       |
+| `MONCASH_WEBHOOK_SECRET`                                                   | Git/Vercel/local                        | ❌ Non, mêmes vérifications                                                                                                                                                                                       |
+| Access Token OAuth2 (`access_token` MonCash)                               | Code source                             | ❌ Jamais retourné par aucune fonction exportée — reste privé à `moncash-client.server.ts` (variable de module `cachedToken`, jamais exportée)                                                                    |
+| Access Token OAuth2                                                        | `moncash_api_logs` (journal d'audit)    | ❌ Non — `request_summary`/`response_summary` sont construits à la main par endpoit, `has_access_token: true/false` seulement, jamais la valeur — voir test dédié ci-dessous                                      |
+| Access Token OAuth2                                                        | React / bundle client                   | ❌ Structurellement impossible — `moncash-client.server.ts` n'est accessible que par import dynamique depuis un autre `.server.ts`, jamais depuis un composant (vérifié après build, voir ci-dessous)             |
+| Payment token MonCash (`payment_token.token`, différent de l'access token) | `moncash_api_logs`                      | ⚠️ Tronqué (4 premiers + 4 derniers caractères, `redactToken()`), jamais en clair — voir MONCASH_FINANCIAL_AUDIT.md                                                                                               |
+| Tout secret                                                                | Notifications (`private.notify_secure`) | ❌ Non — les corps de notification n'interpolent que `amount`/`provider_code`/`reason` textuel, jamais un champ contenant un token ou secret (vérifié par lecture des 3 migrations qui appellent `notify_secure`) |
 
 ## Preuves (commandes exécutées, résultats bruts)
 

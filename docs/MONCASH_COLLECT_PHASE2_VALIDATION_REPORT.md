@@ -20,13 +20,13 @@ pur pour la testabilité.
 [`initiate-collect-payment.test.ts`](../src/lib/__tests__/initiate-collect-payment.test.ts)
 — 8 tests, `moncashProvider` mocké (aucun appel réseau réel) :
 
-| Cas demandé | Couverture |
-|---|---|
-| Paiement créé correctement | ✅ `outcome:"pending"` + `redirectUrl` retournés, `initiatePayment` appelé avec `{direction:"collect", amount:500}` |
-| Erreur API MonCash | ✅ rejet du provider rapporté honnêtement (jamais une exception brute), enregistré via `create_collect_payment_secure(_status:"failed")` |
-| Timeout | ✅ une erreur `code:"timeout"` traitée exactement comme tout autre rejet |
-| Retry | ✅ `initiatePayment` appelé exactement 1 fois par invocation — aucun retry côté client, c'est le rôle du connecteur (déjà couvert par `moncash-client.test.ts`) |
-| Absence de secret exposé | ✅ `JSON.stringify(result)` ne contient jamais le `paymentToken` du mock ; les clés retournées sont exactement `outcome/redirectUrl/transaction` |
+| Cas demandé                | Couverture                                                                                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paiement créé correctement | ✅ `outcome:"pending"` + `redirectUrl` retournés, `initiatePayment` appelé avec `{direction:"collect", amount:500}`                                             |
+| Erreur API MonCash         | ✅ rejet du provider rapporté honnêtement (jamais une exception brute), enregistré via `create_collect_payment_secure(_status:"failed")`                        |
+| Timeout                    | ✅ une erreur `code:"timeout"` traitée exactement comme tout autre rejet                                                                                        |
+| Retry                      | ✅ `initiatePayment` appelé exactement 1 fois par invocation — aucun retry côté client, c'est le rôle du connecteur (déjà couvert par `moncash-client.test.ts`) |
+| Absence de secret exposé   | ✅ `JSON.stringify(result)` ne contient jamais le `paymentToken` du mock ; les clés retournées sont exactement `outcome/redirectUrl/transaction`                |
 
 3 tests bonus : paiement introuvable, méthode non-MonCash rejetée sans
 appeler le provider, provider non configuré rejeté sans l'appeler.
@@ -44,23 +44,23 @@ ce chantier).
 **`create_collect_payment_secure` — 11/11 assertions ✅** (voir
 [phase2_rpc_validation.sql](#annexe-scripts) en annexe) :
 
-| Cas | Résultat |
-|---|---|
-| Propriétaire commande valide | ✅ ligne créée, `status='pending'`, `amount=500.00` |
-| Tentative déjà en cours (bonus) | ✅ rejetée — `"Yon tantativ peman deja an kou pou kòmand sa a"` |
-| Utilisateur non autorisé | ✅ rejetée — `"Payment not found"` (même message qu'une référence inexistante, aucune fuite d'information sur l'existence de la commande) |
-| Montant incorrect | **N/A par conception** — aucun paramètre `_amount` n'existe ; le montant est toujours lu server-side depuis `payments.amount`, jamais accepté du client. Force structurelle, pas une validation d'exécution. |
-| Commande déjà payée | ✅ rejetée — `"Peman sa a deja an kou trete"` |
-| GRANT `authenticated`=oui / `anon`=non (bonus) | ✅ confirmé via `has_function_privilege` |
+| Cas                                            | Résultat                                                                                                                                                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Propriétaire commande valide                   | ✅ ligne créée, `status='pending'`, `amount=500.00`                                                                                                                                                          |
+| Tentative déjà en cours (bonus)                | ✅ rejetée — `"Yon tantativ peman deja an kou pou kòmand sa a"`                                                                                                                                              |
+| Utilisateur non autorisé                       | ✅ rejetée — `"Payment not found"` (même message qu'une référence inexistante, aucune fuite d'information sur l'existence de la commande)                                                                    |
+| Montant incorrect                              | **N/A par conception** — aucun paramètre `_amount` n'existe ; le montant est toujours lu server-side depuis `payments.amount`, jamais accepté du client. Force structurelle, pas une validation d'exécution. |
+| Commande déjà payée                            | ✅ rejetée — `"Peman sa a deja an kou trete"`                                                                                                                                                                |
+| GRANT `authenticated`=oui / `anon`=non (bonus) | ✅ confirmé via `has_function_privilege`                                                                                                                                                                     |
 
 **`complete_collect_payment_secure` — résultats après correction du
 bug §6.1** :
 
-| Cas | Résultat |
-|---|---|
-| Webhook valide | ✅ `payment_transactions.status='paid'` **et** `payments.status='paid'` (le trigger existant `trg_notify_payment_status` se déclenche via cette même UPDATE) |
-| Webhook doublé | ✅ idempotent — même résultat retourné, **0 ligne d'audit dupliquée** (`audit_log` reste à 1 ligne pour ce paiement après 2 appels identiques) |
-| Référence inconnue | ✅ exception explicite `SQLSTATE P0002`, jamais un faux succès silencieux |
+| Cas                | Résultat                                                                                                                                                                                                                                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Webhook valide     | ✅ `payment_transactions.status='paid'` **et** `payments.status='paid'` (le trigger existant `trg_notify_payment_status` se déclenche via cette même UPDATE)                                                                                                                                                                                |
+| Webhook doublé     | ✅ idempotent — même résultat retourné, **0 ligne d'audit dupliquée** (`audit_log` reste à 1 ligne pour ce paiement après 2 appels identiques)                                                                                                                                                                                              |
+| Référence inconnue | ✅ exception explicite `SQLSTATE P0002`, jamais un faux succès silencieux                                                                                                                                                                                                                                                                   |
 | Signature invalide | **N/A au niveau RPC** — la vérification de signature se fait une couche au-dessus, dans `moncash-collect-webhook-handler.server.ts` (déjà testée unitairement, 7 tests). La seule défense de ce RPC est d'être verrouillé `service_role` — vérifié en direct : `authenticated`=EXECUTE non, `anon`=EXECUTE non, `service_role`=EXECUTE oui. |
 
 **Publication realtime** : `ALTER PUBLICATION supabase_realtime ADD
@@ -77,21 +77,20 @@ publication — exactement l'état d'avant le script.
 
 **4/4 assertions ✅** :
 
-| Cas | Résultat |
-|---|---|
-| Le propriétaire voit sa propre ligne | ✅ 1 ligne |
-| Le propriétaire ne voit PAS la ligne d'un autre client | ✅ 0 ligne |
-| Un admin voit toutes les lignes | ✅ 2/2 lignes (testé avec un vrai compte admin) |
-| `anon` (aucun JWT) | ✅ bloqué — `permission denied for table payment_transactions` (le `REVOKE ALL ... FROM PUBLIC, anon` fait son travail avant même que RLS n'entre en jeu) |
+| Cas                                                    | Résultat                                                                                                                                                  |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Le propriétaire voit sa propre ligne                   | ✅ 1 ligne                                                                                                                                                |
+| Le propriétaire ne voit PAS la ligne d'un autre client | ✅ 0 ligne                                                                                                                                                |
+| Un admin voit toutes les lignes                        | ✅ 2/2 lignes (testé avec un vrai compte admin)                                                                                                           |
+| `anon` (aucun JWT)                                     | ✅ bloqué — `permission denied for table payment_transactions` (le `REVOKE ALL ... FROM PUBLIC, anon` fait son travail avant même que RLS n'entre en jeu) |
 
 ## 4. Validation Realtime
 
 - **Un seul point de souscription** dans tout le code :
   [`orders.$id.tsx:76`](../src/routes/orders.$id.tsx)
   — `useRealtimeTableSync("payments", \`order_id=eq.${id}\`, [["order", id]])`.
-  Grep confirmé : aucune autre souscription à `payments` nulle part
-  ailleurs (le seul autre `supabase.channel()` du code est
-  `order-chat-thread.tsx`, un canal broadcast sans rapport).
+Grep confirmé : aucune autre souscription à `payments`nulle part
+ailleurs (le seul autre`supabase.channel()`du code est`order-chat-thread.tsx`, un canal broadcast sans rapport).
 - **Pas de double souscription possible** : le hook génère une clé de
   canal unique par commande (`realtime-sync-payments-order_id=eq.<id>`)
   et nettoie via `supabase.removeChannel()` au démontage
@@ -107,14 +106,14 @@ publication — exactement l'état d'avant le script.
 
 ## 5. Validation sécurité
 
-| Contrôle | Résultat |
-|---|---|
-| RLS `payment_transactions` | Vérifié en direct — §3 |
-| Permissions RPC | Vérifiées en direct via `has_function_privilege` — §2 |
-| Logs | `sanitizeWebhookPayload()` — liste blanche stricte (`message`, `status`, `amount`, `transaction_id`, `order_id`), jamais le payload brut, relu et confirmé inchangé |
-| Secrets | Build de production inspecté : aucun fichier lié à Collect (`moncash-collect-webhook-handler.server`, `initiate-collect-payment.logic`, `moncash-provider.server`) n'apparaît dans `.vercel/output/static` (bundle client) — présents uniquement dans `_ssr` (fonctions serveur) |
-| Protection replay | Mécanisme = garde d'idempotence du RPC (`UPDATE … WHERE status='pending'`), pas un schéma nonce/horodatage — testé directement (§2, "webhook doublé"), 0 effet dupliqué |
-| Doc obsolète (mineur) | `api.webhooks.moncash.collect.ts` référençait un fichier `MONCASH_COLLECT_SECURITY_REPORT.md` inexistant — corrigé pour pointer vers les rapports Phase 1/Phase 2 réels |
+| Contrôle                   | Résultat                                                                                                                                                                                                                                                                         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RLS `payment_transactions` | Vérifié en direct — §3                                                                                                                                                                                                                                                           |
+| Permissions RPC            | Vérifiées en direct via `has_function_privilege` — §2                                                                                                                                                                                                                            |
+| Logs                       | `sanitizeWebhookPayload()` — liste blanche stricte (`message`, `status`, `amount`, `transaction_id`, `order_id`), jamais le payload brut, relu et confirmé inchangé                                                                                                              |
+| Secrets                    | Build de production inspecté : aucun fichier lié à Collect (`moncash-collect-webhook-handler.server`, `initiate-collect-payment.logic`, `moncash-provider.server`) n'apparaît dans `.vercel/output/static` (bundle client) — présents uniquement dans `_ssr` (fonctions serveur) |
+| Protection replay          | Mécanisme = garde d'idempotence du RPC (`UPDATE … WHERE status='pending'`), pas un schéma nonce/horodatage — testé directement (§2, "webhook doublé"), 0 effet dupliqué                                                                                                          |
+| Doc obsolète (mineur)      | `api.webhooks.moncash.collect.ts` référençait un fichier `MONCASH_COLLECT_SECURITY_REPORT.md` inexistant — corrigé pour pointer vers les rapports Phase 1/Phase 2 réels                                                                                                          |
 
 ## 6. Bugs trouvés et corrigés pendant cette validation
 
@@ -123,7 +122,7 @@ publication — exactement l'état d'avant le script.
 `UPDATE public.payments SET status = _decision` échouait
 systématiquement (`_decision` est `text`, `payments.status` est
 l'enum `payment_status` — Postgres ne caste pas implicitement une
-*variable* text vers un enum, seulement un littéral). **Ce bug
+_variable_ text vers un enum, seulement un littéral). **Ce bug
 n'avait jamais été détecté** car aucun test précédent n'exécutait
 réellement ce RPC contre une base — c'est exactement le rôle de cette
 phase de validation. Sans correction, **100% des paiements collect
@@ -173,6 +172,7 @@ le décaissement) tient face à des tests transactionnels réels, pas
 seulement une relecture de code.
 
 **Avant activation** :
+
 1. Appliquer `supabase/migrations/20260731130000_moncash_collect_payments.sql`
    (version corrigée, §6.1) — sur confirmation explicite.
 2. Committer et pousser (rapport fourni, comme requis).
@@ -183,5 +183,6 @@ seulement une relecture de code.
 
 Scripts de validation transactionnels (non committés, usage unique,
 zéro effet permanent confirmé après exécution) :
+
 - `phase2_rpc_validation.sql` — §2
 - `phase2_rls_validation.sql` — §3

@@ -13,7 +13,7 @@
 1. **"PLOP Gateway → wallet adapters (MonCash / NatCash / KashPay)"** — cette architecture suppose que PLOP expose un comportement, un format de requête/réponse, ou une authentification différente par portefeuille, nécessitant un adaptateur séparé par wallet. **Ce n'est pas le cas.** `POST /api/paiement-marchand` est un **unique endpoint**, avec un **unique champ** `payment_method` (`moncash`|`kashpaw`|`natcash`|`all`) qui sélectionne simplement quelle option apparaît sur la page de paiement hébergée par PLOP. Requête, réponse, codes d'erreur, authentification (aucune) sont **strictement identiques** quel que soit le wallet. PLOP **est déjà** l'abstraction multi-wallet — construire des "wallet adapters" par-dessus dupliquerait une abstraction qui existe déjà à un niveau plus bas, pour un bénéfice nul (voir § 5).
 2. **"Implémenter webhook unifié : /api/webhooks/plop"** — **PLOP ne documente aucun webhook, nulle part, dans les 12 pages fournies.** Confirmé pour la troisième fois (Phase 0, Phase 2 remédiation, et cette relecture). Le système actuel a été délibérément construit sans webhook (poll adaptatif côté client + cron de réconciliation quotidien), précisément parce que ce mécanisme n'existe pas. Créer une route `/api/webhooks/plop` créerait un endpoint que PLOP n'appellera jamais — du code mort, pas une correction.
 
-**Ce qui est réellement vrai dans le constat de la mission** : le système **est** aujourd'hui codé en dur sur un seul wallet (`moncash`), mais **par choix de périmètre déjà acté avec vous** (mission originale : *"L'intégration doit uniquement remplacer le provider MonCash Automatik"*), pas par une hypothèse erronée non examinée. Étendre à NatCash/KashPay est un **changement de périmètre réel et légitime à considérer**, pas un bug à corriger silencieusement — d'où cet audit avant tout code, exactement comme demandé.
+**Ce qui est réellement vrai dans le constat de la mission** : le système **est** aujourd'hui codé en dur sur un seul wallet (`moncash`), mais **par choix de périmètre déjà acté avec vous** (mission originale : _"L'intégration doit uniquement remplacer le provider MonCash Automatik"_), pas par une hypothèse erronée non examinée. Étendre à NatCash/KashPay est un **changement de périmètre réel et légitime à considérer**, pas un bug à corriger silencieusement — d'où cet audit avant tout code, exactement comme demandé.
 
 **Le renommage du dashboard admin ("MonCash" → "Peman Otomatik") est déjà fait** — livré et déployé en production dans la session en cours, précisément pour cette même raison (PLOP peut router vers plusieurs wallets). Rien à faire de plus sur ce point.
 
@@ -21,13 +21,13 @@
 
 ## 2. Audit — Payment Providers
 
-| Fichier | Constat |
-|---|---|
-| `src/lib/payment-providers/types.ts` | Interface `PaymentProvider` déjà générique — `initiatePayment(input)`, `checkStatus(ref)`, etc. Aucune notion de "wallet" dans le contrat, à dessein : le wallet est un détail d'implémentation de *comment* le provider traite un paiement, pas une propriété de l'interface elle-même. **Aucun changement requis ici.** |
-| `src/lib/payment-providers/plop-provider.server.ts` | Implémente `PaymentProvider` pour PLOP. `initiatePayment()`/`checkStatus()` sont **déjà wallet-agnostiques** — ils ne référencent jamais "moncash" en dur, ils délèguent entièrement à `plop-client.server.ts`. |
-| `src/lib/payment-providers/plop-client.server.ts` | **C'est ici, et seulement ici, que le wallet est fixé.** `createPayment()` (ligne ~260) lit `paymentMethod` depuis `getPlopConfig()` — une **valeur globale unique pour toute l'application**, jamais un paramètre par appel. `verifyPayment()` ne capture pas le champ `method` que PLOP retourne pourtant dans sa réponse `paiement-verify` (voir § 4.3) — il est présent dans `raw` mais pas exposé comme champ typé. |
-| `src/lib/payment-providers/plop-config.server.ts` | `PLOP_PAYMENT_METHOD` (env var optionnelle, défaut `"moncash"`) — **un seul wallet pour tout le déploiement**, pas par transaction, pas par restaurant, pas par choix client. C'est la définition précise de l'hypothèse "MonCash uniquement" dans le code actuel. |
-| `manual-provider.server.ts`, `natcash-provider.server.ts`, `moncash-provider.server.ts` (legacy Digicel) | Non concernés — ce sont les rails **manuels** (preuve de paiement) et le canal **décaissement** Digicel, structurellement séparés du Collect PLOP (Phase 0/1, confirmé de nouveau, hors périmètre de cette mission). |
+| Fichier                                                                                                  | Constat                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/lib/payment-providers/types.ts`                                                                     | Interface `PaymentProvider` déjà générique — `initiatePayment(input)`, `checkStatus(ref)`, etc. Aucune notion de "wallet" dans le contrat, à dessein : le wallet est un détail d'implémentation de _comment_ le provider traite un paiement, pas une propriété de l'interface elle-même. **Aucun changement requis ici.**                                                                                                |
+| `src/lib/payment-providers/plop-provider.server.ts`                                                      | Implémente `PaymentProvider` pour PLOP. `initiatePayment()`/`checkStatus()` sont **déjà wallet-agnostiques** — ils ne référencent jamais "moncash" en dur, ils délèguent entièrement à `plop-client.server.ts`.                                                                                                                                                                                                          |
+| `src/lib/payment-providers/plop-client.server.ts`                                                        | **C'est ici, et seulement ici, que le wallet est fixé.** `createPayment()` (ligne ~260) lit `paymentMethod` depuis `getPlopConfig()` — une **valeur globale unique pour toute l'application**, jamais un paramètre par appel. `verifyPayment()` ne capture pas le champ `method` que PLOP retourne pourtant dans sa réponse `paiement-verify` (voir § 4.3) — il est présent dans `raw` mais pas exposé comme champ typé. |
+| `src/lib/payment-providers/plop-config.server.ts`                                                        | `PLOP_PAYMENT_METHOD` (env var optionnelle, défaut `"moncash"`) — **un seul wallet pour tout le déploiement**, pas par transaction, pas par restaurant, pas par choix client. C'est la définition précise de l'hypothèse "MonCash uniquement" dans le code actuel.                                                                                                                                                       |
+| `manual-provider.server.ts`, `natcash-provider.server.ts`, `moncash-provider.server.ts` (legacy Digicel) | Non concernés — ce sont les rails **manuels** (preuve de paiement) et le canal **décaissement** Digicel, structurellement séparés du Collect PLOP (Phase 0/1, confirmé de nouveau, hors périmètre de cette mission).                                                                                                                                                                                                     |
 
 **Conclusion § 2** : aucune "duplication d'hypothèse MonCash" à corriger dans la couche `PaymentProvider`/`plopProvider` — elle est déjà correcte. Le point réel à traiter est **un seul endroit** : `payment_method` est une constante de configuration globale au lieu d'être paramétrable par appel.
 
@@ -52,18 +52,27 @@
 
 ### 4.2 Schéma base de données
 
-| Table/Enum | Constat |
-|---|---|
-| `public.payment_method` (ENUM Postgres) | `CREATE TYPE public.payment_method AS ENUM ('stripe','moncash','natcash','kach')` — **`kashpaw` n'existe pas du tout dans l'énumération**. Étendre à KashPay nécessiterait `ALTER TYPE ... ADD VALUE`, une vraie migration de schéma, pas un simple changement de code. `natcash` existe déjà — un paiement automatique PLOP/NatCash est structurellement plus proche d'être supporté sans migration de schéma que KashPay. |
-| `payment_transactions` | Colonnes `provider` (`'moncash_api'`, un code de fournisseur, pas un wallet), `external_reference`, `provider_transaction_id`, `webhook_data jsonb`. **Aucune colonne ne capture quel wallet PLOP a effectivement utilisé.** Le champ `method` que PLOP retourne dans `paiement-verify` (§ 4.3) atterrit dans `webhook_data` (le `raw` complet y est stocké par `plop-reconcile.server.ts`/`poll-collect-payment.logic.ts`) mais n'est pas une colonne interrogeable. |
-| `payment_provider_settings` | 4 lignes (`kach`/`moncash`/`natcash`/`moncash_auto`) — un seul provider `moncash_auto` représente "Peman Otomatik" aujourd'hui. Aucune notion de wallet ici non plus — c'est un choix de *méthode de checkout*, pas de *wallet PLOP*. |
+| Table/Enum                              | Constat                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.payment_method` (ENUM Postgres) | `CREATE TYPE public.payment_method AS ENUM ('stripe','moncash','natcash','kach')` — **`kashpaw` n'existe pas du tout dans l'énumération**. Étendre à KashPay nécessiterait `ALTER TYPE ... ADD VALUE`, une vraie migration de schéma, pas un simple changement de code. `natcash` existe déjà — un paiement automatique PLOP/NatCash est structurellement plus proche d'être supporté sans migration de schéma que KashPay.                                           |
+| `payment_transactions`                  | Colonnes `provider` (`'moncash_api'`, un code de fournisseur, pas un wallet), `external_reference`, `provider_transaction_id`, `webhook_data jsonb`. **Aucune colonne ne capture quel wallet PLOP a effectivement utilisé.** Le champ `method` que PLOP retourne dans `paiement-verify` (§ 4.3) atterrit dans `webhook_data` (le `raw` complet y est stocké par `plop-reconcile.server.ts`/`poll-collect-payment.logic.ts`) mais n'est pas une colonne interrogeable. |
+| `payment_provider_settings`             | 4 lignes (`kach`/`moncash`/`natcash`/`moncash_auto`) — un seul provider `moncash_auto` représente "Peman Otomatik" aujourd'hui. Aucune notion de wallet ici non plus — c'est un choix de _méthode de checkout_, pas de _wallet PLOP_.                                                                                                                                                                                                                                 |
 
 ### 4.3 Le champ `method` de PLOP — capacité existante non exploitée
 
 La réponse `paiement-verify` documentée (PDF, page 3 et `docs/PLOP_PHASE0_AUDIT.md` § 7) contient :
+
 ```json
-{ "status": true, "montant": 250, "trans_status": "no", "id_transaction": "...", "method": "moncash", "id_client": null }
+{
+  "status": true,
+  "montant": 250,
+  "trans_status": "no",
+  "id_transaction": "...",
+  "method": "moncash",
+  "id_client": null
+}
 ```
+
 **PLOP indique déjà, après coup, quel wallet le client a réellement utilisé** (pertinent surtout si `payment_method: "all"` était envoyé à la création, laissant le client choisir). `verifyPayment()` (`plop-client.server.ts`) ne remonte pas ce champ comme propriété typée de `PlopVerifyResult` — il est présent uniquement dans `raw`. C'est une lacune concrète, indépendante de toute décision d'extension de périmètre, qui devra être comblée si le wallet réellement utilisé doit un jour être tracé.
 
 ### 4.4 Variables d'environnement
@@ -75,6 +84,7 @@ La réponse `paiement-verify` documentée (PDF, page 3 et `docs/PLOP_PHASE0_AUDI
 ## 5. Correction — pourquoi "wallet adapters" séparés seraient une régression architecturale
 
 La mission propose :
+
 ```
 PLOP Gateway
  |
@@ -108,11 +118,11 @@ flowchart TD
 
 ## 7. Propositions de schéma (à valider — rien exécuté)
 
-| Option | Portée | Migration requise |
-|---|---|---|
-| **A — Traçabilité seule** (recommandé pour commencer) | Ajouter `payment_transactions.plop_wallet text NULL` (rempli depuis le champ `method` de `paiement-verify`, § 4.3), sans changer le comportement client. Permet de savoir après coup quel wallet a été utilisé, même si `payment_method:"moncash"` reste fixe côté création. | Migration additive triviale, faible risque. |
-| **B — Sélection NatCash par le client** | Étendre `checkout.tsx`/`initiate-collect-payment.logic.ts` pour autoriser `payment.method === "natcash"` en plus de `"moncash"` vers PLOP. **Aucune migration de schéma** (`natcash` existe déjà dans l'ENUM) — changement de code uniquement. | Aucune. |
-| **C — Support KashPay** | Nécessite `ALTER TYPE public.payment_method ADD VALUE 'kashpaw'` (ou équivalent) — impact plus large : UI, `create_order_secure`, tout endroit qui fait un `switch`/`CASE` sur `payment_method` (décaissement, dashboards financiers, etc. — audit dédié nécessaire avant d'y toucher, hors périmètre de cet audit). | Migration de schéma réelle, impact plus large à auditer séparément. |
+| Option                                                | Portée                                                                                                                                                                                                                                                                                                               | Migration requise                                                   |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **A — Traçabilité seule** (recommandé pour commencer) | Ajouter `payment_transactions.plop_wallet text NULL` (rempli depuis le champ `method` de `paiement-verify`, § 4.3), sans changer le comportement client. Permet de savoir après coup quel wallet a été utilisé, même si `payment_method:"moncash"` reste fixe côté création.                                         | Migration additive triviale, faible risque.                         |
+| **B — Sélection NatCash par le client**               | Étendre `checkout.tsx`/`initiate-collect-payment.logic.ts` pour autoriser `payment.method === "natcash"` en plus de `"moncash"` vers PLOP. **Aucune migration de schéma** (`natcash` existe déjà dans l'ENUM) — changement de code uniquement.                                                                       | Aucune.                                                             |
+| **C — Support KashPay**                               | Nécessite `ALTER TYPE public.payment_method ADD VALUE 'kashpaw'` (ou équivalent) — impact plus large : UI, `create_order_secure`, tout endroit qui fait un `switch`/`CASE` sur `payment_method` (décaissement, dashboards financiers, etc. — audit dédié nécessaire avant d'y toucher, hors périmètre de cet audit). | Migration de schéma réelle, impact plus large à auditer séparément. |
 
 **Aucune de ces options n'a été implémentée.** Le choix entre elles (et le go/no-go sur l'extension du périmètre elle-même) vous revient.
 
@@ -133,12 +143,12 @@ flowchart TD
 
 ## 9. Risques
 
-| Niveau | Risque |
-|---|---|
-| **Élevé** | Implémenter la prémisse erronée "webhook unifié /api/plop" créerait une fausse impression de fiabilité (route qui semble exister mais que PLOP n'appellera jamais) — écarté par cet audit, à ne jamais construire sans confirmation PLOP d'un mécanisme réel. |
-| **Moyen** | Option C (KashPay) touche l'ENUM `payment_method`, utilisé dans de nombreux endroits (décaissement, dashboards financiers, `create_order_secure`) — un audit dédié est nécessaire avant d'y toucher, risque de régression sur des zones explicitement protégées jusqu'ici si fait à la légère. |
-| **Faible** | Option A (traçabilité seule) — risque minimal, purement additif, aucun changement de comportement client. |
-| **Faible** | Option B (NatCash) — risque limité, mais impacte l'expérience checkout (UI) et les messages déjà en Kreyòl orientés "MonCash" par endroits résiduels à revérifier si activé. |
+| Niveau     | Risque                                                                                                                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Élevé**  | Implémenter la prémisse erronée "webhook unifié /api/plop" créerait une fausse impression de fiabilité (route qui semble exister mais que PLOP n'appellera jamais) — écarté par cet audit, à ne jamais construire sans confirmation PLOP d'un mécanisme réel.                                  |
+| **Moyen**  | Option C (KashPay) touche l'ENUM `payment_method`, utilisé dans de nombreux endroits (décaissement, dashboards financiers, `create_order_secure`) — un audit dédié est nécessaire avant d'y toucher, risque de régression sur des zones explicitement protégées jusqu'ici si fait à la légère. |
+| **Faible** | Option A (traçabilité seule) — risque minimal, purement additif, aucun changement de comportement client.                                                                                                                                                                                      |
+| **Faible** | Option B (NatCash) — risque limité, mais impacte l'expérience checkout (UI) et les messages déjà en Kreyòl orientés "MonCash" par endroits résiduels à revérifier si activé.                                                                                                                   |
 
 ---
 

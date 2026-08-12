@@ -8,15 +8,15 @@ modification. Ce n'est pas une nouvelle refonte générale.
 
 ## Étape 1 — Priorisation des 6 réserves
 
-| # | Réserve | Priorité | Impact utilisateur | Complexité | Risque | Bénéfice attendu |
-|---|---|---|---|---|---|---|
-| 1 | Footer non session-aware | 🟠 À corriger dans P10 | Faible-modéré : un utilisateur déjà connecté voit « Konekte » dans le footer, juste sous un header qui, lui, affiche correctement « Dashboard »/« Pwofil mwen » — incohérence visible à chaque défilement jusqu'en bas de n'importe quelle page publique | Très faible — même mécanisme que le header (`useAuth()`), déjà éprouvé | Quasi nul — 1 fichier, changement additif, aucune logique métier | Cohérence immédiate avec le header, sur 12 routes publiques |
-| 2 | Admin — grand écran (≥1440px) | 🟡 Dette technique | Faible — audience étroite (équipe admin uniquement), contenu lisible, juste entouré de marge sur très grand écran ; pattern courant et volontaire chez de nombreux produits (GitHub, Linear, Notion plafonnent aussi leur contenu) | Élevée pour un vrai correctif (split contenu/aside touchant carte live, graphique, filtres) | Modéré si fait à la hâte — page à données live, mémoïsation de marqueurs déjà fragile aux changements de layout | Voir §4 — pas assez justifié pour cette phase |
-| 3 | Mode sombre | Voir Étape 2 dédiée | — | — | — | — |
-| 4 | Échelle typographique fermée | 🟢 Backlog | Quasi nul — voir §5, seulement 5 usages, différence imperceptible | Faible en soi, mais gouvernance ("revue de design avant merge") disproportionnée pour le problème réel | Faible | Cosmétique, non mesurable |
-| 5a | `DataTable` généralisé (vue Liste restaurant) | 🟢 Backlog — explicitement non retenu | Voir §6 — risque de **dégrader** l'UX actuelle | Élevée (redesign, pas un simple remplacement) | Élevé si forcé | Aucun bénéfice concret identifié |
-| 5b | `Chip` sur les filtres Tout/An atant (dashboard restaurant) | 🟠 À corriger dans P10 | Modéré — ajoute `aria-pressed`, absent aujourd'hui sur un vrai toggle de filtre | Très faible | Quasi nul | Vraie duplication éliminée + gain d'accessibilité réel |
-| 6 | Fil d'ariane dashboards | 🟢 Backlog — explicitement non retenu | Voir §7 — bénéfice non démontré | — | — | — |
+| #   | Réserve                                                     | Priorité                              | Impact utilisateur                                                                                                                                                                                                                                       | Complexité                                                                                             | Risque                                                                                                          | Bénéfice attendu                                            |
+| --- | ----------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Footer non session-aware                                    | 🟠 À corriger dans P10                | Faible-modéré : un utilisateur déjà connecté voit « Konekte » dans le footer, juste sous un header qui, lui, affiche correctement « Dashboard »/« Pwofil mwen » — incohérence visible à chaque défilement jusqu'en bas de n'importe quelle page publique | Très faible — même mécanisme que le header (`useAuth()`), déjà éprouvé                                 | Quasi nul — 1 fichier, changement additif, aucune logique métier                                                | Cohérence immédiate avec le header, sur 12 routes publiques |
+| 2   | Admin — grand écran (≥1440px)                               | 🟡 Dette technique                    | Faible — audience étroite (équipe admin uniquement), contenu lisible, juste entouré de marge sur très grand écran ; pattern courant et volontaire chez de nombreux produits (GitHub, Linear, Notion plafonnent aussi leur contenu)                       | Élevée pour un vrai correctif (split contenu/aside touchant carte live, graphique, filtres)            | Modéré si fait à la hâte — page à données live, mémoïsation de marqueurs déjà fragile aux changements de layout | Voir §4 — pas assez justifié pour cette phase               |
+| 3   | Mode sombre                                                 | Voir Étape 2 dédiée                   | —                                                                                                                                                                                                                                                        | —                                                                                                      | —                                                                                                               | —                                                           |
+| 4   | Échelle typographique fermée                                | 🟢 Backlog                            | Quasi nul — voir §5, seulement 5 usages, différence imperceptible                                                                                                                                                                                        | Faible en soi, mais gouvernance ("revue de design avant merge") disproportionnée pour le problème réel | Faible                                                                                                          | Cosmétique, non mesurable                                   |
+| 5a  | `DataTable` généralisé (vue Liste restaurant)               | 🟢 Backlog — explicitement non retenu | Voir §6 — risque de **dégrader** l'UX actuelle                                                                                                                                                                                                           | Élevée (redesign, pas un simple remplacement)                                                          | Élevé si forcé                                                                                                  | Aucun bénéfice concret identifié                            |
+| 5b  | `Chip` sur les filtres Tout/An atant (dashboard restaurant) | 🟠 À corriger dans P10                | Modéré — ajoute `aria-pressed`, absent aujourd'hui sur un vrai toggle de filtre                                                                                                                                                                          | Très faible                                                                                            | Quasi nul                                                                                                       | Vraie duplication éliminée + gain d'accessibilité réel      |
+| 6   | Fil d'ariane dashboards                                     | 🟢 Backlog — explicitement non retenu | Voir §7 — bénéfice non démontré                                                                                                                                                                                                                          | —                                                                                                      | —                                                                                                               | —                                                           |
 
 Détail de chaque analyse ci-dessous.
 
@@ -32,7 +32,7 @@ dark: (variante Tailwind)          : 0 fichier, 0 occurrence
 .dark / [data-theme="dark"]        : tokens de couleur déjà définis dans styles.css
 ```
 
-**Le Design System actuel permet-il réellement l'implémentation ?** Partiellement. Les *tokens*
+**Le Design System actuel permet-il réellement l'implémentation ?** Partiellement. Les _tokens_
 sont prêts (`--brand`, `--ink`, `--cream`, `--status-*`, tous déjà déclinés en variante sombre dans
 `styles.css`). Mais la quasi-totalité des surfaces « carte » de l'application (Kanban, Timeline,
 KPI, sections dashboard, modales de contenu) utilisent `bg-white` **littéral** plutôt que le
@@ -54,7 +54,7 @@ probablement `text-black`/`border-*` codés en dur ailleurs, non quantifiés ici
 
 **Est-ce une vraie phase de design, ou une extension mécanique ?** **Une vraie phase.** 105
 fichiers à auditer un par un (certains `bg-white` sont volontaires — ex. logo sur fond de marque —
-et ne doivent *pas* changer), un mécanisme de bascule à construire et tester sur mobile/desktop, et
+et ne doivent _pas_ changer), un mécanisme de bascule à construire et tester sur mobile/desktop, et
 une vérification de contraste sur chaque paire couleur/fond en mode sombre (le contraste vérifié en
 P7 ne l'a été qu'en mode clair). L'estimation d'effort **S** de la spécification d'origine ne
 correspond pas à l'ampleur réelle mesurée ici.
@@ -77,13 +77,13 @@ implémenté dans P10**, conformément à l'instruction.
 
 **Comportement actuel, par audience :**
 
-| Audience | Ce que le footer affiche aujourd'hui | Ce que le header affiche (référence) |
-|---|---|---|
-| Non connecté | « Konekte » + « Pwofil » (les deux, toujours) | « Konekte »/« Enskri » |
-| Client connecté | Idem — incorrect | « Dashboard »/« Pwofil mwen »/déconnexion |
-| Restaurant connecté | Idem — incorrect | Idem (même mécanisme `useAuth()`) |
-| Livreur connecté | Idem — incorrect | Idem |
-| Admin connecté | Idem — incorrect | Idem |
+| Audience            | Ce que le footer affiche aujourd'hui          | Ce que le header affiche (référence)      |
+| ------------------- | --------------------------------------------- | ----------------------------------------- |
+| Non connecté        | « Konekte » + « Pwofil » (les deux, toujours) | « Konekte »/« Enskri »                    |
+| Client connecté     | Idem — incorrect                              | « Dashboard »/« Pwofil mwen »/déconnexion |
+| Restaurant connecté | Idem — incorrect                              | Idem (même mécanisme `useAuth()`)         |
+| Livreur connecté    | Idem — incorrect                              | Idem                                      |
+| Admin connecté      | Idem — incorrect                              | Idem                                      |
 
 **Précision importante trouvée pendant cet audit, absente de P9 :** `SiteFooter` n'est jamais rendu
 sur les routes `/dashboard/*` (confirmé : `grep SiteFooter src` → 17 fichiers, tous des routes
@@ -116,12 +116,12 @@ fiable car la mise en page est un simple grid/flex CSS sans logique JS de mesure
 - Sidebar dashboard : `md:w-[72px] lg:w-[260px]` (`dashboard-sidebar.tsx:23`).
 - Zone de contenu : `<div className="mx-auto max-w-6xl">` (`dashboard.tsx:45`) — 1152px max, centré.
 
-| Largeur | Sidebar | Espace dispo pour le contenu | Plafonné à 1152px ? | Marge périphérique totale |
-|---|---|---|---|---|
-| 1024px | 72px (rail) | ~950px | Non, contenu utilise presque tout l'espace | ~0px |
-| 1280px | 260px | ~1020px | Non | ~0px |
-| 1440px | 260px | ~1180px | À peine (28px) | ~28px, invisible |
-| 1920px | 260px | ~1660px | Oui, largement | **~508px** (marges gauche/droite combinées) |
+| Largeur | Sidebar     | Espace dispo pour le contenu | Plafonné à 1152px ?                        | Marge périphérique totale                   |
+| ------- | ----------- | ---------------------------- | ------------------------------------------ | ------------------------------------------- |
+| 1024px  | 72px (rail) | ~950px                       | Non, contenu utilise presque tout l'espace | ~0px                                        |
+| 1280px  | 260px       | ~1020px                      | Non                                        | ~0px                                        |
+| 1440px  | 260px       | ~1180px                      | À peine (28px)                             | ~28px, invisible                            |
+| 1920px  | 260px       | ~1660px                      | Oui, largement                             | **~508px** (marges gauche/droite combinées) |
 
 **Problèmes réels identifiés :** uniquement à partir de ~1600-1920px, une marge périphérique
 notable (jusqu'à ~500px cumulés) apparaît de part et d'autre du contenu. En dessous, le plafond
@@ -151,7 +151,7 @@ l'application (`hero-section.tsx` ×2, `popular-dishes-section.tsx`, `site-heade
 imperceptible entre elles, et proche de l'utilitaire Tailwind existant `text-xs` (0.75rem/12px).
 
 **Une échelle centralisée apporterait-elle un bénéfice réel ?** Pas à la mesure du problème actuel.
-L'audit initial citait cet exemple pour illustrer un *risque de dérive*, pas un chaos déjà constaté
+L'audit initial citait cet exemple pour illustrer un _risque de dérive_, pas un chaos déjà constaté
 — 5 occurrences quasi-identiques ne constituent pas une incohérence visible pour un utilisateur, et
 aucune confusion de hiérarchie n'a été relevée nulle part dans les 9 audits/rapports de cette
 refonte. Construire une échelle fermée à 9 paliers (nouveaux tokens CSS, migration de tous les
@@ -186,8 +186,10 @@ d'une cuisine »).
 ### `Chip` — filtres Tout / An atant (même écran, vue Liste)
 
 ```tsx
-<button onClick={() => updateFilter("all")}
-  className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}>
+<button
+  onClick={() => updateFilter("all")}
+  className={`rounded-full px-4 py-2.5 text-sm font-bold ${filter === "all" ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+>
   Tout
 </button>
 ```

@@ -66,10 +66,10 @@ jusqu'à l'application des migrations.
 - [ ] Vercel Dashboard → Project → Cron Jobs → confirmer l'entrée
       `moncash-reconcile` apparaît avec le bon horaire.
 - [ ] Re-exécuter le correctif R1 :
-      ```sql
-      SELECT grantee FROM information_schema.routine_privileges
-      WHERE routine_name = 'create_pending_payout_secure' AND grantee = 'anon';
-      ```
+      `sql
+SELECT grantee FROM information_schema.routine_privileges
+WHERE routine_name = 'create_pending_payout_secure' AND grantee = 'anon';
+`
       doit retourner **0 ligne** après l'étape 3.
 
 ## 6. Ce qui reste bloquant indépendamment de tout ce qui précède

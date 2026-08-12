@@ -23,7 +23,7 @@ Effectué avant d'écrire une seule ligne, conformément à la consigne — comp
 - **Détection responsive existante** : recherche exhaustive (`useMediaQuery`, `matchMedia`, `innerWidth`) dans `src/` — **aucun hook réutilisable trouvé**. Seul `install-prompt.tsx` utilise `matchMedia`, pour détecter le mode PWA standalone, pas une largeur d'écran.
 - **`_authenticated/route.tsx`** définit `ssr: false` sur toute la famille de routes authentifiées — confirmé par un commentaire déjà présent ailleurs dans le code (`orders.$id.tsx`, pour Leaflet) que ce choix rend `window` disponible sans risque d'hydratation SSR sur ces pages.
 - **Tests existants** : `e2e/responsive/navigation-and-layout.spec.ts` (`"restaurant order Kanban/list is usable"`, ré-exécuté sur 4 profils d'appareils : Pixel 7/412px, iPhone 13/390px, iPad Mini/768px, Desktop Chrome/1280px) et `e2e/restaurant/order-lifecycle-restaurant.spec.ts` (Konfime, Avanse — projet `restaurant`, viewport desktop implicite 1280px). Baseline exécutée avant toute modification : **13/13 verts**, la totalité en Kanban puisque c'était l'unique défaut possible.
-- **Commentaire pré-existant trouvé dans `order-kanban-board.tsx`**, laissé par une phase antérieure : *"The 'Lis' view on this same screen ... has the identical pattern and is not fixed by this change — out of scope for this phase's Kanban-only remediation, left for a future pass."* — confirme que les deux vues sont **délibérément indépendantes dans leur implémentation UI** tout en partageant la même RPC serveur (`update_order_status_secure`). Ce constat a directement guidé le périmètre retenu en §3.
+- **Commentaire pré-existant trouvé dans `order-kanban-board.tsx`**, laissé par une phase antérieure : _"The 'Lis' view on this same screen ... has the identical pattern and is not fixed by this change — out of scope for this phase's Kanban-only remediation, left for a future pass."_ — confirme que les deux vues sont **délibérément indépendantes dans leur implémentation UI** tout en partageant la même RPC serveur (`update_order_status_secure`). Ce constat a directement guidé le périmètre retenu en §3.
 
 ---
 
@@ -46,7 +46,7 @@ const [view, setView] = useState<"kanban" | "list">(() =>
 ```
 
 - **768px** — pas un seuil inventé : c'est le breakpoint Tailwind `md` déjà utilisé par `DashboardSidebar` pour basculer du chrome mobile au desktop. Cohérence avec une convention déjà établie dans ce même dashboard, plutôt qu'un nouveau seuil arbitraire.
-- **Une seule lecture, au montage** — pas d'écouteur `matchMedia`/`resize` : le défaut ne se recalcule jamais après le premier rendu. C'est volontaire : si l'utilisateur choisit manuellement une vue, un redimensionnement de fenêtre (ou une rotation d'écran) ne doit jamais l'écraser silencieusement. Le prompt lui-même le demande : *"Utilisateur → Peut toujours changer de vue."*
+- **Une seule lecture, au montage** — pas d'écouteur `matchMedia`/`resize` : le défaut ne se recalcule jamais après le premier rendu. C'est volontaire : si l'utilisateur choisit manuellement une vue, un redimensionnement de fenêtre (ou une rotation d'écran) ne doit jamais l'écraser silencieusement. Le prompt lui-même le demande : _"Utilisateur → Peut toujours changer de vue."_
 - `typeof window !== "undefined"` : garde défensive, pas structurelle — `ssr: false` sur toute la famille `_authenticated` (voir §2) garantit déjà que ce composant ne s'exécute jamais côté serveur.
 
 **Aucune donnée, aucune requête, aucune action, aucune règle de transition de statut n'a été touchée.** `kanbanOrders`, `orders`, `changeStatus`, `NEXT_STATUS`, tout reste identique — seule la valeur initiale de `view` change.
@@ -57,16 +57,17 @@ const [view, setView] = useState<"kanban" | "list">(() =>
 
 ### 4.3 Correction du gap trouvé en §2 : urgence absente de la vue Liste
 
-Puisque la vue Liste devient le défaut mobile, un gap trouvé pendant l'audit devenait un vrai problème : **elle ne montrait aucune information d'urgence**, alors que c'est explicitement la priorité #3 de la consigne (*"1. voir rapidement les commandes; 2. comprendre leur statut; 3. identifier les commandes urgentes; 4. effectuer l'action principale"*) et que §5 exige que la vue Liste conserve les *"informations critiques"*.
+Puisque la vue Liste devient le défaut mobile, un gap trouvé pendant l'audit devenait un vrai problème : **elle ne montrait aucune information d'urgence**, alors que c'est explicitement la priorité #3 de la consigne (_"1. voir rapidement les commandes; 2. comprendre leur statut; 3. identifier les commandes urgentes; 4. effectuer l'action principale"_) et que §5 exige que la vue Liste conserve les _"informations critiques"_.
 
 Plutôt que de dupliquer la logique d'urgence de `OrderKanbanBoard` dans le fichier de route (ce que la consigne interdit explicitement, §3), elle a été **extraite** vers `src/lib/order-status.ts` — le fichier qui contient déjà les constantes de statut partagées entre les deux vues (`ORDER_STATUS_LABEL`, `TERMINAL_ORDER_STATUSES`) :
 
 ```ts
-export function getOrderWaitUrgency(status: string, createdAt: string):
-  | { isUrgent: true; minutesWaiting: number }
-  | { isUrgent: false; minutesWaiting: number | null }
+export function getOrderWaitUrgency(
+  status: string,
+  createdAt: string,
+): { isUrgent: true; minutesWaiting: number } | { isUrgent: false; minutesWaiting: number | null };
 
-export function formatOrderWaitTime(minutes: number): string
+export function formatOrderWaitTime(minutes: number): string;
 ```
 
 - `OrderKanbanBoard` a été mis à jour pour **appeler** cette fonction extraite au lieu de sa copie locale (suppression de la duplication existante, pas ajout d'une nouvelle) — comportement et seuil (10 min) strictement identiques, vérifié visuellement (§8) : le badge "221 jou ap tann" s'affiche à l'identique dans les deux vues pour la même commande fixture.
@@ -79,12 +80,12 @@ export function formatOrderWaitTime(minutes: number): string
 
 ## 5. Fichiers modifiés
 
-| Fichier | Nature du changement |
-|---|---|
-| `src/routes/_authenticated/dashboard.restaurant.orders.tsx` | Défaut de vue responsive (§4.1), `role="group"`/`aria-pressed` sur le toggle (§4.2), badge d'urgence dans la vue Liste (§4.3) |
+| Fichier                                                      | Nature du changement                                                                                                             |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/_authenticated/dashboard.restaurant.orders.tsx`  | Défaut de vue responsive (§4.1), `role="group"`/`aria-pressed` sur le toggle (§4.2), badge d'urgence dans la vue Liste (§4.3)    |
 | `src/components/dashboard/restaurant/order-kanban-board.tsx` | Suppression de la logique d'urgence dupliquée, appel à la fonction partagée à la place (§4.3) — aucun changement de comportement |
-| `src/lib/order-status.ts` | Ajout de `getOrderWaitUrgency` et `formatOrderWaitTime`, extraits depuis `order-kanban-board.tsx` |
-| `e2e/responsive/navigation-and-layout.spec.ts` | Test existant mis à jour pour vérifier le vrai contenu par largeur (§7) |
+| `src/lib/order-status.ts`                                    | Ajout de `getOrderWaitUrgency` et `formatOrderWaitTime`, extraits depuis `order-kanban-board.tsx`                                |
+| `e2e/responsive/navigation-and-layout.spec.ts`               | Test existant mis à jour pour vérifier le vrai contenu par largeur (§7)                                                          |
 
 **Note de transparence** : `git status` montre aussi des modifications sur `src/components/auth/restaurant-form.tsx`, `src/components/dashboard/admin/driver-detail-dialog.tsx`, `src/integrations/supabase/types.ts`, `src/lib/register-documents.functions.ts`, `src/routes/_authenticated/dashboard.driver.profile.tsx` et `src/routes/_authenticated/dashboard.restaurant.profile.tsx` — **ces fichiers n'ont pas été touchés par cette phase**, ils appartiennent à un autre travail en cours dans ce même dépôt (zone inscription/documents restaurant/livreur, sans rapport avec le Kanban). Non lus en détail, non modifiés, non inclus dans la portée de ce rapport.
 
@@ -106,14 +107,14 @@ Le toggle Grille/Liste reste pleinement fonctionnel dans les deux sens à toutes
 
 Spec temporaire créée, exécutée, puis supprimée après inspection (`e2e/cross-cutting/_zz-p11-kanban-visual.spec.ts`) — capture `fullPage` de `/dashboard/restaurant/orders` à **320, 390, 414, 768, 1024, 1440px**, avec une commande `pending` ancienne (urgente, "221 jou ap tann") et une commande `confirmed` fraîche (non urgente) affichées ensemble, pour voir les deux cas dans la même capture.
 
-| Largeur | Vue par défaut confirmée | Observations |
-|---:|---|---|
-| 320px | **Lis** | Cartes lisibles, badges de statut + urgence sur une seule ligne avec retour à la ligne propre, boutons Konfime/Refize empilés proprement, aucun débordement horizontal |
-| 390px | **Lis** | Idem, boutons Konfime/Refize/Konfime tiennent sur une ligne |
-| 414px | **Lis** | Idem |
-| 768px | **Kanban** | Sidebar en mode icône seule (comportement `md` existant, non lié à P11), 4 colonnes visibles, carte urgente avec bordure rouge à gauche identique à avant |
-| 1024px | **Kanban** | Sidebar toujours en mode icône (`lg` non atteint), colonnes bien espacées |
-| 1440px | **Kanban** | Sidebar complète avec libellés, mise en page identique à avant P11 |
+| Largeur | Vue par défaut confirmée | Observations                                                                                                                                                           |
+| ------: | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   320px | **Lis**                  | Cartes lisibles, badges de statut + urgence sur une seule ligne avec retour à la ligne propre, boutons Konfime/Refize empilés proprement, aucun débordement horizontal |
+|   390px | **Lis**                  | Idem, boutons Konfime/Refize/Konfime tiennent sur une ligne                                                                                                            |
+|   414px | **Lis**                  | Idem                                                                                                                                                                   |
+|   768px | **Kanban**               | Sidebar en mode icône seule (comportement `md` existant, non lié à P11), 4 colonnes visibles, carte urgente avec bordure rouge à gauche identique à avant              |
+|  1024px | **Kanban**               | Sidebar toujours en mode icône (`lg` non atteint), colonnes bien espacées                                                                                              |
+|  1440px | **Kanban**               | Sidebar complète avec libellés, mise en page identique à avant P11                                                                                                     |
 
 **Aucun chevauchement, aucun débordement, aucune perte de lisibilité constatée à aucune des 6 largeurs.**
 
@@ -141,6 +142,7 @@ npx playwright test e2e/responsive/navigation-and-layout.spec.ts e2e/restaurant/
 ### 10.2 Test mis à jour — vérifie le vrai contenu, pas seulement l'URL
 
 `"restaurant order Kanban/list is usable"` (`e2e/responsive/navigation-and-layout.spec.ts`) a été complété pour :
+
 1. Lire la largeur réelle du viewport (`page.viewportSize()?.width`), pas le nom du projet.
 2. En dessous de 768px : vérifier que le chip "Tout" (propre à la vue Liste, sans équivalent Kanban) **est visible**, que le titre de colonne Kanban "Nouvo kòmand" **ne l'est pas**, que la commande fixture s'affiche réellement (`order.order_number`), et que `aria-pressed="true"` est bien posé sur le bouton "Lis".
 3. À 768px et plus : l'inverse exact (Kanban visible, chip "Tout" absent, `aria-pressed="true"` sur "Kanban").
@@ -168,6 +170,7 @@ npx playwright test e2e/responsive/navigation-and-layout.spec.ts e2e/restaurant/
 Test Files  13 passed (13)
      Tests  143 passed (143)
 ```
+
 Typecheck, lint, garde-fou migrations, tests unitaires, build — **tous verts**, exit code 0.
 
 Les 4 échecs `accessibility.spec.ts` restants (home, checkout, admin dashboard, order tracking) sont tous la même violation `color-contrast` déjà documentée en détail dans `docs/FRONTEND_GLOBAL_AUDIT.md` §15 (F-08, compromis de couleur de marque déjà connu et accepté) — **aucun ne concerne la page `/dashboard/restaurant/orders`** modifiée par cette phase, confirmé en isolant son propre test ("restaurant dashboard") qui reste vert dans les deux exécutions.
@@ -176,16 +179,16 @@ Les 4 échecs `accessibility.spec.ts` restants (home, checkout, admin dashboard,
 
 ## 11. Non-régression
 
-| Fonctionnalité | Statut |
-|---|---|
-| Konfime (Kanban + Liste) | ✅ intact — `order-lifecycle-restaurant.spec.ts` vert |
-| Refize (Kanban + Liste) | ✅ intact — code non touché |
-| Avanse / Kòmanse prepare (Kanban + Liste) | ✅ intact — `order-lifecycle-restaurant.spec.ts` vert |
-| Drag-and-drop (Kanban) | ✅ intact — code non touché |
-| Vue Liste (filtres, pagination, masquage historique) | ✅ intact — code non touché, sauf ajout additif du badge d'urgence |
-| Vue Grille | ✅ intact, comportement et sortie identiques (extraction sans changement) |
-| Badge d'urgence (Kanban) | ✅ intact — comportement identique, source déplacée |
-| États de commande (statuts, transitions) | ✅ intacts — `NEXT_STATUS`/`NEXT_COLUMN` non touchés |
+| Fonctionnalité                                       | Statut                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------- |
+| Konfime (Kanban + Liste)                             | ✅ intact — `order-lifecycle-restaurant.spec.ts` vert                     |
+| Refize (Kanban + Liste)                              | ✅ intact — code non touché                                               |
+| Avanse / Kòmanse prepare (Kanban + Liste)            | ✅ intact — `order-lifecycle-restaurant.spec.ts` vert                     |
+| Drag-and-drop (Kanban)                               | ✅ intact — code non touché                                               |
+| Vue Liste (filtres, pagination, masquage historique) | ✅ intact — code non touché, sauf ajout additif du badge d'urgence        |
+| Vue Grille                                           | ✅ intact, comportement et sortie identiques (extraction sans changement) |
+| Badge d'urgence (Kanban)                             | ✅ intact — comportement identique, source déplacée                       |
+| États de commande (statuts, transitions)             | ✅ intacts — `NEXT_STATUS`/`NEXT_COLUMN` non touchés                      |
 
 ---
 
@@ -194,7 +197,7 @@ Les 4 échecs `accessibility.spec.ts` restants (home, checkout, admin dashboard,
 - Le seuil 768px n'a pas été explicitement demandé par le prompt (qui liste 768px sans le classer côté mobile ou desktop) — choisi par cohérence avec le breakpoint `md` déjà utilisé pour la sidebar du même dashboard, documenté et vérifié à cette limite exacte (§8).
 - Le défaut n'est calculé qu'une fois au montage (pas de mise à jour live sur redimensionnement) — comportement voulu (voir §4.1), mais signifie qu'un utilisateur qui redimensionne sa fenêtre après le premier rendu ne verra jamais son défaut recalculé automatiquement ; il devra utiliser le toggle manuellement. Cohérent avec l'exigence de ne jamais écraser un choix manuel.
 - Aucun test unitaire dédié (Vitest) n'a été ajouté pour `getOrderWaitUrgency`/`formatOrderWaitTime` — la couverture reste E2E uniquement (comportement observé bout-en-bout dans les deux vues). Non demandé explicitement par la consigne (qui ne mentionne que des tests Playwright), mais signalé comme amélioration possible.
-- Le commentaire pré-existant dans `order-kanban-board.tsx` notant que "Lis" avait "the identical pattern" de boutons Konfime/Refize non factorisés (couleurs `bg-emerald-600`/`bg-red-600` en dur au lieu du composant `Button` partagé) reste **non traité** — c'était déjà explicitement hors périmètre d'une phase antérieure, et reste hors périmètre de F-03 (qui porte sur le *défaut de vue*, pas sur l'harmonisation des boutons). Non dupliqué ni aggravé par cette phase.
+- Le commentaire pré-existant dans `order-kanban-board.tsx` notant que "Lis" avait "the identical pattern" de boutons Konfime/Refize non factorisés (couleurs `bg-emerald-600`/`bg-red-600` en dur au lieu du composant `Button` partagé) reste **non traité** — c'était déjà explicitement hors périmètre d'une phase antérieure, et reste hors périmètre de F-03 (qui porte sur le _défaut de vue_, pas sur l'harmonisation des boutons). Non dupliqué ni aggravé par cette phase.
 
 ---
 

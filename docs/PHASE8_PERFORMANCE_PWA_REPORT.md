@@ -45,12 +45,12 @@ Toutes mesurées sur un vrai `npm run build` (preset `vercel`), avec `VITE_SENTR
 pour refléter les conditions de production (un DSN vide ferait disparaître Sentry du bundle
 et fausserait la comparaison).
 
-| Métrique | Avant | Après | Delta |
-|---|---|---|---|
-| Précache SW (entrées / poids) | 256 / 5655.82 KiB | 192 / ~2110 KiB | **-3.5 Mo (-63 %)** |
-| `vendor-react-*.js` (eager, toutes pages) | 284.9 Ko (avec le bug de regex) | 178.48 Ko / gzip 56.40 Ko | **-106.4 Ko brut** |
-| `sentry-browser-*.js` (chunk séparé) | inexistant (fondu dans `vendor-react`) | 84.67 Ko / gzip 28.69 Ko, chargé après le premier rendu | Sorti du chemin critique |
-| `index-*.js` | 340.6-340.8 Ko / gzip 100.4-100.5 Ko | 340.67-340.78 Ko / gzip 100.45-100.47 Ko | Stable (Sentry n'y était pas directement — confirmé via grep, 1 seule référence résiduelle à `captureException`, la glue d'appel dynamique elle-même) |
+| Métrique                                  | Avant                                  | Après                                                   | Delta                                                                                                                                                 |
+| ----------------------------------------- | -------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Précache SW (entrées / poids)             | 256 / 5655.82 KiB                      | 192 / ~2110 KiB                                         | **-3.5 Mo (-63 %)**                                                                                                                                   |
+| `vendor-react-*.js` (eager, toutes pages) | 284.9 Ko (avec le bug de regex)        | 178.48 Ko / gzip 56.40 Ko                               | **-106.4 Ko brut**                                                                                                                                    |
+| `sentry-browser-*.js` (chunk séparé)      | inexistant (fondu dans `vendor-react`) | 84.67 Ko / gzip 28.69 Ko, chargé après le premier rendu | Sorti du chemin critique                                                                                                                              |
+| `index-*.js`                              | 340.6-340.8 Ko / gzip 100.4-100.5 Ko   | 340.67-340.78 Ko / gzip 100.45-100.47 Ko                | Stable (Sentry n'y était pas directement — confirmé via grep, 1 seule référence résiduelle à `captureException`, la glue d'appel dynamique elle-même) |
 
 **LCP/CLS/INP réels (Lighthouse/CrUX)** : non mesurables dans cet environnement (pas de
 navigateur pilotable pour un audit Lighthouse en conditions réelles) — voir "Non mesuré" dans
@@ -63,7 +63,7 @@ exécuté (section 7) mais ses scores ne sont pas un LCP/CLS/INP terrain réel.
    `public/payment-global/**` (aucune référence dans `src/`, vérifié par recherche
    exhaustive) et des chunks `vendor-pdf`/`vendor-charts` (déjà en `import()` dynamique ou
    import statique route-only, jamais dans le chemin d'un client). Les fichiers restent
-   déployés et accessibles à leur URL ; seule la mise en cache *eager* est retirée — la règle
+   déployés et accessibles à leur URL ; seule la mise en cache _eager_ est retirée — la règle
    runtime `CacheFirst` déjà présente dans `src/sw.ts` les met en cache à la demande, avec la
    même garantie offline.
 2. **`src/routes/__root.tsx` — import dynamique de Sentry** : `sentry-browser.ts` passe d'un
@@ -113,14 +113,14 @@ Tests Playwright ciblés exécutés : `e2e/cross-cutting/{pwa,offline,lighthouse
 preuve fiable de régression sans vérification supplémentaire, conformément à la consigne de
 ne pas présenter un test tombé sur la page de connexion comme une preuve valide :**
 
-| Test | Verdict | Méthode de vérification |
-|---|---|---|
-| `offline.spec.ts` — 404 hors-ligne | **Pré-existant** | `git stash` → rebuild du code non modifié → échec identique reproduit. Pas causé par P8. |
-| `offline.spec.ts` — shell hors-ligne sur page déjà visitée | **Pré-existant** | Idem — même méthode, même résultat identique sur le baseline. |
-| `browse-and-order.spec.ts` — liste restaurants | **Pré-existant** | Idem — `git stash` + rebuild baseline reproduit l'échec identique (un restaurant "AC Resto" différent de la fixture s'affiche, sur le code non modifié aussi — symptôme de pollution d'environnement local, pas du code applicatif). |
-| `browse-and-order.spec.ts` — détail + panier | **Pré-existant** | Idem, même symptôme reproduit sur le baseline. |
-| `lighthouse.spec.ts` — accueil | **Flakiness de lot déjà documentée** | Ré-exécuté seul (`-g "home page"`) : **passe** (best-practices 100, SEO 100). Le lot complet réintroduit l'échec — pattern déjà documenté dans `docs/E2E_TEST_REPORT.md` pour cette suite. |
-| `lighthouse.spec.ts` — checkout | **Limitation harness déjà documentée (Phase 7)** | Timeout identique sur `getByRole("button", { name: "Ajoute ... nan panye" })` — même symptôme SSR/mock-auth déjà investigué et documenté dans `docs/PHASE7_ACCESSIBILITY_REPORT.md` et `docs/E2E_TEST_REPORT.md`. |
+| Test                                                       | Verdict                                          | Méthode de vérification                                                                                                                                                                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `offline.spec.ts` — 404 hors-ligne                         | **Pré-existant**                                 | `git stash` → rebuild du code non modifié → échec identique reproduit. Pas causé par P8.                                                                                                                                             |
+| `offline.spec.ts` — shell hors-ligne sur page déjà visitée | **Pré-existant**                                 | Idem — même méthode, même résultat identique sur le baseline.                                                                                                                                                                        |
+| `browse-and-order.spec.ts` — liste restaurants             | **Pré-existant**                                 | Idem — `git stash` + rebuild baseline reproduit l'échec identique (un restaurant "AC Resto" différent de la fixture s'affiche, sur le code non modifié aussi — symptôme de pollution d'environnement local, pas du code applicatif). |
+| `browse-and-order.spec.ts` — détail + panier               | **Pré-existant**                                 | Idem, même symptôme reproduit sur le baseline.                                                                                                                                                                                       |
+| `lighthouse.spec.ts` — accueil                             | **Flakiness de lot déjà documentée**             | Ré-exécuté seul (`-g "home page"`) : **passe** (best-practices 100, SEO 100). Le lot complet réintroduit l'échec — pattern déjà documenté dans `docs/E2E_TEST_REPORT.md` pour cette suite.                                           |
+| `lighthouse.spec.ts` — checkout                            | **Limitation harness déjà documentée (Phase 7)** | Timeout identique sur `getByRole("button", { name: "Ajoute ... nan panye" })` — même symptôme SSR/mock-auth déjà investigué et documenté dans `docs/PHASE7_ACCESSIBILITY_REPORT.md` et `docs/E2E_TEST_REPORT.md`.                    |
 
 Aucun de ces 6 échecs n'a été écarté sans vérification : les 4 premiers ont été confirmés
 **identiques sur le code d'avant P8** via un `git stash`/rebuild/test en aller-retour complet,

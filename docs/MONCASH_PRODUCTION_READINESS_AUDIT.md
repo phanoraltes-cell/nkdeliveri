@@ -15,13 +15,13 @@ par erreur (structurellement impossible — voir § 1.3), mais que l'écart
 entre le code sur `main` et l'état réel de la base de production ne soit
 pas visible sans audit actif, ce que ce rapport corrige.
 
-| Axe | État |
-|---|---|
-| Décaissement B2C MonCash | Non supporté par l'API publique MonCash — bloquant externe, connu depuis l'audit initial |
-| Migrations appliquées | 1 sur 5 (`20260730100000`) — voir § 4 |
-| Secrets MonCash | Absents partout (Git, Vercel, local) — vérifié à nouveau dans cet audit |
-| Paiements manuels (MonCash/NatCash) | Non affectés, chemin de production actuel, aucune régression détectée |
-| Nouvelle faille de sécurité découverte | 1 — **corrigée** (migration `20260731100000`, non appliquée) — voir § 2, R1 |
+| Axe                                    | État                                                                                     |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Décaissement B2C MonCash               | Non supporté par l'API publique MonCash — bloquant externe, connu depuis l'audit initial |
+| Migrations appliquées                  | 1 sur 5 (`20260730100000`) — voir § 4                                                    |
+| Secrets MonCash                        | Absents partout (Git, Vercel, local) — vérifié à nouveau dans cet audit                  |
+| Paiements manuels (MonCash/NatCash)    | Non affectés, chemin de production actuel, aucune régression détectée                    |
+| Nouvelle faille de sécurité découverte | 1 — **corrigée** (migration `20260731100000`, non appliquée) — voir § 2, R1              |
 
 ---
 
@@ -29,14 +29,14 @@ pas visible sans audit actif, ce que ce rapport corrige.
 
 ### 1.1 Migrations MonCash
 
-| Migration | Contenu | Appliquée sur `main` (repo) | Appliquée en production (vérifié par requête) |
-|---|---|---|---|
-| `20260722190000_payment_provider_prep.sql` | Table `payment_providers`, colonne `payouts.provider_code`, `initiate_payout_secure` étendu | ✅ | ✅ |
-| `20260730100000_moncash_webhook_payout_lifecycle.sql` | `payout_status` enum→text+CHECK (`pending`/`failed` ajoutés), `payouts.provider_transaction_id`, table `moncash_webhook_events`, RPC `create/complete/fail_pending_payout_secure` | ✅ | ✅ |
-| `20260730110000_log_payment_provider_error.sql` | RPC `log_payment_provider_error_secure` | ✅ | ❌ **non appliquée** |
-| `20260730120000_moncash_provider_notifications.sql` | Câblage `create/complete/fail_pending_payout_secure` vers `private.notify_secure`, `log_payment_provider_error_secure` +1 paramètre | ✅ | ❌ **non appliquée** |
-| `20260730130000_moncash_financial_audit_log.sql` | Table `moncash_api_logs`, triggers d'immutabilité (`private.prevent_log_mutation`) | ✅ | ❌ **non appliquée** |
-| `20260731100000_revoke_anon_create_pending_payout.sql` | Corrige R1 (§ 2) — `REVOKE EXECUTE ... FROM anon` sur `create_pending_payout_secure` | ✅ | ❌ **non appliquée** |
+| Migration                                              | Contenu                                                                                                                                                                           | Appliquée sur `main` (repo) | Appliquée en production (vérifié par requête) |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------- |
+| `20260722190000_payment_provider_prep.sql`             | Table `payment_providers`, colonne `payouts.provider_code`, `initiate_payout_secure` étendu                                                                                       | ✅                          | ✅                                            |
+| `20260730100000_moncash_webhook_payout_lifecycle.sql`  | `payout_status` enum→text+CHECK (`pending`/`failed` ajoutés), `payouts.provider_transaction_id`, table `moncash_webhook_events`, RPC `create/complete/fail_pending_payout_secure` | ✅                          | ✅                                            |
+| `20260730110000_log_payment_provider_error.sql`        | RPC `log_payment_provider_error_secure`                                                                                                                                           | ✅                          | ❌ **non appliquée**                          |
+| `20260730120000_moncash_provider_notifications.sql`    | Câblage `create/complete/fail_pending_payout_secure` vers `private.notify_secure`, `log_payment_provider_error_secure` +1 paramètre                                               | ✅                          | ❌ **non appliquée**                          |
+| `20260730130000_moncash_financial_audit_log.sql`       | Table `moncash_api_logs`, triggers d'immutabilité (`private.prevent_log_mutation`)                                                                                                | ✅                          | ❌ **non appliquée**                          |
+| `20260731100000_revoke_anon_create_pending_payout.sql` | Corrige R1 (§ 2) — `REVOKE EXECUTE ... FROM anon` sur `create_pending_payout_secure`                                                                                              | ✅                          | ❌ **non appliquée**                          |
 
 **Conséquence vérifiée en production** (lecture directe de la définition
 de fonction live, pas une supposition) : `complete_pending_payout_secure`
@@ -58,16 +58,16 @@ et rien à migrer si Supabase Edge Functions étaient un jour introduites.
 
 ### 1.3 RPC — inventaire et permissions
 
-| RPC | `SECURITY DEFINER` | `GRANT EXECUTE` réel (vérifié en production) | Observation |
-|---|---|---|---|
-| `initiate_payout_secure` | Oui | `anon, authenticated, service_role, postgres` | Chemin manuel actif, protégé par `has_role()` interne |
-| `confirm_payout_secure` | Oui | `anon, authenticated, service_role, postgres` | idem |
-| `dispute_payout_secure` | Oui | `anon, authenticated, service_role, postgres` | idem |
-| `resolve_payout_dispute_secure` | Oui | `anon, authenticated, service_role, postgres` | idem |
-| `create_pending_payout_secure` | Oui | `anon, authenticated, service_role, postgres` | **Voir R1 § 2** — devrait matcher le pattern des deux suivantes |
-| `complete_pending_payout_secure` | Oui | `service_role, postgres` **uniquement** | Correct — aucune session utilisateur ne peut l'appeler |
-| `fail_pending_payout_secure` | Oui | `service_role, postgres` **uniquement** | Correct — idem |
-| `log_payment_provider_error_secure` | Oui | Non applicable — **pas encore en production** | — |
+| RPC                                 | `SECURITY DEFINER` | `GRANT EXECUTE` réel (vérifié en production)  | Observation                                                     |
+| ----------------------------------- | ------------------ | --------------------------------------------- | --------------------------------------------------------------- |
+| `initiate_payout_secure`            | Oui                | `anon, authenticated, service_role, postgres` | Chemin manuel actif, protégé par `has_role()` interne           |
+| `confirm_payout_secure`             | Oui                | `anon, authenticated, service_role, postgres` | idem                                                            |
+| `dispute_payout_secure`             | Oui                | `anon, authenticated, service_role, postgres` | idem                                                            |
+| `resolve_payout_dispute_secure`     | Oui                | `anon, authenticated, service_role, postgres` | idem                                                            |
+| `create_pending_payout_secure`      | Oui                | `anon, authenticated, service_role, postgres` | **Voir R1 § 2** — devrait matcher le pattern des deux suivantes |
+| `complete_pending_payout_secure`    | Oui                | `service_role, postgres` **uniquement**       | Correct — aucune session utilisateur ne peut l'appeler          |
+| `fail_pending_payout_secure`        | Oui                | `service_role, postgres` **uniquement**       | Correct — idem                                                  |
+| `log_payment_provider_error_secure` | Oui                | Non applicable — **pas encore en production** | —                                                               |
 
 `create_pending_payout_secure`/`complete_pending_payout_secure`/
 `fail_pending_payout_secure` sont **inatteignables en pratique
@@ -119,14 +119,15 @@ migration ne touche que les 3 RPC MonCash déjà créées la veille, jamais
 ### 1.7 Wallets
 
 Modèle à 3 soldes (`available_balance`/`pending_balance`/`paid_balance`)
-+ `wallet_transactions` comme grand livre append-only (source de vérité,
-`recompute_wallet_secure()` peut reconstruire les soldes en sommant ce
-journal). **Zéro ligne en production aujourd'hui** (`SELECT count(*) FROM
+
+- `wallet_transactions` comme grand livre append-only (source de vérité,
+  `recompute_wallet_secure()` peut reconstruire les soldes en sommant ce
+  journal). **Zéro ligne en production aujourd'hui** (`SELECT count(*) FROM
 wallets` = 0, vérifié dans cet audit) — la plateforme n'a pas encore de
-restaurant/livreur avec un solde réel. Cela signifie concrètement qu'**aucune
-donnée réelle n'est en jeu** pour tout test ou validation supplémentaire
-avant mise en production réelle du module financier lui-même (indépendant
-de MonCash).
+  restaurant/livreur avec un solde réel. Cela signifie concrètement qu'**aucune
+  donnée réelle n'est en jeu** pour tout test ou validation supplémentaire
+  avant mise en production réelle du module financier lui-même (indépendant
+  de MonCash).
 
 ### 1.8 Commission Engine
 
@@ -163,7 +164,7 @@ chantier MonCash** — c'est un pattern systémique sur **cinq** autres RPC
 qui ont toutes le même `anon:EXECUTE`. Cause probable : privilège par
 défaut au niveau projet Supabase (`ALTER DEFAULT PRIVILEGES`) qui accorde
 `EXECUTE` à `anon`/`authenticated` sur toute nouvelle fonction du schéma
-`public`, sauf révocation explicite *nommant ces rôles*, pas seulement
+`public`, sauf révocation explicite _nommant ces rôles_, pas seulement
 `PUBLIC` (`REVOKE ALL ... FROM PUBLIC` ne suffit pas, il faut
 `REVOKE ALL ... FROM PUBLIC, anon`).
 
@@ -251,11 +252,11 @@ incorrect à éviter**, d'où l'ordre strict.
 
 ## 4. PHASE 2 — Validation des migrations non appliquées
 
-| Migration | Impact | Validation | Rollback possible |
-|---|---|---|---|
-| **20260730110000**<br>`log_payment_provider_error_secure` | Ajout pur : 1 nouvelle fonction. Aucune table modifiée, aucune colonne ajoutée, aucune donnée touchée. | ✅ Testée en isolation via les tests unitaires (appelée par `initiate-provider-payout.functions.ts`, couvert par `moncash-provider.test.ts`). Aucun appelant vivant aujourd'hui (chemin `direction:"disburse"` toujours refusé avant d'y arriver côté succès — mais **le chemin d'échec synchrone, lui, EST atteignable dès aujourd'hui** dès qu'un admin sélectionne "MonCash Automatik" dans le sélecteur unifié, même sans secret configuré — c'est le seul appelant réel actuellement, et il fonctionne). | Oui — `DROP FUNCTION public.log_payment_provider_error_secure(text, text, uuid, uuid, numeric, text, text);` supprime proprement la fonction. Aucune donnée à restaurer (rien n'est écrit ailleurs que `audit_log`, table déjà existante, jamais modifiée en structure par cette migration). |
-| **20260730120000**<br>notify_secure + `log_payment_provider_error_secure` +1 param | Modifie le **corps** de 3 fonctions déjà en production (`create/complete/fail_pending_payout_secure`) — signatures inchangées (`CREATE OR REPLACE`), donc aucun appelant TypeScript à modifier. Remplace (`DROP`+`CREATE`) `log_payment_provider_error_secure` pour ajouter `_code`. | ✅ Testée en isolation (mocks) — voir `moncash-provider.test.ts`/`moncash-webhook-handler.test.ts`. ⚠️ **Non re-testée en transaction rolled-back contre le schéma live** (le rapport de tests précédent l'a explicitement noté comme dette restante) — recommandé avant application : rejouer un script `BEGIN...ROLLBACK` équivalent aux groupes A/B de docs/MONCASH_TEST_REPORT.md une fois appliquée, pour confirmer que les nouvelles notifications (`payout_provider_sent`/`payout_provider_confirmed`/`payout_provider_admin_success`/etc.) sont bien créées. | Oui, mais **pas un simple DROP** : il faut restaurer le corps *précédent* de `create/complete/fail_pending_payout_secure` (celui de `20260730100000`, avec `INSERT INTO notifications` brut) via une nouvelle migration de rollback dédiée — ces 3 fonctions doivent continuer d'exister (elles sont la seule voie du cycle de vie asynchrone). `log_payment_provider_error_secure` peut revenir à sa version 6-arguments via un `DROP`+`CREATE` symétrique à l'application. |
-| **20260730130000**<br>`moncash_api_logs` + triggers d'immutabilité | Ajout pur : 1 nouvelle table + 4 triggers (2 sur la nouvelle table, 2 sur `moncash_webhook_events` déjà existante). Les triggers sur `moncash_webhook_events` bloquent `DELETE`/`TRUNCATE` pour **tout rôle y compris service_role** — vérifier qu'aucun processus (backup/restore, script de maintenance) ne dépend d'un `DELETE` sur cette table avant application. | ✅ Le comportement des triggers est vérifiable par un test dédié en transaction rolled-back (tenter un `DELETE`/`UPDATE`, attendre l'exception) — recommandé avant application, pas encore fait (la table n'existe pas encore pour le tester). `moncash-client.server.ts` écrit déjà vers `moncash_api_logs` dans le code présent sur `main` — tant que la table n'existe pas, chaque tentative d'écriture échoue silencieusement (`console.warn`, jamais bloquant pour un paiement — comportement voulu, voir docs/MONCASH_FINANCIAL_AUDIT.md § Limite connue) : **le code déployé aujourd'hui fonctionne déjà correctement sans cette table**, l'appliquer n'est pas urgent pour la stabilité, seulement pour activer l'audit détaillé. | Table : `DROP TABLE public.moncash_api_logs;` (perte définitive du journal accumulé depuis son activation — à sauvegarder d'abord si des données s'y trouvent). Triggers sur `moncash_webhook_events` : `DROP TRIGGER moncash_webhook_events_no_delete ON public.moncash_webhook_events; DROP TRIGGER moncash_webhook_events_no_truncate ON public.moncash_webhook_events;` — réversible sans perte de données existantes. |
+| Migration                                                                          | Impact                                                                                                                                                                                                                                                                                                                                                                | Validation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Rollback possible                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **20260730110000**<br>`log_payment_provider_error_secure`                          | Ajout pur : 1 nouvelle fonction. Aucune table modifiée, aucune colonne ajoutée, aucune donnée touchée.                                                                                                                                                                                                                                                                | ✅ Testée en isolation via les tests unitaires (appelée par `initiate-provider-payout.functions.ts`, couvert par `moncash-provider.test.ts`). Aucun appelant vivant aujourd'hui (chemin `direction:"disburse"` toujours refusé avant d'y arriver côté succès — mais **le chemin d'échec synchrone, lui, EST atteignable dès aujourd'hui** dès qu'un admin sélectionne "MonCash Automatik" dans le sélecteur unifié, même sans secret configuré — c'est le seul appelant réel actuellement, et il fonctionne).                                                                                                                                                                                                                             | Oui — `DROP FUNCTION public.log_payment_provider_error_secure(text, text, uuid, uuid, numeric, text, text);` supprime proprement la fonction. Aucune donnée à restaurer (rien n'est écrit ailleurs que `audit_log`, table déjà existante, jamais modifiée en structure par cette migration).                                                                                                                                                                                 |
+| **20260730120000**<br>notify_secure + `log_payment_provider_error_secure` +1 param | Modifie le **corps** de 3 fonctions déjà en production (`create/complete/fail_pending_payout_secure`) — signatures inchangées (`CREATE OR REPLACE`), donc aucun appelant TypeScript à modifier. Remplace (`DROP`+`CREATE`) `log_payment_provider_error_secure` pour ajouter `_code`.                                                                                  | ✅ Testée en isolation (mocks) — voir `moncash-provider.test.ts`/`moncash-webhook-handler.test.ts`. ⚠️ **Non re-testée en transaction rolled-back contre le schéma live** (le rapport de tests précédent l'a explicitement noté comme dette restante) — recommandé avant application : rejouer un script `BEGIN...ROLLBACK` équivalent aux groupes A/B de docs/MONCASH_TEST_REPORT.md une fois appliquée, pour confirmer que les nouvelles notifications (`payout_provider_sent`/`payout_provider_confirmed`/`payout_provider_admin_success`/etc.) sont bien créées.                                                                                                                                                                      | Oui, mais **pas un simple DROP** : il faut restaurer le corps _précédent_ de `create/complete/fail_pending_payout_secure` (celui de `20260730100000`, avec `INSERT INTO notifications` brut) via une nouvelle migration de rollback dédiée — ces 3 fonctions doivent continuer d'exister (elles sont la seule voie du cycle de vie asynchrone). `log_payment_provider_error_secure` peut revenir à sa version 6-arguments via un `DROP`+`CREATE` symétrique à l'application. |
+| **20260730130000**<br>`moncash_api_logs` + triggers d'immutabilité                 | Ajout pur : 1 nouvelle table + 4 triggers (2 sur la nouvelle table, 2 sur `moncash_webhook_events` déjà existante). Les triggers sur `moncash_webhook_events` bloquent `DELETE`/`TRUNCATE` pour **tout rôle y compris service_role** — vérifier qu'aucun processus (backup/restore, script de maintenance) ne dépend d'un `DELETE` sur cette table avant application. | ✅ Le comportement des triggers est vérifiable par un test dédié en transaction rolled-back (tenter un `DELETE`/`UPDATE`, attendre l'exception) — recommandé avant application, pas encore fait (la table n'existe pas encore pour le tester). `moncash-client.server.ts` écrit déjà vers `moncash_api_logs` dans le code présent sur `main` — tant que la table n'existe pas, chaque tentative d'écriture échoue silencieusement (`console.warn`, jamais bloquant pour un paiement — comportement voulu, voir docs/MONCASH_FINANCIAL_AUDIT.md § Limite connue) : **le code déployé aujourd'hui fonctionne déjà correctement sans cette table**, l'appliquer n'est pas urgent pour la stabilité, seulement pour activer l'audit détaillé. | Table : `DROP TABLE public.moncash_api_logs;` (perte définitive du journal accumulé depuis son activation — à sauvegarder d'abord si des données s'y trouvent). Triggers sur `moncash_webhook_events` : `DROP TRIGGER moncash_webhook_events_no_delete ON public.moncash_webhook_events; DROP TRIGGER moncash_webhook_events_no_truncate ON public.moncash_webhook_events;` — réversible sans perte de données existantes.                                                   |
 
 | **20260731100000**<br>Correctif R1 | `REVOKE` pur — retire un privilège, n'en ajoute aucun. Aucune table, aucune donnée touchée. | ✅ Le comportement observable ne change pas (l'appel anonyme était déjà rejeté par `has_role()` en interne) — seule la surface d'attaque théorique se réduit. Rien à tester fonctionnellement au-delà de "l'admin peut toujours appeler la fonction" (inchangé, `authenticated` garde son `GRANT`). | Oui, trivial : `GRANT EXECUTE ON FUNCTION public.create_pending_payout_secure(uuid, uuid, numeric, text, text, text, text) TO anon;` restaure l'état antérieur si nécessaire (aucune raison de le faire). |
 

@@ -28,30 +28,30 @@ pas forcer** ce comportement — voir §9 et la limite explicite ci-dessous.
 
 ### Metadata (avant modification)
 
-| Élément | État constaté |
-|---|---|
-| `<title>` racine | ✅ « NK Deliveri — Manje lakay, livre lakay ou » — marque présente, orthographe correcte |
-| Meta description racine | ⚠️ Correcte mais ne mentionnait pas explicitement « Ayiti »/Haïti, seulement « Gonaïves » |
-| Canonical | ✅ Chaque page indexable pose le sien via `pageMeta()` (`lib/seo.ts`) ; la racine n'en pose délibérément pas, pour éviter un doublon — décision déjà correcte, documentée dans le code lui-même |
-| `robots` | ✅ `index, follow` par défaut, `noindex, nofollow` explicite sur les pages privées (`noIndexMeta()`) |
-| Open Graph | ⚠️ `og:title`/`og:description`/`og:url`/`og:type`/`og:image` présents ; **`og:site_name` totalement absent** — ni à la racine, ni dans `pageMeta()` |
-| Twitter/X card | ✅ Présent (`summary_large_image`, title, description, image) |
-| Viewport | ✅ `width=device-width, initial-scale=1, viewport-fit=cover` |
-| Langue | ✅ `<html lang="ht">` — correct, le site est en kreyòl ayisyen |
-| Favicon | ✅ `favicon.ico` + `favicon.png` + `apple-touch-icon.png` (180×180), tous référencés |
-| Manifest | ✅ Déjà brandé correctement (voir §6) |
+| Élément                 | État constaté                                                                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<title>` racine        | ✅ « NK Deliveri — Manje lakay, livre lakay ou » — marque présente, orthographe correcte                                                                                                        |
+| Meta description racine | ⚠️ Correcte mais ne mentionnait pas explicitement « Ayiti »/Haïti, seulement « Gonaïves »                                                                                                       |
+| Canonical               | ✅ Chaque page indexable pose le sien via `pageMeta()` (`lib/seo.ts`) ; la racine n'en pose délibérément pas, pour éviter un doublon — décision déjà correcte, documentée dans le code lui-même |
+| `robots`                | ✅ `index, follow` par défaut, `noindex, nofollow` explicite sur les pages privées (`noIndexMeta()`)                                                                                            |
+| Open Graph              | ⚠️ `og:title`/`og:description`/`og:url`/`og:type`/`og:image` présents ; **`og:site_name` totalement absent** — ni à la racine, ni dans `pageMeta()`                                             |
+| Twitter/X card          | ✅ Présent (`summary_large_image`, title, description, image)                                                                                                                                   |
+| Viewport                | ✅ `width=device-width, initial-scale=1, viewport-fit=cover`                                                                                                                                    |
+| Langue                  | ✅ `<html lang="ht">` — correct, le site est en kreyòl ayisyen                                                                                                                                  |
+| Favicon                 | ✅ `favicon.ico` + `favicon.png` + `apple-touch-icon.png` (180×180), tous référencés                                                                                                            |
+| Manifest                | ✅ Déjà brandé correctement (voir §6)                                                                                                                                                           |
 
 ### Structured Data (avant modification)
 
-| Schema | État constaté |
-|---|---|
-| `Organization` | ⚠️ Présent (`name`, `url`, `logo`, `areaServed`) mais sans `alternateName`, sans `description`, sans `sameAs` (correctement absent, voir §7) |
-| `WebSite` | ⚠️ Présent (`name`, `url`) mais sans `SearchAction`, alors qu'une recherche réelle existe |
-| `WebApplication` | ❌ Absent — évalué en §5, décision : ne pas l'ajouter |
-| `LocalBusiness` | ❌ Absent — évalué, non retenu (voir §5) |
-| `Restaurant` | ❌ Absent — non pertinent : NK Deliveri est la plateforme, pas un restaurant individuel |
-| `BreadcrumbList` | ❌ Absent — hors périmètre de cette mission (n'affecte pas l'identité de marque), non traité |
-| `SearchAction` | ❌ Absent malgré une fonctionnalité de recherche réelle et fonctionnelle |
+| Schema           | État constaté                                                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Organization`   | ⚠️ Présent (`name`, `url`, `logo`, `areaServed`) mais sans `alternateName`, sans `description`, sans `sameAs` (correctement absent, voir §7) |
+| `WebSite`        | ⚠️ Présent (`name`, `url`) mais sans `SearchAction`, alors qu'une recherche réelle existe                                                    |
+| `WebApplication` | ❌ Absent — évalué en §5, décision : ne pas l'ajouter                                                                                        |
+| `LocalBusiness`  | ❌ Absent — évalué, non retenu (voir §5)                                                                                                     |
+| `Restaurant`     | ❌ Absent — non pertinent : NK Deliveri est la plateforme, pas un restaurant individuel                                                      |
+| `BreadcrumbList` | ❌ Absent — hors périmètre de cette mission (n'affecte pas l'identité de marque), non traité                                                 |
+| `SearchAction`   | ❌ Absent malgré une fonctionnalité de recherche réelle et fonctionnelle                                                                     |
 
 ---
 
@@ -61,11 +61,13 @@ Toutes les corrections sont additives — aucune suppression de contenu, aucune 
 aucune répétition artificielle de la marque.
 
 ### `src/lib/seo.ts`
+
 - Ajout de `og:site_name: "NK Deliveri"` dans `pageMeta()` — propage automatiquement à **toutes**
   les pages publiques indexables (accueil, restaurants, à propos, contact, FAQ, conditions,
   confidentialité) puisqu'elles utilisent toutes ce helper central.
 
 ### `src/routes/__root.tsx`
+
 - Ajout de `og:site_name: "NK Deliveri"` dans les meta par défaut de la racine (couvre les routes
   qui n'appellent pas encore `pageMeta()`).
 - Meta description racine, `og:description` et `twitter:description` : ajout naturel de « Ayiti »
@@ -84,6 +86,7 @@ aucune répétition artificielle de la marque.
   fonctionnalité décrite pour enrichir artificiellement le schema.
 
 ### Ce qui n'a délibérément pas été modifié
+
 - Le H1 de la page d'accueil (« Manje lakay, livre lakay ou ») — la marque apparaît déjà
   naturellement dans le contenu visible de la page (logo/wordmark du header, footer), donc
   l'exigence du Phase 5 est déjà satisfaite sans forcer le nom dans le H1 lui-même, ce que
@@ -96,28 +99,28 @@ aucune répétition artificielle de la marque.
 
 ## 5. Structured Data — décisions motivées
 
-| Schema | Décision | Raison |
-|---|---|---|
-| `Organization` | ✅ Enrichi (alternateName, description) | Directement pertinent à l'objectif |
-| `WebSite` | ✅ Enrichi (SearchAction) | Fonctionnalité réelle, correctement décrite |
-| `WebApplication` | ❌ Non ajouté | Le site est une PWA installable, un `WebApplication` serait techniquement défendable, mais l'objectif principal est la reconnaissance de l'*organisation*, pas les fonctionnalités « installation d'app » dans les résultats de recherche. Ajouter un 3ᵉ type sans bénéfice clairement identifié irait à l'encontre de l'instruction « ne pas multiplier les schemas inutilement ». Décision réversible, documentée ici pour une prochaine phase si le besoin devient clair. |
-| `LocalBusiness` | ❌ Non ajouté | NK Deliveri est une plateforme de livraison en ligne, pas un commerce avec une adresse physique/des horaires d'accueil client sur place — le type ne correspond pas fidèlement à la réalité de l'activité. L'ajouter uniquement pour le signal SEO local serait une donnée inexacte, explicitement interdit par l'instruction. |
-| `Restaurant` | ❌ Non pertinent | S'applique à un restaurant individuel, pas à la plateforme elle-même. |
-| `BreadcrumbList` | ❌ Non traité | Améliorerait l'affichage des résultats de recherche pour les pages profondes (ex. détail restaurant), mais sans rapport avec la reconnaissance du *nom de marque* — hors du périmètre ciblé de cette mission. |
+| Schema           | Décision                                | Raison                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Organization`   | ✅ Enrichi (alternateName, description) | Directement pertinent à l'objectif                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `WebSite`        | ✅ Enrichi (SearchAction)               | Fonctionnalité réelle, correctement décrite                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `WebApplication` | ❌ Non ajouté                           | Le site est une PWA installable, un `WebApplication` serait techniquement défendable, mais l'objectif principal est la reconnaissance de l'_organisation_, pas les fonctionnalités « installation d'app » dans les résultats de recherche. Ajouter un 3ᵉ type sans bénéfice clairement identifié irait à l'encontre de l'instruction « ne pas multiplier les schemas inutilement ». Décision réversible, documentée ici pour une prochaine phase si le besoin devient clair. |
+| `LocalBusiness`  | ❌ Non ajouté                           | NK Deliveri est une plateforme de livraison en ligne, pas un commerce avec une adresse physique/des horaires d'accueil client sur place — le type ne correspond pas fidèlement à la réalité de l'activité. L'ajouter uniquement pour le signal SEO local serait une donnée inexacte, explicitement interdit par l'instruction.                                                                                                                                               |
+| `Restaurant`     | ❌ Non pertinent                        | S'applique à un restaurant individuel, pas à la plateforme elle-même.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `BreadcrumbList` | ❌ Non traité                           | Améliorerait l'affichage des résultats de recherche pour les pages profondes (ex. détail restaurant), mais sans rapport avec la reconnaissance du _nom de marque_ — hors du périmètre ciblé de cette mission.                                                                                                                                                                                                                                                                |
 
 ---
 
 ## 6. Metadata — avant / après
 
-| Champ | Avant | Après |
-|---|---|---|
-| `og:site_name` (toutes pages) | *(absent)* | `NK Deliveri` |
-| Meta description (racine) | « Kòmande manje nan meyè restoran nan Gonaïves epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach. » | « NK Deliveri se platfòm livrezon manje Gonaïves, Ayiti. Kòmande manje nan meyè restoran yo epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach. » |
-| `og:description` / `twitter:description` (racine) | « Livrezon manje nan Gonaïves. MonCash, NatCash, Kach. » | « Livrezon manje nan Gonaïves, Ayiti. MonCash, NatCash, Kach. » |
-| `Organization.alternateName` | *(absent)* | `NK Delivery` |
-| `Organization.description` | *(absent)* | Présent (kreyòl, reprend le positionnement existant) |
-| `WebSite.potentialAction` | *(absent)* | `SearchAction` réel vers `/restaurants?q=` |
-| Manifest, sitemap, robots, canonical, title, H1 | Déjà corrects | Inchangés |
+| Champ                                             | Avant                                                                                                         | Après                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `og:site_name` (toutes pages)                     | _(absent)_                                                                                                    | `NK Deliveri`                                                                                                                                              |
+| Meta description (racine)                         | « Kòmande manje nan meyè restoran nan Gonaïves epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach. » | « NK Deliveri se platfòm livrezon manje Gonaïves, Ayiti. Kòmande manje nan meyè restoran yo epi resevwa l lakay ou. Peman ak MonCash, NatCash oswa kach. » |
+| `og:description` / `twitter:description` (racine) | « Livrezon manje nan Gonaïves. MonCash, NatCash, Kach. »                                                      | « Livrezon manje nan Gonaïves, Ayiti. MonCash, NatCash, Kach. »                                                                                            |
+| `Organization.alternateName`                      | _(absent)_                                                                                                    | `NK Delivery`                                                                                                                                              |
+| `Organization.description`                        | _(absent)_                                                                                                    | Présent (kreyòl, reprend le positionnement existant)                                                                                                       |
+| `WebSite.potentialAction`                         | _(absent)_                                                                                                    | `SearchAction` réel vers `/restaurants?q=`                                                                                                                 |
+| Manifest, sitemap, robots, canonical, title, H1   | Déjà corrects                                                                                                 | Inchangés                                                                                                                                                  |
 
 ---
 
@@ -126,12 +129,12 @@ aucune répétition artificielle de la marque.
 Recherche systématique dans `src/` et `public/` pour toutes les variantes (« NK Delivery »,
 « NK DELOVERI », « NKDelivery », « NK Deliveri », majuscules/minuscules).
 
-| Occurrence | Fichier | Contexte | Action |
-|---|---|---|---|
-| « NK delivery person » | `src/components/home/hero-section.tsx:23` | Commentaire de code décrivant l'image de fond (« the NK delivery person » = le livreur de NK) | **Faux positif** — ce n'est pas une référence à la marque « NK Delivery », c'est la phrase anglaise « a delivery person [who works for] NK ». Aucune action. |
-| « NK Deliveri » | Partout (titres de page, `SITE_NAME`, manifest, JSON-LD, footer, header) | Nom de marque | ✅ Correct partout, aucune occurrence incorrecte trouvée |
-| « nkdeliveri.com » | `site-config.ts`, emails, webhooks, tests | Nom de domaine (toujours en minuscules, sans espace — normal pour un domaine) | ✅ Correct |
-| « NK DELOVERI » / « NKDelivery » | — | — | **Aucune occurrence trouvée** dans tout le projet |
+| Occurrence                       | Fichier                                                                  | Contexte                                                                                      | Action                                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| « NK delivery person »           | `src/components/home/hero-section.tsx:23`                                | Commentaire de code décrivant l'image de fond (« the NK delivery person » = le livreur de NK) | **Faux positif** — ce n'est pas une référence à la marque « NK Delivery », c'est la phrase anglaise « a delivery person [who works for] NK ». Aucune action. |
+| « NK Deliveri »                  | Partout (titres de page, `SITE_NAME`, manifest, JSON-LD, footer, header) | Nom de marque                                                                                 | ✅ Correct partout, aucune occurrence incorrecte trouvée                                                                                                     |
+| « nkdeliveri.com »               | `site-config.ts`, emails, webhooks, tests                                | Nom de domaine (toujours en minuscules, sans espace — normal pour un domaine)                 | ✅ Correct                                                                                                                                                   |
+| « NK DELOVERI » / « NKDelivery » | —                                                                        | —                                                                                             | **Aucune occurrence trouvée** dans tout le projet                                                                                                            |
 
 **Conclusion** : le code source est déjà exemplaire sur ce point — `SITE_NAME = "NK Deliveri"` est
 défini une seule fois dans `site-config.ts` et importé partout où c'est pertinent, et les
@@ -146,8 +149,7 @@ Aucun remplacement aveugle n'a été nécessaire ni effectué.
   uniquement (accueil, restaurants, à propos, contact, FAQ, conditions, confidentialité) +
   restaurants approuvés générés dynamiquement depuis Supabase (`status = "approved"`), avec
   `lastmod` réel. Aucune page privée/dashboard/admin. Dégrade proprement vers les URLs statiques
-  en cas d'erreur DB plutôt que de renvoyer une erreur 500. Non modifié — déjà conforme au Phase
-  12.
+  en cas d'erreur DB plutôt que de renvoyer une erreur 500. Non modifié — déjà conforme au Phase 12.
 - **`robots.txt`** (`src/routes/robots[.]txt.ts`) : déjà correct — `Disallow` sur
   `/dashboard`, `/admin`, `/api`, `/private`, `/auth`, `/checkout`, `/orders`, `/profile` ; tout le
   reste autorisé ; référence le sitemap. Non modifié — déjà conforme au Phase 13.

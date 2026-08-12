@@ -7,11 +7,11 @@ taille du bundle, et les optimisations déjà en place.
 
 ## Requêtes bornées, index en place
 
-| Table | Requêtes admin (`/dashboard/admin/moncash`) | Index disponibles |
-|---|---|---|
-| `payouts` | `.eq("provider_code", ...).order(...).limit(50)` | `payouts_provider_reference_idx` (`provider_code, transaction_reference`), plus les index existants sur `restaurant_id`/`driver_id`/`status` |
-| `moncash_api_logs` | `.order("created_at").limit(50)` (affichage), `.limit(200)` (agrégats KPI) | `moncash_api_logs_created_at_idx`, `_transaction_reference_idx`, `_endpoint_idx` — tous créés dans la migration d'origine, aucun ajout nécessaire |
-| `moncash_webhook_events` | `.order("received_at").limit(200)` | `moncash_webhook_events_transaction_reference_idx`, `_received_at_idx` |
+| Table                    | Requêtes admin (`/dashboard/admin/moncash`)                                | Index disponibles                                                                                                                                 |
+| ------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payouts`                | `.eq("provider_code", ...).order(...).limit(50)`                           | `payouts_provider_reference_idx` (`provider_code, transaction_reference`), plus les index existants sur `restaurant_id`/`driver_id`/`status`      |
+| `moncash_api_logs`       | `.order("created_at").limit(50)` (affichage), `.limit(200)` (agrégats KPI) | `moncash_api_logs_created_at_idx`, `_transaction_reference_idx`, `_endpoint_idx` — tous créés dans la migration d'origine, aucun ajout nécessaire |
+| `moncash_webhook_events` | `.order("received_at").limit(200)`                                         | `moncash_webhook_events_transaction_reference_idx`, `_received_at_idx`                                                                            |
 
 Aucune requête non bornée (`.limit()` systématique) — le dashboard ne
 peut pas dégrader même si le volume de logs grossit fortement une fois
@@ -25,7 +25,7 @@ le canal actif.
   supplémentaire à chaque appel. Des appels concurrents pendant un cache
   froid partagent une seule requête en vol (`pendingTokenRequest`) —
   testé (`"concurrent callers share a single in-flight token
-  request"`).
+request"`).
 - **Timeout à 15s par tentative** — borne le temps qu'une requête
   admin/webhook peut rester bloquée en attente de MonCash, évite
   l'épuisement de connexions concurrentes sous charge.

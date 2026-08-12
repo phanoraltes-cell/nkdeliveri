@@ -8,18 +8,18 @@ corrigé pendant cette phase (§ Correctif) — pas seulement vérifié.
 
 ## Les 10 scénarios
 
-| # | Scénario | Statut | Preuve |
-|---|---|---|---|
-| 1 | Perte réseau | ✅ | `moncash-client.test.ts` — "a network error is retried but NOT flagged as timeout" |
-| 2 | Timeout | ✅ | `moncash-client.test.ts` — "a timeout is retried up to 3 attempts and reported with code 'timeout'" |
-| 3 | API indisponible | ✅ | `moncash-client.test.ts` — "MonCash entirely unavailable (every attempt 503) fails cleanly after exactly 3 tries" (nouveau, ajouté dans cette phase) |
-| 4 | Réponse invalide | ✅ **gap trouvé et corrigé** | Voir § Correctif ci-dessous |
-| 5 | Webhook en double | ✅ | `moncash-webhook-handler.test.ts` — duplicate `event_id` (23505) ; confirmé aussi contre le vrai schéma live (`MONCASH_TEST_REPORT.md` groupe E) |
-| 6 | Webhook retardé | ✅ | Couvert par la Couche 2 de retry (`MONCASH_RETRY_STRATEGY.md`) — `reconcilePendingMonCashPayouts` va chercher activement le statut si le webhook n'arrive pas dans les 5 premières minutes ; testé via `moncash-reconcile.test.ts` |
-| 7 | Webhook absent | ✅ | Même mécanisme — au-delà de 3 tentatives de réconciliation (30s/2min/10min), `needs_manual_review` plutôt qu'un abandon silencieux ; testé (`"flags for manual review once the schedule is exhausted"`) |
-| 8 | Erreur MonCash (rejet métier) | ✅ | `moncash-client.test.ts` — "a 4xx response is never retried" ; `moncash-provider.test.ts` — réconciliation idempotente sur échec |
-| 9 | Rollback | ✅ | Vérifié contre le **vrai schéma live**, pas seulement mocké — `MONCASH_TEST_REPORT.md` groupe A : `fail_pending_payout_secure` restitue exactement le solde d'origine |
-| 10 | Reprise après incident | ✅ | La Couche 2 de retry (§6/§7 ci-dessus) *est* le mécanisme de reprise après incident — un payout ne reste jamais bloqué silencieusement indéfiniment |
+| #   | Scénario                      | Statut                       | Preuve                                                                                                                                                                                                                             |
+| --- | ----------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Perte réseau                  | ✅                           | `moncash-client.test.ts` — "a network error is retried but NOT flagged as timeout"                                                                                                                                                 |
+| 2   | Timeout                       | ✅                           | `moncash-client.test.ts` — "a timeout is retried up to 3 attempts and reported with code 'timeout'"                                                                                                                                |
+| 3   | API indisponible              | ✅                           | `moncash-client.test.ts` — "MonCash entirely unavailable (every attempt 503) fails cleanly after exactly 3 tries" (nouveau, ajouté dans cette phase)                                                                               |
+| 4   | Réponse invalide              | ✅ **gap trouvé et corrigé** | Voir § Correctif ci-dessous                                                                                                                                                                                                        |
+| 5   | Webhook en double             | ✅                           | `moncash-webhook-handler.test.ts` — duplicate `event_id` (23505) ; confirmé aussi contre le vrai schéma live (`MONCASH_TEST_REPORT.md` groupe E)                                                                                   |
+| 6   | Webhook retardé               | ✅                           | Couvert par la Couche 2 de retry (`MONCASH_RETRY_STRATEGY.md`) — `reconcilePendingMonCashPayouts` va chercher activement le statut si le webhook n'arrive pas dans les 5 premières minutes ; testé via `moncash-reconcile.test.ts` |
+| 7   | Webhook absent                | ✅                           | Même mécanisme — au-delà de 3 tentatives de réconciliation (30s/2min/10min), `needs_manual_review` plutôt qu'un abandon silencieux ; testé (`"flags for manual review once the schedule is exhausted"`)                            |
+| 8   | Erreur MonCash (rejet métier) | ✅                           | `moncash-client.test.ts` — "a 4xx response is never retried" ; `moncash-provider.test.ts` — réconciliation idempotente sur échec                                                                                                   |
+| 9   | Rollback                      | ✅                           | Vérifié contre le **vrai schéma live**, pas seulement mocké — `MONCASH_TEST_REPORT.md` groupe A : `fail_pending_payout_secure` restitue exactement le solde d'origine                                                              |
+| 10  | Reprise après incident        | ✅                           | La Couche 2 de retry (§6/§7 ci-dessus) _est_ le mécanisme de reprise après incident — un payout ne reste jamais bloqué silencieusement indéfiniment                                                                                |
 
 ## Correctif appliqué dans cette phase — réponse invalide (#4)
 

@@ -37,7 +37,7 @@ authentifié.
   accorder automatiquement le rôle `admin` à l'adresse e-mail codée en dur
   du porteur du projet, **uniquement si aucun `admin`/`super_admin` n'existe
   encore** (`NOT EXISTS (SELECT 1 FROM user_roles WHERE role IN
-  ('admin','super_admin'))`). C'est un mécanisme d'amorçage à usage unique
+('admin','super_admin'))`). C'est un mécanisme d'amorçage à usage unique
   qui se désactive lui-même dès qu'un premier admin existe — il ne
   constitue pas une porte dérobée permanente. Toute évolution de ce
   mécanisme doit préserver cette clause d'auto-désactivation.
@@ -107,6 +107,7 @@ contournement de la validation client échouerait quand même à l'upload.
 `src/lib/sentry.server.ts`/`sentry-browser.ts` : Sentry est **no-op tant
 qu'aucun DSN n'est configuré** (`SENTRY_DSN`/`VITE_SENTRY_DSN`). Lorsqu'il
 est actif :
+
 - `sendDefaultPii: false` — aucune donnée personnelle identifiable
   automatique.
 - `beforeSend` retire explicitement cookies, en-têtes d'authentification,

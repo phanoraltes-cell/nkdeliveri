@@ -83,29 +83,30 @@ sequenceDiagram
 
 ### `payment_provider_settings`
 
-| Colonne | Type | Note |
-|---|---|---|
-| `id` | `uuid` PK | `gen_random_uuid()` |
-| `provider` | `text` UNIQUE | `kach` \| `moncash` \| `natcash` \| `moncash_auto` |
-| `visible` | `boolean` | Affiché dans la grille checkout (non utilisé aujourd'hui, `true` partout — prévu pour un futur "masquer entièrement") |
-| `enabled` | `boolean` | **Le flag réellement appliqué** |
-| `default_provider` | `boolean` | Un seul `true` possible — `UNIQUE INDEX ... WHERE default_provider = true` |
-| `maintenance_message` | `text NULL` | Affiché quand `enabled = false` |
-| `updated_by` | `uuid REFERENCES auth.users` | Traçabilité |
-| `updated_at`, `created_at` | `timestamptz` | |
+| Colonne                    | Type                         | Note                                                                                                                  |
+| -------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | `uuid` PK                    | `gen_random_uuid()`                                                                                                   |
+| `provider`                 | `text` UNIQUE                | `kach` \| `moncash` \| `natcash` \| `moncash_auto`                                                                    |
+| `visible`                  | `boolean`                    | Affiché dans la grille checkout (non utilisé aujourd'hui, `true` partout — prévu pour un futur "masquer entièrement") |
+| `enabled`                  | `boolean`                    | **Le flag réellement appliqué**                                                                                       |
+| `default_provider`         | `boolean`                    | Un seul `true` possible — `UNIQUE INDEX ... WHERE default_provider = true`                                            |
+| `maintenance_message`      | `text NULL`                  | Affiché quand `enabled = false`                                                                                       |
+| `updated_by`               | `uuid REFERENCES auth.users` | Traçabilité                                                                                                           |
+| `updated_at`, `created_at` | `timestamptz`                |                                                                                                                       |
 
 **RLS** : `SELECT` pour `anon, authenticated` (lecture publique — checkout accessible avant connexion). Aucune policy d'écriture — seule la RPC `SECURITY DEFINER` peut modifier.
 
 **Migrations** :
+
 - `20260803120000_payment_provider_settings.sql` — table, index, RLS, seed, `update_payment_provider_setting_secure`.
 - `20260803130000_harden_create_collect_payment_provider_check.sql` — `CREATE OR REPLACE` de `create_collect_payment_secure` (RPC déjà existante), ajout d'un seul `IF` bloquant un `_status='pending'` fabriqué pendant que `moncash_auto` est désactivé.
 
 ### RPC
 
-| RPC | Accès | Rôle |
-|---|---|---|
-| `update_payment_provider_setting_secure(_provider, _visible?, _enabled?, _maintenance_message?, _set_as_default?)` | `authenticated`, vérifie `admin`/`super_admin` en interne | Seul chemin d'écriture |
-| `create_collect_payment_secure` (durcie) | `authenticated`, vérifie propriété du paiement | Refuse un `pending` si `moncash_auto.enabled = false`, quel que soit l'appelant |
+| RPC                                                                                                                | Accès                                                     | Rôle                                                                            |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `update_payment_provider_setting_secure(_provider, _visible?, _enabled?, _maintenance_message?, _set_as_default?)` | `authenticated`, vérifie `admin`/`super_admin` en interne | Seul chemin d'écriture                                                          |
+| `create_collect_payment_secure` (durcie)                                                                           | `authenticated`, vérifie propriété du paiement            | Refuse un `pending` si `moncash_auto.enabled = false`, quel que soit l'appelant |
 
 ## 4. Pourquoi deux tables "provider" coexistent
 

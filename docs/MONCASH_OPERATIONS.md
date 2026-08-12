@@ -22,12 +22,12 @@ nouvelle migration qui inverse.
 - **Périodiquement une fois le canal actif** — KPI "Disponiblite API"
   et "Tan repons mwayèn" comme indicateurs de santé de premier niveau.
 
-| Alerte affichée | Condition | Action attendue |
-|---|---|---|
-| "Plizyè erè youn apre lòt" | 5 derniers appels API tous en erreur | Vérifier `moncash_api_logs` § erreurs — panne MonCash probable, pas nécessairement un bug local |
-| "Webhook pa jwenn" | Paiement `pending` depuis >15min sans webhook portant la même référence | Le mécanisme de réconciliation (Couche 2, cron */5min) devrait le résoudre automatiquement — si l'alerte persiste après 30min, voir § Résolution d'incident |
-| "Peman bloke twò lontan" | Paiement `pending` depuis >30min | Idem — après épuisement de l'échéancier 30s/2min/10min, le paiement passe en `needs_manual_review` (visible dans les logs du cron, pas encore dans l'UI — voir § Limite connue) |
-| "Ogmantasyon echèk sispèk" | ≥50% des 20 derniers appels en erreur | Panne MonCash étendue ou changement d'API côté MonCash — vérifier `docs/PAYMENT_PROVIDERS.md` pour toute évolution du contrat |
+| Alerte affichée            | Condition                                                               | Action attendue                                                                                                                                                                 |
+| -------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Plizyè erè youn apre lòt" | 5 derniers appels API tous en erreur                                    | Vérifier `moncash_api_logs` § erreurs — panne MonCash probable, pas nécessairement un bug local                                                                                 |
+| "Webhook pa jwenn"         | Paiement `pending` depuis >15min sans webhook portant la même référence | Le mécanisme de réconciliation (Couche 2, cron */5min) devrait le résoudre automatiquement — si l'alerte persiste après 30min, voir § Résolution d'incident                     |
+| "Peman bloke twò lontan"   | Paiement `pending` depuis >30min                                        | Idem — après épuisement de l'échéancier 30s/2min/10min, le paiement passe en `needs_manual_review` (visible dans les logs du cron, pas encore dans l'UI — voir § Limite connue) |
+| "Ogmantasyon echèk sispèk" | ≥50% des 20 derniers appels en erreur                                   | Panne MonCash étendue ou changement d'API côté MonCash — vérifier `docs/PAYMENT_PROVIDERS.md` pour toute évolution du contrat                                                   |
 
 **Limite connue** : `needs_manual_review` (réconciliation épuisée) n'a
 pas encore de représentation dédiée dans l'UI admin — actuellement

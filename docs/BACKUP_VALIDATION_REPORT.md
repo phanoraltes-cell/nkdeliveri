@@ -38,7 +38,8 @@ Trois scénarios testés avec un faux `npx supabase db dump` (fixtures fabriqué
 [backup] Integrity report: backups/full_20260805T181354Z.report.md
 EXIT CODE: 0
 ```
-✅ Fichier conservé, rapport généré, aucune ligne de code de la fixture confondue avec des données réelles (le `INSERT INTO` présent *à l'intérieur* du corps de la fonction f1() n'a pas été compté comme une ligne de donnée — vérifié explicitement).
+
+✅ Fichier conservé, rapport généré, aucune ligne de code de la fixture confondue avec des données réelles (le `INSERT INTO` présent _à l'intérieur_ du corps de la fonction f1() n'a pas été compté comme une ligne de donnée — vérifié explicitement).
 
 ### Scénario 2 — reproduction exacte du bug historique n°1 (schéma correct, 0 ligne de donnée)
 
@@ -49,6 +50,7 @@ EXIT CODE: 0
 [backup] FAILED — removing incomplete/unverified output: backups/full_20260805T181431Z.sql
 EXIT CODE: 1
 ```
+
 ✅ Fichier supprimé automatiquement, aucun fichier laissé sur disque (vérifié par `diff` avant/après), code de sortie 1.
 
 ### Scénario 3 — reproduction exacte du bug historique n°2 (0 trigger)
@@ -60,6 +62,7 @@ EXIT CODE: 1
 [backup] FAILED — removing incomplete/unverified output: backups/full_20260805T181446Z.sql
 EXIT CODE: 1
 ```
+
 ✅ Même résultat : fichier supprimé, aucune trace laissée, code de sortie 1.
 
 ### Garde de sécurité de `test-restore-backup.sh`
@@ -71,6 +74,7 @@ $ TEST_DB_URL="postgres://postgres:...@db.dcsnmvbtsmdbwrwbutph.supabase.co:5432/
   matches the production host in .env.local. Refusing to run.
 EXIT: 1
 ```
+
 ✅ Confirmé : le script refuse de cibler la production, avant même de vérifier si `psql` est disponible.
 
 ```
@@ -79,6 +83,7 @@ $ TEST_DB_URL="postgres://postgres:...@127.0.0.1:5433/postgres" \
 [test-restore] ERROR: psql is not available on PATH in this environment...
 EXIT: 1
 ```
+
 ✅ Confirmé : une cible non-production passe la garde de sécurité et échoue ensuite pour la vraie raison (outillage manquant), pas une fausse alerte de sécurité.
 
 ---

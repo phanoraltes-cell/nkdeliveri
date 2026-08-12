@@ -11,14 +11,14 @@ que cette session n'a pas).
 
 `vercel.json` applique à toutes les routes (`/(.*)`) :
 
-| En-tête | Valeur | Effet |
-|---|---|---|
-| `X-Frame-Options` | `DENY` | Bloque l'embarquement en iframe (clickjacking) |
-| `X-Content-Type-Options` | `nosniff` | Empêche le MIME-sniffing |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limite les fuites d'URL vers des tiers |
-| `Permissions-Policy` | caméra/micro/paiement/USB désactivés, géoloc restreinte à `self` | Réduit la surface d'API navigateur exposée |
-| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | Force HTTPS, 2 ans, éligible à la liste de préchargement HSTS |
-| `Content-Security-Policy` | `default-src 'self'` + listes explicites pour Supabase/OSM/OSRM | Limite les origines de script/style/connexion/image |
+| En-tête                     | Valeur                                                           | Effet                                                         |
+| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| `X-Frame-Options`           | `DENY`                                                           | Bloque l'embarquement en iframe (clickjacking)                |
+| `X-Content-Type-Options`    | `nosniff`                                                        | Empêche le MIME-sniffing                                      |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`                                | Limite les fuites d'URL vers des tiers                        |
+| `Permissions-Policy`        | caméra/micro/paiement/USB désactivés, géoloc restreinte à `self` | Réduit la surface d'API navigateur exposée                    |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload`                   | Force HTTPS, 2 ans, éligible à la liste de préchargement HSTS |
+| `Content-Security-Policy`   | `default-src 'self'` + listes explicites pour Supabase/OSM/OSRM  | Limite les origines de script/style/connexion/image           |
 
 Point déjà documenté (Phase 1) et toujours vrai : la CSP garde
 `'unsafe-inline'` pour `script-src`/`style-src` — risque connu et accepté à

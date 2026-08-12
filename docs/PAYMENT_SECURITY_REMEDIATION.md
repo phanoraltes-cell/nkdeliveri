@@ -29,18 +29,18 @@ Audit exhaustif de **~30 fonctions `SECURITY DEFINER`** et **7 tables** du domai
 
 ## 4. Tests transactionnels — résultats détaillés
 
-| # | Test | Scénario | Résultat |
-|---|---|---|---|
-| A | **Création frauduleuse** | Un client authentifié tente `create_collect_payment_secure` pour le `payment_id` d'un **autre** client | 🟢 Bloqué : `"Payment not found"` — le `JOIN orders o ... AND o.customer_id = v_user` empêche toute création hors de ses propres commandes |
-| B | **Escalade** | Un client authentifié **réellement non-admin** (vérifié sans aucun rôle admin/super_admin) tente `update_payment_provider_setting_secure` (admin uniquement) | 🟢 Bloqué : `"Forbidden"`. *(Un premier essai avait semblé échouer — faux positif : le compte de test choisi détenait en fait aussi les rôles `admin`/`super_admin` en plus de `customer`, un compte de développement dual-usage. Refait avec un client authentiquement non-admin — bloqué correctement.)* |
-| C | **Bypass anon → argent réel** | Un appelant **totalement anonyme** (`role=anon`, aucune session) tente de réécrire les numéros MonCash/NatCash **de la plateforme elle-même** via `update_platform_payout_settings_secure` — la fonction au plus fort impact potentiel trouvée avec un `GRANT` `anon` | 🟢 Bloqué : `"Forbidden"` |
-| D | **Bypass PaymentProvider (statut fabriqué)** | Tentative de créer directement une ligne `payment_transactions` avec `_status:='paid'` — sans jamais passer par un vrai fournisseur | 🟢 Bloqué : `"Estati envalid"` — seuls `pending`/`failed` sont acceptés à la création ; `paid` n'existe que via `complete_collect_payment_secure` |
-| E | **Bypass RPC (auto-finalisation)** | Le client propriétaire du paiement tente d'appeler directement `complete_collect_payment_secure` (réservée `service_role`) pour finaliser son propre paiement sans confirmation réelle du fournisseur | 🟢 Bloqué au niveau `GRANT` : `"permission denied for function"` — ni `anon` ni `authenticated` n'ont jamais eu `EXECUTE` sur cette fonction |
-| F | **Bypass table directe — `payments`** | `anon` tente un `INSERT` brut dans `payments` (contournant toute RPC) | 🟢 Bloqué par RLS : `"new row violates row-level security policy"` |
-| G | **Bypass table directe — `payment_transactions`** | Le client tente un `UPDATE` brut de **son propre** `payment_transactions` vers `status='paid'` | 🟢 Bloqué par RLS (par défaut, aucune police ne couvre `UPDATE`) : 0 ligne affectée |
-| H | **Bypass table directe — création** | Le client tente un `INSERT` brut dans `payment_transactions` | 🟢 Bloqué par RLS : `"new row violates row-level security policy"` |
-| I | **Bypass Payment Global / porte fournisseur désactivé** | La porte `payment_provider_settings.natcash_auto.enabled` désactivée **dans la même transaction** ; le client authentifié appelle directement `create_collect_payment_secure` (contournant entièrement la vérification côté TypeScript) | 🟢 Bloqué : `"NatCash Otomatik pa disponib pou kounye a."` — la porte existe aussi côté SQL, pas seulement côté client |
-| J | **Double paiement + replay** | Cycle complet : création → finalisation `paid` → 2ᵉ tentative de paiement automatique sur le même paiement déjà payé → rejeu de la **même** finalisation webhook | 🟢 2ᵉ tentative bloquée (`"Peman sa a deja an kou trete"`) ; rejeu accepté silencieusement comme no-op sûr (`WHERE status='pending'` — la ligne déjà `'paid'` ne correspond plus, aucune double notification, aucun double crédit) |
+| #   | Test                                                    | Scénario                                                                                                                                                                                                                                                              | Résultat                                                                                                                                                                                                                                                                                                   |
+| --- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | **Création frauduleuse**                                | Un client authentifié tente `create_collect_payment_secure` pour le `payment_id` d'un **autre** client                                                                                                                                                                | 🟢 Bloqué : `"Payment not found"` — le `JOIN orders o ... AND o.customer_id = v_user` empêche toute création hors de ses propres commandes                                                                                                                                                                 |
+| B   | **Escalade**                                            | Un client authentifié **réellement non-admin** (vérifié sans aucun rôle admin/super_admin) tente `update_payment_provider_setting_secure` (admin uniquement)                                                                                                          | 🟢 Bloqué : `"Forbidden"`. _(Un premier essai avait semblé échouer — faux positif : le compte de test choisi détenait en fait aussi les rôles `admin`/`super_admin` en plus de `customer`, un compte de développement dual-usage. Refait avec un client authentiquement non-admin — bloqué correctement.)_ |
+| C   | **Bypass anon → argent réel**                           | Un appelant **totalement anonyme** (`role=anon`, aucune session) tente de réécrire les numéros MonCash/NatCash **de la plateforme elle-même** via `update_platform_payout_settings_secure` — la fonction au plus fort impact potentiel trouvée avec un `GRANT` `anon` | 🟢 Bloqué : `"Forbidden"`                                                                                                                                                                                                                                                                                  |
+| D   | **Bypass PaymentProvider (statut fabriqué)**            | Tentative de créer directement une ligne `payment_transactions` avec `_status:='paid'` — sans jamais passer par un vrai fournisseur                                                                                                                                   | 🟢 Bloqué : `"Estati envalid"` — seuls `pending`/`failed` sont acceptés à la création ; `paid` n'existe que via `complete_collect_payment_secure`                                                                                                                                                          |
+| E   | **Bypass RPC (auto-finalisation)**                      | Le client propriétaire du paiement tente d'appeler directement `complete_collect_payment_secure` (réservée `service_role`) pour finaliser son propre paiement sans confirmation réelle du fournisseur                                                                 | 🟢 Bloqué au niveau `GRANT` : `"permission denied for function"` — ni `anon` ni `authenticated` n'ont jamais eu `EXECUTE` sur cette fonction                                                                                                                                                               |
+| F   | **Bypass table directe — `payments`**                   | `anon` tente un `INSERT` brut dans `payments` (contournant toute RPC)                                                                                                                                                                                                 | 🟢 Bloqué par RLS : `"new row violates row-level security policy"`                                                                                                                                                                                                                                         |
+| G   | **Bypass table directe — `payment_transactions`**       | Le client tente un `UPDATE` brut de **son propre** `payment_transactions` vers `status='paid'`                                                                                                                                                                        | 🟢 Bloqué par RLS (par défaut, aucune police ne couvre `UPDATE`) : 0 ligne affectée                                                                                                                                                                                                                        |
+| H   | **Bypass table directe — création**                     | Le client tente un `INSERT` brut dans `payment_transactions`                                                                                                                                                                                                          | 🟢 Bloqué par RLS : `"new row violates row-level security policy"`                                                                                                                                                                                                                                         |
+| I   | **Bypass Payment Global / porte fournisseur désactivé** | La porte `payment_provider_settings.natcash_auto.enabled` désactivée **dans la même transaction** ; le client authentifié appelle directement `create_collect_payment_secure` (contournant entièrement la vérification côté TypeScript)                               | 🟢 Bloqué : `"NatCash Otomatik pa disponib pou kounye a."` — la porte existe aussi côté SQL, pas seulement côté client                                                                                                                                                                                     |
+| J   | **Double paiement + replay**                            | Cycle complet : création → finalisation `paid` → 2ᵉ tentative de paiement automatique sur le même paiement déjà payé → rejeu de la **même** finalisation webhook                                                                                                      | 🟢 2ᵉ tentative bloquée (`"Peman sa a deja an kou trete"`) ; rejeu accepté silencieusement comme no-op sûr (`WHERE status='pending'` — la ligne déjà `'paid'` ne correspond plus, aucune double notification, aucun double crédit)                                                                         |
 
 Chaque test a été re-vérifié comme n'ayant laissé **aucun résidu** en production après le `ROLLBACK` (notamment le test B, où une confusion initiale avec l'état réel `payment_provider_settings.stripe.enabled` — changé entre-temps par une action légitime de l'admin — a été activement écartée en comparant un champ que le test aurait modifié, `maintenance_message`, resté intact).
 
@@ -49,6 +49,7 @@ Chaque test a été re-vérifié comme n'ayant laissé **aucun résidu** en prod
 ### Fonctions : `EXECUTE` accordé à `anon` sans raison structurelle
 
 **17 fonctions** du domaine paiement/payout/refund accordent `EXECUTE` à `anon`, alors que **chacune** commence par une vérification qui rejette systématiquement un appelant sans session (`auth.uid() IS NULL`, une jointure d'ownership qui ne matche jamais `NULL`, ou un contrôle de rôle admin explicite) :
+
 ```
 complete_refund_secure, confirm_cash_payment_secure, confirm_payout_secure,
 dispute_cash_payment_secure, dispute_payout_secure, get_admin_payout_kpis,
@@ -57,24 +58,26 @@ request_refund_secure, resolve_payout_dispute_secure, review_manual_payment_secu
 review_refund_secure, submit_payment_proof_secure, update_driver_payout_secure,
 update_platform_payout_settings_secure, update_restaurant_payout_secure
 ```
+
 **Non touché délibérément** : `get_platform_payout_public()` — accès `anon` légitime par conception (les numéros MonCash/NatCash de la plateforme sont censés être publics, comme les coordonnées de paiement de n'importe quelle entreprise).
 
 ### Tables : privilèges qu'aucune police RLS ne gouverne jamais
 
-| Table | Privilège excessif | Rôle | Pourquoi c'est mort |
-|---|---|---|---|
-| `payments` | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | `anon` | Toutes les polices RLS existantes sont `TO authenticated` uniquement — `anon` n'a accès à **aucune** ligne, quel que soit le privilège de table |
-| `payment_transactions` | `INSERT`/`UPDATE`/`DELETE` | `authenticated` | Seules 2 polices `SELECT` existent — aucune police `INSERT`/`UPDATE`/`DELETE`, donc RLS refuse tout par défaut |
-| `payment_provider_settings` | `INSERT`/`UPDATE`/`DELETE` | `authenticated` | Seule une police `SELECT` publique existe |
-| `payment_proofs` | tous | `anon` | Seule police existante : `SELECT`, `TO authenticated` |
-| `payment_proofs` | `INSERT`/`UPDATE`/`DELETE` | `authenticated` | Le vrai chemin d'écriture est `submit_payment_proof_secure` |
-| `refunds` | `INSERT`/`UPDATE`/`DELETE` | `authenticated` | Le vrai chemin d'écriture est `request_refund_secure`/`review_refund_secure`/`complete_refund_secure` |
+| Table                       | Privilège excessif                  | Rôle            | Pourquoi c'est mort                                                                                                                             |
+| --------------------------- | ----------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payments`                  | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | `anon`          | Toutes les polices RLS existantes sont `TO authenticated` uniquement — `anon` n'a accès à **aucune** ligne, quel que soit le privilège de table |
+| `payment_transactions`      | `INSERT`/`UPDATE`/`DELETE`          | `authenticated` | Seules 2 polices `SELECT` existent — aucune police `INSERT`/`UPDATE`/`DELETE`, donc RLS refuse tout par défaut                                  |
+| `payment_provider_settings` | `INSERT`/`UPDATE`/`DELETE`          | `authenticated` | Seule une police `SELECT` publique existe                                                                                                       |
+| `payment_proofs`            | tous                                | `anon`          | Seule police existante : `SELECT`, `TO authenticated`                                                                                           |
+| `payment_proofs`            | `INSERT`/`UPDATE`/`DELETE`          | `authenticated` | Le vrai chemin d'écriture est `submit_payment_proof_secure`                                                                                     |
+| `refunds`                   | `INSERT`/`UPDATE`/`DELETE`          | `authenticated` | Le vrai chemin d'écriture est `request_refund_secure`/`review_refund_secure`/`complete_refund_secure`                                           |
 
 **Non touché** : les privilèges `REFERENCES`/`TRIGGER`/`TRUNCATE` restants sur `payments` pour `anon` — inatteignables par la vraie surface d'attaque (l'API REST de PostgREST n'expose jamais `TRUNCATE`/DDL, quel que soit le `GRANT` ; ces privilèges ne seraient exploitables qu'avec une connexion SQL directe en tant que rôle `anon`, chose que ni Supabase ni PostgREST n'exposent jamais à un appelant externe). Corriger ces trois-là n'aurait rien fermé de réellement atteignable — laissé de côté pour rester strictement sur les problèmes confirmés atteignables.
 
 ## 6. Correctif appliqué
 
 **Nouvelle migration `supabase/migrations/20260808210000_payment_security_least_privilege.sql`** — uniquement des `REVOKE`, **aucune** modification de corps de fonction, de signature, de police RLS, ou de structure de table :
+
 - `REVOKE EXECUTE ... FROM anon` sur les 17 fonctions listées § 5.
 - `REVOKE INSERT, UPDATE, DELETE, SELECT ON payments FROM anon`.
 - `REVOKE INSERT, UPDATE, DELETE ON payment_transactions FROM authenticated`.
@@ -95,9 +98,11 @@ update_platform_payout_settings_secure, update_restaurant_payout_secure
 ## 8. Conformité au périmètre imposé
 
 `git status` :
+
 ```
 ?? supabase/migrations/20260808210000_payment_security_least_privilege.sql
 ```
+
 Aucun autre fichier touché par cette mission (les fichiers `types.ts`/`plop-reconcile.server.ts`/son test/la migration `20260808200000` visibles dans l'arbre de travail proviennent de la mission P3 précédente, toujours en attente de son propre feu vert, non touchés ici).
 
 ---

@@ -16,12 +16,14 @@
 **Correctif** : migration `20260803130000` — un `IF _status = 'pending'` vérifie `payment_provider_settings.enabled` avant l'insertion.
 
 **Preuve en production, réelle (pas transactionnelle)** :
+
 ```sql
 SET LOCAL role authenticated;
 SELECT set_config('request.jwt.claim.sub', '<client réel, non-admin>', true);
 SELECT public.create_collect_payment_secure('<payment_id réel>'::uuid, 'live-attack-check', 'pending', NULL);
 → ERROR: 42501: MonCash Automatik pa disponib pou kounye a.
 ```
+
 Confirmé : **zéro ligne orpheline** créée (`SELECT count(*) FROM payment_transactions WHERE external_reference IN (...)` → `0`).
 
 ### 2. Manipulation du frontend (retirer l'attribut `disabled`, forcer un clic)
@@ -33,21 +35,29 @@ Le bouton "MonCash Automatik" utilise l'attribut HTML natif `disabled` — un ut
 ### 3. Requête forgée (falsifier `enabled: true` dans la requête)
 
 `InitiateCollectPaymentInputSchema` (Zod) n'accepte qu'un seul champ : `{ paymentId: uuid }`. Testé explicitement :
+
 ```ts
-InitiateCollectPaymentInputSchema.safeParse({ paymentId: "...", enabled: true, providerAvailable: true })
+InitiateCollectPaymentInputSchema.safeParse({
+  paymentId: "...",
+  enabled: true,
+  providerAvailable: true,
+});
 // → { paymentId } uniquement — les champs additionnels sont silencieusement ignorés par zod, jamais transmis
 ```
+
 Aucun champ client ne peut jamais influencer la décision `enabled` — elle est lue exclusivement depuis la base de données côté serveur, jamais depuis l'entrée utilisateur.
 
 ### 4. Élévation de privilège sur la RPC d'administration
 
 `update_payment_provider_setting_secure` — testé transactionnellement avec un vrai utilisateur `customer` (non-admin, sans rôle superposé — voir note méthodologique ci-dessous) :
+
 ```
 → ERROR: 42501 (Forbidden)
 ```
+
 Testé avec un vrai `admin` : succès, `audit_log` reçoit une ligne `payment_provider_setting.updated`.
 
-**Note méthodologique** (transparence) : la première tentative de ce test a échoué à révéler quoi que ce soit car l'utilisateur "customer" sélectionné au hasard (`LIMIT 1` sans tri) possédait *aussi* les rôles `admin`/`super_admin` dans les données de fixture (`6d6db611-...`) — un compte multi-rôle de développement. Corrigé en excluant explicitement tout utilisateur ayant un rôle admin de la sélection du fixture "customer". Documenté ici pour qu'un futur test similaire ne retombe pas dans le même piège.
+**Note méthodologique** (transparence) : la première tentative de ce test a échoué à révéler quoi que ce soit car l'utilisateur "customer" sélectionné au hasard (`LIMIT 1` sans tri) possédait _aussi_ les rôles `admin`/`super_admin` dans les données de fixture (`6d6db611-...`) — un compte multi-rôle de développement. Corrigé en excluant explicitement tout utilisateur ayant un rôle admin de la sélection du fixture "customer". Documenté ici pour qu'un futur test similaire ne retombe pas dans le même piège.
 
 ### 5. RLS — lecture publique, écriture bloquée
 

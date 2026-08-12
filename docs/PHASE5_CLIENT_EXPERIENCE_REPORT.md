@@ -1,4 +1,5 @@
 # Phase 5 — Rapport de clôture
+
 ## Expérience client — polish sur 6 écrans (Refonte Frontend Premium NK Deliveri)
 
 **Statut :** ✅ Exécutée, vérifiée, commitée localement (`ae10100`). **En attente de votre validation avant push.**
@@ -9,14 +10,14 @@
 
 ## 1. Ce qui a changé, écran par écran
 
-| Écran | Changement | Source |
-|---|---|---|
-| Accueil | Le libellé « Peman disponib » force sa propre ligne sur mobile (`w-full`, revient à `sm:w-auto`) au lieu d'un retour à la ligne imprévisible dans le `flex-wrap` existant. | Faiblesse notée dans l'audit (dossier Accueil) |
-| Restaurant (détail) | Descriptions de plat tronquées à 2 lignes (`line-clamp-2`) — hauteur de carte régulière dans une même rangée. Nombre d'avis ajouté à côté de la note dans « Avi kliyan yo ». | Wireframe P5 |
-| Restaurants (liste) | Tri via `Chip` : « Pi popilè » (défaut, note) / « Pi rapid » (délai de préparation), dans l'état d'URL au même titre que `q`/`page`. | Wireframe P5 |
-| Checkout | Le bloc adresse/téléphone/notes et le bloc moyen de paiement reçoivent chacun un titre (« Livrezon » / « Peman ») et une séparation visuelle — toujours une seule page, même ordre de champs, même nombre de clics. | Wireframe P5 |
-| Historique de commandes | Le statut passe d'un texte coloré brut à un `StatusBadge`, avec les mêmes tons (good/warn/bad/info) que la timeline de suivi de commande. | Cohérence perçue (objectif explicite de P5) |
-| Inscription restaurant/livreur (`FileField`) | Aperçu miniature immédiat après sélection d'un fichier image. | Recommandation explicite de l'audit initial |
+| Écran                                        | Changement                                                                                                                                                                                                          | Source                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Accueil                                      | Le libellé « Peman disponib » force sa propre ligne sur mobile (`w-full`, revient à `sm:w-auto`) au lieu d'un retour à la ligne imprévisible dans le `flex-wrap` existant.                                          | Faiblesse notée dans l'audit (dossier Accueil) |
+| Restaurant (détail)                          | Descriptions de plat tronquées à 2 lignes (`line-clamp-2`) — hauteur de carte régulière dans une même rangée. Nombre d'avis ajouté à côté de la note dans « Avi kliyan yo ».                                        | Wireframe P5                                   |
+| Restaurants (liste)                          | Tri via `Chip` : « Pi popilè » (défaut, note) / « Pi rapid » (délai de préparation), dans l'état d'URL au même titre que `q`/`page`.                                                                                | Wireframe P5                                   |
+| Checkout                                     | Le bloc adresse/téléphone/notes et le bloc moyen de paiement reçoivent chacun un titre (« Livrezon » / « Peman ») et une séparation visuelle — toujours une seule page, même ordre de champs, même nombre de clics. | Wireframe P5                                   |
+| Historique de commandes                      | Le statut passe d'un texte coloré brut à un `StatusBadge`, avec les mêmes tons (good/warn/bad/info) que la timeline de suivi de commande.                                                                           | Cohérence perçue (objectif explicite de P5)    |
+| Inscription restaurant/livreur (`FileField`) | Aperçu miniature immédiat après sélection d'un fichier image.                                                                                                                                                       | Recommandation explicite de l'audit initial    |
 
 ## 2. Écarts assumés par rapport au plan initial, et pourquoi
 

@@ -34,26 +34,26 @@ Composant unique, pas de sous-composants extraits pour la ligne d'en-tête ou po
 
 ## 3. Autres constats structurels
 
-| # | Constat | Gravité | Preuve |
-|---|---|---:|---|
-| 1 | Les 9 onglets catégorie sont des `<button>` bruts (couleur seule pour l'état actif), **pas** le composant `Chip` déjà utilisé ailleurs dans l'app (qui a déjà `aria-pressed` correctement câblé) — même pattern que celui corrigé sur le toggle Kanban/Liste en P11 | 🟡 P3 | Code + axe (pas de `aria-pressed` détecté) |
-| 2 | Sur mobile (320–414px), les 9 onglets se répartissent sur 2–3 lignes avant qu'une seule notification soit visible | 🟢 P4 | Capture 320/375/414px |
-| 3 | Panneau "Preferans notifikasyon" : cases à cocher natives non stylées (`<input type="checkbox">` brut), seul endroit de toute la page (et l'un des rares de l'app) à utiliser des contrôles de formulaire non habillés — contraste visuel net avec `Button`/`Chip` utilisés partout ailleurs. Zone tactile de la case elle-même très inférieure aux 44px recommandés | 🟡 P3 | Capture 375/1440px prefs ouvert |
-| 4 | État vide en texte brut centré, pas le composant `EmptyState` partagé déjà utilisé sur ~15 pages dashboard (même famille de constat que F-01 de l'audit global, instance confirmée ici) | 🟡 P3 | Capture empty-375 |
-| 5 | `iconFor()` ne différencie que 3 valeurs de `type` (`payment_paid/failed/under_review`) — les 6 autres catégories (livraison, promotion, système, commande, litige, chat) partagent toutes la même icône Bell générique, alors que la page expose 9 catégories distinctes en onglets | 🟢 P4 | Code + capture (toutes les cartes non-paiement ont la même icône) |
-| 6 | Aucune distinction visuelle entre une carte notification navigable (enveloppée dans un `<Link>` vers la commande/le chat) et une carte purement informative (`div` simple) — même style pour les deux, aucun indice visuel de "cliquable" | 🟡 P3 | Code (`inner` reçoit le même style dans les deux branches) |
-| 7 | Sur très large écran (1440px, dans le conteneur `max-w-6xl` du dashboard), la liste reste sur une seule colonne — les cartes s'étirent sur toute la largeur pour un contenu court, avec beaucoup d'espace vide | 🟢 P4 | Capture 1440px |
+| #   | Constat                                                                                                                                                                                                                                                                                                                                                              | Gravité | Preuve                                                            |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------: | ----------------------------------------------------------------- |
+| 1   | Les 9 onglets catégorie sont des `<button>` bruts (couleur seule pour l'état actif), **pas** le composant `Chip` déjà utilisé ailleurs dans l'app (qui a déjà `aria-pressed` correctement câblé) — même pattern que celui corrigé sur le toggle Kanban/Liste en P11                                                                                                  |   🟡 P3 | Code + axe (pas de `aria-pressed` détecté)                        |
+| 2   | Sur mobile (320–414px), les 9 onglets se répartissent sur 2–3 lignes avant qu'une seule notification soit visible                                                                                                                                                                                                                                                    |   🟢 P4 | Capture 320/375/414px                                             |
+| 3   | Panneau "Preferans notifikasyon" : cases à cocher natives non stylées (`<input type="checkbox">` brut), seul endroit de toute la page (et l'un des rares de l'app) à utiliser des contrôles de formulaire non habillés — contraste visuel net avec `Button`/`Chip` utilisés partout ailleurs. Zone tactile de la case elle-même très inférieure aux 44px recommandés |   🟡 P3 | Capture 375/1440px prefs ouvert                                   |
+| 4   | État vide en texte brut centré, pas le composant `EmptyState` partagé déjà utilisé sur ~15 pages dashboard (même famille de constat que F-01 de l'audit global, instance confirmée ici)                                                                                                                                                                              |   🟡 P3 | Capture empty-375                                                 |
+| 5   | `iconFor()` ne différencie que 3 valeurs de `type` (`payment_paid/failed/under_review`) — les 6 autres catégories (livraison, promotion, système, commande, litige, chat) partagent toutes la même icône Bell générique, alors que la page expose 9 catégories distinctes en onglets                                                                                 |   🟢 P4 | Code + capture (toutes les cartes non-paiement ont la même icône) |
+| 6   | Aucune distinction visuelle entre une carte notification navigable (enveloppée dans un `<Link>` vers la commande/le chat) et une carte purement informative (`div` simple) — même style pour les deux, aucun indice visuel de "cliquable"                                                                                                                            |   🟡 P3 | Code (`inner` reçoit le même style dans les deux branches)        |
+| 7   | Sur très large écran (1440px, dans le conteneur `max-w-6xl` du dashboard), la liste reste sur une seule colonne — les cartes s'étirent sur toute la largeur pour un contenu court, avec beaucoup d'espace vide                                                                                                                                                       |   🟢 P4 | Capture 1440px                                                    |
 
 ---
 
 ## 4. Responsive — résultats par largeur
 
-| Largeur | Résultat |
-|---:|---|
-| 320px | Chevauchement titre/aide push (§2). Reste de la page lisible, cartes bien empilées, pas de débordement horizontal |
-| 375/390/414px | Idem — chevauchement présent à toutes ces largeurs (toute la plage mobile standard) |
-| 768px | Chevauchement résolu. Les 9 onglets tiennent sur une seule ligne. Mise en page confortable |
-| 1024/1440px | Aucun problème de layout ; simplement peu optimisé pour l'espace disponible (§3.7) |
+|       Largeur | Résultat                                                                                                          |
+| ------------: | ----------------------------------------------------------------------------------------------------------------- |
+|         320px | Chevauchement titre/aide push (§2). Reste de la page lisible, cartes bien empilées, pas de débordement horizontal |
+| 375/390/414px | Idem — chevauchement présent à toutes ces largeurs (toute la plage mobile standard)                               |
+|         768px | Chevauchement résolu. Les 9 onglets tiennent sur une seule ligne. Mise en page confortable                        |
+|   1024/1440px | Aucun problème de layout ; simplement peu optimisé pour l'espace disponible (§3.7)                                |
 
 Aucun débordement horizontal, aucun texte tronqué de façon illisible, aucun bouton inaccessible détecté à aucune largeur testée — le seul défaut réel et reproductible est le chevauchement du §2.
 
@@ -99,4 +99,5 @@ Rien de ce qui précède n'a été implémenté — ce rapport est une base de d
 ```
 git status --short
 ```
+
 Identique à l'état avant l'audit, à l'exception de ce nouveau fichier (`docs/NOTIFICATIONS_PAGE_AUDIT.md`) — aucun code, style ou structure modifié.

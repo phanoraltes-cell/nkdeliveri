@@ -7,39 +7,39 @@ Portée : Étape 1 du plan approuvé (`joyful-frolicking-allen.md`) — nouvelle
 
 ## 1. Ce qui a été livré
 
-| Fichier | Statut | Rôle |
-|---|---|---|
-| `src/routes/_authenticated/dashboard.admin.collect.tsx` | Nouveau | Page principale — 3 onglets, lecture seule, aucune mutation |
-| `src/lib/get-plop-status.functions.ts` | Nouveau | Server fn admin-only exposant `isPlopConfigured()` |
-| `src/lib/get-stripe-status.functions.ts` | Nouveau | Server fn admin-only exposant `isStripeConfigured()` |
-| `src/components/dashboard/sidebar/nav-items.ts` | Modifié | Lien "Peman Otomatik" (icône `Zap`) ajouté aux tableaux `admin` et `super_admin`, section "Finans" |
-| `e2e/admin/collect-monitoring.spec.ts` | Nouveau | 2 tests smoke : chargement onglet MonCash par défaut, bascule vers l'onglet Kat Kredi |
-| `src/routeTree.gen.ts` | Régénéré | Effet de bord automatique de l'ajout de route (TanStack Router) |
+| Fichier                                                 | Statut   | Rôle                                                                                               |
+| ------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `src/routes/_authenticated/dashboard.admin.collect.tsx` | Nouveau  | Page principale — 3 onglets, lecture seule, aucune mutation                                        |
+| `src/lib/get-plop-status.functions.ts`                  | Nouveau  | Server fn admin-only exposant `isPlopConfigured()`                                                 |
+| `src/lib/get-stripe-status.functions.ts`                | Nouveau  | Server fn admin-only exposant `isStripeConfigured()`                                               |
+| `src/components/dashboard/sidebar/nav-items.ts`         | Modifié  | Lien "Peman Otomatik" (icône `Zap`) ajouté aux tableaux `admin` et `super_admin`, section "Finans" |
+| `e2e/admin/collect-monitoring.spec.ts`                  | Nouveau  | 2 tests smoke : chargement onglet MonCash par défaut, bascule vers l'onglet Kat Kredi              |
+| `src/routeTree.gen.ts`                                  | Régénéré | Effet de bord automatique de l'ajout de route (TanStack Router)                                    |
 
 Aucune migration requise — toutes les tables/colonnes/policies RLS lues existaient déjà.
 
 ## 2. Vérification RLS (relue directement dans les migrations, pas supposée)
 
-| Table lue | Policy | Portée |
-|---|---|---|
-| `payment_transactions` | `payment_transactions admin read` | `admin`/`super_admin` uniquement (+ `own read` séparée pour les clients, sans effet ici) |
-| `plop_api_logs` | `plop_api_logs admin read` | `admin`/`super_admin` uniquement, `REVOKE ALL FROM PUBLIC, anon, authenticated` en amont |
-| `stripe_api_logs` | `stripe_api_logs admin read` | `admin`/`super_admin` uniquement, même verrouillage |
-| `payment_provider_settings` | `payment_provider_settings public read` | Lecture publique (déjà utilisée par le checkout) — aucune donnée sensible |
+| Table lue                   | Policy                                  | Portée                                                                                   |
+| --------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `payment_transactions`      | `payment_transactions admin read`       | `admin`/`super_admin` uniquement (+ `own read` séparée pour les clients, sans effet ici) |
+| `plop_api_logs`             | `plop_api_logs admin read`              | `admin`/`super_admin` uniquement, `REVOKE ALL FROM PUBLIC, anon, authenticated` en amont |
+| `stripe_api_logs`           | `stripe_api_logs admin read`            | `admin`/`super_admin` uniquement, même verrouillage                                      |
+| `payment_provider_settings` | `payment_provider_settings public read` | Lecture publique (déjà utilisée par le checkout) — aucune donnée sensible                |
 
 La page elle-même n'ajoute aucun filtre de rôle côté client : elle hérite de la garde du layout parent `dashboard.admin.tsx`, et les policies RLS ci-dessus refusent de toute façon l'accès à quiconque n'est pas admin/super_admin, même en cas de contournement du layout.
 
 ## 3. Suite de vérification — résultats
 
-| Commande | Résultat |
-|---|---|
-| `npm run typecheck` | ✅ Clean (aucune sortie d'erreur) |
-| `npm run lint` | ✅ 0 erreur, 12 warnings pré-existants sans rapport (`react-refresh/only-export-components` sur des fichiers non touchés) |
-| `npm run check:migrations` | ✅ 122 migrations scannées, aucun hazard non résolu |
-| `npx vitest run` | ✅ 105/105 tests, 9 fichiers, 7.2s |
-| `npx vite build` | ✅ Build production réussi, 256 entrées precache PWA (identique au dernier build vérifié) |
-| `npm run build:e2e` | ✅ Build e2e réussi |
-| `npx playwright test e2e/admin/collect-monitoring.spec.ts e2e/admin/moncash-monitoring.spec.ts e2e/admin/payment-providers.spec.ts` | ✅ 7/7 tests passés (2 nouveaux + 5 existants, aucune régression) |
+| Commande                                                                                                                            | Résultat                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`                                                                                                                 | ✅ Clean (aucune sortie d'erreur)                                                                                         |
+| `npm run lint`                                                                                                                      | ✅ 0 erreur, 12 warnings pré-existants sans rapport (`react-refresh/only-export-components` sur des fichiers non touchés) |
+| `npm run check:migrations`                                                                                                          | ✅ 122 migrations scannées, aucun hazard non résolu                                                                       |
+| `npx vitest run`                                                                                                                    | ✅ 105/105 tests, 9 fichiers, 7.2s                                                                                        |
+| `npx vite build`                                                                                                                    | ✅ Build production réussi, 256 entrées precache PWA (identique au dernier build vérifié)                                 |
+| `npm run build:e2e`                                                                                                                 | ✅ Build e2e réussi                                                                                                       |
+| `npx playwright test e2e/admin/collect-monitoring.spec.ts e2e/admin/moncash-monitoring.spec.ts e2e/admin/payment-providers.spec.ts` | ✅ 7/7 tests passés (2 nouveaux + 5 existants, aucune régression)                                                         |
 
 ## 4. Scope Git — confirmé sans dérive
 

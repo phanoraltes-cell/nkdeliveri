@@ -1,4 +1,5 @@
 # Phase 4 — Rapport de clôture
+
 ## Dashboard Admin — hiérarchie de décision (Refonte Frontend Premium NK Deliveri)
 
 **Statut :** ✅ Exécutée, vérifiée, commitée localement (`119018c`). **En attente de votre validation avant push.**

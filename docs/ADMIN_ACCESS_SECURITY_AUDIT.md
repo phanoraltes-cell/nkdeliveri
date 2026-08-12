@@ -12,11 +12,11 @@
 
 Ce projet a **déjà** une itération de durcissement de session admin, livrée le 2026-07-28 (commit `a39d194`, "admin idle lock, step-up reauthentication, and active-sessions management"). Trois mécanismes réels sont en place aujourd'hui :
 
-| Mécanisme | Fichier | Portée actuelle |
-|---|---|---|
-| **Verrouillage d'écran par inactivité** | [src/components/dashboard/admin/admin-idle-lock.tsx](../src/components/dashboard/admin/admin-idle-lock.tsx) | Verrouille l'écran (pas la session) après 20 min d'inactivité, pour **toutes** les routes admin (monté une seule fois dans le layout). Déverrouillage par mot de passe ou re-déclenchement Google OAuth. |
-| **Step-up re-authentication** | [src/hooks/useReauth.ts](../src/hooks/useReauth.ts) + [src/components/reauth-dialog.tsx](../src/components/reauth-dialog.tsx) | Wrapping ponctuel de **3 actions précises** : ajout/retrait de rôle ([dashboard.admin.users.tsx:283-316](../src/routes/_authenticated/dashboard.admin.users.tsx#L283-L316)), validation d'un décaissement ([payout-pay-modal.tsx](../src/components/dashboard/payouts/payout-pay-modal.tsx)), traitement d'un remboursement ([dashboard.admin.refunds.tsx](../src/routes/_authenticated/dashboard.admin.refunds.tsx)). |
-| **Gestion des sessions actives** | `src/components/active-sessions-section.tsx` + `useActiveSessions.ts` | Lecture/révocation directe de `auth.sessions`, RPC `get_my_active_sessions_secure`/`revoke_my_session_secure`. |
+| Mécanisme                               | Fichier                                                                                                                       | Portée actuelle                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Verrouillage d'écran par inactivité** | [src/components/dashboard/admin/admin-idle-lock.tsx](../src/components/dashboard/admin/admin-idle-lock.tsx)                   | Verrouille l'écran (pas la session) après 20 min d'inactivité, pour **toutes** les routes admin (monté une seule fois dans le layout). Déverrouillage par mot de passe ou re-déclenchement Google OAuth.                                                                                                                                                                                                               |
+| **Step-up re-authentication**           | [src/hooks/useReauth.ts](../src/hooks/useReauth.ts) + [src/components/reauth-dialog.tsx](../src/components/reauth-dialog.tsx) | Wrapping ponctuel de **3 actions précises** : ajout/retrait de rôle ([dashboard.admin.users.tsx:283-316](../src/routes/_authenticated/dashboard.admin.users.tsx#L283-L316)), validation d'un décaissement ([payout-pay-modal.tsx](../src/components/dashboard/payouts/payout-pay-modal.tsx)), traitement d'un remboursement ([dashboard.admin.refunds.tsx](../src/routes/_authenticated/dashboard.admin.refunds.tsx)). |
+| **Gestion des sessions actives**        | `src/components/active-sessions-section.tsx` + `useActiveSessions.ts`                                                         | Lecture/révocation directe de `auth.sessions`, RPC `get_my_active_sessions_secure`/`revoke_my_session_secure`.                                                                                                                                                                                                                                                                                                         |
 
 **Ce qui n'existe PAS aujourd'hui** : aucun step-up n'est demandé **à l'entrée** du Dashboard Admin, juste après la connexion. Un admin/super_admin qui vient de se connecter accède **immédiatement** à tout le dashboard — le step-up n'intervient que (a) après 20 min d'inactivité, ou (b) au moment de cliquer sur l'une des 3 actions listées ci-dessus. C'est exactement le vide que ce prompt demande de combler.
 
@@ -44,7 +44,7 @@ Ce projet a **déjà** une itération de durcissement de session admin, livrée 
 
 - **Point de passage unique** : [src/routes/_authenticated/dashboard.admin.tsx](../src/routes/_authenticated/dashboard.admin.tsx) — `beforeLoad: () => requireRole(context.allRoles, ["admin", "super_admin"])`. Par la convention de fichiers plats de TanStack Router, **toutes** les 18 routes `dashboard.admin.*.tsx` sont des enfants de cette route et héritent donc de ce guard — **un seul endroit à modifier** pour ajouter un step-up global (pas 18).
 - [src/lib/auth-guard.ts](../src/lib/auth-guard.ts) — `requireRole()`, guard générique partagé par toutes les familles de dashboard (`throw redirect({ to: "/dashboard" })` si non autorisé).
-- **Ce guard est purement client-side** (route `ssr: false` pour toute la famille `_authenticated`, confirmé par le commentaire explicite de `_authenticated/route.tsx:22-24` : *"the actual authorization boundary is Postgres RLS on every request, not this client-side guard"*). C'est un choix architectural assumé et documenté, pas un oubli — mais cela signifie que **le guard de route seul ne bloque jamais un appel RPC direct** (voir §5 — Risques).
+- **Ce guard est purement client-side** (route `ssr: false` pour toute la famille `_authenticated`, confirmé par le commentaire explicite de `_authenticated/route.tsx:22-24` : _"the actual authorization boundary is Postgres RLS on every request, not this client-side guard"_). C'est un choix architectural assumé et documenté, pas un oubli — mais cela signifie que **le guard de route seul ne bloque jamais un appel RPC direct** (voir §5 — Risques).
 
 ### 1.5 Architecture frontend
 
@@ -108,21 +108,27 @@ Toutes les tables administratives sensibles ont une policy `has_role(auth.uid(),
 ## 6. Risques actuels (constat, pas encore de solution)
 
 ### 🔴 R1 — Aucun step-up à l'entrée du dashboard admin
+
 Un admin/super_admin authentifié (session/JWT valide, `aal1`) obtient un accès complet immédiat à **tout** le dashboard admin dès la connexion. Rien ne prouve, à ce moment précis, que c'est bien le titulaire du compte qui est devant l'écran (session volée, appareil partagé, token exfiltré via XSS, etc.).
 
 ### 🔴 R2 — Le step-up existant (`useReauth`) n'est PAS appliqué côté serveur
+
 Vérifié en lisant le corps SQL complet de `add_user_role_secure`, `remove_user_role_secure`, `review_refund_secure`, `complete_refund_secure`, `initiate_payout_secure` : **aucune** ne vérifie une preuve de ré-authentification récente, l'`aal` du JWT, ou un quelconque signal de step-up. La seule protection est `verifiedUntilRef` — une variable **en mémoire JavaScript côté client**, jamais transmise au serveur. Concrètement : un attaquant disposant d'une session admin valide (JWT volé, ou simplement DevTools ouvert) peut appeler `supabase.rpc("add_user_role_secure", {...})` **directement**, sans jamais passer par `ReauthDialog` — **la Règle 5 du prompt ("le contrôle d'accès ne doit pas reposer uniquement sur le frontend") est déjà violée par le mécanisme existant**, pas seulement par une éventuelle nouvelle fonctionnalité. C'est la découverte la plus importante de cet audit.
 
 ### 🟠 R3 — Re-authentification Google potentiellement silencieuse
+
 `useReauth.continueWithOAuth()` et `AdminIdleLock.unlockWithOAuth()` appellent `signInWithOAuth({ provider: "google" })` **sans** paramètre `prompt`. Si le navigateur a encore une session Google active, Google peut renvoyer un code d'autorisation **sans jamais afficher de formulaire de connexion ni demander de confirmation** — le "re-auth" réussirait alors sans que la personne devant l'écran prouve quoi que ce soit qu'elle ne prouvait pas déjà (elle n'a qu'à avoir le navigateur ouvert). Ceci affaiblit directement la valeur du step-up OAuth pour le seul admin réel du projet (compte Google-only). Non testé en conditions réelles dans cet audit (nécessiterait un vrai navigateur avec session Google active), mais c'est le comportement documenté de l'implicit/silent OAuth flow sauf si `prompt=login` ou `prompt=consent` est explicitement demandé.
 
 ### 🟡 R4 — Pas d'écran "accès refusé" explicite
+
 `requireRole()` redirige silencieusement vers `/dashboard` sans expliquer pourquoi (Règle 10 du prompt : messages clairs attendus).
 
 ### 🟡 R5 — Aucun test automatisé sur `auth-guard.ts`, `useReauth.ts`, `admin-idle-lock.tsx`
+
 Aucun fichier `__tests__` trouvé pour ces 3 fichiers malgré leur rôle sécuritaire.
 
 ### 🟢 R6 — Points déjà sains, à ne pas régresser
+
 RLS/RPC backend cohérentes (§1.6), séparation admin/super_admin déjà appliquée pour la gestion des rôles, idle-lock déjà en place, `sessions_single_per_user`/gestion des sessions actives déjà livrée.
 
 ---
@@ -134,33 +140,38 @@ RLS/RPC backend cohérentes (§1.6), séparation admin/super_admin déjà appliq
 1. **Le seul admin réel n'a pas de mot de passe.** `phanoraltes@gmail.com` est Google-only (§1.2). Une solution "redemander le mot de passe" est **injouable** pour ce compte sans d'abord lui faire créer un mot de passe — un changement de compte non demandé, et une régression UX (`useReauth`/`admin-idle-lock` gèrent déjà ce cas correctement en basculant sur un re-déclenchement OAuth ; toute nouvelle solution doit faire pareil ou mieux).
 2. **Même pour un compte avec mot de passe, redemander exactement le même mot de passe n'ajoute pas de facteur réellement indépendant.** Si la machine/navigateur est compromis (keylogger, session voisine, XSS qui intercepte le formulaire), le mot de passe est reproductible par le même attaquant qui a déjà obtenu l'accès initial — ça prouve seulement "je connais encore le mot de passe", pas "je suis bien la personne physique titulaire du compte". C'est mieux que rien (bloque un JWT volé isolément sans le mot de passe), mais c'est le facteur le plus faible de toutes les options listées dans le prompt.
 
-**Conclusion : la proposition initiale n'est pas rejetée en bloc — le mécanisme `signInWithPassword` qu'elle implique existe déjà et reste utile comme fallback ou comme brique) — mais elle ne doit pas être le mécanisme *unique* ni *principal*.** Une vraie amélioration doit ajouter un facteur réellement indépendant (TOTP) et surtout corriger R2 (l'absence d'enforcement serveur), ce que la proposition initiale ne fait pas non plus par elle-même.
+**Conclusion : la proposition initiale n'est pas rejetée en bloc — le mécanisme `signInWithPassword` qu'elle implique existe déjà et reste utile comme fallback ou comme brique) — mais elle ne doit pas être le mécanisme _unique_ ni _principal_.** Une vraie amélioration doit ajouter un facteur réellement indépendant (TOTP) et surtout corriger R2 (l'absence d'enforcement serveur), ce que la proposition initiale ne fait pas non plus par elle-même.
 
 ---
 
 ## 8. Comparaison des solutions
 
 ### Option A — Deuxième saisie du même mot de passe
+
 **Pour** : zéro nouvelle dépendance, implémentation triviale, `useReauth` le fait déjà pour les comptes password.
 **Contre** : injouable pour le seul admin réel (Google-only) sans détour OAuth ; pas un facteur indépendant (§7) ; si implémenté seul, ne corrige pas R2.
 **Verdict** : insuffisant seul, déjà partiellement présent comme fallback.
 
 ### Option B — Ré-authentification Supabase (re-`signInWithPassword`/`signInWithOAuth`)
+
 **Pour** : utilise uniquement l'API Supabase officielle, déjà implémentée pour 3 actions (§1.1), gère déjà les deux types de compte.
-**Contre** : c'est *exactement* le mécanisme actuel — hérite de R2 (non vérifiable serveur) et R3 (silent OAuth) tel quel. Réutilisable et à corriger, pas à jeter.
+**Contre** : c'est _exactement_ le mécanisme actuel — hérite de R2 (non vérifiable serveur) et R3 (silent OAuth) tel quel. Réutilisable et à corriger, pas à jeter.
 **Verdict** : bonne base, insuffisante seule pour un vrai step-up "server-enforced".
 
 ### Option C — MFA / TOTP (Supabase natif)
-**Pour** : **déjà activé au niveau du projet** (`mfa_totp_enroll_enabled/verify_enabled: true`, aucun changement de config Supabase requis) ; c'est un facteur *réellement* indépendant (connaissance d'un secret TOTP, pas juste "avoir le navigateur ouvert") ; l'`aal` résultant est un **claim JWT signé par GoTrue**, vérifiable côté serveur dans une RLS/RPC (`auth.jwt()->>'aal' = 'aal2'`) — **seule option qui corrige réellement R2**, pas seulement au niveau UX ; fonctionne identiquement pour les comptes password et OAuth-only (l'enrôlement MFA est indépendant de la méthode de connexion primaire) ; API officielle Supabase (`supabase.auth.mfa.*`), zéro système cryptographique maison.
+
+**Pour** : **déjà activé au niveau du projet** (`mfa_totp_enroll_enabled/verify_enabled: true`, aucun changement de config Supabase requis) ; c'est un facteur _réellement_ indépendant (connaissance d'un secret TOTP, pas juste "avoir le navigateur ouvert") ; l'`aal` résultant est un **claim JWT signé par GoTrue**, vérifiable côté serveur dans une RLS/RPC (`auth.jwt()->>'aal' = 'aal2'`) — **seule option qui corrige réellement R2**, pas seulement au niveau UX ; fonctionne identiquement pour les comptes password et OAuth-only (l'enrôlement MFA est indépendant de la méthode de connexion primaire) ; API officielle Supabase (`supabase.auth.mfa.*`), zéro système cryptographique maison.
 **Contre** : nécessite un enrôlement initial (l'admin doit scanner un QR code avec une app authenticator) — un pas de plus la première fois ; nécessite de vérifier/tester le comportement exact de `mfa_allow_low_aal` en conditions réelles avant de s'appuyer dessus en production (voir §12, Limitations) ; légèrement plus de code que réutiliser `useReauth` tel quel.
 **Verdict** : **la seule option qui satisfait pleinement la Règle 5 du prompt (enforcement serveur réel).**
 
 ### Option D — Passkey / WebAuthn
+
 **Pour** : UX moderne, résistant au phishing par design.
 **Contre** : **désactivé au niveau du projet** (`mfa_web_authn_enroll_enabled: false`, `passkey_enabled: false`) — activer serait un changement de config Supabase Dashboard supplémentaire, hors du périmètre "juste écrire une migration" ; support navigateur/appareil plus variable qu'un TOTP ; un seul admin réel aujourd'hui, la complexité de récupération de compte (perte de clé physique) est un risque disproportionné pour la taille actuelle de l'équipe.
 **Verdict** : pertinent comme **extension future documentée**, pas pour cette itération.
 
 ### Option E — Combinaison (recommandée)
+
 Voir §9.
 
 ---
@@ -172,15 +183,15 @@ Voir §9.
 Pourquoi cette combinaison plutôt qu'une seule option pure :
 
 - **TOTP est la seule option qui corrige réellement R2** (vérifiable côté serveur via le claim `aal` du JWT) sans nécessiter de changement de configuration Supabase (contrairement à WebAuthn/Passkey, actuellement désactivés).
-- **Un repli est nécessaire** : le seul admin réel n'a aujourd'hui aucun facteur TOTP enrollé. Exiger un step-up TOTP *avant même de pouvoir l'enrôler* créerait un verrouillage total (personne ne pourrait plus jamais entrer dans le dashboard admin pour aller enrôler son premier facteur). La solution doit donc prévoir un **flux d'enrôlement obligatoire mais non-bloquant au premier accès** (proposer l'enrôlement, autoriser un accès step-up via `useReauth` classique en attendant, avec une bannière/rappel visible tant que l'enrôlement n'est pas fait) — pas un big-bang qui bloque tout le monde le jour du déploiement.
-- **Ne pas jeter `useReauth`/`ReauthDialog`** — ce code est déjà propre, gère déjà les deux types de compte, et sert déjà de fallback légitime + de mécanisme pour les step-up *par action* (§7 du prompt : superadmin + opérations extrêmement sensibles). Il doit être **corrigé** (R2, R3) et **réutilisé**, pas remplacé par un nouveau système.
-- Respecte explicitement la Règle 13 du prompt : *"Si Supabase fournit déjà une capacité MFA/re-authentication adaptée, l'utiliser plutôt que créer une implémentation cryptographique maison"* — TOTP via `supabase.auth.mfa` est exactement ça.
+- **Un repli est nécessaire** : le seul admin réel n'a aujourd'hui aucun facteur TOTP enrollé. Exiger un step-up TOTP _avant même de pouvoir l'enrôler_ créerait un verrouillage total (personne ne pourrait plus jamais entrer dans le dashboard admin pour aller enrôler son premier facteur). La solution doit donc prévoir un **flux d'enrôlement obligatoire mais non-bloquant au premier accès** (proposer l'enrôlement, autoriser un accès step-up via `useReauth` classique en attendant, avec une bannière/rappel visible tant que l'enrôlement n'est pas fait) — pas un big-bang qui bloque tout le monde le jour du déploiement.
+- **Ne pas jeter `useReauth`/`ReauthDialog`** — ce code est déjà propre, gère déjà les deux types de compte, et sert déjà de fallback légitime + de mécanisme pour les step-up _par action_ (§7 du prompt : superadmin + opérations extrêmement sensibles). Il doit être **corrigé** (R2, R3) et **réutilisé**, pas remplacé par un nouveau système.
+- Respecte explicitement la Règle 13 du prompt : _"Si Supabase fournit déjà une capacité MFA/re-authentication adaptée, l'utiliser plutôt que créer une implémentation cryptographique maison"_ — TOTP via `supabase.auth.mfa` est exactement ça.
 
 ### Niveaux (§7 du prompt)
 
-| Niveau | Exigence |
-|---|---|
-| **Admin** | Step-up obligatoire (TOTP si enrollé, sinon repli `useReauth`) à l'entrée du dashboard. Durée de confiance : voir §10. |
+| Niveau          | Exigence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Admin**       | Step-up obligatoire (TOTP si enrollé, sinon repli `useReauth`) à l'entrée du dashboard. Durée de confiance : voir §10.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | **Super_admin** | Identique + step-up **supplémentaire, immédiat, sans fenêtre de confiance** pour : changer un rôle admin/super_admin, actions irréversibles (suppression), configuration financière critique (`payout-settings`, `payment-providers`). Ces actions passent déjà par `useReauth` aujourd'hui pour 2 des 3 cas — l'extension est d'ajouter le même wrapping sur les endpoints financiers restants et de retirer la fenêtre de grâce de 5 min pour ce sous-ensemble précis (contrairement au step-up d'entrée, qui lui garde une fenêtre — voir §10). |
 
 **Documenté comme extension possible, non développée maintenant** : Passkey/WebAuthn si l'équipe grandit et que la perte-de-facteur devient un risque opérationnel gérable (nécessite d'abord d'activer `mfa_web_authn_enroll_enabled` côté Supabase Dashboard).
@@ -252,33 +263,38 @@ Deux mécanismes différents selon le facteur, tous deux serveur-vérifiables :
 
 ## 12. Risques de régression
 
-| Risque | Mitigation prévue |
-|---|---|
-| Casser l'accès du seul admin réel (Google-only, aucun TOTP enrollé) le jour du déploiement | Repli non-bloquant explicite (§9) — jamais de déploiement qui exige un facteur non encore enrollé pour un compte existant |
-| `mfa_allow_low_aal: false` a un effet secondaire non anticipé une fois un premier facteur TOTP enrollé (comportement Supabase pas 100% vérifié dans cet audit — voir Limitations) | Tester en environnement contrôlé avant d'enrôler le compte admin réel ; documenter le comportement observé dans le rapport de Phase 2 |
-| Régression sur login/signup/Google OAuth/reset password | Aucun de ces flux n'est touché par le plan — seul le point d'entrée *après* connexion, au moment d'accéder au dashboard admin, est concerné |
-| Casser les 3 usages existants de `useReauth` (payout/refund/rôles) en les faisant pointer vers le nouveau mécanisme | Migration en place, pas en remplacement sec — garder la compatibilité, migrer un call site à la fois, avec tests de non-régression avant/après chacun |
-| Nouvelle table/RPC mal scopée exposant un moyen de forger un step-up | Suivre exactement le pattern `SECURITY DEFINER` + `auth.uid()` déjà utilisé partout ailleurs dans ce projet, jamais de logique côté client comme seule preuve |
+| Risque                                                                                                                                                                            | Mitigation prévue                                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Casser l'accès du seul admin réel (Google-only, aucun TOTP enrollé) le jour du déploiement                                                                                        | Repli non-bloquant explicite (§9) — jamais de déploiement qui exige un facteur non encore enrollé pour un compte existant                                     |
+| `mfa_allow_low_aal: false` a un effet secondaire non anticipé une fois un premier facteur TOTP enrollé (comportement Supabase pas 100% vérifié dans cet audit — voir Limitations) | Tester en environnement contrôlé avant d'enrôler le compte admin réel ; documenter le comportement observé dans le rapport de Phase 2                         |
+| Régression sur login/signup/Google OAuth/reset password                                                                                                                           | Aucun de ces flux n'est touché par le plan — seul le point d'entrée _après_ connexion, au moment d'accéder au dashboard admin, est concerné                   |
+| Casser les 3 usages existants de `useReauth` (payout/refund/rôles) en les faisant pointer vers le nouveau mécanisme                                                               | Migration en place, pas en remplacement sec — garder la compatibilité, migrer un call site à la fois, avec tests de non-régression avant/après chacun         |
+| Nouvelle table/RPC mal scopée exposant un moyen de forger un step-up                                                                                                              | Suivre exactement le pattern `SECURITY DEFINER` + `auth.uid()` déjà utilisé partout ailleurs dans ce projet, jamais de logique côté client comme seule preuve |
 
 ---
 
 ## 13. Plan de tests (Phase 2)
 
 ### Authentication
+
 Utilisateur authentifié / non authentifié / admin / super_admin — reprendre exactement les 4 cas déjà listés dans le prompt.
 
 ### Authorization
+
 Client, restaurant, livreur ne peuvent pas accéder ; admin sans step-up ne peut pas accéder ; admin vérifié peut accéder ; super_admin sans step-up ne peut pas accéder ; super_admin vérifié peut accéder.
 
 ### Expiration
+
 Step-up expiré (15 min), session expirée, déconnexion.
 
 ### Bypass (le plus important, vu R2)
+
 - Appel RPC direct (`add_user_role_secure` etc.) avec une session admin valide mais **sans step-up récent** → doit maintenant échouer côté serveur, pas seulement être caché côté UI.
 - Accès direct à `/dashboard/admin` sans jamais passer par l'écran de vérification.
 - F5, nouvel onglet, navigation arrière/avant après step-up.
 
 ### Non-régression
+
 Login, inscription, Google OAuth, logout, reset password, dashboards non-admin, les 3 usages existants de `useReauth`.
 
 ---
@@ -294,6 +310,7 @@ Login, inscription, Google OAuth, logout, reset password, dashboards non-admin, 
 ## 🚦 Statut
 
 **Phase 1 terminée — aucun code modifié.** En attente de votre validation sur :
+
 1. La solution recommandée (§9 — TOTP + repli `useReauth` corrigé) ;
 2. La durée de step-up proposée (§10.1 — 15 min glissantes pour l'entrée, aucune fenêtre pour les actions super_admin sensibles) ;
 3. Le périmètre exact des "opérations extrêmement sensibles" additionnelles à wrapper (§9, niveau super_admin) au-delà des 3 déjà couvertes.

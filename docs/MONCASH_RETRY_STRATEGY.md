@@ -12,13 +12,13 @@ tente.
 de la fonction Vercel) — déjà implémentée et testée avant ce chantier de
 durcissement, décrite ici pour former le tableau complet.
 
-| Déclencheur | Relancé ? |
-|---|---|
-| Timeout (`AbortController`) | ✅ |
-| Erreur réseau (`TypeError`/échec DNS/connexion) | ✅ |
-| HTTP 429 | ✅ |
-| HTTP 5xx | ✅ |
-| HTTP 4xx | ❌ jamais |
+| Déclencheur                                     | Relancé ? |
+| ----------------------------------------------- | --------- |
+| Timeout (`AbortController`)                     | ✅        |
+| Erreur réseau (`TypeError`/échec DNS/connexion) | ✅        |
+| HTTP 429                                        | ✅        |
+| HTTP 5xx                                        | ✅        |
+| HTTP 4xx                                        | ❌ jamais |
 
 Jusqu'à 3 tentatives, backoff exponentiel 300ms → 900ms. Chaque
 tentative individuelle est journalisée dans `moncash_api_logs`
@@ -77,11 +77,11 @@ automatique.
 
 ### Fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `payment-providers/moncash-reconcile.server.ts` | La logique elle-même — 7 tests dédiés (succès, échec, toujours en attente, fenêtre de backoff respectée/expirée, échéancier épuisé) |
-| `routes/api.cron.moncash-reconcile.ts` | Cible Vercel Cron, protégée par `CRON_SECRET` |
-| `vercel.json` (`crons`) | `0 3 * * *` (une fois par jour, 3h UTC) — **confirmé, pas juste anticipé** : un `*/5 * * * *` a réellement fait échouer le déploiement entier sur ce projet (compte Hobby, message Vercel : "Hobby accounts are limited to daily cron jobs"), pas seulement la fonctionnalité cron. Repasser à un intervalle plus court nécessite un upgrade vers le plan Pro ; en attendant, un déclencheur externe (GitHub Actions planifié, service de cron tiers) peut appeler le même endpoint plus souvent avec le même `Authorization: Bearer <CRON_SECRET>` si une réconciliation plus fréquente est souhaitée avant l'upgrade |
+| Fichier                                         | Rôle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payment-providers/moncash-reconcile.server.ts` | La logique elle-même — 7 tests dédiés (succès, échec, toujours en attente, fenêtre de backoff respectée/expirée, échéancier épuisé)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `routes/api.cron.moncash-reconcile.ts`          | Cible Vercel Cron, protégée par `CRON_SECRET`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `vercel.json` (`crons`)                         | `0 3 * * *` (une fois par jour, 3h UTC) — **confirmé, pas juste anticipé** : un `*/5 * * * *` a réellement fait échouer le déploiement entier sur ce projet (compte Hobby, message Vercel : "Hobby accounts are limited to daily cron jobs"), pas seulement la fonctionnalité cron. Repasser à un intervalle plus court nécessite un upgrade vers le plan Pro ; en attendant, un déclencheur externe (GitHub Actions planifié, service de cron tiers) peut appeler le même endpoint plus souvent avec le même `Authorization: Bearer <CRON_SECRET>` si une réconciliation plus fréquente est souhaitée avant l'upgrade |
 
 ### Statut aujourd'hui
 

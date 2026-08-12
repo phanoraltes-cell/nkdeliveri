@@ -76,7 +76,7 @@ export interface PaymentProvider {
 
 6. **Ligne `payment_providers`** — migration additive,
    `INSERT INTO payment_providers (code, label, is_active) VALUES
-   ('mon_fournisseur_api', 'Mon Fournisseur', false)` — toujours
+('mon_fournisseur_api', 'Mon Fournisseur', false)` — toujours
    `is_active = false` à la création, jamais activé avant que
    l'implémentation soit réellement testée.
 

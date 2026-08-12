@@ -9,14 +9,15 @@
 **Option A** (préférée par la mission) : la méthode reste **visible** dans la grille des 4 méthodes de paiement, mais devient **non sélectionnable**, avec un badge "Byento disponib" et un message explicatif.
 
 **Pourquoi Option A plutôt que B (masquage complet)** :
+
 - Cohérent avec le design actuel : la grille `sm:grid-cols-2` de 4 boutons égaux serait déséquilibrée (3 éléments, une case vide ou un réagencement) si on masquait complètement l'option.
-- Un client qui a l'habitude de "MonCash Automatik" (déjà utilisé, même brièvement, en production) comprend immédiatement *pourquoi* il ne peut plus la choisir plutôt que de se demander où elle est passée.
+- Un client qui a l'habitude de "MonCash Automatik" (déjà utilisé, même brièvement, en production) comprend immédiatement _pourquoi_ il ne peut plus la choisir plutôt que de se demander où elle est passée.
 - Cohérent avec le principe "ne jamais supprimer du code" étendu à l'UX : rien ne disparaît, un état temporaire est communiqué.
 
 ## 2. Message affiché
 
-- **Badge** (sur le bouton, toujours visible) : *"Byento disponib"*.
-- **Sous-texte** (remplace le sous-texte habituel *"Peman otomatik, konfimasyon imedya"* uniquement pour cette méthode) : *"MonCash Automatik pa disponib pou kounye a. L ap retounen byento."*
+- **Badge** (sur le bouton, toujours visible) : _"Byento disponib"_.
+- **Sous-texte** (remplace le sous-texte habituel _"Peman otomatik, konfimasyon imedya"_ uniquement pour cette méthode) : _"MonCash Automatik pa disponib pou kounye a. L ap retounen byento."_
 
 Choix de formulation : le second exemple suggéré par la mission ("Fonksyonalite sa a anba amelyorasyon") a été écarté au profit du premier ("ap retounen byento") — plus honnête vis-à-vis du contexte réel (ce n'est pas une amélioration en cours, c'est un remplacement de fournisseur en préparation), sans exposer de détail interne (le nom "Bouspam" ou "Digicel" n'apparaît nulle part côté client).
 
