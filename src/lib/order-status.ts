@@ -62,3 +62,39 @@ export function formatOrderWaitTime(minutes: number): string {
   if (hours < 24) return `${hours} è`;
   return `${Math.floor(hours / 24)} jou`;
 }
+
+export type UnconfirmedOrderPayment = {
+  status: string;
+  method: string;
+  payment_transactions?: { status: string }[] | null;
+};
+
+/**
+ * A moncash/natcash payment not yet `paid` blocks restaurant order
+ * confirmation for two completely different reasons that must never share
+ * one message: MANUAL (client uploaded a proof, an admin has to verify it
+ * — submit_payment_proof_secure) vs AUTOMATIC (PLOP/Collect, waiting on
+ * the provider's own webhook — no proof, no admin involved at all).
+ *
+ * A `payment_transactions` row only ever exists for the automatic flow
+ * (create_collect_payment_secure's own header comment,
+ * 20260731130000_moncash_collect_payments.sql) — its presence/absence is
+ * the reliable signal, the same one orders.$id.tsx already uses correctly
+ * (`isCollect = Boolean(collectTransaction)`). Mirrors
+ * private.update_order_status_secure's own classification
+ * (20260813120000_fix_manual_vs_automatic_payment_classification.sql) so
+ * the button's disabled/title state in dashboard.restaurant.orders.tsx
+ * matches what the RPC will actually decide — not an approximation of it
+ * that can drift, which is exactly the bug this replaced: the previous
+ * version keyed off `payment.method` alone (the wallet name), which is
+ * the same rail for both flows and proves nothing about which one a given
+ * payment went through.
+ */
+export function classifyUnconfirmedPayment(
+  payment: UnconfirmedOrderPayment | undefined,
+): "manual" | "automatic" | null {
+  if (!payment) return null;
+  if (payment.method !== "moncash" && payment.method !== "natcash") return null;
+  if (payment.status === "paid") return null;
+  return (payment.payment_transactions?.length ?? 0) > 0 ? "automatic" : "manual";
+}

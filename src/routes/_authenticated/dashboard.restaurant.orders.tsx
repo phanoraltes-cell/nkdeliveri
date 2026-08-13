@@ -19,6 +19,7 @@ import {
   TERMINAL_ORDER_STATUSES,
   getOrderWaitUrgency,
   formatOrderWaitTime,
+  classifyUnconfirmedPayment,
 } from "@/lib/order-status";
 import { Chip } from "@/components/ui/chip";
 
@@ -106,7 +107,14 @@ function RestaurantOrders() {
       let q = supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price, notes), payments(status, method)",
+          // payment_transactions(status) — the only reliable signal that a
+          // moncash/natcash payment went through the AUTOMATIC PLOP/Collect
+          // flow rather than the manual proof-upload flow (a row only ever
+          // exists for the automatic flow, see create_collect_payment_secure's
+          // own header comment). Needed below to stop conflating "automatic
+          // payment still in flight" with "manual payment waiting on an
+          // admin" — same signal already used correctly on orders.$id.tsx.
+          "id, order_number, status, total, subtotal, delivery_fee, delivery_address, contact_phone, delivery_notes, created_at, order_items(id, product_name, quantity, unit_price, notes), payments(status, method, payment_transactions(status))",
           filter === "all" ? { count: "exact" } : undefined,
         )
         .eq("restaurant_id", restaurant!.id)
@@ -388,17 +396,16 @@ function RestaurantOrders() {
                       <>
                         {(() => {
                           const payment = o.payments?.[0];
-                          const paymentUnverified =
-                            payment &&
-                            (payment.method === "moncash" || payment.method === "natcash") &&
-                            payment.status !== "paid";
+                          const unconfirmedPayment = classifyUnconfirmedPayment(payment);
                           return (
                             <button
-                              disabled={changeStatus.isPending || paymentUnverified}
+                              disabled={changeStatus.isPending || !!unconfirmedPayment}
                               title={
-                                paymentUnverified
+                                unconfirmedPayment === "manual"
                                   ? "Tann yon admin konfime prèv peman an anvan w konfime kòmand la"
-                                  : undefined
+                                  : unconfirmedPayment === "automatic"
+                                    ? "Peman otomatik la an tretman — n ap tann konfimasyon sistèm peman an, pa gen okenn aksyon admin ki nesesè"
+                                    : undefined
                               }
                               onClick={() =>
                                 changeStatus.mutate({ orderId: o.id, status: "confirmed" })
@@ -406,7 +413,11 @@ function RestaurantOrders() {
                               className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                             >
                               <Check className="h-3.5 w-3.5" />
-                              {paymentUnverified ? "Tann verifikasyon peman" : "Konfime"}
+                              {unconfirmedPayment === "manual"
+                                ? "Tann verifikasyon peman"
+                                : unconfirmedPayment === "automatic"
+                                  ? "Peman ap tretman"
+                                  : "Konfime"}
                             </button>
                           );
                         })()}
