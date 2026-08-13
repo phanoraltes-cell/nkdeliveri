@@ -85,7 +85,13 @@ function RestaurantOrders() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, total, delivery_address, delivery_notes, contact_phone, subtotal, delivery_fee, created_at, order_items(id, product_name, quantity, notes), payments(status, method)",
+          // payment_transactions(status) — same F-03/F-01 signal as the
+          // "Lis" view's own query above: without it, a moncash/natcash
+          // payment still in the AUTOMATIC PLOP/Collect flow was
+          // indistinguishable here from one waiting on manual admin
+          // proof-review, so the Kanban "Konfime" button had no guard at
+          // all (docs/FULL_PLATFORM_AUDIT_2026-08-13.md, F-01).
+          "id, order_number, status, total, delivery_address, delivery_notes, contact_phone, subtotal, delivery_fee, created_at, order_items(id, product_name, quantity, notes), payments(status, method, payment_transactions(status))",
         )
         .eq("restaurant_id", restaurant!.id)
         .order("created_at", { ascending: false })

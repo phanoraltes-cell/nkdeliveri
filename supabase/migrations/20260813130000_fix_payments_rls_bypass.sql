@@ -1,0 +1,53 @@
+-- F-03 remediation (docs/FULL_PLATFORM_AUDIT_2026-08-13.md, carried from
+-- docs/GLOBAL_AUDIT_360_2026-08-13.md's H-01). The "payments admin
+-- update" RLS policy let any admin/super_admin session write directly to
+-- public.payments via PostgREST (supabase.from('payments').update(...))
+-- with NO transition validation at all -- no OLD.status guard, meaning an
+-- admin session could flip an already-'refunded'/'paid'/'failed' (terminal)
+-- payment back to any other status arbitrarily.
+--
+-- Confirmed before writing this (live queries against production, not
+-- assumed):
+--   - The policy: qual = has_role(admin) OR has_role(super_admin),
+--     with_check = NULL (falls back to qual -- role only, no state check).
+--   - No validation trigger exists on payments (pg_trigger returns only
+--     trg_notify_payment_status, trg_pay_upd, trg_payment_paid_confirm_order
+--     -- none of which validate a transition, they only react to one
+--     already having happened).
+--   - grepped src/ exhaustively: zero frontend code calls
+--     `.from("payments").update(...)` directly. The only mutation path in
+--     the app is `supabase.rpc("review_manual_payment_secure", ...)`
+--     (src/routes/_authenticated/dashboard.admin.payments.tsx).
+--
+-- Every legitimate way payments.status actually changes today already
+-- goes through a validated RPC that has its own transition guard:
+--   - review_manual_payment_secure (admin): only awaiting_proof/
+--     under_review -> paid/failed, FOR UPDATE-locked, already rejects
+--     re-deciding an already-decided payment (its own migration's header
+--     comment documents this exact "arbitrary status mutation" concern
+--     being the reason it was created in the first place -- this
+--     migration finishes that job by closing the parallel bypass that
+--     migration didn't remove).
+--   - complete_collect_payment_secure (service_role only -- GRANT EXECUTE
+--     is service_role/postgres, NOT authenticated -- confirmed live via
+--     information_schema.role_routine_grants; the webhook handler already
+--     bypasses RLS entirely via the service-role client, so this policy
+--     removal has zero effect on it either way).
+--   - confirm_cash_payment_secure (customer/driver): only ever moves a
+--     'kach' payment to 'paid' once both confirmation timestamps are set.
+--   - complete_refund_secure (admin, STANDARD step-up): only 'approved'
+--     refunds -> payments.status='refunded'.
+--
+-- Removing this policy is therefore a pure narrowing, identical in spirit
+-- to C-01's fix (supabase/migrations/20260813110000_fix_user_roles_rls_bypass.sql):
+-- it closes a redundant, unvalidated write path without touching the one
+-- real path (four already-guarded RPCs), and without adding new parallel
+-- validation logic (a trigger) that could drift out of sync with what
+-- those RPCs already enforce. This makes `payments` match the pattern
+-- already used by every other financially-sensitive table in this schema
+-- (orders, platform_payout_settings, payment_provider_settings, payouts,
+-- user_roles): zero direct-write RLS policy, RPC-only mutation.
+--
+-- "payments read" (SELECT) is untouched -- read access was never the
+-- vulnerability and this migration changes nothing about who can read what.
+DROP POLICY IF EXISTS "payments admin update" ON public.payments;

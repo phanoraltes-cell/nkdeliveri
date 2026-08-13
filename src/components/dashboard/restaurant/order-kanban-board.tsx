@@ -4,7 +4,11 @@ import { formatHTG } from "@/lib/format";
 import { printKitchenTicket } from "@/lib/kitchen-ticket";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
-import { getOrderWaitUrgency, formatOrderWaitTime } from "@/lib/order-status";
+import {
+  getOrderWaitUrgency,
+  formatOrderWaitTime,
+  classifyUnconfirmedPayment,
+} from "@/lib/order-status";
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   moncash: "MonCash",
@@ -25,7 +29,8 @@ export type KanbanOrder = {
   created_at: string;
   order_items:
     { id: string; product_name: string; quantity: number; notes: string | null }[] | null;
-  payments?: { status: string; method: string }[] | null;
+  payments?:
+    { status: string; method: string; payment_transactions?: { status: string }[] | null }[] | null;
 };
 
 type Column = { key: string; label: string; statuses: string[] };
@@ -50,9 +55,22 @@ const NEXT_COLUMN: Record<string, string> = {
 };
 const CANCELLABLE_FROM = new Set(["pending", "confirmed", "preparing", "ready"]);
 
-function isValidDrop(fromStatus: string, toColumnKey: string) {
+// F-01 (docs/FULL_PLATFORM_AUDIT_2026-08-13.md): dragging a card is a
+// second path to the exact same "pending -> confirmed" transition the
+// "Konfime" button guards below -- without this check here too, a
+// restaurant could drag around the button's disabled state and reach the
+// same unconfirmed-payment case the button now blocks. Cancelling isn't
+// gated on payment state (matches the button below, which never disables
+// "Refize" for this reason), so only the confirm transition is checked.
+function isValidDrop(
+  fromStatus: string,
+  toColumnKey: string,
+  unconfirmedPayment: "manual" | "automatic" | null,
+) {
   if (toColumnKey === "cancelled") return CANCELLABLE_FROM.has(fromStatus);
-  return NEXT_COLUMN[fromStatus] === toColumnKey;
+  if (NEXT_COLUMN[fromStatus] !== toColumnKey) return false;
+  if (fromStatus === "pending" && toColumnKey === "confirmed" && unconfirmedPayment) return false;
+  return true;
 }
 
 type OrderKanbanBoardProps = {
@@ -69,14 +87,18 @@ export function OrderKanbanBoard({
   onChangeStatus,
   isChangingStatus,
 }: OrderKanbanBoardProps) {
-  const [dragOrder, setDragOrder] = useState<{ id: string; status: string } | null>(null);
+  const [dragOrder, setDragOrder] = useState<{
+    id: string;
+    status: string;
+    unconfirmedPayment: "manual" | "automatic" | null;
+  } | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
 
   function handleDrop(columnKey: string) {
     setDragOverCol(null);
     if (!dragOrder) return;
-    if (!isValidDrop(dragOrder.status, columnKey)) return;
+    if (!isValidDrop(dragOrder.status, columnKey, dragOrder.unconfirmedPayment)) return;
     const { id } = dragOrder;
     if (columnKey === "cancelled") {
       requestConfirm("Anile kòmand sa a?", () => onChangeStatus(id, "cancelled"));
@@ -102,7 +124,9 @@ export function OrderKanbanBoard({
       <div className="flex touch-pan-x gap-3 overflow-x-auto pb-3">
         {COLUMNS.map((col) => {
           const cards = orders.filter((o) => col.statuses.includes(o.status));
-          const isDropTarget = dragOrder != null && isValidDrop(dragOrder.status, col.key);
+          const isDropTarget =
+            dragOrder != null &&
+            isValidDrop(dragOrder.status, col.key, dragOrder.unconfirmedPayment);
           return (
             <div
               key={col.key}
@@ -136,7 +160,13 @@ export function OrderKanbanBoard({
                     order={o}
                     restaurantName={restaurantName}
                     draggable={NEXT_COLUMN[o.status] !== undefined}
-                    onDragStart={() => setDragOrder({ id: o.id, status: o.status })}
+                    onDragStart={() =>
+                      setDragOrder({
+                        id: o.id,
+                        status: o.status,
+                        unconfirmedPayment: classifyUnconfirmedPayment(o.payments?.[0]),
+                      })
+                    }
                     onDragEnd={() => {
                       setDragOrder(null);
                       setDragOverCol(null);
@@ -185,6 +215,14 @@ function KanbanCard({
   const itemsWithNotes = o.order_items?.filter((it) => it.notes) ?? [];
   const paymentMethod = o.payments?.[0]?.method;
   const nextCol = NEXT_COLUMN[o.status];
+  // Same guard as the "Lis" view (dashboard.restaurant.orders.tsx) via the
+  // shared classifyUnconfirmedPayment source of truth — see F-01
+  // (docs/FULL_PLATFORM_AUDIT_2026-08-13.md): before this fix, this button
+  // had no payment-state guard at all, so a restaurant could confirm an
+  // order whose moncash/natcash payment was still unconfirmed (manual
+  // proof pending admin review, or automatic PLOP/Collect still in
+  // flight), unlike the List view which already blocked it.
+  const unconfirmedPayment = classifyUnconfirmedPayment(o.payments?.[0]);
 
   // Wait-time flag for the "Nouvo kòmand" column only — that's the queue
   // staff must act on fastest, so it's the one place a card sitting too
@@ -274,10 +312,22 @@ function KanbanCard({
               <Button
                 size="sm"
                 className="h-auto flex-1 gap-1 px-2.5 py-2"
-                disabled={isChangingStatus}
+                disabled={isChangingStatus || !!unconfirmedPayment}
+                title={
+                  unconfirmedPayment === "manual"
+                    ? "Tann yon admin konfime prèv peman an anvan w konfime kòmand la"
+                    : unconfirmedPayment === "automatic"
+                      ? "Peman otomatik la an tretman — n ap tann konfimasyon sistèm peman an, pa gen okenn aksyon admin ki nesesè"
+                      : undefined
+                }
                 onClick={() => onChangeStatus(o.id, "confirmed")}
               >
-                <Check aria-hidden="true" /> Konfime
+                <Check aria-hidden="true" />{" "}
+                {unconfirmedPayment === "manual"
+                  ? "Tann verifikasyon peman"
+                  : unconfirmedPayment === "automatic"
+                    ? "Peman ap tretman"
+                    : "Konfime"}
               </Button>
               <Button
                 variant="destructive"
