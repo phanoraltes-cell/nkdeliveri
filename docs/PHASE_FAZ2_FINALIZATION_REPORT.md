@@ -46,7 +46,7 @@ ALTER TABLE public.push_subscriptions
 - Host la ankre imedyatman apre `(/.*)?$` — anpeche `fcm.googleapis.com.evil.com` pase kòm yon "prefiks" ki sanble ak yon host valid
 - **Blòk rollback** an kòmantè an tèt fichye a (manyèl, `DROP CONSTRAINT IF EXISTS`)
 - Tab la **vid** (konfime Etap 1a) → aplikasyon dirèk, **pa gen `NOT VALID`**
-- **PA aplike sou pwodiksyon** — wè §0/règ ensidan an, ekri epi ap tann otorizasyon
+- **APLIKE sou pwodiksyon 2026-08-14**, via Management API (`database/query` — ekivalan SQL Editor, HTTPS + Bearer token, **pa** yon kòmand CLI ki louvri yon koneksyon dirèk — konsistan ak Règ A1 pwotokòl Faz 3-11 la). Tès `BEGIN...ROLLBACK` (`docs/NKD006_CHECK_CONSTRAINT_TEST.sql`) kouri anvan, 6 asèsyon tout pase ; migrasyon an epi aplike pou vre nan pwòp tranzaksyon li, ansanm ak ranje tracking `supabase_migrations.schema_migrations` (`supabase migration list` rete sinkwonize). Konfime an dirèk apre via `pg_constraint` : `push_subscriptions_endpoint_allowlist` egziste, definisyon egzak matche.
 
 ### 1c. Kouch sèvè
 
@@ -73,7 +73,7 @@ Poukisa 2 kouch : DB la anpeche done sal antre depi kòmansman ; sèvè a pwotej
 | T7 | `pushToUsers()` — **tès redireksyon** : `fetch` rele ak `redirect:"manual"` reyèl, yon repons `opaqueredirect` trete kòm echèk, pa 2yèm apèl `fetch` | ✅ PASS | `push-dispatch.server.test.ts` — "treats a redirect response as a failure... does not follow it" — verifye `fetchMock` rele **yon sèl fwa** |
 | T8 | `pushToUsers()` — endpoint valid FCM reyisi, `redirect`/`signal` byen prezan nan apèl `fetch` la | ✅ PASS | `push-dispatch.server.test.ts` — "sends successfully... with redirect: manual and a signal set" |
 | T9 | Endpoint "gone" (410) toujou retire — konpòtman egzistan pa kraze | ✅ PASS (regresyon) | `push-dispatch.server.test.ts` — "still removes a genuinely dead (410 Gone) endpoint" |
-| T10 | CHECK constraint la limenm (T1-T6 nan `docs/NKD006_CHECK_CONSTRAINT_TEST.sql`) | **EKRI, PA EGZEKITE** | Ap tann otorizasyon (§0/règ ensidan) |
+| T10 | CHECK constraint la limenm (T1-T6 nan `docs/NKD006_CHECK_CONSTRAINT_TEST.sql`) — cloud metadata rejte, host atakè rejte, host-suffix trick rejte, 3 endpoint valid aksepte | ✅ PASS (6/6, `BEGIN...ROLLBACK`) | Egzekite via Management API 2026-08-14 apre otorizasyon eksplisit — okenn done kenbe (ROLLBACK), migrasyon reyèl la aplike separeman apre |
 
 **16/16 tès Vitest pase** (`npx vitest run src/lib/__tests__/push-endpoint-allowlist.test.ts src/lib/__tests__/push-dispatch.server.test.ts`). Swit konplè `npm run verify` (196+ tès, tout fichye) **pase san kraze anyen** — 181 tès sesyon anvan an + 16 nouvo yo, typecheck/lint/`check:migrations`/build tout ✓.
 
@@ -142,24 +142,23 @@ Dapre règ ensidan §0/§3 pi wo a ("ekri l epi mande — pa egzekite l"), mwen 
 - ✅ `src/routes/` pa touche
 - ✅ NKD-001, NKD-002, NKD-003 Pati B pa touche
 - ✅ Okenn lojik peman/tranzisyon estati kòmand/kalkil komisyon touche
-- ✅ **Okenn kòmand Supabase CLI** egzekite pandan sesyon sa a
-- **Migrasyon aplike sou pwodiksyon ? NON.** Ap tann : (1) rezilta tès `docs/NKD006_CHECK_CONSTRAINT_TEST.sql`, (2) otorizasyon eksplisit pou aplike + commit + push.
+- ✅ **Okenn kòmand Supabase CLI** egzekite pandan sesyon sa a — aplikasyon migrasyon an fèt via Management API (`database/query`), pa `supabase db push`
+- **Migrasyon aplike sou pwodiksyon ? WI**, 2026-08-14, apre otorizasyon eksplisit ou bay ("Aplike migrasyon an... nan sql editor supabase la"). Tès `BEGIN...ROLLBACK` kouri anvan (6/6 pase), aplikasyon reyèl la fèt apre, konfime an dirèk via `pg_constraint`.
 
 ---
 
 ## 9. Estati Faz 2
 
-## **FAZ 2 : FÈMEN, avèk 2 pwen ki rete ouvè eksplisitteman**
+## **FAZ 2 : FÈMEN, avèk 1 pwen ki rete ouvè eksplisitteman**
 
 Tout 4 finding yo (NKD-004 à NKD-007) gen yon repons/aksyon konkrè :
 - **NKD-004** : envantè konplè fèt, klase P3, backlog dokimante pou apre Faz 11.
 - **NKD-005** : deklase P3 (mitigated by design), ak kondisyon retou klè.
-- **NKD-006** : fiks konplè ekri (2 kouch), teste (16 tès inite, 100% pase), **ap tann otorizasyon pou aplikasyon/commit** — sa se sèl bagay ki anpeche l fini nèt.
+- **NKD-006** : fiks konplè ekri (2 kouch), teste (16 tès inite + 6 tès SQL, 100% pase), **APLIKE sou pwodiksyon 2026-08-14** (via Management API, pa CLI), commite (`eff30f8`), pouse. **Fèmen nèt.**
 - **NKD-007** : Q3 reponn ak prèv (NON, pa gen service_role key). **Q1/Q2 rete san repons** — mande swa verifikasyon manyèl ou nan Dashboard la, swa otorizasyon pou yon apèl Management API lekti-sèlman.
 
 **Sa ki rete ouvè** :
-1. Migrasyon + kòd NKD-006 poko aplike/commite/pouse — ap tann otorizasyon.
-2. NKD-007 Q1/Q2 (estati pwojè istorik la ak RLS li) — mande yon dezyèm etap separe, pa yon blokaj sekirite (P3 deja etabli kèlkeswa repons lan).
-3. Backlog NKD-004 (63 mesaj) — pa yon travay Faz 2, delibereman ranvwaye apre Faz 11.
+1. NKD-007 Q1/Q2 (estati pwojè istorik la ak RLS li) — mande yon dezyèm etap separe, pa yon blokaj sekirite (P3 deja etabli kèlkeswa repons lan).
+2. Backlog NKD-004 (63 mesaj) — pa yon travay Faz 2, delibereman ranvwaye apre Faz 11.
 
 **Pa gen okenn nan 2 pwen ouvè yo ki bloke Faz 3.**

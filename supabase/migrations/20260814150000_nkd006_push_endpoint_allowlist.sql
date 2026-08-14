@@ -37,14 +37,17 @@
 -- write) and its `redirect: "manual"` (stops an allowed host from
 -- redirecting the request to a disallowed one after the fact).
 --
--- NOT YET APPLIED TO PRODUCTION. Per the 2026-08-14 CLI credential
--- incident (docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md), this session is
--- under a standing instruction to write queries/migrations and ask before
--- executing anything against the live database, rather than run them
--- autonomously as prior migrations in this project were tested/applied.
--- The BEGIN...ROLLBACK test for this constraint is written and ready
--- (see the finalization report) -- it has not been run. Apply only after
--- that test is reviewed and this migration is explicitly authorized.
+-- APPLIED to production 2026-08-14, via the Management API
+-- (database/query -- the SQL Editor equivalent, HTTPS + Bearer token, NOT
+-- a CLI command that opens a direct Postgres connection -- see rule A1 in
+-- the Phase 3-11 protocol, docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md).
+-- docs/NKD006_CHECK_CONSTRAINT_TEST.sql was run first (BEGIN...ROLLBACK,
+-- all 6 assertions passed), then this statement was applied for real in
+-- its own transaction, together with the matching
+-- supabase_migrations.schema_migrations tracking row so `supabase
+-- migration list` stays in sync with the CLI's own bookkeeping despite
+-- not being applied via `supabase db push`. Confirmed live afterward via
+-- pg_constraint.
 --
 -- ROLLBACK (manual, if this constraint ever needs to be reverted):
 --   ALTER TABLE public.push_subscriptions

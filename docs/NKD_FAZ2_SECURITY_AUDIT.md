@@ -144,7 +144,7 @@ Twa mekanis distenk, chak li ak politik RLS li nan kontèks konplè :
 |---|---|---|---|---|
 | NKD-004 | RAISE EXCEPTION an angle (Kategori B) | P3 | 67/157 (42.7%) | KONFIME pa lekti konplè (2026-08-14) — `docs/NKD-004_RAISE_MESSAGES_BACKLOG.md` |
 | NKD-005 | Fuit non tab nan trigger `prevent_log_mutation` (Kategori C) | ~~P1*~~ **P3 — mitigated by design** (rekl. 2026-08-14, §2) | 1 ka | KONFIME, ak nòt reyaksesibilite ki redwi risk pratik |
-| NKD-006 | SSRF via `push_subscriptions.endpoint` san validasyon | **P1** | 1 chemen konplè | KONFIME, chemen dat-a-dat trase |
+| NKD-006 | SSRF via `push_subscriptions.endpoint` san validasyon | P1 → **FIXED** (finalizasyon Faz 2, 2026-08-14 — `docs/PHASE_FAZ2_FINALIZATION_REPORT.md`) | 1 chemen konplè | KONFIME, chemen dat-a-dat trase |
 | NKD-007 | Ansyen `.env` (pwojè Supabase diferan + kle Google Maps deja rezoud) nan istwa git | P3 | 3 kòmi, 2 varyab sansib (1 deja rezoud) | KONFIME (pathspec + pickaxe egzoustif) |
 
 *NKD-005 te klase P1 dapre gid klasifikasyon Kategori C bay pou Faz 2 a; reklase P3 (mitigated by design) pandan finalizasyon Faz 2 (2026-08-14) — wè §2 pou 2 rezon konfime yo ak kondisyon retou a P1.
