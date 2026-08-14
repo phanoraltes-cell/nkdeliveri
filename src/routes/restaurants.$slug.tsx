@@ -200,7 +200,16 @@ function RestaurantPage() {
   });
 
   if (!data) return null;
-  const { r, cats, prods } = data;
+  const { r, cats } = data;
+  // NKD-010: a product with stock_quantity === 0 doesn't appear on the
+  // customer menu at all (not even disabled) — the owner's explicit
+  // request. NULL/undefined (untracked, D1) and any positive count both
+  // pass through unchanged. This is convenience only, not the real
+  // control — create_order_secure's own atomic decrement is the actual
+  // authority (see the "Fini" fallback further down for the case where a
+  // product still in a customer's already-open cart runs out before
+  // checkout).
+  const prods = data.prods.filter((p) => p.stock_quantity !== 0);
 
   function onToggleFavorite() {
     if (!isLoggedIn) {
