@@ -1,0 +1,57 @@
+-- NKD-006 remediation (docs/NKD_FAZ2_SECURITY_AUDIT.md §4 -> P1 SSRF).
+--
+-- Before this migration: public.push_subscriptions.endpoint had no CHECK
+-- at all beyond NOT NULL UNIQUE (20260703071050_...:4). RLS "Users manage
+-- own push subs" (WITH CHECK auth.uid() = user_id) only verifies who owns
+-- the row, never what the endpoint value itself is. Any authenticated
+-- user could upsert an arbitrary URL as their own endpoint directly via
+-- PostgREST, bypassing the browser PushManager entirely (which would
+-- never generate anything but a real push-service URL) --
+-- src/lib/push-dispatch.server.ts then fetches that URL server-side with
+-- no host check at all, the next time any normal event pushes a
+-- notification to that user. Full chain in the audit doc.
+--
+-- Confirmed live before writing this (SQL Editor, 2026-08-14):
+--   SELECT split_part(split_part(endpoint, '/', 3), ':', 1) AS host, count(*)
+--   FROM public.push_subscriptions GROUP BY 1 ORDER BY 2 DESC;
+--   -> Success. No rows returned.
+-- Table is empty: no data migration, no NOT VALID/VALIDATE CONSTRAINT
+-- two-step needed, no risk of breaking an existing row -- and, just as
+-- importantly, no evidence this was ever actually exploited (there was
+-- never a row to exploit through).
+--
+-- Allowlist (kept in sync by hand with the TS-side copy,
+-- src/lib/push-endpoint-allowlist.ts -- see that file's header for the
+-- browser-by-browser justification of exactly these 3 hosts, no others):
+--   fcm.googleapis.com                  Chrome/Edge/Opera/Chromium (+Android)
+--   updates.push.services.mozilla.com   Firefox (+Android)
+--   web.push.apple.com                  Safari macOS 13+/iOS 16.4+
+--
+-- The regex anchors the host with `(/|$)` immediately after it (not just
+-- a substring match) so `https://fcm.googleapis.com.evil.com/...` cannot
+-- pass by having an allowed hostname as a mere prefix.
+--
+-- This is layer 1 of 2 -- see push-dispatch.server.ts's own
+-- isAllowedPushEndpoint() re-check (layer 2: stops the fetch itself even
+-- if a row somehow bypassed this constraint, e.g. a future service_role
+-- write) and its `redirect: "manual"` (stops an allowed host from
+-- redirecting the request to a disallowed one after the fact).
+--
+-- NOT YET APPLIED TO PRODUCTION. Per the 2026-08-14 CLI credential
+-- incident (docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md), this session is
+-- under a standing instruction to write queries/migrations and ask before
+-- executing anything against the live database, rather than run them
+-- autonomously as prior migrations in this project were tested/applied.
+-- The BEGIN...ROLLBACK test for this constraint is written and ready
+-- (see the finalization report) -- it has not been run. Apply only after
+-- that test is reviewed and this migration is explicitly authorized.
+--
+-- ROLLBACK (manual, if this constraint ever needs to be reverted):
+--   ALTER TABLE public.push_subscriptions
+--     DROP CONSTRAINT IF EXISTS push_subscriptions_endpoint_allowlist;
+-- Safe to drop at any time -- it only restricts future INSERT/UPDATE
+-- values, no data or other object depends on it existing.
+ALTER TABLE public.push_subscriptions
+  ADD CONSTRAINT push_subscriptions_endpoint_allowlist CHECK (
+    endpoint ~ '^https://(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|web\.push\.apple\.com)(/.*)?$'
+  );

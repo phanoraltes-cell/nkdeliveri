@@ -6,6 +6,14 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { isAllowedPushEndpoint } from "@/lib/push-endpoint-allowlist";
+
+// NKD-006 SSRF fix (docs/NKD_FAZ2_SECURITY_AUDIT.md §4) — matches the
+// AbortController + timeout convention already used by
+// moncash-client.server.ts / plop-client.server.ts, not the newer
+// AbortSignal.timeout() API, for consistency with the rest of this
+// codebase's outbound-fetch code.
+const PUSH_FETCH_TIMEOUT_MS = 15_000;
 
 /**
  * Same check_rate_limit_secure call/throw/return shape that used to be
@@ -98,8 +106,40 @@ export async function pushToUsers(
           expirationTime: null,
           keys: { p256dh: s.p256dh, auth: s.auth },
         };
+        // Re-checked here even though public.push_subscriptions has its own
+        // CHECK constraint on `endpoint` (NKD-006) — this is the second of
+        // the fix's two layers: the DB stops bad data from being written at
+        // all, this stops the fetch itself from ever reaching a
+        // disallowed/internal host, whichever way a row got here. A row
+        // that fails this can never pass it later either, so it's cleaned
+        // up the same way a dead (404/410) endpoint is.
+        if (!isAllowedPushEndpoint(s.endpoint)) {
+          console.warn("[push] rejected endpoint outside the allowlist", s.endpoint);
+          deadEndpoints.push(s.endpoint);
+          return;
+        }
+
         const built = await buildPushPayload(message, subscription, vapid);
-        const res = await fetch(s.endpoint, built as unknown as RequestInit);
+        const controller = new AbortController();
+        const timeoutHandle = setTimeout(() => controller.abort(), PUSH_FETCH_TIMEOUT_MS);
+        let res: Response;
+        try {
+          res = await fetch(s.endpoint, {
+            ...(built as unknown as RequestInit),
+            // Without this, a host that passes the allowlist check (e.g. a
+            // real fcm.googleapis.com response) could still redirect the
+            // request to an internal address and have `fetch` follow it
+            // automatically — "manual" makes that a no-op response instead.
+            redirect: "manual",
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutHandle);
+        }
+        if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+          console.warn("[push] endpoint attempted a redirect, refusing to follow", s.endpoint);
+          return;
+        }
         if (res.status === 404 || res.status === 410) deadEndpoints.push(s.endpoint);
         else if (res.ok || res.status === 201) sent++;
       } catch (err) {
