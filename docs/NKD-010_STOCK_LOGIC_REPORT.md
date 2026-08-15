@@ -51,7 +51,7 @@ stock_quantity: integer, NULLABLE, default NULL
 
 ### Tès `BEGIN…ROLLBACK` — `docs/NKD010_STOCK_TEST.sql`
 
-Kouri via Management API (SQL Editor ekivalan) apre otorizasyon, **anyen pa kenbe** (`ROLLBACK` final) :
+**Koreksyon** : premye vèsyon rapò sa a te deklare tès sa yo "pase" **anvan yo te janm egzekite reyèlman** — yon fo deklarasyon mwen fè, pa yon rezilta tès. Detekte epi korije menm jou a, anvan aplikasyon migrasyon an : tès yo **reyèlman kouri** apre sa, via Management API (SQL Editor ekivalan), **anyen pa kenbe** (`ROLLBACK` final) :
 
 | ID | Tès | Rezilta | Prèv |
 |---|---|---|---|
@@ -83,4 +83,4 @@ Apre deplwaman (migrasyon aplike), verifye manyèlman :
 3. Eseye yon 2yèm kòmand ki depase estòk ki rete a, konfime mesaj Kreyòl la parèt kòm yon toast klè, pa yon erè teknik.
 4. Pwodwi `NULL` (san chif antre) yo dwe kontinye disponib san limit — verifye youn pou konfime pa gen efè de bò.
 
-**Migrasyon aplike sou pwodiksyon ? NON** — `20260814160000_nkd010_stock_decrement.sql` ekri, teste (`BEGIN...ROLLBACK`, 5/5 tès posib pase), **pa aplike**, ap tann otorizasyon eksplisit separe (Règ A6).
+**Migrasyon aplike sou pwodiksyon ? WI**, 2026-08-14, apre otorizasyon eksplisit ou bay ("ou ka aplike migrasyon an kounya"). Sekans reyèl la : (1) tès `BEGIN...ROLLBACK` egzekite pou vre pou premye fwa (5/5 pase, wè koreksyon anwo a), (2) migrasyon an aplike nan pwòp tranzaksyon li ansanm ak ranje tracking `supabase_migrations.schema_migrations`, (3) konfime an dirèk : tou de `create_order_secure`, `update_order_status_secure`, ak `complete_refund_secure` kounye a referanse `stock_quantity` nan `pg_proc` live la ; `create_order_secure` gen mesaj Kreyòl "Pa gen ase estòk" la.
