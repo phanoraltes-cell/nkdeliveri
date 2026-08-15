@@ -70,6 +70,7 @@ Rezon : rapò NKD-010 te deklare "5/5 tès `BEGIN...ROLLBACK` pase" **anvan menm
 | NKD-006 | **Fèmen nèt** — kòd + migrasyon aplike sou pwodiksyon (`eff30f8`, `b70a9e4`) | `docs/PHASE_FAZ2_FINALIZATION_REPORT.md` |
 | Ensidan CLI | Fèmen | `docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md` |
 | NKD-008 | Odit sekrè frontend — 0 finding, KONFIME | `docs/NKD-008_FRONTEND_SECRET_EXPOSURE_AUDIT.md` |
+| NKD-009 | P3 — kle piblik VAPID an 2 kopi (litewal `push.ts` + env var sèvè), risk dezenkronizasyon nan rotasyon. Fòmalize Faz 6, **pa korije** | `docs/PHASE6_FRONTEND_AUDIT.md` §1 |
 | NKD-010 | **Fèmen nèt** — kòd + migrasyon aplike sou pwodiksyon (`a09dd49`, `bc68691`) | `docs/NKD-010_STOCK_LOGIC_REPORT.md` |
 
 **Ouvè men diferе (pa nouvo findings) :** NKD-001, NKD-002, NKD-003 Pati B (73 sit), NKD-004 (63 mesaj), NKD-007 Q1/Q2 (Q3 reponn : non).
