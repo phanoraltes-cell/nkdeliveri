@@ -22,16 +22,20 @@
 
 ---
 
-## PWEN 2 — RLS live (rekèt ekri, PA egzekite)
+## PWEN 2 — RLS live — **FÈT, KONFIME**
 
-Dapre Règ A1, rekèt sa a **ekri sèlman** — mande w kouri l nan SQL Editor epi kole rezilta a :
+Rekèt la (ekri dapre Règ A1) mèt pwojè a kouri li menm nan SQL Editor, 2026-08-16, 13:39 (kapti ekran) :
 
 ```sql
 SELECT tablename, rowsecurity FROM pg_tables
 WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 ```
 
-**Estati : PA FÈT** — ap tann rezilta ou. Rapò Faz 3 **pa mete ajou** (li rete `ESTIMASYON` jiskaske mwen gen yon vrè rezilta pou koله).
+**Rezilta : `Success. No rows returned` (0 rows, 100 max).**
+
+Dapre kritè lekti etabli davans (Faz 3 §2) : **`0 rows` → `51/51 KONFIME`**. Okenn tab piblik pa gen `rowsecurity = false` — RLS aktive san eksepsyon sou tout 51 tab yo, live, pa sèlman istwa migrasyon.
+
+**Rapò Faz 3 mete ajou** (`docs/PHASE3_DATABASE_AUDIT.md` §2 ak §8) — retire `ESTIMASYON`, ranplase ak rezilta a + dat.
 
 ---
 
@@ -58,7 +62,7 @@ WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 | Pwen | Estati |
 |---|---|
 | 1 — Rotasyon kle publishable | **KONFIME FÈT**, re-verifye ak konparezon egal-ego (ansyen=401, nouvo=200 sou menm endpoint). `.env.local` deja korije. |
-| 2 — RLS live | **PA FÈT** — rekèt ekri, ap tann ou kouri l nan SQL Editor |
+| 2 — RLS live | **KONFIME FÈT** — 0 rows, 51/51 tab. Rapò Faz 3 mete ajou. |
 | 3 — NKD-014 (envantè zouti) | **KONFIME FÈT**, re-verifye — gap `settings.local.json` la **deja fèmen** (`.gitignore:59`, nouvo règ `.claude/`) |
 
-**2 sou 3 konfime fèt ak prèv, tou de gap ki te siyale nan premye pas la deja fèmen. 1 (RLS) toujou ap tann ou.**
+**3 sou 3 KONFIME fèt ak prèv. Tou de gap ki te siyale yo deja fèmen. Okenn nan 3 pwen yo pa rete ouvè.**

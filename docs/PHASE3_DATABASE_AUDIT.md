@@ -64,14 +64,12 @@ Rechèch egzoustif (`^\s*[a-z_]+\s+(FLOAT|REAL|double precision)\b`) sou tout 13
 
 **Kwaze ak `ENABLE ROW LEVEL SECURITY`** → **51/51 tab gen omwen 1 `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` nan istwa yo**. `grep "DISABLE ROW LEVEL SECURITY"` → **0 rezilta nan tout pwojè a** (pa gen okenn dezaktivasyon, janm).
 
-**ESTIMASYON, pa KONFIME** — sa a soti nan istwa migrasyon, pa yon lekti live `pg_class.relrowsecurity`. Rekèt pou konfime, **ekri, pa egzekite** (Règ A1) :
+**KONFIME live, 2026-08-16** — mèt pwojè a kouri rekèt sa a nan SQL Editor (Règ A1, `docs/NKD-014_TRIPLE_VERIFICATION_REPORT.md` Pwen 2) :
 ```sql
-SELECT relname, relrowsecurity
-FROM pg_class
-WHERE relnamespace = 'public'::regnamespace AND relkind = 'r'
-ORDER BY relrowsecurity ASC, relname;
+SELECT tablename, rowsecurity FROM pg_tables
+WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 ```
-Si tout 51 ranje retounen `relrowsecurity = true`, sa konfime rezilta a. Si youn retounen `false`, sa vle di yon dezaktivasyon manyèl te fèt deyò istwa migrasyon an — enpòtan pou detekte.
+**Rezilta : `Success. No rows returned` (0 rows).** Dapre kritè lekti etabli davans — `0 rows` → **51/51 tab gen RLS aktive, KONFIME**. Okenn tab piblik pa gen `rowsecurity = false`.
 
 ### Tab ak RLS aktive men **0 policy** (verifye ak yon regex miltip-liy, apre yon premye vèsyon ki te gen fo pozitif)
 **2 tab** : `admin_backup_code_state`, `admin_backup_codes`. **Verifye entansyonèl, pa yon bug** : tou de gen `REVOKE ALL ... FROM PUBLIC, anon, authenticated` (kòmantè pwòp migrasyon an konfime : `-- SECURITY DEFINER RPC sèlman`) — okenn wòl pa menm ka rive nan tab la pou deklanche yon evalyasyon policy an premye lye. RLS san policy la se yon dezyèm kouch, pa sèl la.
@@ -149,9 +147,9 @@ Rechèch `.map(async...)`/`.forEach(async...)`/`for (const...)` ki gen yon apèl
 - `push_subscriptions` UNIQUE(endpoint) jere kòrèkteman via upsert.
 - 2 tab RLS-san-policy (`admin_backup_code*`) se yon chwa entansyonèl, pa yon bug.
 - 0 patwon N+1 nan kòd frontend (routes/hooks).
+- **(Ajoute 2026-08-16)** 51/51 tab gen RLS aktive — konfime live, 0 rows sou rekèt `pg_tables.rowsecurity = false` (§2).
 
 **ESTIMASYON** (baze sou istwa migrasyon, mande konfimasyon live pou vin KONFIME) :
-- 51/51 tab gen RLS aktive — rekèt SQL ekri §2, ap tann egzekisyon.
 - 16 kolòn FK san endèks/UNIQUE — enpak reyèl mande `EXPLAIN ANALYZE`, rekèt ekri §3.
 
 **PA VERIFYE** :
