@@ -7,18 +7,18 @@
 
 ## PWEN 1 — Rotasyon kle publishable
 
-**1. Lokal** : `grep "sb_publishable_-n1MHTf6ad5AH8l" .env.local` → **jwenn**, `.env.local:28` (`.env` limenm pa egziste). Ansyen kle a **toujou konfigire lokalman**.
+**Re-verifye 2026-08-16, apre premye pas la** — `.env.local` chanje ant 2 verifikasyon yo, refè tès yo nèt sou **menm endpoint** (`/rest/v1/restaurants?select=id&limit=1`, pa endpoint rasin nan ki gen yon konpòtman apa) pou yon konparezon egal-ego :
 
-**2. Tès kont API a** (kòmand egzat pwomt la mande, egzekite) :
-```
-curl -s -o /dev/null -w "%{http_code}" "https://dcsnmvbtsmdbwrwbutph.supabase.co/rest/v1/" \
-  -H "apikey: sb_publishable_-n1MHTf6ad5AH8l_F5I3mg_NbyKX9CC"
-```
-**Rezilta : `401`**, kò repons : `{"message":"Unregistered API key","hint":"Double check the provided API key as it is not registered for this project."}`
+| Kle | Kòd HTTP | Kò repons |
+|---|---|---|
+| Ansyen (`sb_publishable_-n1MHTf6ad5AH8l...`) | **401** | `{"message":"Unregistered API key",...}` |
+| Nouvo (`sb_publishable_tzuK0mbZlG-HzyRnd9jYMA_Xd2HzhWQ`) | **200** | `[{"id":"7b57fe3d-ee9c-4d53-82a1-e989d3102a7b"}]` — done reyèl retounen |
 
-**Deklarasyon : `ROTASYON FÈT`** — kòd HTTP 401 + mesaj "Unregistered API key" se prèv dirèk ansyen kle a **rejte** pa Supabase.
+(Premye pas la te teste ansyen kle a sèlman kont `/rest/v1/` rasin, ki te bay `401 "Unregistered API key"` — kòrèk. Nouvo kle a, teste kont menm rasin nan, te bay `401 "Secret API key required"` — yon mesaj **diferan**, ki reflete yon kirikte endpoint rasin nan pou nouvo fòma kle a, pa yon pwoblèm ak kle a limenm. Tès sou yon vrè tab (anwo a) leve dout la nèt.)
 
-**⚠️ Konsekans dekouvri pandan verifikasyon an (pa mande, men enpòtan)** : `.env.local` lokal la **poko mete ajou** ak nouvo kle a — li toujou gen ansyen kle rejte a. Sa vle di **devlopman lokal sou machin sa a ap echwe kounye a** (nenpòt sesyon `npm run dev` ta rele Supabase ak yon kle ki deja rejte). Pa yon echèk rotasyon — se yon konsekans nòmal li ki poko trete lokalman.
+**Deklarasyon : `ROTASYON FÈT`, KONFIME nèt** — ansyen kle a rejte, nouvo kle a fonksyone, tès yo fèt sou menm endpoint pou elimine ambigwite.
+
+**Mizajou** : `.env.local` **deja korije** ant 2 verifikasyon yo — li gen nouvo kle a kounye a (`.env.local:5,28`). Gap lokal ki te siyale nan premye pas la **fèmen**.
 
 ---
 
@@ -46,7 +46,7 @@ WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 | Fichye | Kontni | Klasifikasyon |
 |---|---|---|
 | `.claude/settings.json` | **Konfime gen sekrè** — 495 liy, allowlist kòmand akimile ki gen **ansyen kle publishable la kole dirèkteman** nan plizyè liy `curl ... -H 'apikey: sb_publishable_-n1MHTf6ad5AH8l...'` (menm kle Pwen 1 la — **sa a se pwobableman menm rezon ki te fè rotasyon an nesesè**), plis lòt patwon `sk_secret`/`token`/`password` nan kòmand grep/sed itilize pandan sesyon sa a. | **DEJA JERE** — `.gitignore:56` egzat sou `.claude/settings.json`, konfime aktif (pa nan `git ls-files`). |
-| `.claude/settings.local.json` | 25 liy, sèlman yon lis `permissions.allow` (kòmand Bash/Read ki apwouve pandan sesyon yo). **0 mak sekrè** (`apikey`/`token`/`secret`/`password` → 0 match). | **PWOP** nan kontni, **men PA "DEJA JERE"** — pa gen okenn liy pou li nan `.gitignore` **pwojè a**. Sèl rezon li pa parèt nan `git status` se yon `**/.claude/settings.local.json` nan gitignore **global/pèsonèl** machin sa a (`C:\Users\DALPHE/.config/git/ignore`) — sa pwoteje **sèlman machin sa a**, pa okenn lòt devlopè k ap klone repo a. **Finding, pa korije** (dapre enstriksyon "pa korije anyen") : ajoute `.claude/settings.local.json` nan `.gitignore` pwojè a ta fèmen gap sa a pou tout moun, menm jan `settings.json` deja fèt. |
+| `.claude/settings.local.json` | 25 liy, sèlman yon lis `permissions.allow` (kòmand Bash/Read ki apwouve pandan sesyon yo). **0 mak sekrè** (`apikey`/`token`/`secret`/`password` → 0 match). | **PWOP, e kounye a DEJA JERE** — mizajou depi premye pas la : `.gitignore:59` gen yon nouvo règ `.claude/` (kouvri tout dosye a, pa sèlman `settings.json`). `git check-ignore -v` konfime se règ sa a ki pwoteje `settings.local.json` kounye a, pa gitignore pèsonèl la ankò. **Gap la fèmen.** |
 | `.vscode/*` (règ egziste, dosye a pa la) | n/a | **DEJA JERE, pwoaktif** — `.gitignore:35-36` deja pare (`.vscode/*` ekli, eksepte `extensions.json`) si dosye a ta janm kreye. |
 | `.idea` (règ egziste, dosye a pa la) | n/a | **DEJA JERE, pwoaktif** — `.gitignore:37`. |
 | `.cursor/` | n/a — pa egziste, **pa gen okenn règ `.gitignore` pou li non plis** | **Pa aplikab kounye a** — si yon devlopè te janm kreye l, li pa ta pwoteje otomatikman (pa gen `.cursor` nan `.gitignore`). Mansyone pou konplete, pa yon risk aktyèl (dosye a pa egziste).
@@ -57,8 +57,8 @@ WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 
 | Pwen | Estati |
 |---|---|
-| 1 — Rotasyon kle publishable | **KONFIME FÈT** (HTTP 401, prèv kole) |
+| 1 — Rotasyon kle publishable | **KONFIME FÈT**, re-verifye ak konparezon egal-ego (ansyen=401, nouvo=200 sou menm endpoint). `.env.local` deja korije. |
 | 2 — RLS live | **PA FÈT** — rekèt ekri, ap tann ou kouri l nan SQL Editor |
-| 3 — NKD-014 (envantè zouti) | **KONFIME FÈT** (envantè + klasifikasyon konplè) — 1 gap jwenn (`settings.local.json` pa nan `.gitignore` pwojè a), **pa korije**, dapre enstriksyon |
+| 3 — NKD-014 (envantè zouti) | **KONFIME FÈT**, re-verifye — gap `settings.local.json` la **deja fèmen** (`.gitignore:59`, nouvo règ `.claude/`) |
 
-**2 sou 3 konfime fèt ak prèv. 1 (RLS) ap tann ou.**
+**2 sou 3 konfime fèt ak prèv, tou de gap ki te siyale nan premye pas la deja fèmen. 1 (RLS) toujou ap tann ou.**
