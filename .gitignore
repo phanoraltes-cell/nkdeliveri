@@ -55,3 +55,5 @@ blob-report/
 
 .claude/settings.json
 supabase/.temp/
+
+.claude/
