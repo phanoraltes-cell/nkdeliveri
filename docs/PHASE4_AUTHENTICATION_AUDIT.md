@@ -46,8 +46,23 @@ storage: localStorage, persistSession: true, autoRefreshToken: true
 
 **Limit konnen (dokimante nan pwòp migrasyon an, pa yon gap kache)** : token aksè (JWT) ki deja siyen an rete valid jiska pwòp `exp` li menm apre revokasyon sesyon an — konpòtman estanda pou nenpòt sistèm JWT san tab blocklist separe. Enpak reyèl la depann de dire `exp` (config Auth GoTrue, **pa nan fichye migrasyon**).
 
-### **PA VERIFYE** — dire `exp` JWT la
-Konfigirasyon ekspirasyon JWT (defo Supabase se 1è, men ka chanje nan Dashboard → Authentication → Settings) **pa aksesib nan kòd sous ni migrasyon** — se yon paramèt GoTrue, pa yon tab SQL. Mande swa (a) verifikasyon manyèl nan Dashboard la, swa (b) yon rekèt Management API `GET /v1/projects/{ref}/config/auth` (lekti sèlman, pa yon koneksyon DB dirèk — men mande otorizasyon dapre Règ A1 kanmenm).
+### Dire `exp` JWT + rotasyon/reuse detection — **KONFIME**, mizajou 2026-08-14
+
+Verifye via Management API `GET /v1/projects/{ref}/config/auth` (lekti sèlman, otorize eksplisitteman dapre Règ A1), rezilta HTTP 200 :
+
+```
+jwt_exp: 3600
+refresh_token_rotation_enabled: true
+security_refresh_token_reuse_interval: 10
+```
+
+| Chèk | Rezilta | Klasifikasyon |
+|---|---|---|
+| Rotasyon refresh token | **aktive** (`true`) | ✅ |
+| Reuse detection | **aktive** — dekoule dirèkteman de rotasyon aktive a, ak yon fenèt gras 10s pou ka konkirans/rekèt paralèl lejitim yo (konpòtman estanda GoTrue, pa yon dezaktivasyon) | ✅ |
+| Dire `exp` JWT | `3600`s (1è) — **defo estanda Supabase, pa etann** | ✅ Nòt : pa `> 3600s`, donk pa gen jistifikasyon/redwiksyon nesesè |
+
+**Konklizyon (dapre gid klasifikasyon Travay 2)** : **Rotasyon aktive + reuse detection aktive → KONFIME pwòp — fèmen.** Yon refresh token vòlè pa ka rete valid endefiniman — premye reyitilizasyon li apre rotasyon deklanche revokasyon tout fanmi tokens lan (konpòtman GoTrue estanda). **Okenn nouvo ID NKD.**
 
 ---
 
@@ -106,11 +121,11 @@ Yon fwa yon lòt livrè reklame kòmand sa a (`claim_delivery_secure`, deja odit
 - Revokasyon sesyon reyèl (`DELETE FROM auth.sessions`), byen ankre sou pwòp itilizatè a.
 - RLS `orders`/`deliveries` anpeche IDOR sou tout 4 senaryo mande yo (livrè-vs-livrè, anplwaye-vs-lòt-restoran).
 - Forgot-password : rate-limited (site, pa re-derive).
+- **(Ajoute 2026-08-14)** Rotasyon refresh token aktive, reuse detection aktive, JWT exp = 3600s (defo) — verifye via Management API, §3.
 
 **ESTIMASYON** : okenn — chak KONFIME anwo a soti nan lekti dirèk kòd/migrasyon, pa yon sèl grep san kontèks.
 
 **PA VERIFYE** :
-- Dire `exp` JWT la (konfig GoTrue, pa nan repo a) — mande verifikasyon Dashboard oswa Management API.
 - Envantè konplè 117 RPC pou IDOR (sa a se yon echantiyon sou tab ki pi sansib, pa 100%).
 
 ---

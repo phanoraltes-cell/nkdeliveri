@@ -28,6 +28,31 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 
 **Nivo** : sa a se yon **risk pwosesis konfime, deja dokimante ak yon fiks ekri** (kòmand `gh api` nan `DEVOPS.md`) — pa yon nouvo finding NKD, se yon dosye ki merite re-parèt paske Faz 7 mande l eksplisitteman. **Aksyon** se yon desizyon mèt pwojè a (Règ A5 — aplike règ branch protection yo mande yon aksè admin GitHub, yon aksyon deliberateman pa fèt otomatikman pa okenn ajan).
 
+### **Mizajou 2026-08-14 (NKD-013, dapre demand mèt pwojè a) — bloke konplètman, pa yon senp "poko fèt"**
+
+`gh api repos/:owner/:repo/branches/main/protection` egzekite dirèkteman :
+```
+{"message":"Upgrade to GitHub Pro or make this repository public to enable this feature.","status":"403"}
+```
+
+**Konsekans** : Branch protection **pa disponib ditou** sou plan GitHub aktyèl la pou yon depo prive — se pa yon chwa ki poko fèt, se yon limit plan ki bloke menm kòmand `gh api` `DEVOPS.md` la deja ekri a. Kòmand sa a **ta echwe menm si mèt pwojè a te eseye egzekite l**.
+
+**2 opsyon reyèl** (desizyon biznis, Règ A5 — pa yon chwa teknik mwen ka fè) :
+1. Upgrade GitHub Pro/Team (peman) pou aktive branch protection sou yon depo prive.
+2. Fè depo a piblik (gratis, men ekspoze tout kòd sous — yon desizyon ki gen enpak deyò sekirite pi).
+
+**Lis non egzak 4 job yo** (pou konfigirasyon "required status checks" lè youn nan 2 opsyon yo aplike) :
+1. `Lint, typecheck, format, build`
+2. `Validate Supabase migrations (local replay)`
+3. `E2E — client/restaurant/driver/admin/auth`
+4. `E2E — accessibility/Lighthouse/SEO/PWA/offline/responsive`
+
+**⚠️** Egzanp `gh api` `DEVOPS.md:46-56` itilize `"contexts": ["quality", "migrations-db"]` — **ID YAML job yo, pa `name:` afiche yo**. GitHub matche "required status checks" ak tèks `name:` (lis anwo a), pa ID YAML la — kòmand egzanp lan ta bezwen korije pou itilize non egzat yo anvan li itil, menm apre yon upgrade plan.
+
+**Estati `.github/workflows/ci.yml` li menm** : verifye, **okenn chanjman kòd nesesè** — tout 4 job yo deja kouri sou `pull_request` **ak** `push` (yon sèl blòk `on:` nan tèt fichye a, pa gen okenn override pa-job), ak tout 5 chèk `npm run verify` a kouri kòm etap separe nan job `quality` a, plis `format:check` an plis. Sèl bagay ki manke se aplikasyon règ branch protection yo — bloke pa plan GitHub la, pa pa yon manke nan `ci.yml`.
+
+**Estati NKD-013** : **rete OUVÈ, P2** — pa yon fo pozitif, pa rezoud. Kòz la chanje (limit plan, pa yon senp "pa konfigire ankò"), men risk la menm jan an idantik : `main` san pwoteksyon, Vercel deplwaye chak push san CI kòm baryè.
+
 ---
 
 ## 2. Liy ensidan CLI
@@ -36,11 +61,19 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 
 ---
 
-## 3. NKD-007 Q1/Q2 — rete `PA VERIFYE`
+## 3. NKD-007 — **FÈMEN** (2026-08-14)
 
 **Q3 deja reponn** (Faz 2 finalizasyon) : **NON**, pa gen `service_role` key nan 3 kòmi yo.
 
-**Q1/Q2 mande** swa (a) verifikasyon manyèl ou nan Dashboard Supabase (chèche referans pwojè istorik ki soti nan `.env` kòmi 2026-07-02/03, valè li pa dwe parèt nan rapò a) pou konfime si pwojè a toujou aktif, swa (b) yon apèl Management API `GET /v1/projects` (lekti sèlman) ki mande otorizasyon eksplisit (Règ A1). **Pa fèt nan pas sa a** — pa bloke Faz 7, men rete yon liy ouvè.
+**Q1 reponn** : `GET /v1/projects` (Management API, lekti sèlman) → **1 sèl pwojè total nan kont Supabase la, se pwodiksyon aktyèl la** (`dcsnmvbtsmdbwrwbutph`). Referans pwojè istorik la (soti nan `.env` kòmi 2026-07-02/03, valè li pa parèt nan dokiman sa a) **pa egziste ankò nan kont sa a** — pa gen match.
+
+**Konklizyon dapre tablo klasifikasyon an** :
+
+| Q1 pwojè aktif ? | Q2 RLS ? | Konklizyon |
+|---|---|---|
+| **Non** | — (san objè, pwojè a pa egziste) | **Fèmen — okenn risk** |
+
+**Estati final NKD-007 : FÈMEN, okenn risk.** Q2 pa mande verifikasyon adisyonèl paske Q1 li menm rezoud kesyon an antyèman — pa gen yon pwojè k ap egziste pou li ta ka gen yon pwoblèm RLS ladan l.
 
 ---
 
@@ -87,18 +120,19 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 ## 10. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
-- `ci.yml` li konplè, byen konstwi, 4 job.
-- Branch protection **pa aplike** (dokimante deja, konfime anpirikman pa konpòtman sesyon sa a).
+- `ci.yml` li konplè, byen konstwi, 4 job, tout kouri sou `pull_request` ak `push`.
+- Branch protection **bloke pa plan GitHub la** (403, mizajou 2026-08-14 — pa yon senp "pa konfigire", yon limit plan).
 - `.env`/`.env.*` byen nan `.gitignore`, men **pa gen pre-commit hook**.
 - Vercel deplwaye chak push san CI kòm baryè.
 - TLS/Cloudflare/headers deja VERIFIED (site).
 - Monitoring Sentry konfime.
 - `docs/BACKUP_RESTORE.md` egziste.
+- **NKD-007 FÈMEN** (Q1=Non, mizajou 2026-08-14) — pa gen risk.
+- **(Ajoute)** Rotasyon/reuse detection refresh token aktive, JWT exp 3600s (defo) — Faz 4 §3.
 
 **ESTIMASYON** : okenn nouvo.
 
 **PA VERIFYE** :
-- NKD-007 Q1/Q2 (estati pwojè istorik la).
 - Konfigirasyon alèt Sentry reyèl.
 - Kontni detaye `BACKUP_RESTORE.md` (prezans konfime sèlman).
 
@@ -106,8 +140,8 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 
 ## 11. Kwazman ak backlog egzistan
 
-Pa gen nouvo ID NKD kreye. **De bagay site pou atansyon mèt pwojè a** (pa vilnerabilite, desizyon pwosesis) :
-1. Aplike branch protection `main` (kòmand deja ekri, `DEVOPS.md`).
+**NKD-013 rete OUVÈ (P2)** — kòz konfime kounye a (limit plan GitHub, pa yon senp negliges). **De bagay site pou atansyon mèt pwojè a** (pa vilnerabilite, desizyon biznis/pwosesis) :
+1. NKD-013 : chwazi ant upgrade GitHub Pro/Team oswa fè depo a piblik, pou aktive branch protection `main`.
 2. Ajoute yon pre-commit hook/scanner sekrè (§4).
 
 ---

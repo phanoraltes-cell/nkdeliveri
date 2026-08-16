@@ -71,11 +71,15 @@ Rezon : rapò NKD-010 te deklare "5/5 tès `BEGIN...ROLLBACK` pase" **anvan menm
 | Ensidan CLI | Fèmen | `docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md` |
 | NKD-008 | Odit sekrè frontend — 0 finding, KONFIME | `docs/NKD-008_FRONTEND_SECRET_EXPOSURE_AUDIT.md` |
 | NKD-009 | P3 — kle piblik VAPID an 2 kopi (litewal `push.ts` + env var sèvè), risk dezenkronizasyon nan rotasyon. Fòmalize Faz 6, **pa korije** | `docs/PHASE6_FRONTEND_AUDIT.md` §1 |
+| NKD-007 | **Fèmen 2026-08-14** — Q1 (ansyen pwojè aktif?) = Non, pwojè pa egziste ankò nan kont lan. Okenn risk | `docs/PHASE7_INFRASTRUCTURE_AUDIT.md` §3 |
+| NKD-013 | **P2, OUVÈ** — CI (`ci.yml`) pa bloke deplwaman, `main` san pwoteksyon. Kòz konfime 2026-08-14 : bloke pa limit plan GitHub (403 sou depo prive), pa yon senp "pa konfigire". Mande desizyon biznis (upgrade plan oswa depo piblik) | `docs/PHASE7_INFRASTRUCTURE_AUDIT.md` §1 |
 | NKD-010 | **Fèmen nèt** — kòd + migrasyon aplike sou pwodiksyon (`a09dd49`, `bc68691`) | `docs/NKD-010_STOCK_LOGIC_REPORT.md` |
 
-**Ouvè men diferе (pa nouvo findings) :** NKD-001, NKD-002, NKD-003 Pati B (73 sit), NKD-004 (63 mesaj), NKD-007 Q1/Q2 (Q3 reponn : non).
+**Ouvè men diferе (pa nouvo findings) :** NKD-001, NKD-002, NKD-003 Pati B (73 sit), NKD-004 (63 mesaj).
 
-Si yon faz kwaze youn nan sa yo : site backlog la, pa kreye yon nouvo ID. Pwochen ID disponib : **NKD-011**.
+**Ouvè, mande desizyon biznis (pa diferе, pa yon fiks teknik)** : NKD-013 (branch protection bloke pa plan GitHub).
+
+Si yon faz kwaze youn nan sa yo : site backlog la, pa kreye yon nouvo ID. Pwochen ID disponib : **NKD-014**.
 
 ---
 
