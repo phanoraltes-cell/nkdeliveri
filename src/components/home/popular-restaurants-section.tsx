@@ -3,6 +3,7 @@ import { ArrowRight, Heart, Star, Store } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import type { HomeRestaurant } from "@/components/home/home-data";
 import { ImageWithFallback } from "@/components/image-with-fallback";
+import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 
 const CUISINES = ["Tout", "Manje Kreyòl", "Soup Joumou", "Ragou", "Lalo", "Fritay"];
 
@@ -22,6 +23,10 @@ export function PopularRestaurantsSection({
   isFavorite,
   onToggleFavorite,
 }: PopularRestaurantsSectionProps) {
+  // NKD-015: platform-wide fee (admin-set), not restaurant-set — r.delivery_fee
+  // no longer reflects the real charged fee since create_order_secure stopped
+  // reading it (every restaurant's own column is now permanently stale).
+  const deliveryFee = useDeliveryFee();
   return (
     <section className="mx-auto max-w-[1200px] px-5 pb-14">
       <div className="mb-6 flex items-end justify-between">
@@ -97,7 +102,9 @@ export function PopularRestaurantsSection({
               </div>
               <div className="flex items-center justify-between text-xs text-ink-soft">
                 <span>{r.avg_prep_time} min · Gonaïves</span>
-                <span className="font-semibold text-ink">{formatHTG(Number(r.delivery_fee))}</span>
+                {deliveryFee.data != null && (
+                  <span className="font-semibold text-ink">{formatHTG(deliveryFee.data)}</span>
+                )}
               </div>
             </div>
           </Link>

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
 import { usePaymentProviderAvailability } from "@/hooks/usePaymentProviderAvailability";
+import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import {
   getDefaultProvider,
   getProviderSetting,
@@ -159,22 +160,6 @@ function Checkout() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const restaurantId = items[0]?.restaurantId;
-  const restaurantFee = useQuery({
-    queryKey: ["restaurant-delivery-fee", restaurantId],
-    enabled: !!restaurantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("restaurants")
-        .select("delivery_fee")
-        .eq("id", restaurantId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data?.delivery_fee ?? null;
-    },
-    staleTime: 60 * 1000,
-  });
-
   const savedAddresses = useQuery({
     queryKey: ["my-addresses", user?.id],
     enabled: !!user,
@@ -200,10 +185,13 @@ function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedAddresses.data]);
 
-  // 150 mirrors create_order_secure's own COALESCE(v_restaurant.delivery_fee, 150)
-  // fallback — kept in sync so the total shown here always matches what the
-  // order is actually created with server-side.
-  const deliveryFee = items.length > 0 ? (restaurantFee.data ?? 150) : 0;
+  // NKD-015: platform-wide fee (admin-set, not restaurant-set), read from
+  // the same source create_order_secure itself reads at order-creation
+  // time (public.platform_delivery_zones' default zone) — see
+  // useDeliveryFee's own comment for why this is shared across every
+  // call site that needs to display it, not just re-queried here.
+  const platformFee = useDeliveryFee();
+  const deliveryFee = items.length > 0 ? (platformFee.data ?? 0) : 0;
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
@@ -616,7 +604,7 @@ function Checkout() {
               <Button
                 className="mt-6 h-auto w-full py-4 font-display font-extrabold"
                 onClick={submit}
-                disabled={submitting}
+                disabled={submitting || platformFee.isLoading}
               >
                 {submitting ? "Ap kreye…" : `Konfime kòmand la · ${formatHTG(total)}`}
               </Button>

@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Megaphone,
   AlertTriangle,
+  Truck,
 } from "lucide-react";
 import { useLiveOrders, type ActiveDelivery } from "@/hooks/useLiveOrders";
 import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
@@ -358,6 +359,12 @@ function AdminDashboard() {
                   title: "Peman platfòm",
                   desc: "Nimewo MonCash/NatCash fallback",
                   to: "/dashboard/admin/payout-settings",
+                },
+                {
+                  icon: Truck,
+                  title: "Frè livrezon",
+                  desc: "Pri livrezon platfòm nan itilize pou tout kòmand",
+                  to: "/dashboard/admin/delivery-fee",
                 },
                 {
                   icon: Percent,

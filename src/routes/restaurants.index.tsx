@@ -15,6 +15,7 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { useActivePlacements } from "@/hooks/useActivePlacements";
+import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { Chip } from "@/components/ui/chip";
 
 const PAGE_SIZE = 24;
@@ -103,6 +104,12 @@ function RestaurantsPage() {
   const showSponsored = !q?.trim() && (page ?? 1) === 1;
   const sponsored = useActivePlacements("search_results", 2);
   const sponsoredRows = showSponsored ? (sponsored.data ?? []) : [];
+
+  // NKD-015: platform-wide fee (admin-set), not restaurant-set — both
+  // r.delivery_fee (main list) and s.restaurant_delivery_fee (sponsored
+  // cards) no longer reflect the real charged fee since
+  // create_order_secure stopped reading restaurants.delivery_fee.
+  const deliveryFee = useDeliveryFee();
 
   function updateSearch(next: { q?: string; page?: number; sort?: SortKey }) {
     navSearch({ search: (prev) => ({ ...prev, ...next }), replace: true });
@@ -212,9 +219,7 @@ function RestaurantsPage() {
                         {s.restaurant_avg_prep_time != null && (
                           <span>{s.restaurant_avg_prep_time} min</span>
                         )}
-                        {s.restaurant_delivery_fee != null && (
-                          <span>{formatHTG(Number(s.restaurant_delivery_fee))}</span>
-                        )}
+                        {deliveryFee.data != null && <span>{formatHTG(deliveryFee.data)}</span>}
                       </div>
                     </div>
                   </Link>
@@ -264,7 +269,7 @@ function RestaurantsPage() {
                     ★ {Number(r.rating).toFixed(1)}
                   </span>
                   <span>{r.avg_prep_time} min</span>
-                  <span>{formatHTG(Number(r.delivery_fee))}</span>
+                  {deliveryFee.data != null && <span>{formatHTG(deliveryFee.data)}</span>}
                 </div>
               </div>
             </Link>

@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { SponsoredSection } from "@/components/restaurant/sponsored-section";
+import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 
 const DAY_SCHEMA_NAME: Record<string, string> = {
   mon: "Monday",
@@ -199,6 +200,11 @@ function RestaurantPage() {
     },
   });
 
+  // NKD-015: platform-wide fee (admin-set), not restaurant-set —
+  // r.delivery_fee no longer reflects the real charged fee since
+  // create_order_secure stopped reading it.
+  const deliveryFee = useDeliveryFee();
+
   if (!data) return null;
   const { r, cats } = data;
   // NKD-010: a product with stock_quantity === 0 doesn't appear on the
@@ -299,9 +305,11 @@ function RestaurantPage() {
                 <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">
                   {r.avg_prep_time} min
                 </span>
-                <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">
-                  Livrezon {formatHTG(Number(r.delivery_fee))}
-                </span>
+                {deliveryFee.data != null && (
+                  <span className="rounded-full bg-white/90 px-2 py-0.5 font-bold text-ink">
+                    Livrezon {formatHTG(deliveryFee.data)}
+                  </span>
+                )}
               </div>
             </div>
           </div>

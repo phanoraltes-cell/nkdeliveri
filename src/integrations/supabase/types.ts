@@ -1568,6 +1568,36 @@ export type Database = {
           },
         ];
       };
+      platform_delivery_zones: {
+        Row: {
+          created_at: string;
+          fee_htg: number;
+          id: string;
+          is_default: boolean;
+          name: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          fee_htg: number;
+          id?: string;
+          is_default?: boolean;
+          name: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          fee_htg?: number;
+          id?: string;
+          is_default?: boolean;
+          name?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
       platform_payout_settings: {
         Row: {
           id: boolean;
@@ -4206,6 +4236,27 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "orders";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_delivery_zone_fee_secure: {
+        Args: {
+          _fee_htg: number;
+          _zone_id: string;
+        };
+        Returns: {
+          created_at: string;
+          fee_htg: number;
+          id: string;
+          is_default: boolean;
+          name: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "platform_delivery_zones";
           isOneToOne: true;
           isSetofReturn: false;
         };
