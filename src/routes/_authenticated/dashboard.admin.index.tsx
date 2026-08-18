@@ -367,6 +367,12 @@ function AdminDashboard() {
                   to: "/dashboard/admin/delivery-fee",
                 },
                 {
+                  icon: AlertTriangle,
+                  title: "Livrezon echwe",
+                  desc: "Kòmand k ap tann kliyan vin chèche yo nan biwo a",
+                  to: "/dashboard/admin/delivery-failed",
+                },
+                {
                   icon: Percent,
                   title: "Restoran & Komisyon",
                   desc: "Chwazi pousantaj/montan chak restoran peye",

@@ -386,6 +386,8 @@ export type Database = {
           driver_lat: number | null;
           driver_lng: number | null;
           driver_notes: string | null;
+          failure_comment: string | null;
+          failure_reason: string | null;
           fee: number;
           id: string;
           location_updated_at: string | null;
@@ -403,6 +405,8 @@ export type Database = {
           driver_lat?: number | null;
           driver_lng?: number | null;
           driver_notes?: string | null;
+          failure_comment?: string | null;
+          failure_reason?: string | null;
           fee?: number;
           id?: string;
           location_updated_at?: string | null;
@@ -420,6 +424,8 @@ export type Database = {
           driver_lat?: number | null;
           driver_lng?: number | null;
           driver_notes?: string | null;
+          failure_comment?: string | null;
+          failure_reason?: string | null;
           fee?: number;
           id?: string;
           location_updated_at?: string | null;
@@ -1052,6 +1058,7 @@ export type Database = {
           currency: string;
           customer_id: string;
           delivery_address: string;
+          delivery_failed_at: string | null;
           delivery_fee: number;
           delivery_lat: number | null;
           delivery_lng: number | null;
@@ -1074,6 +1081,7 @@ export type Database = {
           currency?: string;
           customer_id: string;
           delivery_address: string;
+          delivery_failed_at?: string | null;
           delivery_fee?: number;
           delivery_lat?: number | null;
           delivery_lng?: number | null;
@@ -1096,6 +1104,7 @@ export type Database = {
           currency?: string;
           customer_id?: string;
           delivery_address?: string;
+          delivery_failed_at?: string | null;
           delivery_fee?: number;
           delivery_lat?: number | null;
           delivery_lng?: number | null;
@@ -3780,6 +3789,34 @@ export type Database = {
         };
         Returns: undefined;
       };
+      report_delivery_failed_secure: {
+        Args: { _comment?: string | null; _order_id: string; _reason: string };
+        Returns: {
+          assigned_at: string;
+          created_at: string;
+          delivered_at: string | null;
+          driver_heading: number | null;
+          driver_id: string | null;
+          driver_lat: number | null;
+          driver_lng: number | null;
+          driver_notes: string | null;
+          failure_comment: string | null;
+          failure_reason: string | null;
+          fee: number;
+          id: string;
+          location_updated_at: string | null;
+          order_id: string;
+          picked_up_at: string | null;
+          status: Database["public"]["Enums"]["delivery_status"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "deliveries";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       request_refund_secure: {
         Args: { _order_id: string; _reason: string };
         Returns: {
@@ -4588,14 +4625,19 @@ export type Database = {
         "customer" | "restaurant_owner" | "restaurant_staff" | "driver" | "admin" | "super_admin";
       cash_confirmation_status:
         "pending" | "customer_confirmed" | "driver_confirmed" | "validated" | "disputed";
-      commission_entry_type: "order_commission" | "monthly_fee" | "reversal";
+      commission_entry_type:
+        | "order_commission"
+        | "monthly_fee"
+        | "reversal"
+        | "driver_commission_delivery_failed";
       delivery_status:
         | "assigned"
         | "en_route_pickup"
         | "picked_up"
         | "en_route_dropoff"
         | "delivered"
-        | "cancelled";
+        | "cancelled"
+        | "delivery_failed";
       dispute_author_role: "customer" | "restaurant" | "driver" | "admin";
       dispute_status: "open" | "resolved";
       driver_status: "pending" | "approved" | "suspended" | "rejected" | "offline" | "online";
@@ -4608,7 +4650,8 @@ export type Database = {
         | "picked_up"
         | "delivered"
         | "cancelled"
-        | "refunded";
+        | "refunded"
+        | "delivery_failed";
       payment_method: "stripe" | "moncash" | "natcash" | "kach";
       payment_status:
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
@@ -4754,7 +4797,12 @@ export const Constants = {
         "validated",
         "disputed",
       ],
-      commission_entry_type: ["order_commission", "monthly_fee", "reversal"],
+      commission_entry_type: [
+        "order_commission",
+        "monthly_fee",
+        "reversal",
+        "driver_commission_delivery_failed",
+      ],
       delivery_status: [
         "assigned",
         "en_route_pickup",
@@ -4762,6 +4810,7 @@ export const Constants = {
         "en_route_dropoff",
         "delivered",
         "cancelled",
+        "delivery_failed",
       ],
       dispute_author_role: ["customer", "restaurant", "driver", "admin"],
       dispute_status: ["open", "resolved"],
@@ -4776,6 +4825,7 @@ export const Constants = {
         "delivered",
         "cancelled",
         "refunded",
+        "delivery_failed",
       ],
       payment_method: ["stripe", "moncash", "natcash", "kach"],
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],

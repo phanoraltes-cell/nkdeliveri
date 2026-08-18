@@ -6,4 +6,5 @@ export const DELIVERY_STATUS_LABEL: Record<string, string> = {
   en_route_dropoff: "Nan wout pou livre",
   delivered: "Livre",
   cancelled: "Anile",
+  delivery_failed: "Livrezon echwe",
 };

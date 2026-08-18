@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHTG } from "@/lib/format";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Package, CheckCircle2, X, Eraser } from "lucide-react";
+import { Package, CheckCircle2, X, Eraser, AlertTriangle } from "lucide-react";
 import { sendOrderDeliveredPush } from "@/lib/send-order-push.functions";
+import { sendOrderStatusPush } from "@/lib/send-order-status-push.functions";
 import { DELIVERY_STATUS_LABEL as STATUS_LABEL } from "@/lib/delivery-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,15 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 export const Route = createFileRoute("/_authenticated/dashboard/driver/history")({
   component: DriverHistory,
 });
+
+// NKD-016: must match the CHECK constraint on public.deliveries.failure_reason
+// (supabase/migrations/20260817120000_nkd016_delivery_failed.sql) exactly.
+const FAILURE_REASONS: { value: string; label: string }[] = [
+  { value: "customer_unavailable", label: "Kliyan pa reponn" },
+  { value: "address_not_found", label: "Pa jwenn adrès la" },
+  { value: "zone_inaccessible", label: "Zòn nan pa aksesib" },
+  { value: "other", label: "Lòt rezon" },
+];
 
 function DriverHistory() {
   const { user } = Route.useRouteContext();
@@ -41,6 +51,7 @@ function DriverHistory() {
   });
 
   const sendDeliveredPush = useServerFn(sendOrderDeliveredPush);
+  const sendStatusPush = useServerFn(sendOrderStatusPush);
 
   const active = useQuery({
     queryKey: ["me-active-deliveries", driver?.id],
@@ -161,6 +172,41 @@ function DriverHistory() {
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
+  const [failingDeliveryId, setFailingDeliveryId] = useState<string | null>(null);
+  const [failureReason, setFailureReason] = useState("");
+  const [failureComment, setFailureComment] = useState("");
+
+  function closeFailureForm() {
+    setFailingDeliveryId(null);
+    setFailureReason("");
+    setFailureComment("");
+  }
+
+  // NKD-016: driver's "Can't deliver" button. Only valid from 'picked_up' —
+  // public.report_delivery_failed_secure enforces the same rule server-side
+  // (the RPC is the authority, this is just the earliest useful check).
+  const reportFailed = useMutation({
+    mutationFn: async ({ orderId, id }: { orderId: string; id: string }) => {
+      const { error } = await supabase.rpc("report_delivery_failed_secure", {
+        _order_id: orderId,
+        _reason: failureReason,
+        _comment: failureComment.trim() || null,
+      });
+      if (error) throw error;
+      return { orderId, id };
+    },
+    onSuccess: ({ orderId }) => {
+      toast.success("Rapò a voye — kòmand lan make kòm livrezon echwe");
+      closeFailureForm();
+      qc.invalidateQueries({ queryKey: ["me-active-deliveries"] });
+      qc.invalidateQueries({ queryKey: ["me-delivery-history"] });
+      sendStatusPush({ data: { orderId } }).catch((e) =>
+        console.warn("[push] delivery-failed notify failed", e),
+      );
+    },
+    onError: (e) => toast.error(e.message ?? "Erè"),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -259,8 +305,67 @@ function DriverHistory() {
                         <CheckCircle2 className="h-3.5 w-3.5" /> Livre
                       </button>
                     )}
+                    {d.status === "picked_up" && failingDeliveryId !== d.id && (
+                      <button
+                        disabled={advance.isPending}
+                        onClick={() => setFailingDeliveryId(d.id)}
+                        className="inline-flex items-center gap-1 rounded-full border-2 border-red-300 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5" /> Pa ka livre
+                      </button>
+                    )}
                   </div>
                 </div>
+                {failingDeliveryId === d.id && (
+                  <div className="mt-3 space-y-2 rounded-xl border border-red-200 bg-red-50 p-3">
+                    <label className="block text-xs font-bold uppercase text-red-800">
+                      Poukisa ou pa ka livre kòmand sa a?
+                    </label>
+                    <select
+                      value={failureReason}
+                      onChange={(e) => setFailureReason(e.target.value)}
+                      className={inputClsCompact()}
+                    >
+                      <option value="">— Chwazi yon rezon —</option>
+                      {FAILURE_REASONS.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                    {failureReason === "other" && (
+                      <textarea
+                        value={failureComment}
+                        onChange={(e) => setFailureComment(e.target.value)}
+                        placeholder="Eksplike rezon an…"
+                        aria-label="Eksplike rezon an…"
+                        rows={2}
+                        className={inputClsCompact()}
+                      />
+                    )}
+                    <p className="text-xs text-red-700">
+                      Kòmand lan ap make kòm livrezon echwe, kliyan an ap notifye pou l vin
+                      chèche manje a nan biwo a nan 2 èdtan.
+                    </p>
+                    <div className="flex gap-1.5">
+                      <Button size="sm" variant="outline" onClick={closeFailureForm}>
+                        Anile
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={
+                          reportFailed.isPending ||
+                          !failureReason ||
+                          (failureReason === "other" && failureComment.trim().length === 0)
+                        }
+                        onClick={() => reportFailed.mutate({ orderId: d.order_id, id: d.id })}
+                      >
+                        {reportFailed.isPending ? "Ap voye…" : "Konfime — pa ka livre"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -9,6 +9,7 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
   delivered: "Livre",
   cancelled: "Anile",
   refunded: "Ranbouse",
+  delivery_failed: "Livrezon echwe",
 };
 
 /** Statuses the order-chat feature is open for (server-enforced identically in send_order_chat_message_secure) — read-only outside of these. */

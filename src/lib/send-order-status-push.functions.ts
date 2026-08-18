@@ -21,9 +21,17 @@ const STATUS_COPY: Record<string, { title: string; body: (orderNumber: string) =
     title: "Kòmand anile",
     body: (n) => `Kòmand ${n} te anile.`,
   },
+  // NKD-016: sent right after report_delivery_failed_secure, not
+  // update_order_status_secure — orders.status still ends up 'delivery_failed'
+  // either way (synced by private.protect_delivery_status_transition), so
+  // this lookup-by-status helper covers it the same way as every other entry.
+  delivery_failed: {
+    title: "Nou pa t ka livre kòmand ou a",
+    body: (n) => `Nou pa t ka livre kòmand ${n}. Manje a ap tann ou nan biwo nou an pou 2 èdtan.`,
+  },
 };
 
-/** Called right after update_order_status_secure succeeds for a confirmed/preparing/ready/cancelled transition — notifies the customer. */
+/** Called right after update_order_status_secure (or report_delivery_failed_secure) succeeds for a confirmed/preparing/ready/cancelled/delivery_failed transition — notifies the customer. */
 export const sendOrderStatusPush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => InputSchema.parse(data))

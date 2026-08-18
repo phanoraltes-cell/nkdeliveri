@@ -78,6 +78,7 @@ import { Route as AuthenticatedDashboardAdminFinanceRouteImport } from './routes
 import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
 import { Route as AuthenticatedDashboardAdminDisputesRouteImport } from './routes/_authenticated/dashboard.admin.disputes'
 import { Route as AuthenticatedDashboardAdminDeliveryFeeRouteImport } from './routes/_authenticated/dashboard.admin.delivery-fee'
+import { Route as AuthenticatedDashboardAdminDeliveryFailedRouteImport } from './routes/_authenticated/dashboard.admin.delivery-failed'
 import { Route as AuthenticatedDashboardAdminCustomersRouteImport } from './routes/_authenticated/dashboard.admin.customers'
 import { Route as AuthenticatedDashboardAdminCommissionsRouteImport } from './routes/_authenticated/dashboard.admin.commissions'
 import { Route as AuthenticatedDashboardAdminCollectRouteImport } from './routes/_authenticated/dashboard.admin.collect'
@@ -473,6 +474,12 @@ const AuthenticatedDashboardAdminDeliveryFeeRoute =
     path: '/delivery-fee',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminDeliveryFailedRoute =
+  AuthenticatedDashboardAdminDeliveryFailedRouteImport.update({
+    id: '/delivery-failed',
+    path: '/delivery-failed',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminCustomersRoute =
   AuthenticatedDashboardAdminCustomersRouteImport.update({
     id: '/customers',
@@ -540,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
+  '/dashboard/admin/delivery-failed': typeof AuthenticatedDashboardAdminDeliveryFailedRoute
   '/dashboard/admin/delivery-fee': typeof AuthenticatedDashboardAdminDeliveryFeeRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -610,6 +618,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
+  '/dashboard/admin/delivery-failed': typeof AuthenticatedDashboardAdminDeliveryFailedRoute
   '/dashboard/admin/delivery-fee': typeof AuthenticatedDashboardAdminDeliveryFeeRoute
   '/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -687,6 +696,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/_authenticated/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
   '/_authenticated/dashboard/admin/customers': typeof AuthenticatedDashboardAdminCustomersRoute
+  '/_authenticated/dashboard/admin/delivery-failed': typeof AuthenticatedDashboardAdminDeliveryFailedRoute
   '/_authenticated/dashboard/admin/delivery-fee': typeof AuthenticatedDashboardAdminDeliveryFeeRoute
   '/_authenticated/dashboard/admin/disputes': typeof AuthenticatedDashboardAdminDisputesRoute
   '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
@@ -764,6 +774,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
     | '/dashboard/admin/customers'
+    | '/dashboard/admin/delivery-failed'
     | '/dashboard/admin/delivery-fee'
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
     | '/dashboard/admin/customers'
+    | '/dashboard/admin/delivery-failed'
     | '/dashboard/admin/delivery-fee'
     | '/dashboard/admin/disputes'
     | '/dashboard/admin/drivers'
@@ -910,6 +922,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/collect'
     | '/_authenticated/dashboard/admin/commissions'
     | '/_authenticated/dashboard/admin/customers'
+    | '/_authenticated/dashboard/admin/delivery-failed'
     | '/_authenticated/dashboard/admin/delivery-fee'
     | '/_authenticated/dashboard/admin/disputes'
     | '/_authenticated/dashboard/admin/drivers'
@@ -1462,6 +1475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminDeliveryFeeRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/delivery-failed': {
+      id: '/_authenticated/dashboard/admin/delivery-failed'
+      path: '/delivery-failed'
+      fullPath: '/dashboard/admin/delivery-failed'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminDeliveryFailedRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/customers': {
       id: '/_authenticated/dashboard/admin/customers'
       path: '/customers'
@@ -1506,6 +1526,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminCollectRoute: typeof AuthenticatedDashboardAdminCollectRoute
   AuthenticatedDashboardAdminCommissionsRoute: typeof AuthenticatedDashboardAdminCommissionsRoute
   AuthenticatedDashboardAdminCustomersRoute: typeof AuthenticatedDashboardAdminCustomersRoute
+  AuthenticatedDashboardAdminDeliveryFailedRoute: typeof AuthenticatedDashboardAdminDeliveryFailedRoute
   AuthenticatedDashboardAdminDeliveryFeeRoute: typeof AuthenticatedDashboardAdminDeliveryFeeRoute
   AuthenticatedDashboardAdminDisputesRoute: typeof AuthenticatedDashboardAdminDisputesRoute
   AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
@@ -1533,6 +1554,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminCommissionsRoute,
     AuthenticatedDashboardAdminCustomersRoute:
       AuthenticatedDashboardAdminCustomersRoute,
+    AuthenticatedDashboardAdminDeliveryFailedRoute:
+      AuthenticatedDashboardAdminDeliveryFailedRoute,
     AuthenticatedDashboardAdminDeliveryFeeRoute:
       AuthenticatedDashboardAdminDeliveryFeeRoute,
     AuthenticatedDashboardAdminDisputesRoute:
