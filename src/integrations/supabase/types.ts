@@ -60,6 +60,7 @@ export type Database = {
           _contact_phone: string;
           _delivery_address: string;
           _delivery_notes: string;
+          _idempotency_key?: string;
           _items: Json;
           _method: Database["public"]["Enums"]["payment_method"];
           _restaurant_id: string;
@@ -1064,6 +1065,7 @@ export type Database = {
           delivery_lng: number | null;
           delivery_notes: string | null;
           id: string;
+          idempotency_key: string | null;
           order_number: string;
           restaurant_id: string;
           service_fee: number;
@@ -1087,6 +1089,7 @@ export type Database = {
           delivery_lng?: number | null;
           delivery_notes?: string | null;
           id?: string;
+          idempotency_key?: string | null;
           order_number?: string;
           restaurant_id: string;
           service_fee?: number;
@@ -1110,6 +1113,7 @@ export type Database = {
           delivery_lng?: number | null;
           delivery_notes?: string | null;
           id?: string;
+          idempotency_key?: string | null;
           order_number?: string;
           restaurant_id?: string;
           service_fee?: number;
@@ -2803,6 +2807,7 @@ export type Database = {
           _contact_phone: string;
           _delivery_address: string;
           _delivery_notes: string;
+          _idempotency_key?: string;
           _items: Json;
           _method: Database["public"]["Enums"]["payment_method"];
           _restaurant_id: string;
