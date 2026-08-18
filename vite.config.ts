@@ -96,12 +96,14 @@ export default defineConfig({
         outDir: ".vercel/output/static",
         injectManifest: {
           globDirectory: ".vercel/output/static",
-          // webp/jpg/jpeg added: chef.jpg, hero-livreur.jpg, phone-mockup.jpg,
-          // scooter.jpg, moncash-logo.webp, and public/dishes/*.webp were all
-          // silently excluded before — first offline load of any page using
-          // them showed a broken image. json added for any small static data
+          // webp/jpg/jpeg added: chef.jpg, phone-mockup.jpg, scooter.jpg,
+          // moncash-logo.webp, and public/dishes/*.webp were all silently
+          // excluded before — first offline load of any page using them
+          // showed a broken image. json added for any small static data
           // file the build emits (e.g. manifest-adjacent metadata); harmless
-          // if none exist, matches zero files.
+          // if none exist, matches zero files. hero-livreur.webp/.png (hero
+          // section, LCP/fetchPriority="high") covered by the same webp/png
+          // entries, no glob change needed for that swap.
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,json,webmanifest,woff2}"],
           // Refonte Frontend Premium, Phase 8 (P8) — the glob above matched
           // every route's chunk indiscriminately: 256 entries / ~5.65 MiB

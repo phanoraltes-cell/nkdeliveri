@@ -1,7 +1,14 @@
 import { motion } from "framer-motion";
 import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck, Banknote } from "lucide-react";
 
-const heroLivreur = "/hero-livreur.jpg";
+// hero-livreur.png (source, 1254×1254) is 1.79 MB — the network the
+// Gonaïves audience is on makes that cost real, so a WebP encode (q80,
+// ~73 KB — under the ~200 KB budget with headroom) is served first via
+// <picture>; the untouched original .png stays as the <img> fallback for
+// browsers with no WebP decoder, never re-encoded, so its quality can't
+// regress from this change.
+const heroLivreurWebp = "/hero-livreur.webp";
+const heroLivreurPng = "/hero-livreur.png";
 
 const HERO_STATS = [
   { n: "10+", l: "Restoran", Icon: Store },
@@ -20,14 +27,26 @@ type HeroSectionProps = {
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
     <section id="hero" className="relative min-h-[600px] overflow-hidden md:min-h-[700px]">
-      {/* Background image — the NK delivery person */}
-      <img
-        src={heroLivreur}
-        alt=""
-        aria-hidden="true"
-        fetchPriority="high"
-        className="absolute inset-0 h-full w-full object-cover object-[70%_15%]"
-      />
+      {/* Background image — the NK delivery person. Decorative: the
+          heading/subtitle right below already carry the section's real
+          content as text, so an empty alt (screen readers skip it, same
+          as aria-hidden) is the correct choice here, not a descriptive
+          one — a descriptive alt would just make a screen reader announce
+          a redundant image description on top of that text. No explicit
+          width/height needed despite this being the LCP image: the
+          section itself is pinned to min-h-[600px]/md:min-h-[700px]
+          (line above) regardless of when/whether the image finishes
+          loading, so there's nothing for it to shift. */}
+      <picture>
+        <source srcSet={heroLivreurWebp} type="image/webp" />
+        <img
+          src={heroLivreurPng}
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_18%]"
+        />
+      </picture>
       {/* Dark gradient overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/25 md:from-black/75 md:via-black/50 md:to-transparent" />
 
