@@ -8,6 +8,7 @@ import { Minus, Plus, Trash2, MapPin, Banknote } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { noIndexMeta } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
 import { usePaymentProviderAvailability } from "@/hooks/usePaymentProviderAvailability";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/checkout-idempotency";
+import { isNetworkError, translateSupabaseError, NETWORK_GIVE_UP_MESSAGE } from "@/lib/rpc-errors";
 import {
   getDefaultProvider,
   getProviderSetting,
@@ -112,6 +115,29 @@ const METHODS = [
 ] as const;
 
 type CheckoutMethod = (typeof METHODS)[number]["id"];
+
+// NKD-012 — Senaryo A: connection drops after create_order_secure's
+// request is sent but before the response arrives. A network failure
+// (isNetworkError) is retried automatically, with the *same* idempotency
+// key (NKD-011) — the RPC itself either creates the order or, if a
+// previous attempt already did, returns that same order_id instead of a
+// duplicate. A real business rejection (insufficient stock, etc.) always
+// carries a Postgres code and is thrown immediately, never retried.
+const NETWORK_RETRY_ATTEMPTS = 2;
+const NETWORK_RETRY_DELAY_MS = 1000;
+
+async function createOrderWithRetry(
+  payload: Database["public"]["Functions"]["create_order_secure"]["Args"],
+): Promise<{ orderId: string } | { networkFailure: true }> {
+  for (let attempt = 0; attempt <= NETWORK_RETRY_ATTEMPTS; attempt++) {
+    const { data, error } = await supabase.rpc("create_order_secure", payload);
+    if (!error) return { orderId: data as string };
+    if (!isNetworkError(error)) throw error;
+    if (attempt === NETWORK_RETRY_ATTEMPTS) return { networkFailure: true };
+    await new Promise((resolve) => setTimeout(resolve, NETWORK_RETRY_DELAY_MS * (attempt + 1)));
+  }
+  return { networkFailure: true };
+}
 
 function Checkout() {
   const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
@@ -235,7 +261,8 @@ function Checkout() {
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
-      const { data: orderId, error: rpcErr } = await supabase.rpc("create_order_secure", {
+      const idempotencyKey = getOrCreateIdempotencyKey();
+      const orderResult = await createOrderWithRetry({
         _restaurant_id: rId,
         _items: items.map((it) => ({
           product_id: it.productId,
@@ -247,11 +274,26 @@ function Checkout() {
         _delivery_notes: notes || "",
         _method: orderMethod,
         _wants_location_sharing: wantsLocationSharing,
+        _idempotency_key: idempotencyKey,
       });
-      if (rpcErr) throw rpcErr;
+      if ("networkFailure" in orderResult) {
+        // Deliberately not a hard error state — the order may well have
+        // been created server-side (that's exactly Senaryo A). Same
+        // idempotency key stays saved for the next manual retry, and the
+        // link lets the customer check for themselves right now.
+        toast.error(NETWORK_GIVE_UP_MESSAGE, {
+          action: { label: "Wè kòmand mwen yo", onClick: () => nav({ to: "/orders" }) },
+        });
+        return;
+      }
+      const orderId = orderResult.orderId;
+      // The order now definitively exists — this attempt is done, whatever
+      // happens in the payment-initiation steps below. The next checkout
+      // (new cart, new items) needs its own key.
+      clearIdempotencyKey();
 
       // Best-effort — a failed push send must never block order creation.
-      sendNewOrderPushFn({ data: { orderId: orderId as string } }).catch((e) =>
+      sendNewOrderPushFn({ data: { orderId } }).catch((e) =>
         console.warn("[push] new-order notify failed", e),
       );
 
@@ -269,12 +311,12 @@ function Checkout() {
         const { data: paymentRow, error: payErr } = await supabase
           .from("payments")
           .select("id")
-          .eq("order_id", orderId as string)
+          .eq("order_id", orderId)
           .single();
         if (payErr || !paymentRow) {
           clear();
           toast.error("Kòmand kreye, men nou pa jwenn peman an. Kontakte sipò.");
-          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          nav({ to: "/orders/$id", params: { id: orderId } });
           return;
         }
 
@@ -296,7 +338,7 @@ function Checkout() {
             result.error ||
               "Kòmand kreye, men peman otomatik la pa reyisi kòmanse. Ou ka eseye ankò nan paj kòmand la.",
           );
-          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          nav({ to: "/orders/$id", params: { id: orderId } });
           return;
         }
         if (result.outcome === "already_confirmed") {
@@ -306,7 +348,7 @@ function Checkout() {
           // own poll/Realtime picks up the "paid" status within moments.
           clear();
           toast.success("Peman an konfime! N ap trete kòmand ou an.");
-          nav({ to: "/orders/$id", params: { id: orderId as string } });
+          nav({ to: "/orders/$id", params: { id: orderId } });
           return;
         }
         clear();
@@ -320,9 +362,24 @@ function Checkout() {
           ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
           : "Kòmand kreye ak siksè",
       );
-      nav({ to: "/orders/$id", params: { id: orderId as string } });
+      nav({ to: "/orders/$id", params: { id: orderId } });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erè pandan kreyasyon kòmand la");
+      // NKD-012: create_order_secure's own RAISE EXCEPTION (business
+      // errors — insufficient stock, restaurant closed, etc.) always
+      // carries a Postgres code and reaches here unchanged; a genuine
+      // network failure was already retried inside createOrderWithRetry
+      // and returned as { networkFailure: true } above, never thrown — so
+      // by the time execution reaches this catch, translateSupabaseError
+      // is always the right call. isNetworkError is still checked here as
+      // a safety net for a failure elsewhere in this try block (the
+      // payments lookup, initiateCollect) that isn't the retried RPC call.
+      if (isNetworkError(e)) {
+        toast.error(NETWORK_GIVE_UP_MESSAGE, {
+          action: { label: "Wè kòmand mwen yo", onClick: () => nav({ to: "/orders" }) },
+        });
+      } else {
+        toast.error(translateSupabaseError(e));
+      }
     } finally {
       setSubmitting(false);
     }

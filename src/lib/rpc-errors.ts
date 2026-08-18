@@ -51,6 +51,7 @@ const KNOWN_PG_CODE_MESSAGES: Record<string, string> = {
   "23502": "Gen yon enfòmasyon obligatwa ki manke.", // not_null_violation
   "23514": "Valè a pa valid.", // check_violation
   "42501": "Ou pa gen otorizasyon pou fè aksyon sa a.", // insufficient_privilege
+  "22P02": "Valè a pa valid.", // invalid_text_representation — real call site: create_order_secure's _idempotency_key (uuid) param, NKD-011
 };
 
 // Same lazy-import pattern as src/routes/__root.tsx's ErrorComponent: never
@@ -87,3 +88,29 @@ export function translateSupabaseError(error: unknown): string {
 
   return GENERIC_FALLBACK_MESSAGE;
 }
+
+// NKD-012 — a real network/connectivity failure (request never reached the
+// server, or no response ever came back) must never be shown or retried the
+// same way as a normal Postgres/business error. Every error this module
+// otherwise handles — including an *unmapped* one — carries a Postgres
+// SQLSTATE `code` string, because it came from PostgREST/Postgres actually
+// responding. A genuine network failure (the browser's fetch throwing, a
+// client-side timeout) has no such code at all: that absence is the same
+// signal `translateSupabaseError` above already keys its P0001-passthrough
+// decision on, just named and exported here so a caller can decide whether
+// to retry *before* translating the error into a shown message. Deliberately
+// does NOT consult `navigator.onLine` — it commonly reports `true` in Haiti
+// while the request still fails outright (this project's own field
+// observation, NKD-012) — the shape of the thrown error is the only honest
+// signal available.
+export function isNetworkError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return typeof (error as { code?: string }).code !== "string";
+}
+
+/** Shown while an automatic retry (same idempotency key) is still in flight — never an immediate hard failure. */
+export const NETWORK_RETRY_MESSAGE = "Koneksyon an fèb. N ap verifye si kòmand ou a pase...";
+
+/** Shown only once every automatic retry has also failed — the order may still have gone through server-side, so this must never claim it didn't. */
+export const NETWORK_GIVE_UP_MESSAGE =
+  "Nou pa ka konfime si kòmand ou a pase — koneksyon an fèb. Tcheke lis kòmand ou pou wè si li la.";

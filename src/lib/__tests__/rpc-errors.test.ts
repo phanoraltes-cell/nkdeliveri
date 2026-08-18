@@ -9,7 +9,7 @@
  * the user unchanged.
  */
 import { describe, expect, it } from "vitest";
-import { translateSupabaseError } from "../rpc-errors";
+import { translateSupabaseError, isNetworkError } from "../rpc-errors";
 
 const GENERIC_FALLBACK = "Nou pa kapab trete demann lan kounye a. Tanpri eseye ankò pita.";
 
@@ -102,6 +102,36 @@ describe("translateSupabaseError: unknown/absent codes always fall back to the g
 
   it("a bare string throw", () => {
     expect(translateSupabaseError("something went wrong")).toBe(GENERIC_FALLBACK);
+  });
+});
+
+describe("isNetworkError (NKD-012): distinguishes a real connectivity failure from a normal Postgres/business error", () => {
+  it("a bare fetch TypeError with no Postgres code is a network error", () => {
+    const err = new TypeError("Failed to fetch");
+    expect(isNetworkError(err)).toBe(true);
+  });
+
+  it("a real Postgres error (has a code) is NOT a network error, even as an Error instance", () => {
+    const err = Object.assign(new Error("Kòmand sa a pa disponib ankò."), { code: "P0001" });
+    expect(isNetworkError(err)).toBe(false);
+  });
+
+  it("a known Postgres SQLSTATE (e.g. 23505) is NOT a network error", () => {
+    const err = Object.assign(new Error("duplicate key"), { code: "23505" });
+    expect(isNetworkError(err)).toBe(false);
+  });
+
+  it("a PostgrestError-shaped plain object (not an Error instance) is NOT a network error", () => {
+    expect(isNetworkError(fakePostgrestError("23514", "check violation"))).toBe(false);
+  });
+
+  it("a plain string throw is NOT a network error (not an Error instance)", () => {
+    expect(isNetworkError("something went wrong")).toBe(false);
+  });
+
+  it("null/undefined are NOT network errors", () => {
+    expect(isNetworkError(null)).toBe(false);
+    expect(isNetworkError(undefined)).toBe(false);
   });
 });
 
