@@ -2,8 +2,8 @@
 
 **Dat** : 2026-08-17/18
 **Sous** : Faz 10 Business Logic Audit §7. Règ A5 leve pou pòte sa a sèlman.
-**Estati** : Migrasyon ekri + teste (lokal/tsc/lint/build/vitest), **PA APLIKE sou pwodiksyon** — tann otorizasyon eksplisit (§9).
-**Revizyon 2026-08-18** : mèt pwojè a jwenn 2 defo reyèl nan revizyon anvan aplikasyon (§10) — toude korije nan menm 2 fichye migrasyon yo (poko aplike, okenn nan yo pa t janm rive pwodiksyon).
+**Estati** : Migrasyon **APLIKE sou pwodiksyon** (2026-08-18, §9). Tès `BEGIN…ROLLBACK` : T0-T4 `PASS`, T5 te gen yon bug nan tès la (korije), T6/T8/T9 poko rekouri — **kòd fwontèn poko pouse** (§3, §9).
+**Revizyon 2026-08-18** : 2 defo reyèl jwenn nan revizyon anvan aplikasyon (§8b), korije nan menm 2 fichye migrasyon yo anvan aplikasyon. Apre aplikasyon, tès la revele yon 3yèm bug — nan **tès la** sèlman (T5, §3), pa nan migrasyon an — korije tou.
 
 ---
 
@@ -68,24 +68,22 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 
 ### Tès `BEGIN…ROLLBACK` — `docs/NKD016_DELIVERY_FAILED_TEST.sql`
 
-**PA ANKÒ EGZEKITE.** Kontrèman ak NKD-015, tès sa a **mande** de migrasyon yo deja aplike pou vre anvan (paske li itilize valè enum yo) — pa ka teste nan yon sèl `BEGIN…ROLLBACK` konbine. Sekans pou mèt pwojè a :
-1. Kouri `20260817110000_nkd016_delivery_failed_enum_values.sql` (san risk — ajoute valè enum sèlman, pa gen itilizasyon).
-2. Kouri `20260817120000_nkd016_delivery_failed.sql`.
-3. Kouri `docs/NKD016_DELIVERY_FAILED_TEST.sql` (BEGIN…ROLLBACK — anyen pa rete).
-4. Voye rezilta yo (NOTICE/erè) — **mwen pa deklare okenn PASS san prèv egzekisyon reyèl** (Règ A9).
+**Egzekite pa mèt pwojè a, 2026-08-18, nan SQL Editor**, apre migrasyon 1+2 deja aplike (§9). Premye pas la : T0-T4 `PASS`, **T5 `FAIL`** (`before=8, after=8`), T6/T8/T9 pa kouri (tranzaksyon an tonbe nan T5). Dapre Règ A9, sa se prèv egzekisyon reyèl — pa yon prediksyon.
 
-| ID | Tès | Rezilta |
-|---|---|---|
-| T0 | Kòmand san `contact_phone` rejte | ⏳ Pa teste ankò |
-| T1 | `picked_up → delivery_failed` mache | ⏳ Pa teste ankò |
-| T1b | Rezon "lòt" san kòmantè rejte | ⏳ Pa teste ankò |
-| T2 | Livrè kredite 150 HTG, restoran pa kredite | ⏳ Pa teste ankò |
-| T3 | Idanpotans — 2èm deklanchman (`orders`) pa double-kredite | ⏳ Pa teste ankò |
-| T4 | `delivery_failed → delivered` mache (admin) **+ verifye pa gen doub komisyon** (Defo 1) | ⏳ Pa teste ankò |
-| T5 | `delivery_failed → cancelled` : pa gen ranbousman, estòk pa retounen | ⏳ Pa teste ankò |
-| T6 | Tranzisyon envalid rejte (`delivery_failed → picked_up`) | ⏳ Pa teste ankò |
-| T8 | `en_route_dropoff → delivery_failed` mache (Defo 2) | ⏳ Pa teste ankò |
-| T9 | `assigned → delivery_failed` rejte (livrè poko pran manje a) | ⏳ Pa teste ankò |
+**Analiz `T5-FAIL`** : bug nan **tès la**, pa nan migrasyon an. Chif yo (`before=8, after=8`) pwouve estòk la **pa t chanje ditou** — konpòtman ki egzakteman atandi (delivery_failed → cancelled pa dwe touche estòk). `v_stock_before` te kaptire **apre** `create_order_secure` deja dekremante l (10→8), donk konparezon an kont `v_stock_before - 2` te doub-soustrè. **Korije** : konparezon vin `v_stock_after <> v_stock_before` (san `- 2`). Verifye : se sèl asèsyon nan fichye a ki reyitilize yon valè kaptire anvan yon operasyon deja modifye l — pa gen lòt ka menm klas la.
+
+| ID | Tès | Rezilta | Prèv |
+|---|---|---|---|
+| T0 | Kòmand san `contact_phone` rejte | ✅ PASS | Egzekite 2026-08-18, `T0-PASS` NOTICE resevwa |
+| T1 | `picked_up → delivery_failed` mache | ✅ PASS | Egzekite 2026-08-18, `T1-PASS` NOTICE resevwa |
+| T1b | Rezon "lòt" san kòmantè rejte | ✅ PASS | Egzekite 2026-08-18, `T1b-PASS` NOTICE resevwa |
+| T2 | Livrè kredite 150 HTG, restoran pa kredite | ✅ PASS | Egzekite 2026-08-18, `T2-PASS` NOTICE resevwa |
+| T3 | Idanpotans — 2èm deklanchman (`orders`) pa double-kredite | ✅ PASS | Egzekite 2026-08-18, `T3-PASS` NOTICE resevwa |
+| T4 | `delivery_failed → delivered` mache (admin) **+ verifye pa gen doub komisyon** (Defo 1) | ✅ PASS | Egzekite 2026-08-18, `T4-PASS` NOTICE resevwa — **konfime Defo 1 korije, pa gen 300 HTG** |
+| T5 | `delivery_failed → cancelled` : pa gen ranbousman, estòk pa retounen | ⚠️ Bug nan tès la (`before=8, after=8` — konpòtman reyèl la kòrèk), korije, **poko rekouri** | Egzekite 2026-08-18, erè analize ak korije, tann rekourse |
+| T6 | Tranzisyon envalid rejte (`delivery_failed → picked_up`) | ⏳ Pa kouri ankò (tranzaksyon tonbe nan T5) | — |
+| T8 | `en_route_dropoff → delivery_failed` mache (Defo 2) | ⏳ Pa kouri ankò (tranzaksyon tonbe nan T5) | — |
+| T9 | `assigned → delivery_failed` rejte (livrè poko pran manje a) | ⏳ Pa kouri ankò (tranzaksyon tonbe nan T5) | — |
 
 ## 6. Chanjman UI (`fichye:liy`)
 
@@ -121,4 +119,6 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 
 ## 9. Estati aplikasyon
 
-**Migrasyon aplike sou pwodiksyon ? NON.** Règ A1 rete an vigè pou pòte sa a (kontrèman ak NKD-015, pa gen otorizasyon Management-API-dirèk pou pòte sa a) — ekri, teste lokalman (tsc/lint/migrations/vitest/build), **tann mèt pwojè a kouri de fichye migrasyon yo + tès la nan SQL Editor**, epi otorizasyon eksplisit anvan aplikasyon reyèl. **Lòd deplwaman obligatwa** : migrasyon aplike (toude fichye, nan lòd) **anvan** okenn push kòd — Vercel deplwaye chak push san CI pa bloke l (Faz 7), kòd fwontèn nan li `delivery_failed`/nouvo kolòn ki pa ta egziste ankò.
+**Migrasyon aplike sou pwodiksyon ? WI**, 2026-08-18 — toude fichye (`20260817110000_...enum_values.sql` ak `20260817120000_...delivery_failed.sql`, avèk koreksyon Defo 1+2 yo ladan), pa mèt pwojè a li menm nan SQL Editor. **Konfime 9/9 eleman** (RPC `report_delivery_failed_secure`, trigger `trg_generate_driver_commission_on_delivery_failure`, 2 endèks — `orders_delivery_failed_at_idx` ak `commission_ledger_order_driver_delivery_failed_uniq`, 3 kolòn — `orders.delivery_failed_at`, `deliveries.failure_reason`, `deliveries.failure_comment`, 2 kontrent — `orders_contact_phone_required`, `deliveries_failure_reason_valid`) **+ 3 valè enum** (`delivery_failed` nan `order_status`/`delivery_status`, `driver_commission_delivery_failed` nan `commission_entry_type`). Migrasyon yo **pa retouche ankò** — bug T5 a te nan tès la sèlman (§3), pa nan yo.
+
+**Rekourse tès la mande** (T5 korije + T6/T8/T9 ki pa t kouri akòz T5) anvan konfime tout 10 tès yo `PASS` — kòd fwontèn nan **poko pouse** (commit lokal `1653004` sèlman), donk pa gen risk fenèt kase pandan sa a ap tann.

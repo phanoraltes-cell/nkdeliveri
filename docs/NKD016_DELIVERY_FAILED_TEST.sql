@@ -176,8 +176,13 @@ BEGIN
   PERFORM public.update_order_status_secure(v_order, 'cancelled');
   RESET ROLE;
   SELECT stock_quantity INTO v_stock_after FROM public.products WHERE id = v_product;
-  IF v_stock_after <> v_stock_before - 2 THEN
-    RAISE EXCEPTION 'T5-FAIL: stock changed on delivery_failed -> cancelled (before=%, after=%) -- must stay at post-order level, food was already made', v_stock_before, v_stock_after;
+  -- v_stock_before was captured at line 74, *after* create_order_secure had
+  -- already decremented it (10 -> 8) -- it already reflects the post-order
+  -- level. Comparing to v_stock_before - 2 double-subtracted and produced a
+  -- false failure (before=8, after=8, bug in this assertion, not in the
+  -- migration -- confirmed by the project owner running this test).
+  IF v_stock_after <> v_stock_before THEN
+    RAISE EXCEPTION 'T5-FAIL: estòk chanje sou delivery_failed -> cancelled (anvan=%, apre=%) -- li dwe rete menm, manje a te deja fèt', v_stock_before, v_stock_after;
   END IF;
   IF EXISTS (SELECT 1 FROM public.payments WHERE order_id = v_order AND status = 'refunded') THEN
     RAISE EXCEPTION 'T5-FAIL: payment was refunded on delivery_failed -> cancelled -- must not be (no-refund rule)';
