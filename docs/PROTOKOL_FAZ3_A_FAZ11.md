@@ -1,7 +1,7 @@
 # PWOTOKÒL FAZ 3 → 11 — NK DELIVERI
 
 **Kreye** : 2026-08-14 (pwotokòl orijinal la te pase kòm pwomt chat, jamè anrejistre kòm fichye — pèsiste isit la pou li rete referansab pa `fichye:liy` nan tout faz k ap vini yo).
-**Dènye mizajou** : 2026-08-14 — ajoute Règ A9.
+**Dènye mizajou** : 2026-08-18 — ajoute Règ A10, A11.
 
 > Kole **Seksyon A + B** nan tèt chak faz k ap vini. Kole seksyon faz la ansanm ak pwomt faz la nan master la.
 
@@ -61,6 +61,13 @@ Rezon : rapò NKD-010 te deklare "5/5 tès `BEGIN...ROLLBACK` pase" **anvan menm
 SQL Editor Supabase a **pa gen onglet Messages** — `RAISE NOTICE` yo pa vizib ditou pou mèt pwojè a. Yon tès `DO $$ ... $$` ki depann sèlman sou `RAISE NOTICE '...-PASS'` pou pwouve chak etap pase kite mèt pwojè a san okenn fason pou verifye anyen apa "pa gen ERROR" (`Success. No rows returned`) — yon prèv valab (kontras dirèk ak yon echèk ki ta bay `ERROR: P0001: ...` vizib, jan NKD-016 §3 montre), men **endirèk**, e li pa montre **kilès** nan plizyè tès ki pase si youn ta echwe silansyeu san `RAISE EXCEPTION` (egzanp: yon `IF` ki pa kouvri yon ka).
 
 **Aplikasyon konkrè** : chak nouvo tès `BEGIN...ROLLBACK` (`DO $$ ... $$`) dwe ekri rezilta chak etap (ID, deskripsyon, PASS/FAIL, valè verifye) nan yon **tab tanporè** (`CREATE TEMP TABLE ... ON COMMIT DROP` oswa senpleman yon tab ki egziste sèlman anndan menm transaksyon an, efase pa `ROLLBACK` a) olye de (oswa anplis) `RAISE NOTICE`, epi fini ak yon `SELECT * FROM <tab tanporè> ORDER BY id;` **anvan** `ROLLBACK` — sa a parèt kòm yon rezilta tabilè reyèl nan SQL Editor, mèt pwojè a ka wè l dirèkteman san bezwen kontras ant de pas egzekisyon.
+
+### A11 — INSERT nan `schema_migrations` fè pati aplikasyon manyèl la, pa yon etap apa
+Lè yon migrasyon aplike manyèlman (SQL Editor oswa Management API otorize, wè A1) san `supabase db push`, `INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES (...)` dwe fèt **nan menm aplikasyon an** — pa kòm yon demand apa apre kou, e pa kòm yon etap pou "pita si mèt pwojè a mande".
+
+Rezon : migrasyon NKD-016 yo (`20260817110000`, `20260817120000`) te aplike manyèlman san ranje `schema_migrations` korespondan — `supabase migration list`/tout zouti ki depann de tab sa a pa t konnen yo te deja aplike. Konsekans reyèl : migrasyon NKD-011 (`20260818100000`) te re-egzekite pa aksidan (`ERROR 42701: column already exists`) — san danje reyèl (echwe sou premye deklarasyon anndan `BEGIN`, transaksyon an anile antye, okenn dega), men ki ta evite antyèman si `schema_migrations` te toujou ajou imedyatman apre chak aplikasyon, olye de tann yon demann apa.
+
+**Aplikasyon konkrè** : nenpòt migrasyon ki aplike andeyò `supabase db push` (SQL Editor manyèl oswa Management API otorize) dwe gen INSERT `schema_migrations` la kòm **dènye deklarasyon nan menm script/tranzaksyon an** (anvan `COMMIT;` si migrasyon an wrap nan yon tranzaksyon, dapre A6), pa yon swiv apa nan yon lòt mesaj/etap.
 
 ---
 
