@@ -32,20 +32,22 @@
 
 `npm run check:migrations` : ✅ 144 migrasyon, pa gen danje overload.
 
-### Tès SQL — `docs/NKD011_ORDER_IDEMPOTENCY_TEST.sql` (fòma A10)
+### Tès SQL — `docs/NKD011_COMBINED_TEST.sql` (fòma A10)
 
-**EKRI, PA EGZEKITE.** Tab tanporè `test_results` + `SELECT * FROM test_results ORDER BY tes;` anvan `ROLLBACK` — okenn `RAISE NOTICE`.
+**Egzekite pa mèt pwojè a, 2026-08-18, nan SQL Editor** — migrasyon an + tès la ansanm nan yon sèl `BEGIN…ROLLBACK` (posib isit la, kontrèman ak NKD-016, paske pa gen restriksyon Postgres sou nouvo valè enum). Rezilta tabilè reyèl resevwa dirèkteman (Règ A10), pa yon kontras endirèk. Dapre Règ A9, sa se prèv egzekisyon reyèl.
 
-| ID | Tès | Estati |
-|---|---|---|
-| T1 | Menm kle 2 fwa → menm `order_id` | ⏳ Ekri, pa egzekite |
-| T1b | Menm kle 2 fwa → 1 sèl ranje `orders` | ⏳ Ekri, pa egzekite |
-| T2 | Menm kle 2 fwa → estòk dekremante 1 fwa | ⏳ Ekri, pa egzekite |
-| T3 | Menm kle 2 fwa → 1 sèl ranje `payments` | ⏳ Ekri, pa egzekite |
-| T4 | Kle diferan → kòmand diferan | ⏳ Ekri, pa egzekite |
-| T5 | Echèk estòk → kle a lib pou reeseye | ⏳ Ekri, pa egzekite |
-| T6 | Kle `NULL` → rejte | ⏳ Ekri, pa egzekite |
-| T7 | Konkirans reyèl | **Limit onèt** : yon sèl script SQL Editor sekansyèl pa ka louvri 2 koneksyon similtane — pa ka obsève reyèlman. Verifye estriktirèlman ke fonksyon an itilize `ON CONFLICT ... DO UPDATE ... RETURNING` (atomik, pa yon `SELECT` apre `INSERT` ki ta gen ras) — garanti a rete sou pwòp mekanis lock nivo-ranje Postgres deja dokimante pou idyom sa a. **Make `NOT-TESTED`, pa `PASS`** (Règ A9). |
+| ID | Tès | Rezilta | Detay |
+|---|---|---|---|
+| T1 | Menm kle 2 fwa → menm `order_id` | ✅ PASS | `order1=5f1c0a05…, retry=5f1c0a05…` (idantik) |
+| T1b | Menm kle 2 fwa → 1 sèl ranje `orders` | ✅ PASS | 1 ranje pou `idempotency_key` a |
+| T2 | Menm kle 2 fwa → estòk dekremante 1 fwa | ✅ PASS | `8 → 8` (idantik apre retry) |
+| T3 | Menm kle 2 fwa → 1 sèl ranje `payments` | ✅ PASS | 1 ranje pou `order1` |
+| T4 | Kle diferan → kòmand diferan | ✅ PASS | `order1 ≠ order2` |
+| T5 | Echèk estòk → kle a lib pou reeseye | ✅ PASS | 1ye tantativ echwe, 2yèm (menm kle) reyisi |
+| T6 | Kle `NULL` → rejte | ✅ PASS | eksepsyon leve |
+| T7 | Konkirans reyèl | **NOT-TESTED** (Règ A9 — limit onèt, pa yon `PASS` fòse) | 1 script SQL Editor sekansyèl pa ka louvri 2 koneksyon similtane. Atomisite a rete sou `ON CONFLICT ... DO UPDATE ... RETURNING` (verifye estriktirèlman), pa yon `SELECT` apre `INSERT` ki ta gen ras. |
+
+**7/7 tès posib pase.** Sa a se yon **repetisyon** (`BEGIN…ROLLBACK`) — migrasyon an **poko aplike pou vre**, li tann otorizasyon eksplisit + fichye separe `20260818100000_nkd011_order_idempotency.sql` pou aplikasyon reyèl (§9).
 
 ## 4. NKD-012 — chanjman frontend
 
@@ -79,4 +81,4 @@ Egzekite pa `npm run test` — **221/221** (212 preegzistan + 9 nouvo, 0 regresy
 
 ## 7. Konfimasyon
 
-**Anyen aplike sou pwodiksyon. Anyen pouse.** Migrasyon `20260818100000_nkd011_order_idempotency.sql` tann : (1) mèt pwojè a kouri `docs/NKD011_ORDER_IDEMPOTENCY_TEST.sql` an lokal oswa nan yon `BEGIN…ROLLBACK` separe **apre** migrasyon an aplike (menm rezon Postgres ki egziste pou NKD-016 — men isit la se yon nouvo kolòn/fonksyon, pa yon nouvo valè enum, donk **ka konbine nan yon sèl `BEGIN…ROLLBACK`** kontrèman ak NKD-016, si mèt pwojè a prefere teste anvan aplike pou vre), (2) otorizasyon eksplisit pou aplike, (3) lòd deplwaman : migrasyon anvan push (Faz 7, menm règ ki toujou aplike).
+**Anyen aplike sou pwodiksyon. Anyen pouse.** Tès repetisyon an (`docs/NKD011_COMBINED_TEST.sql`, `BEGIN…ROLLBACK`) konfime 7/7 — men se te yon repetisyon, li pa t kite anyen. Migrasyon `supabase/migrations/20260818100000_nkd011_order_idempotency.sql` tann : (1) mèt pwojè a kouri l pou vre nan SQL Editor (menm kontni an, san `BEGIN…ROLLBACK` fwa sa a), (2) konfimasyon aplikasyon reyèl la, (3) lòd deplwaman : migrasyon anvan push (Faz 7, menm règ ki toujou aplike) — kòd fwontèn nan (deja committe, `3d368f3`/`6dfbd17`) li paramèt `_idempotency_key` ki pa ta egziste ankò san migrasyon an aplike.
