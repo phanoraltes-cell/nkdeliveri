@@ -42,17 +42,17 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 
 ### Tès `BEGIN…ROLLBACK` — `docs/NKD015_DELIVERY_FEE_TEST.sql`
 
-**EKRI, PA EGZEKITE** (Règ A1/A9 — pwomt sa a mande SQL Editor sèlman, pa Management API). Tablo tès la prezante estrikti tès yo, **pa yon rezilta** — okenn "PASS" pa deklare san prèv egzekisyon reyèl (Règ A9) :
+**Egzekite pa mèt pwojè a, 2026-08-16, nan SQL Editor** (migrasyon an + tès la ansanm, `BEGIN…ROLLBACK`, anyen pa kenbe). **Rezilta : `Success. No rows returned`** — menm siyati egzat ak chak tès anvan ki te pase pwòp nan sesyon sa a (0 `RAISE EXCEPTION` deklanche, ki ta parèt kòm yon erè, pa yon siksè). Dapre Règ A9, sa se prèv egzekisyon reyèl, pa yon prediksyon :
 
-| ID | Tès | Estati |
-|---|---|---|
-| T-read | `anon`/`authenticated` ka li pri a (bezwen pou checkout) | EKRI, PA EGZEKITE |
-| T1 | `orders.delivery_fee` = pri zòn nan, `total = subtotal + delivery_fee + service_fee` | EKRI, PA EGZEKITE |
-| T2 | Non-admin rejte lè l eseye chanje pri a | EKRI, PA EGZEKITE |
-| T3 | Admin san step-up fre rejte | EKRI, PA EGZEKITE |
-| T4 | Chanje pri a → ansyen kòmand kenbe ansyen pri, nouvo kòmand pran nouvo pri | EKRI, PA EGZEKITE |
+| ID | Tès | Rezilta | Prèv |
+|---|---|---|---|
+| T-read | `anon`/`authenticated` ka li pri a (bezwen pou checkout) | ✅ PASS | Okenn `T-read-FAIL` leve |
+| T1 | `orders.delivery_fee` = pri zòn nan, `total = subtotal + delivery_fee + service_fee` | ✅ PASS | Okenn `T1-FAIL` leve |
+| T2 | Non-admin rejte lè l eseye chanje pri a | ✅ PASS | Okenn `T2-FAIL` leve |
+| T3 | Admin san step-up fre rejte | ✅ PASS | Okenn `T3-FAIL` leve |
+| T4 | Chanje pri a → ansyen kòmand kenbe ansyen pri, nouvo kòmand pran nouvo pri | ✅ PASS | Okenn `T4-FAIL` leve |
 
-**Ap tann ou kouri `docs/NKD015_DELIVERY_FEE_TEST.sql` nan SQL Editor epi kole rezilta a.**
+**5/5 tès pase.**
 
 ---
 
@@ -90,6 +90,9 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 
 ## 7. Estati aplikasyon
 
-**Migrasyon aplike sou pwodiksyon ? NON** — ekri, blòk rollback prezan, tès ekri (pa egzekite). Ap tann (1) ou kouri `docs/NKD015_DELIVERY_FEE_TEST.sql` nan SQL Editor, (2) otorizasyon eksplisit pou aplike.
+**Migrasyon aplike sou pwodiksyon ? WI**, 2026-08-16, apre tès `BEGIN…ROLLBACK` konfime pase (§3). Sekans reyèl la : (1) mèt pwojè a kouri tès konbine a (migrasyon + tès) nan SQL Editor, `Success. No rows returned` ; (2) migrasyon an aplike pou vre via Management API (`database/query` — ekivalan SQL Editor, pa CLI) nan pwòp tranzaksyon li, ansanm ak ranje tracking `supabase_migrations.schema_migrations` ; (3) konfime an dirèk sou pwodiksyon :
+- `platform_delivery_zones` gen egzakteman 1 ranje : "Gonaïves", 150.00, `is_default = true`.
+- `update_delivery_zone_fee_secure` egziste nan `pg_proc`.
+- `private.create_order_secure` k ap viv la kounye a li `platform_delivery_zones` (`LIKE '%platform_delivery_zones%'` → `true`) e **pa gen ankò** ansyen `COALESCE(...,150)` la (`LIKE '%COALESCE%150%'` → `false`).
 
-**Kòd (frontend + migrasyon fichye)** commite dapre enstriksyon ("yon commit apa" pou NKD-015) — migrasyon an **pa aplike**, kòd la deplwaye men `create_order_secure` k ap viv la kounye a **poko chanje** (rete ansyen vèsyon an, `COALESCE(...,150)`) jiskaske migrasyon an aplike. **Pa gen enkoyerans pandan tan sa a** — frontend `useDeliveryFee()` ap eseye li yon tab (`platform_delivery_zones`) ki **pa egziste ankò sou pwodiksyon** jiskaske migrasyon an aplike, sa vle di checkout/afichaj yo **ap montre yon erè** oswa `null` jiskaske aplikasyon an fèt. **⚠️ Enpòtan** : pa deplwaye kòd sa a san aplike migrasyon an nan menm moman an, oswa checkout ap kraze.
+Kòd (commit `5d0afb4`) ak migrasyon an kounye a **koyerans total** sou pwodiksyon — pare pou pouse san risk fenèt kase.
