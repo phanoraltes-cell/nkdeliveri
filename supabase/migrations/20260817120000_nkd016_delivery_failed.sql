@@ -36,6 +36,11 @@
 --   -- of each (20260814160000_nkd010_stock_decrement.sql,
 --   -- 20260723090000_notifications_engine_and_gps_sharing.sql,
 --   -- 20260816120000_nkd015_delivery_fee_config.sql respectively) verbatim.
+--   -- private.generate_commission_for_order: re-apply the original body
+--   -- verbatim (20260722120000_backfill_runs_and_commission_refactor.sql:129-207)
+--   -- via CREATE OR REPLACE (it was originally a plain CREATE FUNCTION,
+--   -- never redefined until this migration -- CREATE OR REPLACE against
+--   -- the same signature (uuid, uuid, text) is still correct to revert it).
 --   ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_contact_phone_required;
 --   DROP INDEX IF EXISTS orders_delivery_failed_at_idx;
 --   ALTER TABLE public.orders DROP COLUMN IF EXISTS delivery_failed_at;
@@ -218,7 +223,10 @@ $$;
 -- 3) private.protect_delivery_status_transition -- same signature (0-arg
 --    trigger function). Extends the live version
 --    (20260723090000_notifications_engine_and_gps_sharing.sql:259) with:
---    (a) picked_up -> delivery_failed as a legal driver transition,
+--    (a) picked_up -> delivery_failed AND en_route_dropoff -> delivery_failed
+--        as legal driver transitions (a failed delivery is most often
+--        discovered on arrival, i.e. from en_route_dropoff, not only right
+--        after pickup),
 --    (b) GPS auto-revocation also on delivery_failed (the attempt is over),
 --    (c) orders.status + orders.delivery_failed_at synced in the same UPDATE.
 CREATE OR REPLACE FUNCTION private.protect_delivery_status_transition()
@@ -258,7 +266,12 @@ BEGIN
       ('en_route_pickup', 'picked_up'),
       ('picked_up', 'en_route_dropoff'), ('picked_up', 'delivered'),
       ('en_route_dropoff', 'delivered'),
-      ('picked_up', 'delivery_failed')
+      -- NKD-016 correction: the driver is most likely to discover a failed
+      -- delivery *after* leaving the restaurant, not only right at pickup
+      -- (customer doesn't answer / address not found happens on arrival,
+      -- i.e. from en_route_dropoff). picked_up is kept too since the RPC
+      -- also allows reporting immediately after pickup.
+      ('picked_up', 'delivery_failed'), ('en_route_dropoff', 'delivery_failed')
     ) THEN
       RAISE EXCEPTION 'Illegal delivery status transition: % -> %', OLD.status, NEW.status;
     END IF;
@@ -522,7 +535,14 @@ BEGIN
     RAISE EXCEPTION 'Forbidden' USING ERRCODE = '42501';
   END IF;
 
-  IF v_delivery.status <> 'picked_up' THEN
+  -- NKD-016 correction: a failed delivery is most often discovered on
+  -- arrival (customer doesn't answer / address not found), i.e. from
+  -- en_route_dropoff -- restricting this to 'picked_up' only left the
+  -- driver stuck with no way to report it at the exact moment it's
+  -- actually found out. Must match protect_delivery_status_transition's
+  -- own whitelist above exactly, or one would silently reject what the
+  -- other allows.
+  IF v_delivery.status NOT IN ('picked_up', 'en_route_dropoff') THEN
     RAISE EXCEPTION 'Ou pa ka siyale yon echèk livrezon nan eta sa a.';
   END IF;
 
@@ -629,3 +649,116 @@ CREATE TRIGGER trg_generate_driver_commission_on_delivery_failure
 AFTER UPDATE ON public.orders
 FOR EACH ROW WHEN (NEW.status = 'delivery_failed' AND OLD.status IS DISTINCT FROM 'delivery_failed')
 EXECUTE FUNCTION private.generate_driver_commission_on_delivery_failure();
+
+-- ---------------------------------------------------------------------------
+-- 7) DEFECT FIX (found in review, before this migration was ever applied):
+--    double driver commission. Sequence that caused it: picked_up ->
+--    delivery_failed credits the driver 150 HTG under entry_type
+--    'driver_commission_delivery_failed' (§6 above); the customer then
+--    picks the food up at the office and an admin moves the order
+--    delivery_failed -> delivered; trg_generate_commission_on_delivery
+--    (20260722100100_commission_engine.sql:143, unmodified, still fires on
+--    any transition INTO 'delivered') then credits the SAME driver AGAIN,
+--    150 HTG, under entry_type 'order_commission' -- a different
+--    entry_type, so the existing ON CONFLICT idempotency guards (one per
+--    entry_type, by design -- see 20260722100000_payout_wallet_schema.sql:98-110)
+--    never see each other. 300 HTG paid for one delivery.
+--
+--    Fix: private.generate_commission_for_order -- same signature
+--    (uuid, uuid, text), same body as the live version
+--    (20260722120000_backfill_runs_and_commission_refactor.sql:129-207) --
+--    the driver side only now skips crediting if a
+--    'driver_commission_delivery_failed' row already exists for this
+--    order+driver. The restaurant side is intentionally UNCHANGED: the
+--    customer did receive the food when picking it up at the office, so
+--    the restaurant still earned its commission on that sale -- only the
+--    driver must not be paid twice for the same delivery.
+CREATE OR REPLACE FUNCTION private.generate_commission_for_order(_order_id uuid, _actor_id uuid, _source text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_order public.orders;
+  v_calc record;
+  v_ledger_id uuid;
+  v_wallet_id uuid;
+  v_note_suffix text;
+  v_role text;
+BEGIN
+  SELECT * INTO v_order FROM public.orders WHERE id = _order_id;
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+
+  v_note_suffix := CASE WHEN _source = 'backfill' THEN ' (backfill istorik)' ELSE '' END;
+  v_role := CASE WHEN _source = 'backfill' THEN 'admin' ELSE NULL END;
+
+  SELECT * INTO v_calc FROM private.compute_order_commission_preview(_order_id);
+
+  -- Restaurant side (unchanged -- see header comment above)
+  INSERT INTO public.commission_ledger (restaurant_id, order_id, entry_type, gross_amount, commission_rate, commission_amount, net_amount, created_by)
+  VALUES (v_order.restaurant_id, v_order.id, 'order_commission', v_order.subtotal, v_calc.restaurant_commission_rate, v_calc.restaurant_commission_amount, v_calc.restaurant_net_amount, _actor_id)
+  ON CONFLICT (order_id, restaurant_id) WHERE entry_type = 'order_commission' AND restaurant_id IS NOT NULL
+  DO NOTHING
+  RETURNING id INTO v_ledger_id;
+
+  IF v_ledger_id IS NOT NULL THEN
+    INSERT INTO public.wallets (restaurant_id, available_balance, lifetime_earnings)
+    VALUES (v_order.restaurant_id, v_calc.restaurant_net_amount, v_calc.restaurant_net_amount)
+    ON CONFLICT (restaurant_id) DO UPDATE SET
+      available_balance = wallets.available_balance + v_calc.restaurant_net_amount,
+      lifetime_earnings = wallets.lifetime_earnings + v_calc.restaurant_net_amount,
+      updated_at = now()
+    RETURNING id INTO v_wallet_id;
+
+    INSERT INTO public.wallet_transactions (wallet_id, type, available_delta, lifetime_delta, commission_ledger_id, created_by, note)
+    VALUES (v_wallet_id, 'commission_credit', v_calc.restaurant_net_amount, v_calc.restaurant_net_amount, v_ledger_id, _actor_id, 'Commission sou kòmand ' || v_order.order_number || v_note_suffix);
+
+    PERFORM private.log_audit_event(_actor_id, v_role, 'commission.created',
+      jsonb_build_object('commission_ledger_id', v_ledger_id, 'order_id', v_order.id, 'restaurant_id', v_order.restaurant_id, 'net_amount', v_calc.restaurant_net_amount, 'source', _source));
+    PERFORM private.log_audit_event(_actor_id, v_role, 'wallet.credited',
+      jsonb_build_object('wallet_id', v_wallet_id, 'restaurant_id', v_order.restaurant_id, 'amount', v_calc.restaurant_net_amount, 'source', _source));
+  END IF;
+
+  -- Driver side (skipped entirely if no assigned driver on this order) --
+  -- NKD-016 fix: also skipped if this driver was already paid for this
+  -- order via the delivery_failed path (§6 above) -- that commission is
+  -- final and must not be paid a second time under 'order_commission' just
+  -- because the order later reaches 'delivered' anyway (office pickup).
+  IF v_calc.driver_id IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM public.commission_ledger cl
+       WHERE cl.order_id = v_order.id
+         AND cl.driver_id = v_calc.driver_id
+         AND cl.entry_type = 'driver_commission_delivery_failed'
+     ) THEN
+    v_ledger_id := NULL;
+
+    INSERT INTO public.commission_ledger (driver_id, order_id, entry_type, gross_amount, commission_rate, commission_amount, net_amount, created_by)
+    VALUES (v_calc.driver_id, v_order.id, 'order_commission', v_calc.driver_fee, v_calc.driver_commission_rate, v_calc.driver_commission_amount, v_calc.driver_net_amount, _actor_id)
+    ON CONFLICT (order_id, driver_id) WHERE entry_type = 'order_commission' AND driver_id IS NOT NULL
+    DO NOTHING
+    RETURNING id INTO v_ledger_id;
+
+    IF v_ledger_id IS NOT NULL THEN
+      INSERT INTO public.wallets (driver_id, available_balance, lifetime_earnings)
+      VALUES (v_calc.driver_id, v_calc.driver_net_amount, v_calc.driver_net_amount)
+      ON CONFLICT (driver_id) DO UPDATE SET
+        available_balance = wallets.available_balance + v_calc.driver_net_amount,
+        lifetime_earnings = wallets.lifetime_earnings + v_calc.driver_net_amount,
+        updated_at = now()
+      RETURNING id INTO v_wallet_id;
+
+      INSERT INTO public.wallet_transactions (wallet_id, type, available_delta, lifetime_delta, commission_ledger_id, created_by, note)
+      VALUES (v_wallet_id, 'commission_credit', v_calc.driver_net_amount, v_calc.driver_net_amount, v_ledger_id, _actor_id, 'Komisyon sou kòmand ' || v_order.order_number || v_note_suffix);
+
+      PERFORM private.log_audit_event(_actor_id, v_role, 'commission.created',
+        jsonb_build_object('commission_ledger_id', v_ledger_id, 'order_id', v_order.id, 'driver_id', v_calc.driver_id, 'net_amount', v_calc.driver_net_amount, 'source', _source));
+      PERFORM private.log_audit_event(_actor_id, v_role, 'wallet.credited',
+        jsonb_build_object('wallet_id', v_wallet_id, 'driver_id', v_calc.driver_id, 'amount', v_calc.driver_net_amount, 'source', _source));
+    END IF;
+  END IF;
+END;
+$$;

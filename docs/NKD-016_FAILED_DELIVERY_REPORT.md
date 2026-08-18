@@ -2,7 +2,8 @@
 
 **Dat** : 2026-08-17/18
 **Sous** : Faz 10 Business Logic Audit §7. Règ A5 leve pou pòte sa a sèlman.
-**Estati** : Migrasyon ekri + teste (lokal/tsc/lint/build/vitest), **PA APLIKE sou pwodiksyon** — tann otorizasyon eksplisit (§7).
+**Estati** : Migrasyon ekri + teste (lokal/tsc/lint/build/vitest), **PA APLIKE sou pwodiksyon** — tann otorizasyon eksplisit (§9).
+**Revizyon 2026-08-18** : mèt pwojè a jwenn 2 defo reyèl nan revizyon anvan aplikasyon (§10) — toude korije nan menm 2 fichye migrasyon yo (poko aplike, okenn nan yo pa t janm rive pwodiksyon).
 
 ---
 
@@ -79,10 +80,12 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 | T1 | `picked_up → delivery_failed` mache | ⏳ Pa teste ankò |
 | T1b | Rezon "lòt" san kòmantè rejte | ⏳ Pa teste ankò |
 | T2 | Livrè kredite 150 HTG, restoran pa kredite | ⏳ Pa teste ankò |
-| T3 | Idanpotans — 2èm deklanchman pa double-kredite | ⏳ Pa teste ankò |
-| T4 | `delivery_failed → delivered` mache (admin) | ⏳ Pa teste ankò |
+| T3 | Idanpotans — 2èm deklanchman (`orders`) pa double-kredite | ⏳ Pa teste ankò |
+| T4 | `delivery_failed → delivered` mache (admin) **+ verifye pa gen doub komisyon** (Defo 1) | ⏳ Pa teste ankò |
 | T5 | `delivery_failed → cancelled` : pa gen ranbousman, estòk pa retounen | ⏳ Pa teste ankò |
 | T6 | Tranzisyon envalid rejte (`delivery_failed → picked_up`) | ⏳ Pa teste ankò |
+| T8 | `en_route_dropoff → delivery_failed` mache (Defo 2) | ⏳ Pa teste ankò |
+| T9 | `assigned → delivery_failed` rejte (livrè poko pran manje a) | ⏳ Pa teste ankò |
 
 ## 6. Chanjman UI (`fichye:liy`)
 
@@ -100,7 +103,17 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 
 ## 7. Verifikasyon `npm run verify`
 
-`npx tsc --noEmit` ✅, `eslint` ✅, `check:migrations` ✅ (142 migrasyon), `vitest` ✅ **212/212** (0 regresyon), `npm run build` ✅ (routeTree.gen.ts regenere ak nouvo wout admin lan).
+`npx tsc --noEmit` ✅, `eslint` ✅ (0 erè — 3 avètisman `react-refresh` preegzistan, san rapò ak NKD-016), `check:migrations` ✅ (142 migrasyon, pa gen danje overload), `vitest` ✅ **212/212** (0 regresyon), `npm run build` ✅. Re-verifye ankò apre koreksyon 2 defo yo (§8b) — menm rezilta.
+
+## 8b. Defo jwenn nan revizyon (2026-08-18, anvan okenn aplikasyon) — korije
+
+**Defo 1 — doub komisyon livrè (kritik, pèt lajan)** : `picked_up → delivery_failed` kredite livrè a 150 HTG (`entry_type = 'driver_commission_delivery_failed'`). Si kliyan an vin chèche manje a nan biwo a e admin mete kòmand lan `delivered`, `trg_generate_commission_on_delivery` (ki poko t modifye) deklanche `generate_commission_for_order`, ki t ap kredite **menm livrè a ankò**, 150 HTG anplis, sou yon `entry_type` diferan (`order_commission`) — 2 endèks inik separe pa wè youn lòt. **Rezilta ta ye : 300 HTG pou yon sèl livrezon.**
+
+**Koreksyon** : `private.generate_commission_for_order` (§7 nan migrasyon an) — bò livrè a sèlman kounye a sote si yon ranje `driver_commission_delivery_failed` deja egziste pou kòmand+livrè a. Bò restoran an **pa chanje** — kliyan an resevwa manje a nan biwo a, restoran an merite komisyon li kanmenm.
+
+**Defo 2 — livrè bloke nan `en_route_dropoff`** : `report_delivery_failed_secure` te egzije `deliveries.status = 'picked_up'` sèlman, men moman ki pi pwobab pou dekouvri yon echèk se **lè livrè a rive sou plas** (`en_route_dropoff`) — bouton "Pa ka livre" ta rejte l egzakteman lè li ta pi itil.
+
+**Koreksyon** : `en_route_dropoff` ajoute kòm sous valab ni nan `report_delivery_failed_secure` (§5) ni nan `protect_delivery_status_transition` (§3) — de kote yo dwe rete idantik oswa youn ta rejte sa lòt la aksepte.
 
 ## 8. Kesyon ki rete
 

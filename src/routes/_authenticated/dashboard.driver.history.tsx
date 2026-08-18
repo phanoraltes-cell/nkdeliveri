@@ -344,8 +344,8 @@ function DriverHistory() {
                       />
                     )}
                     <p className="text-xs text-red-700">
-                      Kòmand lan ap make kòm livrezon echwe, kliyan an ap notifye pou l vin
-                      chèche manje a nan biwo a nan 2 èdtan.
+                      Kòmand lan ap make kòm livrezon echwe, kliyan an ap notifye pou l vin chèche
+                      manje a nan biwo a nan 2 èdtan.
                     </p>
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="outline" onClick={closeFailureForm}>

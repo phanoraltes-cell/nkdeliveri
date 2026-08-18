@@ -4626,10 +4626,7 @@ export type Database = {
       cash_confirmation_status:
         "pending" | "customer_confirmed" | "driver_confirmed" | "validated" | "disputed";
       commission_entry_type:
-        | "order_commission"
-        | "monthly_fee"
-        | "reversal"
-        | "driver_commission_delivery_failed";
+        "order_commission" | "monthly_fee" | "reversal" | "driver_commission_delivery_failed";
       delivery_status:
         | "assigned"
         | "en_route_pickup"

@@ -147,7 +147,9 @@ BEGIN
   END IF;
   RAISE NOTICE 'T3-PASS: idempotent -- duplicate fire did not double-credit';
 
-  -- T4: delivery_failed -> delivered works (admin, customer picked up at the office)
+  -- T4: delivery_failed -> delivered works (admin, customer picked up at the
+  -- office) AND does not double-credit the driver (Defect 1 fix: this is
+  -- exactly the path trg_generate_commission_on_delivery fires on).
   SET ROLE authenticated;
   PERFORM set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
   PERFORM public.update_order_status_secure(v_order, 'delivered');
@@ -156,7 +158,16 @@ BEGIN
   IF v_status <> 'delivered' THEN
     RAISE EXCEPTION 'T4-FAIL: delivery_failed -> delivered rejected';
   END IF;
-  RAISE NOTICE 'T4-PASS: delivery_failed -> delivered works (admin)';
+  SELECT available_balance INTO v_wallet_after FROM public.wallets WHERE driver_id = v_driver;
+  IF v_wallet_after IS DISTINCT FROM 150 THEN
+    RAISE EXCEPTION 'T4-FAIL: double commission -- driver balance is %, expected 150', v_wallet_after;
+  END IF;
+  SELECT count(*) INTO v_ledger_count FROM public.commission_ledger
+    WHERE order_id = v_order AND driver_id = v_driver;
+  IF v_ledger_count <> 1 THEN
+    RAISE EXCEPTION 'T4-FAIL: % commission_ledger rows for the driver, expected 1', v_ledger_count;
+  END IF;
+  RAISE NOTICE 'T4-PASS: delivery_failed -> delivered, no double commission';
 
   -- T5: delivery_failed -> cancelled: no refund, stock NOT returned
   UPDATE public.orders SET status = 'delivery_failed' WHERE id = v_order; -- reset for this test
@@ -195,7 +206,50 @@ BEGIN
   -- this whole test, and stays whatever it already was through the cancel
   -- path above -- same order used throughout this test IS a 'kach' order).
 
-  RAISE NOTICE 'ALL NKD-016 TESTS PASSED (T0, T1, T1b, T2, T3, T4, T5, T6)';
+  -- T8 (Defect 2): en_route_dropoff -> delivery_failed must work -- a
+  -- failed delivery is most often discovered on arrival, not right after
+  -- pickup. Reset via admin, then the driver moves picked_up -> en_route_dropoff
+  -- (already-legal driver transition) before reporting the failure.
+  SET ROLE authenticated;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  UPDATE public.deliveries SET status = 'picked_up', failure_reason = NULL, failure_comment = NULL WHERE id = v_delivery_id;
+  RESET ROLE;
+
+  SET ROLE authenticated;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_driver_user, 'role', 'authenticated')::text, true);
+  UPDATE public.deliveries SET status = 'en_route_dropoff' WHERE id = v_delivery_id;
+  v_caught := false;
+  BEGIN
+    PERFORM public.report_delivery_failed_secure(v_order, 'zone_inaccessible', null);
+  EXCEPTION WHEN OTHERS THEN v_caught := true;
+  END;
+  RESET ROLE;
+  IF v_caught THEN RAISE EXCEPTION 'T8-FAIL: en_route_dropoff -> delivery_failed was rejected, must be allowed'; END IF;
+  SELECT status INTO v_status FROM public.orders WHERE id = v_order;
+  IF v_status <> 'delivery_failed' THEN
+    RAISE EXCEPTION 'T8-FAIL: orders.status is %, expected delivery_failed', v_status;
+  END IF;
+  RAISE NOTICE 'T8-PASS: en_route_dropoff -> delivery_failed works';
+
+  -- T9 (Defect 2 guard): assigned -> delivery_failed must be REJECTED --
+  -- the driver hasn't picked up the food yet, there is nothing to fail.
+  SET ROLE authenticated;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  UPDATE public.deliveries SET status = 'assigned', failure_reason = NULL, failure_comment = NULL WHERE id = v_delivery_id;
+  RESET ROLE;
+
+  SET ROLE authenticated;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_driver_user, 'role', 'authenticated')::text, true);
+  v_caught := false;
+  BEGIN
+    PERFORM public.report_delivery_failed_secure(v_order, 'customer_unavailable', null);
+  EXCEPTION WHEN OTHERS THEN v_caught := true;
+  END;
+  RESET ROLE;
+  IF NOT v_caught THEN RAISE EXCEPTION 'T9-FAIL: assigned -> delivery_failed was accepted, must be rejected'; END IF;
+  RAISE NOTICE 'T9-PASS: assigned -> delivery_failed rejected';
+
+  RAISE NOTICE 'ALL NKD-016 TESTS PASSED (T0, T1, T1b, T2, T3, T4, T5, T6, T8, T9)';
 END $$;
 
 ROLLBACK;

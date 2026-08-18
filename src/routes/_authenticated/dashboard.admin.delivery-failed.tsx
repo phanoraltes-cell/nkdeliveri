@@ -65,7 +65,13 @@ function AdminDeliveryFailed() {
   });
 
   const resolve = useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: "delivered" | "cancelled" }) => {
+    mutationFn: async ({
+      orderId,
+      status,
+    }: {
+      orderId: string;
+      status: "delivered" | "cancelled";
+    }) => {
       const { error } = await supabase.rpc("update_order_status_secure", {
         _order_id: orderId,
         _new_status: status,
@@ -94,8 +100,8 @@ function AdminDeliveryFailed() {
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Livrezon echwe</h1>
           <p className="mt-1 text-ink-soft">
-            Kòmand kote livrezon pa reyisi — manje a nan biwo a, kliyan gen 2 èdtan pou vin
-            chèche l.
+            Kòmand kote livrezon pa reyisi — manje a nan biwo a, kliyan gen 2 èdtan pou vin chèche
+            l.
           </p>
         </div>
         <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
