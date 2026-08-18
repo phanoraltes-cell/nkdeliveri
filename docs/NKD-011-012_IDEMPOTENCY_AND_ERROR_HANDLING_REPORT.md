@@ -30,7 +30,9 @@
 - Kè a : `INSERT INTO orders (...) VALUES (...) ON CONFLICT (idempotency_key) DO UPDATE SET updated_at = orders.updated_at RETURNING id, (xmax = 0) INTO v_order_id, v_was_inserted;` — yon sèl deklarasyon atomik. `IF NOT v_was_inserted THEN RETURN v_order_id; END IF;` anvan bouk atik yo — okenn dezyèm dekremantasyon estòk, okenn dezyèm `payments`.
 - Kòmand ki echwe (estòk ensifizan) : okenn netwayaj nesesè — `RAISE EXCEPTION` anile tout tranzaksyon an, kle a pa janm rive komite, li lib otomatikman.
 
-`npm run check:migrations` : ✅ 144 migrasyon, pa gen danje overload.
+**Koreksyon 2026-08-18** (mèt pwojè a repere) : fichye a te manke `BEGIN;`/`COMMIT;`. San yo, SQL Editor egzekite chak deklarasyon apa (autocommit) — ant `DROP FUNCTION` ak `CREATE FUNCTION` (§2, §3) sa ta kite yon fenèt reyèl kote `create_order_secure` pa egziste ditou, ki ta fè nenpòt kòmand ki rive nan moman sa a echwe ak "function not found". Ajoute : `BEGIN;` anvan §1, `COMMIT;` apre dènye `GRANT` la — tout deklarasyon yo (ALTER TABLE, CREATE INDEX, DROP/CREATE FUNCTION, REVOKE, GRANT) se DDL transaksyonèl nòmal Postgres (pa gen `CONCURRENTLY`), donk `BEGIN`/`COMMIT` gratis, e li fè yon echèk pati-nan-wout anile tout, pa kite skema a mwatye migre.
+
+`npm run check:migrations` : ✅ 143 migrasyon, pa gen danje overload.
 
 ### Tès SQL — `docs/NKD011_COMBINED_TEST.sql` (fòma A10)
 

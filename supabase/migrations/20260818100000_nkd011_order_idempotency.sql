@@ -43,6 +43,18 @@
 --   -- §2 for private's Kreyòl-message body) verbatim, in that order.
 --   DROP INDEX IF EXISTS orders_idempotency_key_uniq;
 --   ALTER TABLE public.orders DROP COLUMN IF EXISTS idempotency_key;
+--
+-- Wrapped in BEGIN...COMMIT: run raw in SQL Editor (autocommit per
+-- statement) this file's own DROP FUNCTION + CREATE FUNCTION pair would
+-- otherwise leave a real window, between the two statements, where
+-- create_order_secure does not exist at all -- any checkout request
+-- landing in that gap gets a hard "function not found" instead of a
+-- normal order. Every statement below (ALTER TABLE, CREATE INDEX, DROP/
+-- CREATE FUNCTION, REVOKE, GRANT) is ordinary transactional DDL in
+-- Postgres (none of them is CONCURRENTLY or otherwise non-transactional),
+-- so wrapping is free -- and it also means a failure partway through
+-- rolls back cleanly instead of leaving the schema half-migrated.
+BEGIN;
 
 -- ---------------------------------------------------------------------------
 -- 1) Schema. Nullable -- Postgres never treats two NULLs as conflicting in
@@ -240,3 +252,5 @@ AS $$
 $$;
 REVOKE ALL ON FUNCTION public.create_order_secure(uuid, jsonb, text, text, text, public.payment_method, boolean, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.create_order_secure(uuid, jsonb, text, text, text, public.payment_method, boolean, uuid) TO authenticated;
+
+COMMIT;
