@@ -57,6 +57,11 @@ Rezon : rapò NKD-010 te deklare "5/5 tès `BEGIN...ROLLBACK` pase" **anvan menm
 
 **Aplikasyon konkrè** : si yon tès ekri men pa ka egzekite imedyatman (egzanp: mande otorizasyon anvan, oswa mande mèt pwojè a kouri l), rapò a dwe di **"EKRI, PA EGZEKITE"** oswa **"AP TANN OTORIZASYON"** — jamè "PASS" oswa yon rezilta espesifik san prèv egzekisyon kole nan menm mesaj la.
 
+### A10 — Rezilta tès SQL dwe vizib nan yon tab, pa nan `RAISE NOTICE`
+SQL Editor Supabase a **pa gen onglet Messages** — `RAISE NOTICE` yo pa vizib ditou pou mèt pwojè a. Yon tès `DO $$ ... $$` ki depann sèlman sou `RAISE NOTICE '...-PASS'` pou pwouve chak etap pase kite mèt pwojè a san okenn fason pou verifye anyen apa "pa gen ERROR" (`Success. No rows returned`) — yon prèv valab (kontras dirèk ak yon echèk ki ta bay `ERROR: P0001: ...` vizib, jan NKD-016 §3 montre), men **endirèk**, e li pa montre **kilès** nan plizyè tès ki pase si youn ta echwe silansyeu san `RAISE EXCEPTION` (egzanp: yon `IF` ki pa kouvri yon ka).
+
+**Aplikasyon konkrè** : chak nouvo tès `BEGIN...ROLLBACK` (`DO $$ ... $$`) dwe ekri rezilta chak etap (ID, deskripsyon, PASS/FAIL, valè verifye) nan yon **tab tanporè** (`CREATE TEMP TABLE ... ON COMMIT DROP` oswa senpleman yon tab ki egziste sèlman anndan menm transaksyon an, efase pa `ROLLBACK` a) olye de (oswa anplis) `RAISE NOTICE`, epi fini ak yon `SELECT * FROM <tab tanporè> ORDER BY id;` **anvan** `ROLLBACK` — sa a parèt kòm yon rezilta tabilè reyèl nan SQL Editor, mèt pwojè a ka wè l dirèkteman san bezwen kontras ant de pas egzekisyon.
+
 ---
 
 ## SEKSYON B — SA KI DEJA FÈMEN (PA RE-OUVRI)
