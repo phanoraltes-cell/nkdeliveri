@@ -26,12 +26,16 @@ export function SiteHeader() {
     <header className="sticky top-[calc(1rem+var(--sat))] z-50 pl-[max(1rem,var(--sal))] pr-[max(1rem,var(--sar))]">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-1.5 rounded-full border border-brand-soft/60 bg-white/95 px-3 shadow-[0_10px_30px_rgba(249,115,22,0.10)] backdrop-blur sm:h-20 sm:gap-3 sm:px-5">
         <Link to="/" className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2.5">
+          {/* Icon grown ~25-27% (32→40px mobile, 44→56px sm+) — text
+              branding next to it deliberately untouched (still text-base/
+              text-xl below). width/height bumped to match the new sm+
+              rendered size so the intrinsic-size CLS hint stays accurate. */}
           <img
             src="/nk-logo.png"
             alt="NK Deliveri"
-            width={44}
-            height={44}
-            className="h-8 w-8 shrink-0 rounded-full object-contain sm:h-11 sm:w-11"
+            width={56}
+            height={56}
+            className="h-10 w-10 shrink-0 rounded-full object-contain sm:h-14 sm:w-14"
           />
           <div className="min-w-0">
             <div className="truncate font-display text-base font-extrabold tracking-tight leading-none text-ink sm:text-xl">

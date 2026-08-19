@@ -66,13 +66,16 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-[1100px] gap-8 px-5 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2.5">
+            {/* Icon grown ~33% (36→48px) — slightly larger than the
+                navbar's own icon per the request ("footer icon nan ka yon
+                ti jan pi gwo"), text branding next to it untouched. */}
             <img
               src="/nk-logo.png"
               alt="NK Deliveri"
-              width={36}
-              height={36}
+              width={48}
+              height={48}
               loading="lazy"
-              className="h-9 w-9 rounded-full bg-white object-contain p-0.5"
+              className="h-12 w-12 rounded-full bg-white object-contain p-0.5"
             />
             <div className="font-display text-xl font-extrabold text-white">
               NK <span className="text-cream">Deliveri</span>
