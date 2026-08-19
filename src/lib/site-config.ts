@@ -23,9 +23,27 @@ export const PRIMARY_CITY = {
   countryName: "Ayiti",
 };
 
-export const SOCIAL_LINKS: { label: string; url: string }[] = [
-  // Populate once NK Deliveri's social profiles exist — omitted for now
-  // rather than linking to accounts that don't exist yet.
+/**
+ * `icon` is a plain string key (not a component reference) on purpose —
+ * this file stays pure data, no JSX/React import here. site-footer.tsx maps
+ * the key to the real icon component, since that's the one place actually
+ * rendering it.
+ *
+ * `url` is intentionally "" for now: the real icons are wanted on the site
+ * today, but the accounts themselves don't exist yet ("pita map mete lyen
+ * kont yo" — the owner will fill these in directly once each profile is
+ * live). site-footer.tsx renders an inert (non-clickable, dimmed) icon
+ * whenever `url` is empty, and a real link the moment it isn't — filling in
+ * a URL here is the only change needed later, nothing else to touch.
+ */
+export const SOCIAL_LINKS: {
+  label: string;
+  url: string;
+  icon: "facebook" | "instagram" | "tiktok";
+}[] = [
+  { label: "Facebook", url: "", icon: "facebook" },
+  { label: "Instagram", url: "", icon: "instagram" },
+  { label: "TikTok", url: "", icon: "tiktok" },
 ];
 
 export const CONTACT_EMAIL = "support@nkdeliveri.com";

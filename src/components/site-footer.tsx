@@ -1,7 +1,23 @@
 import { Link } from "@tanstack/react-router";
-import { Banknote } from "lucide-react";
+import { Banknote, Facebook, Instagram } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/site-config";
 import { useAuth } from "@/hooks/useAuth";
+
+// lucide-react has no TikTok mark (it only ships Feather's original small
+// social set — Facebook/Instagram/Twitter/Linkedin/Youtube, confirmed by
+// checking its exports) — hand-rolled here rather than pulling in a whole
+// brand-icon package (react-icons/simple-icons) for one glyph, matching
+// Faz 9's dependency-conscious posture. `currentColor` fill so it inherits
+// the same color treatment as the two lucide icons next to it.
+function TiktokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16.6 5.82c-.7-.77-1.09-1.77-1.09-2.82h-3.02v13.44c0 1.5-1.22 2.72-2.72 2.72a2.72 2.72 0 0 1 0-5.44c.28 0 .55.04.8.12V10.7a5.6 5.6 0 0 0-.8-.06A5.76 5.76 0 0 0 4 16.4a5.76 5.76 0 0 0 5.77 5.76 5.76 5.76 0 0 0 5.76-5.76V9.01a8.7 8.7 0 0 0 5.09 1.63V7.63a5.83 5.83 0 0 1-4.02-1.81z" />
+    </svg>
+  );
+}
+
+const SOCIAL_ICONS = { facebook: Facebook, instagram: Instagram, tiktok: TiktokIcon } as const;
 
 export function SiteFooter() {
   // Refonte Frontend Premium, Phase 10 (P10) — this footer is only ever
@@ -66,18 +82,36 @@ export function SiteFooter() {
             Manje lakay, livre lakay ou. Sèvis livrezon manje nan Gonaïves.
           </p>
           {SOCIAL_LINKS.length > 0 && (
-            <div className="mt-3 flex gap-3">
-              {SOCIAL_LINKS.map((s) => (
-                <a
-                  key={s.url}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-white/85 hover:text-white hover:underline"
-                >
-                  {s.label}
-                </a>
-              ))}
+            <div className="mt-3 flex gap-2.5">
+              {SOCIAL_LINKS.map((s) => {
+                const Icon = SOCIAL_ICONS[s.icon];
+                // No real account URL yet (site-config.ts) — show the icon
+                // now as requested, but as an inert, dimmed, non-clickable
+                // marker rather than a link to nowhere. Becomes a real
+                // link automatically the moment `url` is filled in, no
+                // further change needed here.
+                return s.url ? (
+                  <a
+                    key={s.label}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </a>
+                ) : (
+                  <span
+                    key={s.label}
+                    aria-hidden="true"
+                    title={`${s.label} — byento`}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/45"
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>
