@@ -107,8 +107,9 @@ function Privacy() {
                 yo dirèkteman (Seksyon 6).
               </strong>{" "}
               Nou konsyan sa pa yon bon pratik alontèm e n ap travay sou yon politik retansyon
-              fòmèl. Sèl eksepsyon jodi a : pozisyon GPS pandan yon livrezon efase otomatikman kou
-              livrezon an fini (livre, echwe, oswa anile).
+              fòmèl. De eksepsyon jodi a : pozisyon GPS pandan yon livrezon efase otomatikman kou
+              livrezon an fini (livre, echwe, oswa anile), e istorik notifikasyon aplikasyon an
+              efase otomatikman apre 90 jou.
             </p>
           </Section>
 

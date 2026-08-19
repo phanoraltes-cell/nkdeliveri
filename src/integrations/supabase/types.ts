@@ -4002,6 +4002,13 @@ export type Database = {
         Args: { _session_id: string };
         Returns: undefined;
       };
+      run_data_retention_cleanup_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          category: string;
+          rows_deleted: number;
+        }[];
+      };
       send_order_chat_message_secure: {
         Args: {
           _image_url?: string;
