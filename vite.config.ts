@@ -148,6 +148,19 @@ export default defineConfig({
           //    longer referenced anywhere in src/ after the swap above —
           //    same "unused, don't pay for it upfront" reasoning as
           //    payment-global/** below.
+          //  - hero-livreur.png (3.68 MB, hero-section.tsx): the fallback
+          //    for browsers without WebP support, behind a <picture> whose
+          //    <source type="image/webp"> (~77 kB) is what every modern
+          //    browser actually fetches — grew past Workbox's 2 MiB
+          //    injectManifest limit once the courier photo's canvas was
+          //    twice extended sideways (object-position fix) this session,
+          //    which failed the build outright (not just a warning). Still
+          //    eagerly loaded (fetchPriority="high", not lazy) so this
+          //    doesn't change what a first-time visitor sees or when — it
+          //    only defers the PNG's *cache* write from upfront to "the
+          //    first time it's actually requested", same CacheFirst runtime
+          //    rule (src/sw.ts) already doing that for every other entry in
+          //    this list.
           globIgnores: [
             "payment-global/**",
             "assets/vendor-pdf-*.js",
@@ -156,6 +169,7 @@ export default defineConfig({
             "Mockup.png",
             "scooter.png",
             "scooter.jpg",
+            "hero-livreur.png",
           ],
         },
       }),

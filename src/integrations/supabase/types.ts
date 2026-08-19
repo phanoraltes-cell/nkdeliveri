@@ -1758,6 +1758,8 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null;
+          anonymized_at: string | null;
+          anonymized_by: string | null;
           avatar_url: string | null;
           created_at: string;
           first_name: string | null;
@@ -1770,6 +1772,8 @@ export type Database = {
         };
         Insert: {
           address?: string | null;
+          anonymized_at?: string | null;
+          anonymized_by?: string | null;
           avatar_url?: string | null;
           created_at?: string;
           first_name?: string | null;
@@ -1782,6 +1786,8 @@ export type Database = {
         };
         Update: {
           address?: string | null;
+          anonymized_at?: string | null;
+          anonymized_by?: string | null;
           avatar_url?: string | null;
           created_at?: string;
           first_name?: string | null;
@@ -2522,6 +2528,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      anonymize_customer_secure: {
+        Args: { _customer_id: string; _reason?: string };
+        Returns: undefined;
+      };
       charge_restaurant_monthly_fee_secure: {
         Args: { _period?: string; _restaurant_id: string };
         Returns: {
@@ -3215,6 +3225,7 @@ export type Database = {
           _search?: string;
         };
         Returns: {
+          anonymized_at: string;
           banned_until: string;
           created_at: string;
           email: string;

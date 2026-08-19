@@ -4,9 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadCSV } from "@/lib/csv-export";
-import { suspendUserAccount, reactivateUserAccount } from "@/lib/manage-user.functions";
+import {
+  suspendUserAccount,
+  reactivateUserAccount,
+  anonymizeCustomerAccount,
+} from "@/lib/manage-user.functions";
 import { toast } from "sonner";
-import { Download, Search, X, Ban, RotateCcw } from "lucide-react";
+import { Download, Search, X, Ban, RotateCcw, UserX } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
@@ -60,6 +64,7 @@ function AdminUsers() {
   const [exporting, setExporting] = useState(false);
   const suspendFn = useServerFn(suspendUserAccount);
   const reactivateFn = useServerFn(reactivateUserAccount);
+  const anonymizeFn = useServerFn(anonymizeCustomerAccount);
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
   const { withReauth, invalidateStepUp, dialogState } = useReauth();
 
@@ -197,6 +202,27 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["admin-all-users"] });
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
+  });
+
+  // NKD-020 — irreversible, so STRICT step-up (same tier as add/removeRole
+  // above), not just the plain requestConfirm every other row action here
+  // uses.
+  const anonymize = useMutation({
+    mutationFn: async (customerId: string) => {
+      await anonymizeFn({ data: { customerId } });
+    },
+    onSuccess: () => {
+      toast.success("Kont kliyan anonimize");
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+    },
+    onError: (e) => {
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message ?? "Erè");
+    },
   });
 
   return (
@@ -347,26 +373,57 @@ function AdminUsers() {
                       {new Date(u.created_at).toLocaleDateString("fr-HT")}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2">
-                      {isBanned ? (
-                        <button
-                          onClick={() => reactivate.mutate(u.id)}
-                          disabled={reactivate.isPending}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          <RotateCcw className="h-3 w-3" /> Reyaktive
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            requestConfirm(`Sispann kont ${u.email}?`, () => suspend.mutate(u.id))
-                          }
-                          disabled={suspend.isPending || isSelf}
-                          title={isSelf ? "Ou pa ka sispann pwòp kont ou" : undefined}
-                          className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
-                        >
-                          <Ban className="h-3 w-3" /> Sispann
-                        </button>
-                      )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {u.anonymized_at ? (
+                          <span
+                            title={`Anonimize sou ${new Date(u.anonymized_at).toLocaleDateString("fr-HT")}`}
+                            className="inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-1.5 text-[10px] font-bold text-ink-soft"
+                          >
+                            <UserX className="h-3 w-3" /> Anonimize
+                          </span>
+                        ) : isBanned ? (
+                          <button
+                            onClick={() => reactivate.mutate(u.id)}
+                            disabled={reactivate.isPending}
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Reyaktive
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              requestConfirm(`Sispann kont ${u.email}?`, () => suspend.mutate(u.id))
+                            }
+                            disabled={suspend.isPending || isSelf}
+                            title={isSelf ? "Ou pa ka sispann pwòp kont ou" : undefined}
+                            className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            <Ban className="h-3 w-3" /> Sispann
+                          </button>
+                        )}
+                        {/* NKD-020 — pòte limite (owner-confirmed): sèlman
+                            kont ki gen SÈLMAN wòl 'customer', pa gen okenn
+                            lòt wòl. anonymize_customer_secure() reverifye
+                            menm règ la sèvè-side — filtè sa a se sèlman UX,
+                            pa sekirite. */}
+                        {!u.anonymized_at &&
+                          !isSelf &&
+                          (u.roles ?? []).length === 1 &&
+                          (u.roles ?? [])[0] === "customer" && (
+                            <button
+                              onClick={() =>
+                                requestConfirm(
+                                  `Anonimize kont kliyan ${u.email}? Non/telefòn/adrès/foto ap efase pou tout tan, kont lan ap bloke.`,
+                                  () => withReauth(() => anonymize.mutate(u.id), "strict"),
+                                )
+                              }
+                              disabled={anonymize.isPending}
+                              className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-ink/80 disabled:opacity-50"
+                            >
+                              <UserX className="h-3 w-3" /> Anonimize
+                            </button>
+                          )}
+                      </div>
                     </td>
                   </tr>
                 );
