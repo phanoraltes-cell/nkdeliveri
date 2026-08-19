@@ -13,8 +13,25 @@ import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck, Banknote } 
 // fully framed at every width instead of needing a hand-tuned X%
 // per breakpoint. Re-verified visually (Playwright) at every width in
 // the QA list below after implementation.
-const heroLivreurWebp = "/hero-livreur.webp";
-const heroLivreurPng = "/hero-livreur.png";
+// -v2 filenames deliberately, not a reused hero-livreur.png/.webp: this
+// exact content has already been overwritten in place under the OLD
+// filename three times earlier this session (square photo → canvas-
+// extended → this courier-right composition). vite-plugin-pwa's
+// precacheAndRoute correctly revisions changed content by hash, but the
+// .png specifically was excluded from precache (globIgnores in
+// vite.config.ts, from when the pre-swap file was 3.68 MB) and only ever
+// reached through src/sw.ts's plain CacheFirst "static-assets" rule —
+// which has NO revision awareness at all and serves whatever it cached
+// under that exact URL for up to 30 days, network or no network. Any
+// returning visitor/tester whose browser had an old copy cached there
+// would see stale (possibly broken/partial) image bytes indefinitely,
+// while every other Hero element (plain SSR'd text, no separate fetch)
+// kept rendering fine — the leading hypothesis for "image disparèt sou
+// mobil, rès la ok" reported after 3 same-filename swaps in one session.
+// A new filename is a guaranteed cache MISS for every client regardless
+// of SW/cache state, independent of whether this was actually the cause.
+const heroLivreurWebp = "/hero-livreur-v2.webp";
+const heroLivreurPng = "/hero-livreur-v2.png";
 
 // Why the <section>'s md/lg/xl min-height SHRINKS at narrower breakpoints
 // (counter-intuitive at a glance): object-fit:cover always scales the

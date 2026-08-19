@@ -148,19 +148,23 @@ export default defineConfig({
           //    longer referenced anywhere in src/ after the swap above —
           //    same "unused, don't pay for it upfront" reasoning as
           //    payment-global/** below.
-          //  - hero-livreur.png (3.68 MB, hero-section.tsx): the fallback
-          //    for browsers without WebP support, behind a <picture> whose
-          //    <source type="image/webp"> (~77 kB) is what every modern
-          //    browser actually fetches — grew past Workbox's 2 MiB
-          //    injectManifest limit once the courier photo's canvas was
-          //    twice extended sideways (object-position fix) this session,
-          //    which failed the build outright (not just a warning). Still
-          //    eagerly loaded (fetchPriority="high", not lazy) so this
-          //    doesn't change what a first-time visitor sees or when — it
-          //    only defers the PNG's *cache* write from upfront to "the
-          //    first time it's actually requested", same CacheFirst runtime
-          //    rule (src/sw.ts) already doing that for every other entry in
-          //    this list.
+          //  - hero-livreur.png was excluded here for one session (grew
+          //    past Workbox's 2 MiB injectManifest limit at an intermediate
+          //    canvas-extended size and briefly failed the build outright).
+          //    The final courier-right composition (now hero-livreur-v2.png,
+          //    ~1.25 MB) is back under the limit — removed from this list on
+          //    purpose, not an oversight: excluding it here means it's only
+          //    ever cached via src/sw.ts's plain CacheFirst "static-assets"
+          //    rule, which has NO content-revision awareness and served
+          //    stale image bytes to returning visitors for up to 30 days
+          //    across three same-filename content swaps this session (the
+          //    root cause behind "image disparèt sou mobil" — see
+          //    hero-section.tsx's own comment). precacheAndRoute (this glob)
+          //    correctly detects a content-hash change and busts the old
+          //    entry on every future deploy, which CacheFirst alone never
+          //    does — the fix for THIS incident was renaming the asset, but
+          //    leaving it precached is what prevents the same class of bug
+          //    on the next legitimate edit to this same file.
           globIgnores: [
             "payment-global/**",
             "assets/vendor-pdf-*.js",
@@ -169,7 +173,6 @@ export default defineConfig({
             "Mockup.png",
             "scooter.png",
             "scooter.jpg",
-            "hero-livreur.png",
           ],
         },
       }),
