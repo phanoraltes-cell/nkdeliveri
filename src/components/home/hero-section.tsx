@@ -1,12 +1,26 @@
 import { motion } from "framer-motion";
 import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck, Banknote } from "lucide-react";
 
-// hero-livreur.png (source, 1254×1254) is 1.79 MB — the network the
-// Gonaïves audience is on makes that cost real, so a WebP encode (q80,
-// ~73 KB — under the ~200 KB budget with headroom) is served first via
-// <picture>; the untouched original .png stays as the <img> fallback for
-// browsers with no WebP decoder, never re-encoded, so its quality can't
-// regress from this change.
+// hero-livreur.png/webp: the original photo is a 1254×1254 SQUARE. A square
+// source behind a landscape hero always gets scaled by WIDTH under
+// object-fit:cover (any wide/short container has a higher aspect ratio than
+// a 1:1 image), which crops top/bottom only — object-position's X value has
+// zero effect, because there's never any horizontal room to reposition
+// within. That's exactly why the courier's face used to sit directly behind
+// the heading/search bar at every desktop width, no matter what X was set
+// to. Fixed at the source: 1200px of solid dark canvas (#1c1a17 — chosen to
+// disappear under the gradient below, which is darkest at the left edge)
+// extended onto the LEFT only (sharp-cli `extend`), making the real photo
+// 2454×1254 (~1.96:1) instead of 1:1. That's wide enough that most hero
+// aspect ratios once again crop horizontally, so object-position can
+// actually push the subject into the clear, gradient-light right side —
+// object-[50%_18%] became object-[72%_18%] to match (72% ≈ the courier's
+// new position within the wider canvas: (627px original center + 1200px
+// pad) / 2454px total). Re-verified visually (Playwright, 375/768/1280/
+// 1920px) after the change — the ~1.79 MB PNG is still the untouched
+// original content, just wider canvas; the WebP (q80, ~75 KB) stays well
+// under the ~200 KB budget since the added flat-color region compresses to
+// almost nothing.
 const heroLivreurWebp = "/hero-livreur.webp";
 const heroLivreurPng = "/hero-livreur.png";
 
@@ -44,7 +58,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           alt=""
           aria-hidden="true"
           fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-[50%_18%]"
+          className="absolute inset-0 h-full w-full object-cover object-[72%_18%]"
         />
       </picture>
       {/* Dark gradient overlay for text readability */}
