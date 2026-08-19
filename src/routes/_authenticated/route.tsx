@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { noIndexMeta } from "@/lib/seo";
+import { TermsAcceptanceGate } from "@/components/terms-acceptance-gate";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -59,5 +60,9 @@ export const Route = createFileRoute("/_authenticated")({
       allRoles: allRoles.length > 0 ? allRoles : [(role as string | null) ?? "customer"],
     };
   },
-  component: () => <Outlet />,
+  component: () => (
+    <TermsAcceptanceGate>
+      <Outlet />
+    </TermsAcceptanceGate>
+  ),
 });

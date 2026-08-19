@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { inputCls } from "@/lib/utils";
 import { baseSignUp, toFileInput } from "./register-shared.logic";
 import { useSubmit } from "@/hooks/useSubmit";
 import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
+import { CURRENT_TERMS_VERSION } from "@/lib/legal";
 
 export function DriverForm() {
   const [f, setF] = useState({
@@ -41,6 +43,10 @@ export function DriverForm() {
         address: f.address,
         vehicle_type: f.vehicleType,
         license_plate: f.licensePlate,
+        // NKD-022: only sent because the checkbox below is required to
+        // submit (line above) — handle_new_user() stamps
+        // profiles.terms_accepted_at from this, never unconditionally.
+        terms_version: CURRENT_TERMS_VERSION,
       });
       // Runs server-side with the service role — the ID document (required
       // for admin approval) is never silently dropped if email confirmation
@@ -186,7 +192,27 @@ export function DriverForm() {
             onChange={(e) => setF({ ...f, terms: e.target.checked })}
             className="mt-1"
           />
-          <span>Mwen aksepte kondisyon livrè NK Deliveri.</span>
+          <span>
+            Mwen aksepte{" "}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-deep underline"
+            >
+              Kondisyon Itilizasyon
+            </Link>{" "}
+            ak{" "}
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-deep underline"
+            >
+              Politik Konfidansyalite
+            </Link>{" "}
+            NK Deliveri kòm livrè.
+          </span>
         </label>
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont livrè"}

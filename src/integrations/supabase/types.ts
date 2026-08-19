@@ -1764,6 +1764,8 @@ export type Database = {
           id: string;
           last_name: string | null;
           phone: string | null;
+          terms_accepted_at: string | null;
+          terms_version: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1774,6 +1776,8 @@ export type Database = {
           id: string;
           last_name?: string | null;
           phone?: string | null;
+          terms_accepted_at?: string | null;
+          terms_version?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1784,6 +1788,8 @@ export type Database = {
           id?: string;
           last_name?: string | null;
           phone?: string | null;
+          terms_accepted_at?: string | null;
+          terms_version?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -2449,6 +2455,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_terms_secure: {
+        Args: { _version: string };
+        Returns: undefined;
+      };
       add_dispute_message_secure: {
         Args: {
           _attachment_url?: string;

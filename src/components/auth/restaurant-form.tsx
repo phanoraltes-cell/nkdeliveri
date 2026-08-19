@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { finalizeRegistrationDocuments } from "@/lib/register-documents.functions";
 import { inputCls } from "@/lib/utils";
 import { baseSignUp, toFileInput } from "./register-shared.logic";
@@ -9,6 +10,7 @@ import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { HoursPicker, type WeeklyHours } from "@/components/hours-picker";
 import { buildRestaurantHoursMetadata } from "./restaurant-form.logic";
+import { CURRENT_TERMS_VERSION } from "@/lib/legal";
 
 export function RestaurantForm() {
   const [f, setF] = useState({
@@ -51,6 +53,10 @@ export function RestaurantForm() {
         restaurant_cuisine: f.cuisine,
         restaurant_address: f.address,
         ...buildRestaurantHoursMetadata(hours),
+        // NKD-022: only sent because the checkbox below is required to
+        // submit (line above) — handle_new_user() stamps
+        // profiles.terms_accepted_at from this, never unconditionally.
+        terms_version: CURRENT_TERMS_VERSION,
       });
       // Runs server-side with the service role — works even without a
       // client session, so logo/cover are never silently lost when email
@@ -188,7 +194,27 @@ export function RestaurantForm() {
             onChange={(e) => setF({ ...f, terms: e.target.checked })}
             className="mt-1"
           />
-          <span>Mwen aksepte kondisyon patenarya ak platfòm NK Deliveri.</span>
+          <span>
+            Mwen aksepte{" "}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-deep underline"
+            >
+              Kondisyon Itilizasyon
+            </Link>{" "}
+            ak{" "}
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-deep underline"
+            >
+              Politik Konfidansyalite
+            </Link>{" "}
+            patenarya ak platfòm NK Deliveri.
+          </span>
         </label>
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont restoran"}
