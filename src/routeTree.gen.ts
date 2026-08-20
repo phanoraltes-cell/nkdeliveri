@@ -29,13 +29,13 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-passw
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as ApiCspReportRouteImport } from './routes/api.csp-report'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as ApiWebhooksMoncashRouteImport } from './routes/api.webhooks.moncash'
 import { Route as ApiCronPlopReconcileRouteImport } from './routes/api.cron.plop-reconcile'
 import { Route as ApiCronMoncashReconcileRouteImport } from './routes/api.cron.moncash-reconcile'
 import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
+import { Route as AuthenticatedDashboardNotificationsRouteImport } from './routes/_authenticated/dashboard.notifications'
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
 import { Route as AuthenticatedDashboardCustomerRouteImport } from './routes/_authenticated/dashboard.customer'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
@@ -184,12 +184,6 @@ const ApiCspReportRoute = ApiCspReportRouteImport.update({
   path: '/api/csp-report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedNotificationsRoute =
-  AuthenticatedNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -220,6 +214,12 @@ const AuthenticatedDashboardRestaurantRoute =
   AuthenticatedDashboardRestaurantRouteImport.update({
     id: '/restaurant',
     path: '/restaurant',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardNotificationsRoute =
+  AuthenticatedDashboardNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardDriverRoute =
@@ -523,7 +523,6 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
-  '/notifications': typeof AuthenticatedNotificationsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -537,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
+  '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
@@ -598,7 +598,6 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/notifications': typeof AuthenticatedNotificationsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -609,6 +608,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersIndexRoute
   '/restaurants': typeof RestaurantsIndexRoute
   '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
+  '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRouteWithChildren
@@ -672,7 +672,6 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
-  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/api/csp-report': typeof ApiCspReportRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -686,6 +685,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/_authenticated/dashboard/customer': typeof AuthenticatedDashboardCustomerRouteWithChildren
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
+  '/_authenticated/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
@@ -750,7 +750,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/dashboard'
-    | '/notifications'
     | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
@@ -764,6 +763,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/customer'
     | '/dashboard/driver'
+    | '/dashboard/notifications'
     | '/dashboard/restaurant'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
@@ -825,7 +825,6 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/terms'
-    | '/notifications'
     | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
@@ -836,6 +835,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/restaurants'
     | '/chat/$orderId'
+    | '/dashboard/notifications'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
     | '/api/webhooks/moncash'
@@ -898,7 +898,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/dashboard'
-    | '/_authenticated/notifications'
     | '/api/csp-report'
     | '/auth/forgot-password'
     | '/auth/register'
@@ -912,6 +911,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/customer'
     | '/_authenticated/dashboard/driver'
+    | '/_authenticated/dashboard/notifications'
     | '/_authenticated/dashboard/restaurant'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
@@ -1132,13 +1132,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCspReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -1179,6 +1172,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurant'
       fullPath: '/dashboard/restaurant'
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/notifications': {
+      id: '/_authenticated/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/driver': {
@@ -1696,6 +1696,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardCustomerRoute: typeof AuthenticatedDashboardCustomerRouteWithChildren
   AuthenticatedDashboardDriverRoute: typeof AuthenticatedDashboardDriverRouteWithChildren
+  AuthenticatedDashboardNotificationsRoute: typeof AuthenticatedDashboardNotificationsRoute
   AuthenticatedDashboardRestaurantRoute: typeof AuthenticatedDashboardRestaurantRouteWithChildren
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -1708,6 +1709,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardCustomerRouteWithChildren,
     AuthenticatedDashboardDriverRoute:
       AuthenticatedDashboardDriverRouteWithChildren,
+    AuthenticatedDashboardNotificationsRoute:
+      AuthenticatedDashboardNotificationsRoute,
     AuthenticatedDashboardRestaurantRoute:
       AuthenticatedDashboardRestaurantRouteWithChildren,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
@@ -1720,13 +1723,11 @@ const AuthenticatedDashboardRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
-  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedChatOrderIdRoute: typeof AuthenticatedChatOrderIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
-  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedChatOrderIdRoute: AuthenticatedChatOrderIdRoute,
 }
 

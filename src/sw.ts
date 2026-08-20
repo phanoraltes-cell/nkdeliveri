@@ -77,7 +77,7 @@ self.addEventListener("push", (event) => {
   }
 
   const title = payload.title || "NK Deliveri";
-  const targetUrl = payload.url || "/notifications";
+  const targetUrl = payload.url || "/dashboard/notifications";
   const options = {
     body: payload.body || "",
     icon: "/app-icon-192.png",
@@ -119,7 +119,8 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/notifications";
+  const targetUrl =
+    (event.notification.data && event.notification.data.url) || "/dashboard/notifications";
 
   event.waitUntil(
     (async () => {

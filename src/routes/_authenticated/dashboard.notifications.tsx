@@ -27,7 +27,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 
-export const Route = createFileRoute("/_authenticated/notifications")({
+// Moved here from _authenticated/notifications.tsx (a sibling of
+// dashboard.tsx, not a child of it): TanStack Router's flat-file
+// convention meant that path never actually rendered inside dashboard.tsx's
+// layout (DashboardHeader/DashboardSidebar/max-w-6xl container) — every
+// visit landed on a completely bare page with no navigation chrome at all,
+// reached exclusively via the header bell (dashboard-header.tsx), which
+// itself only ever renders inside that same shell. Renaming into the
+// dashboard.* family fixes it structurally, for free, via the same nesting
+// mechanism every other dashboard page already relies on.
+export const Route = createFileRoute("/_authenticated/dashboard/notifications")({
   component: NotificationsPage,
 });
 
@@ -161,19 +170,22 @@ function NotificationsPage() {
 
   return (
     <div className="space-y-5">
-      {/* P12 (F header P2) — flex-wrap (missing before) is the actual fix:
-          PushToggle isn't always a compact button — its "denied"/
-          "unsupported" states render a much wider help card, and without
-          wrap the two flex items got forced onto one line and crushed
-          into each other instead of PushToggle simply dropping to its own
-          line below the title, which is what happens now. Works for any
-          width either side ends up needing — not a fixed breakpoint. */}
-      <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center">
+      {/* Title centered on request (was left-aligned in a justify-between
+          row with PushToggle). Stacked instead of the old side-by-side
+          row so centering the title doesn't fight PushToggle's variable
+          width — its "denied"/"unsupported" states render a much wider
+          help card than its normal compact-button state, which is
+          exactly why this used flex-wrap before; centering both on their
+          own rows sidesteps that instead of trying to keep it working
+          around an off-center title. */}
+      <div className="space-y-3 text-center">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Notifikasyon</h1>
           <p className="mt-1 text-ink-soft">{unread.length} nouvo</p>
         </div>
-        <PushToggle />
+        <div className="flex justify-center">
+          <PushToggle />
+        </div>
       </div>
 
       {user?.id && <NotificationPreferencesPanel userId={user.id} />}

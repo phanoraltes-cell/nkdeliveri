@@ -175,7 +175,7 @@ export function DashboardHeader({
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
         <Link
-          to="/notifications"
+          to="/dashboard/notifications"
           className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-soft bg-white text-brand-deep transition hover:border-brand hover:bg-brand-soft/40 hover:shadow-brand-xs"
           aria-label="Notifikasyon"
         >

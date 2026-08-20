@@ -272,7 +272,10 @@ function CustomerDashboard() {
           <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink">
             <Bell className="h-5 w-5 text-brand-deep" /> Notifikasyon
           </h2>
-          <Link to="/notifications" className="text-sm font-bold text-brand-deep hover:underline">
+          <Link
+            to="/dashboard/notifications"
+            className="text-sm font-bold text-brand-deep hover:underline"
+          >
             Wè tout →
           </Link>
         </div>
