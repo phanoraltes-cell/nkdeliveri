@@ -74,24 +74,36 @@ type HeroSectionProps = {
  *    top, capped to ~40% width so it never reaches the courier's zone.
  *  - below md: the courier gets his own top block (plain <img>, no text
  *    ever overlaid on it — nothing to contrast-check, nothing that can
- *    drift onto his face on a future copy change); the badge/heading/
- *    search/stats/payment content follows underneath, matching Uber Eats/
+ *    drift onto his face on a future copy change), matching Uber Eats/
  *    DoorDash-style mobile heroes (and the prompt's own mobile diagram).
- *    That content panel's own backdrop is a SECOND copy of the same
- *    photo, cropped to its opposite (object-left, the pre-blurred
- *    cityscape zone) instead of a flat color — a plain bg-ink rectangle
- *    here originally read as a broken/missing image to the owner
- *    ("gwo background nwa"), when the actual ask was for the photo's own
- *    blur to keep going, not a solid panel.
+ *    Its own gradient fades that ONE image to solid --ink; the content
+ *    panel below it is flat --ink with no image of its own — two earlier
+ *    attempts (a plain bg-ink rectangle, then a second differently-
+ *    cropped copy of the same photo) both left a visible seam where the
+ *    owner could see the join. One image + a long fade to the exact flat
+ *    color used right after it is what actually reads as continuous.
  */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
     <section id="hero" className="relative overflow-hidden md:min-h-[560px] xl:min-h-[640px]">
-      {/* Mobile/tablet-portrait image block — own stacking context, real
-          height in normal flow (not absolute), so it never needs a
-          min-height hack to avoid collapsing. Hidden at md+, where the
-          full-bleed version below takes over instead of stacking both. */}
-      <div className="relative h-[240px] w-full sm:h-[320px] md:hidden">
+      {/* Mobile/tablet-portrait hero visual — ONE continuous image fading
+          to solid --ink via its own long gradient, not two separately-
+          cropped instances of the same photo stacked with a short fade
+          between them (the previous version). That still left a visible
+          seam: a close-up screenshot (owner-provided reference) showed a
+          sharp, warm, in-focus courier meeting a darker, blurrier,
+          DIFFERENT crop of the same photo right at the join — exactly the
+          "koupi/liy" the reference brief calls out. Extending this same
+          crop's own gradient the rest of the way to solid ink, then
+          handing off to a flat bg-ink panel of the identical color below
+          (see the content wrapper further down), means the only "seam"
+          left is the gradient itself — a fade, never a hard line — and
+          the image→panel handoff is invisible because both sides resolve
+          to the exact same flat color. Own stacking context, real height
+          in normal flow (not absolute), so it never needs a min-height
+          hack to avoid collapsing. Hidden at md+, where the full-bleed
+          version below takes over instead of stacking both. */}
+      <div className="relative h-[280px] w-full overflow-hidden sm:h-[340px] md:hidden">
         <picture>
           <source srcSet={heroLivreurWebp} type="image/webp" />
           <img
@@ -102,12 +114,10 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             className="absolute inset-0 h-full w-full object-cover object-right"
           />
         </picture>
-        {/* Seam into the content panel right below, which now has its own
-            (differently-cropped, object-left) copy of this same photo as
-            its backdrop — this small fade just softens the cut between
-            the two crops, it isn't carrying the whole transition alone
-            anymore. */}
-        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-ink/60 to-transparent" />
+        {/* Transparent for the top ~42% (courier stays fully bright) then
+            fades to solid --ink (#1F1F1F) by the bottom — a real fade
+            across most of the block's height, not a thin band. */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,transparent_42%,#1F1F1F_100%)]" />
       </div>
 
       {/* Desktop/tablet-landscape background image — hidden below md, so
@@ -140,32 +150,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           with hand-placed coordinates otherwise — only max-width
           constrains it, so it can never drift onto the courier regardless
           of viewport width. */}
-      <div className="relative z-10 overflow-hidden px-5 pt-7 pb-10 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:px-0 md:pt-0 md:pb-0">
-        {/* Mobile-only backdrop: the SAME hero photo again, but
-            object-position LEFT this time — the pre-blurred cityscape
-            zone, not the courier (already shown above at object-right in
-            the image block). Owner feedback: a flat bg-ink rectangle
-            here read as a broken/missing image ("gwo background nwa"),
-            when the actual intent was for the photo's own blur to
-            continue as the backdrop, not a solid color. Darkened by the
-            gradient below for text contrast, same idea as the desktop
-            overlay just applied to a second, differently-cropped copy of
-            the same asset instead of reusing the courier crop. Hidden at
-            md+, where the single full-bleed image above already does
-            this job for the whole section. */}
-        <div className="absolute inset-0 md:hidden">
-          <picture>
-            <source srcSet={heroLivreurWebp} type="image/webp" />
-            <img
-              src={heroLivreurPng}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="h-full w-full object-cover object-left"
-            />
-          </picture>
-          <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-ink/85 to-ink" />
-        </div>
+      {/* bg-ink here is deliberately the EXACT same flat color the image
+          block's own gradient above fades to (#1F1F1F) — that's what
+          makes the handoff between "image with gradient" and "solid
+          panel" invisible, instead of needing a second image/gradient
+          layer here to fake continuity (the earlier, seam-prone
+          version). */}
+      <div className="relative z-10 overflow-hidden bg-ink px-5 pt-7 pb-10 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:bg-transparent md:px-0 md:pt-0 md:pb-0">
         <div className="relative mx-auto w-full max-w-[1200px] md:px-5 md:pt-8 lg:pt-14 xl:pt-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -173,8 +164,10 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             transition={{ duration: 0.6 }}
             className="max-w-md md:max-w-[300px] lg:max-w-[400px] xl:max-w-[480px]"
           >
-            {/* Badge */}
-            <span className="mb-5 inline-block rounded-full bg-brand px-4 py-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_16px_rgba(249,115,22,0.4)]">
+            {/* Badge — location pin icon added (visual reinforcement, same
+                text/business logic, just a "📍" equivalent per the ask). */}
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_16px_rgba(249,115,22,0.4)]">
+              <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
               Livre lakay ou nan Gonaïves
             </span>
 
@@ -193,10 +186,14 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               <span className="text-brand">livre lakay ou</span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="mb-8 max-w-[46ch] text-[15px] leading-relaxed text-white/80">
-              Kòmande manje kreyòl otantik nan meyè restoran Gonaïves yo epi resevwa l cho lakay ou
-              nan mwens pase 45 minit.
+            {/* Subtitle — shortened from a 3-line sentence to fit 1-2 lines
+                on a small phone (was pushing the search CTA well below the
+                first viewport at 320-390px). "Gonaïves" dropped here
+                deliberately, not lost — the badge right above already
+                states it, repeating it a second time in the very next line
+                added length without adding information. */}
+            <p className="mb-7 max-w-[38ch] text-[15px] leading-relaxed text-white/80">
+              Manje kreyòl otantik, livre cho lakay ou nan mwens pase 45 minit.
             </p>
 
             {/* Search bar */}
@@ -220,14 +217,38 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               />
               <button
                 type="submit"
-                className="flex shrink-0 items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)]"
+                className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
               >
                 <Search className="h-4 w-4" /> Chèche
               </button>
             </form>
 
-            {/* Stats row — 4 items */}
-            <div className="mt-8 flex flex-wrap gap-6 md:gap-5 lg:gap-8">
+            {/* Compact trust indicators — mobile only, replacing the 4-way
+                equal-weight icon grid below (which pushed the Hero taller
+                than the first viewport on a short phone). Numbers stay
+                readable at a glance; security is a secondary line, not a
+                4th equal box — the brief's own literal target format. */}
+            <div className="mt-6 md:hidden">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-white">
+                <span>10+ Restoran</span>
+                <span aria-hidden="true" className="text-white/40">
+                  ·
+                </span>
+                <span>50+ Plat</span>
+                <span aria-hidden="true" className="text-white/40">
+                  ·
+                </span>
+                <span>~30 min</span>
+              </div>
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-white/60">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                Peman an sekirite
+              </p>
+            </div>
+
+            {/* Full icon treatment — md+ only, where there's no vertical
+                constraint forcing the compact version above. */}
+            <div className="mt-8 hidden flex-wrap gap-5 md:flex lg:gap-8">
               {HERO_STATS.map((s) => (
                 <div key={s.l} className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-brand backdrop-blur-sm">
