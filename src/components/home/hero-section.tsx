@@ -75,9 +75,14 @@ type HeroSectionProps = {
  *  - below md: the courier gets his own top block (plain <img>, no text
  *    ever overlaid on it — nothing to contrast-check, nothing that can
  *    drift onto his face on a future copy change); the badge/heading/
- *    search/stats/payment content follows underneath in a solid dark
- *    panel that visually continues the image (matches Uber Eats/
- *    DoorDash-style mobile heroes, and the prompt's own mobile diagram).
+ *    search/stats/payment content follows underneath, matching Uber Eats/
+ *    DoorDash-style mobile heroes (and the prompt's own mobile diagram).
+ *    That content panel's own backdrop is a SECOND copy of the same
+ *    photo, cropped to its opposite (object-left, the pre-blurred
+ *    cityscape zone) instead of a flat color — a plain bg-ink rectangle
+ *    here originally read as a broken/missing image to the owner
+ *    ("gwo background nwa"), when the actual ask was for the photo's own
+ *    blur to keep going, not a solid panel.
  */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
@@ -97,9 +102,12 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             className="absolute inset-0 h-full w-full object-cover object-right"
           />
         </picture>
-        {/* Seam into the dark content panel right below — a gradient, not
-            a hard cut, so the join reads as one deliberate composition. */}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink to-transparent" />
+        {/* Seam into the content panel right below, which now has its own
+            (differently-cropped, object-left) copy of this same photo as
+            its backdrop — this small fade just softens the cut between
+            the two crops, it isn't carrying the whole transition alone
+            anymore. */}
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-ink/60 to-transparent" />
       </div>
 
       {/* Desktop/tablet-landscape background image — hidden below md, so
@@ -119,21 +127,46 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           (prompt's own "LEFT = darker, RIGHT = image stays bright" rule). */}
       <div className="absolute inset-0 hidden bg-gradient-to-r from-black/85 via-black/55 to-transparent md:block" />
 
-      {/* Content. Normal document flow + solid panel below md (mirrors
-          the mobile diagram exactly); absolute-over-the-image at md+.
-          Deliberately items-start + top padding, NOT flex+items-center:
-          this block is pinned via inset-0 to the section's own (fairly
-          tight, see the min-height comment above) box, and at 900px wide
-          the badge/heading/subtitle/search/stats stack is taller than
-          that box — center-aligning it clipped the badge chip clean off
-          the top under overflow-hidden (Playwright screenshot). Top-
-          anchoring means a too-tall stack just extends further down
-          inside the box instead, which is always recoverable — never
-          silently invisible. Never itself positioned with hand-placed
-          coordinates otherwise — only max-width constrains it, so it can
-          never drift onto the courier regardless of viewport width. */}
-      <div className="relative z-10 bg-ink px-5 pt-7 pb-10 md:absolute md:inset-0 md:flex md:items-start md:bg-transparent md:px-0 md:pt-0 md:pb-0">
-        <div className="mx-auto w-full max-w-[1200px] md:px-5 md:pt-8 lg:pt-14 xl:pt-20">
+      {/* Content. Normal document flow below md; absolute-over-the-image at
+          md+. Deliberately items-start + top padding, NOT flex+items-
+          center: this block is pinned via inset-0 to the section's own
+          (fairly tight, see the min-height comment above) box, and at
+          900px wide the badge/heading/subtitle/search/stats stack is
+          taller than that box — center-aligning it clipped the badge
+          chip clean off the top under overflow-hidden (Playwright
+          screenshot). Top-anchoring means a too-tall stack just extends
+          further down inside the box instead, which is always
+          recoverable — never silently invisible. Never itself positioned
+          with hand-placed coordinates otherwise — only max-width
+          constrains it, so it can never drift onto the courier regardless
+          of viewport width. */}
+      <div className="relative z-10 overflow-hidden px-5 pt-7 pb-10 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:px-0 md:pt-0 md:pb-0">
+        {/* Mobile-only backdrop: the SAME hero photo again, but
+            object-position LEFT this time — the pre-blurred cityscape
+            zone, not the courier (already shown above at object-right in
+            the image block). Owner feedback: a flat bg-ink rectangle
+            here read as a broken/missing image ("gwo background nwa"),
+            when the actual intent was for the photo's own blur to
+            continue as the backdrop, not a solid color. Darkened by the
+            gradient below for text contrast, same idea as the desktop
+            overlay just applied to a second, differently-cropped copy of
+            the same asset instead of reusing the courier crop. Hidden at
+            md+, where the single full-bleed image above already does
+            this job for the whole section. */}
+        <div className="absolute inset-0 md:hidden">
+          <picture>
+            <source srcSet={heroLivreurWebp} type="image/webp" />
+            <img
+              src={heroLivreurPng}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="h-full w-full object-cover object-left"
+            />
+          </picture>
+          <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-ink/85 to-ink" />
+        </div>
+        <div className="relative mx-auto w-full max-w-[1200px] md:px-5 md:pt-8 lg:pt-14 xl:pt-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
