@@ -267,13 +267,23 @@ BEGIN
     CASE WHEN v_caught AND v_errmsg = 'Tanpri antre yon deskripsyon' THEN 'PASS' ELSE 'FAIL' END,
     'mesaj: ' || COALESCE(v_errmsg, 'okenn'));
 
-  -- T4 — admin update WITH description -> succeeds, updated.
+  -- T4 — admin update WITH description -> succeeds, updated. Also echoes
+  -- the media fields T2 set (_media_type/_media_url/_alt_text) — exactly
+  -- like the real admin form always does (its save() never omits them).
+  -- Omitting them here would let them silently fall back to the RPC's own
+  -- DEFAULTs (_media_type='image', _media_url=NULL) and reset the ad's
+  -- media to NULL — a real behavior of the RPC, correct and intentional
+  -- for a caller that truly means to clear media, but wrong for this test
+  -- if left un-echoed, since T6 below expects the media T2 set to still
+  -- be there.
   SET ROLE authenticated;
   PERFORM set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
   PERFORM public.update_sponsored_placement_secure(
     _id := v_placement, _title := 'Anons tès (modifye)',
     _starts_at := now(), _ends_at := now() + interval '10 days', _is_active := true,
-    _description := 'Nouvo deskripsyon apre modifikasyon'
+    _description := 'Nouvo deskripsyon apre modifikasyon',
+    _media_type := 'image', _media_url := 'https://cdn.example.com/ads-media/desc-test/1.webp',
+    _alt_text := 'Tès'
   );
   RESET ROLE;
   SELECT description INTO v_row FROM public.sponsored_placements WHERE id = v_placement;
@@ -322,7 +332,9 @@ BEGIN
   PERFORM public.update_sponsored_placement_secure(
     _id := v_placement, _title := 'Anons tès (modifye)',
     _starts_at := now(), _ends_at := now() + interval '10 days', _is_active := false,
-    _description := 'Nouvo deskripsyon apre modifikasyon'
+    _description := 'Nouvo deskripsyon apre modifikasyon',
+    _media_type := 'image', _media_url := 'https://cdn.example.com/ads-media/desc-test/1.webp',
+    _alt_text := 'Tès'
   );
   RESET ROLE;
   SET ROLE anon;
