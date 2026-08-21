@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { useActivePlacements } from "@/hooks/useActivePlacements";
-import { ImageWithFallback } from "@/components/image-with-fallback";
+import { AdMedia } from "@/components/ads/ad-media";
 
 type SponsoredSectionProps = {
   /** Excludes a restaurant advertising itself on its own page. */
@@ -29,9 +29,8 @@ export function SponsoredSection({ currentRestaurantId }: SponsoredSectionProps)
           const card = (
             <div className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-brand-xs ring-1 ring-amber-300 transition hover:-translate-y-1 hover:shadow-brand-md">
               <div className="overflow-hidden">
-                <ImageWithFallback
-                  src={s.image_url ?? s.restaurant_cover_url}
-                  alt={s.title}
+                <AdMedia
+                  ad={{ ...s, image_url: s.image_url ?? s.restaurant_cover_url }}
                   icon={Store}
                   loading="lazy"
                   width={230}

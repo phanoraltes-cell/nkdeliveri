@@ -1,5 +1,5 @@
 import { useActivePlacements } from "@/hooks/useActivePlacements";
-import { ImageWithFallback } from "@/components/image-with-fallback";
+import { AdMedia } from "@/components/ads/ad-media";
 import { Store } from "lucide-react";
 
 /**
@@ -15,7 +15,11 @@ export function AdBannerSection() {
 
   const href =
     ad.link_url ?? (ad.restaurant_slug ? `/restaurants/${ad.restaurant_slug}` : undefined);
-  const img = ad.image_url ?? ad.restaurant_cover_url;
+  // The restaurant's own cover photo is a last-resort fallback, used only
+  // when the admin hasn't uploaded anything for the ad itself (media_url
+  // and the legacy image_url both empty) — AdMedia already prefers
+  // media_url over image_url on its own.
+  const hasMedia = !!(ad.media_url || ad.image_url || ad.restaurant_cover_url);
 
   const content = (
     <div className="relative grid overflow-hidden rounded-[32px] bg-brand-deep text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.4fr_1fr]">
@@ -27,11 +31,17 @@ export function AdBannerSection() {
           {ad.title}
         </h2>
       </div>
-      {img && (
-        <div className="relative">
-          <ImageWithFallback
-            src={img}
-            alt={ad.title}
+      {hasMedia && (
+        // Fixed 16:9 frame on mobile (this column previously had no defined
+        // height at all — its rendered size just happened to fall out of
+        // the <img>'s own intrinsic ratio, which silently broke the moment
+        // an ad's media became a <video>, since a video with no CSS height
+        // and no width/height attributes collapses to 0). Desktop keeps its
+        // existing behavior: the image column fills whatever height the
+        // grid row already resolves to, via absolute+inset.
+        <div className="relative aspect-[16/9] md:aspect-auto">
+          <AdMedia
+            ad={{ ...ad, image_url: ad.image_url ?? ad.restaurant_cover_url }}
             icon={Store}
             loading="lazy"
             width={1024}

@@ -3213,9 +3213,16 @@ export type Database = {
       get_active_placements_secure: {
         Args: { _limit?: number; _placement: string };
         Returns: {
+          alt_text: string;
+          cta_label: string;
+          description: string;
           id: string;
           image_url: string;
+          link_target: string;
           link_url: string;
+          media_items: Json;
+          media_type: string;
+          media_url: string;
           placement: string;
           restaurant_address: string;
           restaurant_avg_prep_time: number;
@@ -3227,6 +3234,7 @@ export type Database = {
           restaurant_rating: number;
           restaurant_slug: string;
           sort_order: number;
+          thumbnail_url: string;
           title: string;
         }[];
       };

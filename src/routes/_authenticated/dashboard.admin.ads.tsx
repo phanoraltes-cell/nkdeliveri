@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, X } from "lucide-react";
+import { Megaphone, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { inputClsCompact as inputCls } from "@/lib/utils";
@@ -16,6 +16,7 @@ import {
 } from "@/components/dashboard/admin/media-uploader";
 import { EMPTY_MEDIA_VALUE, type MediaUploaderValue } from "@/lib/media-value";
 import { deleteStorageFiles, pathFromPublicUrl } from "@/lib/storage-upload";
+import { AdMedia } from "@/components/ads/ad-media";
 
 const ADS_BUCKET = "ads-media";
 
@@ -30,19 +31,33 @@ const PLACEMENT_LABEL: Record<string, string> = {
   dashboard: "Dashboard",
 };
 
+// Only these two placements actually render the ad's OWN media
+// (ad-banner-section.tsx, sponsored-section.tsx) — "search_results" shows
+// the boosted restaurant's own cover photo instead (restaurants.index.tsx),
+// and "dashboard" is a small text-only card with no image slot at all
+// (dashboard-ad-card.tsx, by design — "never a takeover"). The live-preview
+// frame below only makes sense for the two that do.
+const PLACEMENT_MEDIA_FRAME: Record<string, string | null> = {
+  home_banner: "aspect-[16/9]",
+  search_results: null,
+  restaurant_page: "aspect-[23/15]", // matches sponsored-section.tsx's real 230×150 card exactly
+  dashboard: null,
+};
+
 // Fields the redesigned form still has no editor for (cta_label,
-// description, link_target, media_items — that's the fuller Piblisite
-// form redesign, out of scope for this media-integration pass). Any RPC
-// call to update_sponsored_placement_secure MUST echo these back verbatim
-// from the current row: the RPC's new params all carry their own DEFAULTs
-// (for backward compat with pre-media callers), so omitting them on an
-// UPDATE would silently reset an existing ad's values instead of leaving
-// them untouched.
+// link_target, media_items — carousel/CTA redesign, out of scope for this
+// pass). `description` USED to be in this passthrough list too, but it's
+// now a required, directly-edited field (see the Deskripsyon textarea
+// below) — passing it through unedited would defeat the point of making it
+// mandatory. Any RPC call to update_sponsored_placement_secure MUST still
+// echo these remaining ones back verbatim from the current row: the RPC's
+// new params all carry their own DEFAULTs (for backward compat with
+// pre-media callers), so omitting them on an UPDATE would silently reset an
+// existing ad's values instead of leaving them untouched.
 function passthroughExtraFields(p: Placement) {
   return {
     _link_target: p.link_target ?? undefined,
     _cta_label: p.cta_label ?? undefined,
-    _description: p.description ?? undefined,
     _media_items: p.media_items ?? undefined,
   };
 }
@@ -113,6 +128,12 @@ function AdminAds() {
         _media_path: p.media_path ?? undefined,
         _thumbnail_url: p.thumbnail_url ?? undefined,
         _alt_text: p.alt_text ?? undefined,
+        // `description` is required by the RPC as of this pass — the
+        // button's onClick already blocks this call for any ad that
+        // doesn't have one yet, so this is always non-empty by the time
+        // it's reached, but stays explicit (not passthroughExtraFields())
+        // since it's no longer merely "echoed", it's enforced.
+        _description: p.description ?? undefined,
         ...passthroughExtraFields(p),
       });
       if (error) throw error;
@@ -187,7 +208,20 @@ function AdminAds() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => toggleActive.mutate(p)}
+                    onClick={() => {
+                      // Description is now required by the RPC itself — an
+                      // ad created before this pass may still have none.
+                      // Catch that here with a clear, actionable message
+                      // instead of letting the RPC's generic exception
+                      // surface through a raw toast.
+                      if (!p.description?.trim()) {
+                        toast.error(
+                          `"${p.title}" bezwen yon deskripsyon anvan — ale nan "Modifye" pou ajoute l.`,
+                        );
+                        return;
+                      }
+                      toggleActive.mutate(p);
+                    }}
                     className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
                   >
                     {p.is_active ? "Dezaktive" : "Aktive"}
@@ -249,6 +283,7 @@ function PlacementForm({
     placement: placement?.placement ?? "home_banner",
     restaurant_id: placement?.restaurant_id ?? "",
     title: placement?.title ?? "",
+    description: placement?.description ?? "",
     link_url: placement?.link_url ?? "",
     starts_at: placement?.starts_at ? placement.starts_at.slice(0, 10) : "",
     ends_at: placement?.ends_at ? placement.ends_at.slice(0, 10) : "",
@@ -306,6 +341,7 @@ function PlacementForm({
     // upload is already in flight is a no-op, not a second request.
     if (saving || mediaUploading) return;
     if (!f.title.trim()) return toast.error("Tit anons lan obligatwa");
+    if (!f.description.trim()) return toast.error("Deskripsyon anons lan obligatwa");
     if (!f.starts_at || !f.ends_at) return toast.error("Chwazi dat kòmansman ak dat fen");
     const startsAt = new Date(f.starts_at).toISOString();
     const endsAt = new Date(f.ends_at + "T23:59:59").toISOString();
@@ -318,6 +354,7 @@ function PlacementForm({
         const { error } = await supabase.rpc("update_sponsored_placement_secure", {
           _id: placement.id,
           _title: f.title.trim(),
+          _description: f.description.trim(),
           _starts_at: startsAt,
           _ends_at: endsAt,
           _is_active: placement.is_active,
@@ -358,6 +395,7 @@ function PlacementForm({
         const { error } = await supabase.rpc("create_sponsored_placement_secure", {
           _placement: f.placement,
           _title: f.title.trim(),
+          _description: f.description.trim(),
           _starts_at: startsAt,
           _ends_at: endsAt,
           _restaurant_id: f.restaurant_id || undefined,
@@ -428,6 +466,20 @@ function PlacementForm({
           value={f.title}
           onChange={(e) => setF({ ...f, title: e.target.value })}
         />
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+            Deskripsyon <span className="text-red-600">*</span>
+          </span>
+          <textarea
+            placeholder="Yon ti tèks ki dekri anons lan"
+            aria-label="Deskripsyon anons lan"
+            required
+            rows={2}
+            className={inputCls() + " resize-y"}
+            value={f.description}
+            onChange={(e) => setF({ ...f, description: e.target.value })}
+          />
+        </label>
         <input
           placeholder="Lyen destinasyon (opsyonèl)"
           aria-label="Lyen destinasyon (opsyonèl)"
@@ -478,6 +530,38 @@ function PlacementForm({
           onUploadingChange={setMediaUploading}
         />
       </div>
+
+      {PLACEMENT_MEDIA_FRAME[f.placement] ? (
+        <div className="mt-4">
+          <span className="mb-2 block text-xs font-bold uppercase text-ink-soft">
+            Apèsi nan kad "{PLACEMENT_LABEL[f.placement]}" la
+          </span>
+          {/* Same crop (object-cover, fixed ratio) AdMedia will actually
+              render on the site — shows the admin exactly how their
+              photo/video will be framed/cropped before they save, instead
+              of the uncropped raw preview MediaUploader shows above. */}
+          <div
+            className={`overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`}
+          >
+            <AdMedia
+              ad={{
+                media_type: media.mediaType,
+                media_url: media.mediaUrl,
+                thumbnail_url: media.thumbnailUrl,
+                alt_text: media.altText,
+                title: f.title || "Apèsi anons",
+              }}
+              icon={Megaphone}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-ink-soft">
+          Medya anons lan pa afiche pou "{PLACEMENT_LABEL[f.placement]}" — anplasman sa a montre lòt
+          kontni (foto restoran an, oswa yon ti kat san imaj).
+        </p>
+      )}
 
       <Button
         className="mt-4"
