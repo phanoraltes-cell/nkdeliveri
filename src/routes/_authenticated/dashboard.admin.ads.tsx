@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,14 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { PromotionalNotificationForm } from "@/components/dashboard/admin/promotional-notification-form";
+import {
+  MediaUploader,
+  type MediaUploaderHandle,
+} from "@/components/dashboard/admin/media-uploader";
+import { EMPTY_MEDIA_VALUE, type MediaUploaderValue } from "@/lib/media-value";
+import { deleteStorageFiles, pathFromPublicUrl } from "@/lib/storage-upload";
+
+const ADS_BUCKET = "ads-media";
 
 type Placement = Database["public"]["Tables"]["sponsored_placements"]["Row"] & {
   restaurants: { name: string } | null;
@@ -21,6 +29,23 @@ const PLACEMENT_LABEL: Record<string, string> = {
   restaurant_page: "Paj restoran",
   dashboard: "Dashboard",
 };
+
+// Fields the redesigned form still has no editor for (cta_label,
+// description, link_target, media_items — that's the fuller Piblisite
+// form redesign, out of scope for this media-integration pass). Any RPC
+// call to update_sponsored_placement_secure MUST echo these back verbatim
+// from the current row: the RPC's new params all carry their own DEFAULTs
+// (for backward compat with pre-media callers), so omitting them on an
+// UPDATE would silently reset an existing ad's values instead of leaving
+// them untouched.
+function passthroughExtraFields(p: Placement) {
+  return {
+    _link_target: p.link_target ?? undefined,
+    _cta_label: p.cta_label ?? undefined,
+    _description: p.description ?? undefined,
+    _media_items: p.media_items ?? undefined,
+  };
+}
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
@@ -48,9 +73,17 @@ function AdminAds() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("delete_sponsored_placement_secure", { _id: id });
+    mutationFn: async (p: Placement) => {
+      const { error } = await supabase.rpc("delete_sponsored_placement_secure", { _id: p.id });
       if (error) throw error;
+      // Delete only AFTER the DB row is confirmed gone — same
+      // DB-success-before-storage-cleanup ordering as the form's own save
+      // flow. A failed file delete here is non-fatal (deleteStorageFiles
+      // already logs it) and never re-creates the row.
+      const paths = [p.media_path, pathFromPublicUrl(ADS_BUCKET, p.thumbnail_url)].filter(
+        (x): x is string => !!x,
+      );
+      if (paths.length > 0) void deleteStorageFiles(ADS_BUCKET, paths);
     },
     onSuccess: () => {
       toast.success("Anons efase");
@@ -71,9 +104,16 @@ function AdminAds() {
         _starts_at: p.starts_at,
         _ends_at: p.ends_at,
         _is_active: !p.is_active,
-        _image_url: p.image_url as string,
         _link_url: p.link_url as string,
         _sort_order: p.sort_order,
+        // Echo every media field straight back — toggling active/inactive
+        // must never touch what's actually displayed.
+        _media_type: p.media_type,
+        _media_url: p.media_url ?? p.image_url ?? undefined,
+        _media_path: p.media_path ?? undefined,
+        _thumbnail_url: p.thumbnail_url ?? undefined,
+        _alt_text: p.alt_text ?? undefined,
+        ...passthroughExtraFields(p),
       });
       if (error) throw error;
     },
@@ -162,7 +202,7 @@ function AdminAds() {
                     Modifye
                   </button>
                   <button
-                    onClick={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p.id))}
+                    onClick={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p))}
                     aria-label={`Efase anons "${p.title}"`}
                     className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
                   >
@@ -184,6 +224,18 @@ function AdminAds() {
   );
 }
 
+function mediaFromPlacement(p: Placement | null): MediaUploaderValue {
+  if (!p) return EMPTY_MEDIA_VALUE;
+  const mediaUrl = p.media_url || p.image_url || null;
+  return {
+    mediaType: mediaUrl ? ((p.media_type as MediaUploaderValue["mediaType"]) ?? "image") : "none",
+    mediaUrl,
+    mediaPath: p.media_path ?? null,
+    thumbnailUrl: p.thumbnail_url ?? null,
+    altText: p.alt_text ?? "",
+  };
+}
+
 function PlacementForm({
   placement,
   onClose,
@@ -197,13 +249,24 @@ function PlacementForm({
     placement: placement?.placement ?? "home_banner",
     restaurant_id: placement?.restaurant_id ?? "",
     title: placement?.title ?? "",
-    image_url: placement?.image_url ?? "",
     link_url: placement?.link_url ?? "",
     starts_at: placement?.starts_at ? placement.starts_at.slice(0, 10) : "",
     ends_at: placement?.ends_at ? placement.ends_at.slice(0, 10) : "",
     sort_order: placement?.sort_order != null ? String(placement.sort_order) : "0",
   });
+  const [media, setMedia] = useState<MediaUploaderValue>(() => mediaFromPlacement(placement));
   const [saving, setSaving] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const uploaderRef = useRef<MediaUploaderHandle>(null);
+  // Snapshot of what this ad's media pointed to BEFORE this edit session —
+  // used after a successful save to know what old storage object(s), if
+  // any, are now safe to delete. Lazy-initialized once (same convention
+  // `f` already uses above) — this form isn't remounted between edits of
+  // different ads, matching this component's pre-existing behavior.
+  const previousMediaRef = useRef({
+    mediaPath: placement?.media_path ?? null,
+    thumbnailPath: pathFromPublicUrl(ADS_BUCKET, placement?.thumbnail_url ?? null),
+  });
 
   const restaurants = useQuery({
     queryKey: ["approved-restaurants-for-ads"],
@@ -219,13 +282,36 @@ function PlacementForm({
     },
   });
 
+  /**
+   * Deletes whatever THIS form session uploaded and was never committed to
+   * a saved row, and resets the visible media state to match (a stale
+   * preview pointing at a file that no longer exists would be worse than
+   * an empty uploader). Returns whether there was anything to clean up —
+   * shared by both the create- and edit-mode failure paths below.
+   */
+  function cleanupOrphanUpload(): boolean {
+    const orphans = uploaderRef.current?.getUploadedPaths();
+    if (!orphans || (!orphans.mediaPath && !orphans.thumbnailPath)) return false;
+    void deleteStorageFiles(
+      ADS_BUCKET,
+      [orphans.mediaPath, orphans.thumbnailPath].filter((p): p is string => !!p),
+    );
+    uploaderRef.current?.commit();
+    setMedia((m) => ({ ...EMPTY_MEDIA_VALUE, altText: m.altText }));
+    return true;
+  }
+
   async function save() {
+    // Double-submit guard: a second click while either a save or an
+    // upload is already in flight is a no-op, not a second request.
+    if (saving || mediaUploading) return;
     if (!f.title.trim()) return toast.error("Tit anons lan obligatwa");
     if (!f.starts_at || !f.ends_at) return toast.error("Chwazi dat kòmansman ak dat fen");
     const startsAt = new Date(f.starts_at).toISOString();
     const endsAt = new Date(f.ends_at + "T23:59:59").toISOString();
     if (new Date(endsAt) <= new Date(startsAt))
       return toast.error("Dat fen dwe apre dat kòmansman");
+
     setSaving(true);
     try {
       if (placement) {
@@ -235,11 +321,38 @@ function PlacementForm({
           _starts_at: startsAt,
           _ends_at: endsAt,
           _is_active: placement.is_active,
-          _image_url: f.image_url || undefined,
           _link_url: f.link_url || undefined,
           _sort_order: Number(f.sort_order) || 0,
+          _media_type: media.mediaType,
+          _media_url: media.mediaUrl ?? undefined,
+          _media_path: media.mediaPath ?? undefined,
+          _thumbnail_url: media.thumbnailUrl ?? undefined,
+          _alt_text: media.altText || undefined,
+          ...passthroughExtraFields(placement),
         });
-        if (error) throw error;
+        if (error) {
+          // Storage-safety rule: never delete old production media just
+          // because a save failed — only whatever THIS attempt uploaded.
+          cleanupOrphanUpload();
+          throw error;
+        }
+        // DB save confirmed successful — only now is it safe to (a) stop
+        // treating this session's upload as an orphan and (b) delete
+        // whatever the edit actually replaced. Read the new thumbnail
+        // path BEFORE commit() clears the tracking ref.
+        const newThumbnailPath = uploaderRef.current?.getThumbnailPath() ?? null;
+        uploaderRef.current?.commit();
+        const prev = previousMediaRef.current;
+        const toDelete = [
+          prev.mediaPath && prev.mediaPath !== media.mediaPath ? prev.mediaPath : null,
+          prev.thumbnailPath && prev.thumbnailPath !== newThumbnailPath ? prev.thumbnailPath : null,
+        ].filter((p): p is string => !!p);
+        if (toDelete.length > 0) {
+          // Best-effort: deleteStorageFiles already logs its own failures
+          // and never throws — a cleanup failure must not invalidate an
+          // ad that's already saved and displaying correctly.
+          void deleteStorageFiles(ADS_BUCKET, toDelete);
+        }
         toast.success("Anons mizajou");
       } else {
         const { error } = await supabase.rpc("create_sponsored_placement_secure", {
@@ -248,17 +361,25 @@ function PlacementForm({
           _starts_at: startsAt,
           _ends_at: endsAt,
           _restaurant_id: f.restaurant_id || undefined,
-          _image_url: f.image_url || undefined,
           _link_url: f.link_url || undefined,
           _sort_order: Number(f.sort_order) || 0,
+          _media_type: media.mediaType,
+          _media_url: media.mediaUrl ?? undefined,
+          _media_path: media.mediaPath ?? undefined,
+          _thumbnail_url: media.thumbnailUrl ?? undefined,
+          _alt_text: media.altText || undefined,
         });
-        if (error) throw error;
+        if (error) {
+          cleanupOrphanUpload();
+          throw error;
+        }
+        uploaderRef.current?.commit();
         toast.success("Anons kreye");
       }
       onSaved();
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erè");
+      toast.error(e instanceof Error ? e.message : "Erè pandan anrejistreman an");
     } finally {
       setSaving(false);
     }
@@ -308,16 +429,9 @@ function PlacementForm({
           onChange={(e) => setF({ ...f, title: e.target.value })}
         />
         <input
-          placeholder="Imaj URL (opsyonèl)"
-          aria-label="Imaj URL (opsyonèl)"
-          className={inputCls()}
-          value={f.image_url}
-          onChange={(e) => setF({ ...f, image_url: e.target.value })}
-        />
-        <input
           placeholder="Lyen destinasyon (opsyonèl)"
           aria-label="Lyen destinasyon (opsyonèl)"
-          className={inputCls()}
+          className={inputCls() + " sm:col-span-2"}
           value={f.link_url}
           onChange={(e) => setF({ ...f, link_url: e.target.value })}
         />
@@ -339,7 +453,7 @@ function PlacementForm({
             onChange={(e) => setF({ ...f, ends_at: e.target.value })}
           />
         </label>
-        <label className="block">
+        <label className="block sm:col-span-2">
           <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
             Priyorite (0 = premye)
           </span>
@@ -351,8 +465,27 @@ function PlacementForm({
           />
         </label>
       </div>
-      <Button className="mt-4" disabled={saving} onClick={save}>
-        {saving ? "Ap sove…" : "Sove anons"}
+
+      <div className="mt-4">
+        <span className="mb-2 block text-xs font-bold uppercase text-ink-soft">
+          Medya anons lan
+        </span>
+        <MediaUploader
+          ref={uploaderRef}
+          value={media}
+          onChange={setMedia}
+          disabled={saving}
+          onUploadingChange={setMediaUploading}
+        />
+      </div>
+
+      <Button
+        className="mt-4"
+        disabled={saving || mediaUploading}
+        isLoading={saving}
+        onClick={save}
+      >
+        Sove anons
       </Button>
     </div>
   );

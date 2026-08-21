@@ -2213,49 +2213,120 @@ export type Database = {
           },
         ];
       };
-      sponsored_placements: {
+      sponsored_placement_events: {
         Row: {
           created_at: string;
+          event_type: string;
+          id: string;
+          placement_id: string;
+          platform: string | null;
+          session_id: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          event_type: string;
+          id?: string;
+          placement_id: string;
+          platform?: string | null;
+          session_id?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          event_type?: string;
+          id?: string;
+          placement_id?: string;
+          platform?: string | null;
+          session_id?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_placement_events_placement_id_fkey";
+            columns: ["placement_id"];
+            isOneToOne: false;
+            referencedRelation: "sponsored_placements";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sponsored_placements: {
+        Row: {
+          alt_text: string | null;
+          clicks: number;
+          created_at: string;
           created_by: string;
+          cta_label: string | null;
+          description: string | null;
           ends_at: string;
           id: string;
           image_url: string | null;
+          impressions: number;
           is_active: boolean;
+          link_target: string;
           link_url: string | null;
+          media_items: Json;
+          media_path: string | null;
+          media_type: string;
+          media_url: string | null;
           placement: string;
           restaurant_id: string | null;
           sort_order: number;
           starts_at: string;
+          thumbnail_url: string | null;
           title: string;
           updated_at: string;
         };
         Insert: {
+          alt_text?: string | null;
+          clicks?: number;
           created_at?: string;
           created_by: string;
+          cta_label?: string | null;
+          description?: string | null;
           ends_at: string;
           id?: string;
           image_url?: string | null;
+          impressions?: number;
           is_active?: boolean;
+          link_target?: string;
           link_url?: string | null;
+          media_items?: Json;
+          media_path?: string | null;
+          media_type?: string;
+          media_url?: string | null;
           placement: string;
           restaurant_id?: string | null;
           sort_order?: number;
           starts_at: string;
+          thumbnail_url?: string | null;
           title: string;
           updated_at?: string;
         };
         Update: {
+          alt_text?: string | null;
+          clicks?: number;
           created_at?: string;
           created_by?: string;
+          cta_label?: string | null;
+          description?: string | null;
           ends_at?: string;
           id?: string;
           image_url?: string | null;
+          impressions?: number;
           is_active?: boolean;
+          link_target?: string;
           link_url?: string | null;
+          media_items?: Json;
+          media_path?: string | null;
+          media_type?: string;
+          media_url?: string | null;
           placement?: string;
           restaurant_id?: string | null;
           sort_order?: number;
           starts_at?: string;
+          thumbnail_url?: string | null;
           title?: string;
           updated_at?: string;
         };
@@ -2947,27 +3018,48 @@ export type Database = {
       };
       create_sponsored_placement_secure: {
         Args: {
+          _alt_text?: string;
+          _cta_label?: string;
+          _description?: string;
           _ends_at: string;
           _image_url?: string;
+          _is_active?: boolean;
+          _link_target?: string;
           _link_url?: string;
+          _media_items?: Json;
+          _media_path?: string;
+          _media_type?: string;
+          _media_url?: string;
           _placement: string;
           _restaurant_id?: string;
           _sort_order?: number;
           _starts_at: string;
+          _thumbnail_url?: string;
           _title: string;
         };
         Returns: {
+          alt_text: string | null;
+          clicks: number;
           created_at: string;
           created_by: string;
+          cta_label: string | null;
+          description: string | null;
           ends_at: string;
           id: string;
           image_url: string | null;
+          impressions: number;
           is_active: boolean;
+          link_target: string;
           link_url: string | null;
+          media_items: Json;
+          media_path: string | null;
+          media_type: string;
+          media_url: string | null;
           placement: string;
           restaurant_id: string | null;
           sort_order: number;
           starts_at: string;
+          thumbnail_url: string | null;
           title: string;
           updated_at: string;
         };
@@ -3715,6 +3807,15 @@ export type Database = {
           role: string;
           user_id: string;
         }[];
+      };
+      log_ad_event_secure: {
+        Args: {
+          _event_type: string;
+          _placement_id: string;
+          _platform?: string;
+          _session_id?: string;
+        };
+        Returns: undefined;
       };
       log_admin_step_up_event_secure: {
         Args: { _action: string };
@@ -4617,27 +4718,47 @@ export type Database = {
       };
       update_sponsored_placement_secure: {
         Args: {
+          _alt_text?: string;
+          _cta_label?: string;
+          _description?: string;
           _ends_at: string;
           _id: string;
           _image_url?: string;
           _is_active: boolean;
+          _link_target?: string;
           _link_url?: string;
+          _media_items?: Json;
+          _media_path?: string;
+          _media_type?: string;
+          _media_url?: string;
           _sort_order?: number;
           _starts_at: string;
+          _thumbnail_url?: string;
           _title: string;
         };
         Returns: {
+          alt_text: string | null;
+          clicks: number;
           created_at: string;
           created_by: string;
+          cta_label: string | null;
+          description: string | null;
           ends_at: string;
           id: string;
           image_url: string | null;
+          impressions: number;
           is_active: boolean;
+          link_target: string;
           link_url: string | null;
+          media_items: Json;
+          media_path: string | null;
+          media_type: string;
+          media_url: string | null;
           placement: string;
           restaurant_id: string | null;
           sort_order: number;
           starts_at: string;
+          thumbnail_url: string | null;
           title: string;
           updated_at: string;
         };
