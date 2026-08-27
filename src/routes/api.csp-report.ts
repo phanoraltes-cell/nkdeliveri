@@ -15,14 +15,18 @@ import { createFileRoute } from "@tanstack/react-router";
  * silently ignore the other — sending both is the current best practice
  * during the multi-year transition between the two.
  *
- * Deliberately minimal: no database write, no rate limiting beyond a body-
- * size cap. This is a public, unauthenticated, browser-generated POST
- * target by design (report-uri/report-to never carry a session) — the
- * only two costs to control are storage (we don't write any) and log
- * volume (bounded by size and by only reading a small allowlist of fields
- * off each report before logging it — never the full request body
- * verbatim, same discipline as sanitizeWebhookPayload() in
- * stripe-collect-webhook-handler.server.ts).
+ * Deliberately minimal: no database write of the reports themselves, only
+ * an allowlist of fields off each one before logging (never the full
+ * request body verbatim, same discipline as sanitizeWebhookPayload() in
+ * stripe-collect-webhook-handler.server.ts). This is a public,
+ * unauthenticated, browser-generated POST target by design (report-uri/
+ * report-to never carry a session) — the costs to control are storage (we
+ * don't write report content), log volume, and Sentry event quota.
+ *
+ * Per-IP rate limiting added 2026-08-27 (audit remediation, API-002): the
+ * body-size cap alone didn't stop a flood of small, cheap requests from
+ * inflating Sentry's event count — see check_rate_limit_secure's own
+ * call below.
  */
 
 const MAX_BODY_BYTES = 20_000; // generous for a CSP report batch; anything past this is not a real report
@@ -105,6 +109,19 @@ function parseViolations(bodyText: string): NormalizedViolation[] {
   return [];
 }
 
+/**
+ * Best-effort client IP for rate-limiting only — never for anything
+ * authorization-sensitive. Vercel sets x-forwarded-for/x-real-ip; a bare
+ * "unknown" bucket is still fine here (worst case, every client with no
+ * usable header shares one rate-limit bucket, which only makes the limit
+ * MORE conservative, never a bypass).
+ */
+function clientIpForRateLimit(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
 export const Route = createFileRoute("/api/csp-report")({
   server: {
     handlers: {
@@ -112,6 +129,40 @@ export const Route = createFileRoute("/api/csp-report")({
         const rawBody = await request.text();
         if (rawBody.length > MAX_BODY_BYTES) {
           return new Response(null, { status: 413 });
+        }
+
+        // Audit remediation (2026-08-27, API-002): this endpoint has no
+        // session (browsers send these beacons unauthenticated by design,
+        // see the module comment), so nothing about it could distinguish
+        // "one browser's real CSP violations" from "an attacker replaying
+        // the same POST body" — the only identity available at all is the
+        // source IP. Reuses check_rate_limit_secure's existing
+        // service-role/_actor_override path (already used by
+        // finalizeRegistrationDocuments for the same "no user session yet"
+        // reason) rather than inventing a second rate-limiting mechanism.
+        // Generous window (30/min/IP): a page with several genuinely
+        // broken resources can legitimately fire a handful of reports in
+        // one load; this caps sustained abuse, not a normal burst.
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const ip = clientIpForRateLimit(request);
+          const { data: allowed, error } = await supabaseAdmin.rpc("check_rate_limit_secure", {
+            _action: "csp_report",
+            _max_hits: 30,
+            _window_seconds: 60,
+            _actor_override: ip,
+          });
+          if (error) throw error;
+          if (!allowed) return new Response(null, { status: 429 });
+        } catch (err) {
+          // Fail OPEN, not closed: a rate-limit-check outage must never
+          // turn into "no CSP violations are ever reported again" — the
+          // whole point of this endpoint is visibility into a real
+          // security-relevant signal (a violated Content-Security-Policy).
+          console.warn(
+            "[csp-report] rate-limit check failed, proceeding without it",
+            err instanceof Error ? err.message : String(err),
+          );
         }
 
         const violations = parseViolations(rawBody);
