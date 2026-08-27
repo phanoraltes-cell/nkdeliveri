@@ -18,6 +18,13 @@ import { createFileRoute } from "@tanstack/react-router";
  * failure must never get reported as (or mask) a payment-reconciliation
  * failure, and vice versa.
  *
+ * Also runs the wallet-balance reconciliation check (audit remediation
+ * 2026-08-27, FIN-001) for the exact same reason — a 3rd standalone cron
+ * still isn't available on the Hobby plan. wallets.available_balance is a
+ * stored running total; this detects (never auto-corrects, see the
+ * migration's own comment) drift against commission_ledger. Own try/catch,
+ * same isolation reasoning as the retention block above.
+ *
  * Protected by CRON_SECRET (same convention as
  * api.cron.moncash-reconcile.ts — Vercel automatically sends
  * `Authorization: Bearer <value>` on scheduled invocations, see
@@ -29,17 +36,11 @@ export const Route = createFileRoute("/api/cron/plop-reconcile")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const expected = process.env.CRON_SECRET;
-        if (!expected) {
-          return new Response(JSON.stringify({ ok: false, error: "CRON_SECRET pa konfigire" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        const authHeader = request.headers.get("authorization");
-        if (authHeader !== `Bearer ${expected}`) {
-          return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-            status: 401,
+        const { isValidCronRequest } = await import("@/lib/cron-auth.server");
+        const auth = isValidCronRequest(request);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ ok: false, error: auth.error }), {
+            status: auth.status,
             headers: { "Content-Type": "application/json" },
           });
         }
@@ -71,8 +72,31 @@ export const Route = createFileRoute("/api/cron/plop-reconcile")({
           retentionResult = { ok: false, error: message };
         }
 
+        // Same isolation reasoning as retention above: a wallet-reconciliation
+        // failure (or a discrepancy it finds) must never look like a PLOP or
+        // retention failure, and shouldn't fail the whole cron invocation —
+        // Vercel Cron doesn't page anyone on a non-2xx, so 200 with the
+        // discrepancy count visible in the response is what actually gets
+        // noticed (logs/manual check), not a silent 500 buried in the mix.
+        let walletReconciliationResult:
+          { ok: true; summary: unknown } | { ok: false; error: string };
+        try {
+          const { runWalletReconciliation } = await import("@/lib/wallet-reconciliation.server");
+          const summary = await runWalletReconciliation();
+          walletReconciliationResult = { ok: true, summary };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("[wallet-reconciliation] failed", message);
+          walletReconciliationResult = { ok: false, error: message };
+        }
+
         return new Response(
-          JSON.stringify({ ok: plopResult.ok, plop: plopResult, retention: retentionResult }),
+          JSON.stringify({
+            ok: plopResult.ok,
+            plop: plopResult,
+            retention: retentionResult,
+            walletReconciliation: walletReconciliationResult,
+          }),
           {
             status: plopResult.ok ? 200 : 500,
             headers: { "Content-Type": "application/json" },

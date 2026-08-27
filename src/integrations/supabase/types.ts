@@ -2412,6 +2412,73 @@ export type Database = {
         };
         Relationships: [];
       };
+      wallet_discrepancies: {
+        Row: {
+          detected_at: string;
+          difference: number;
+          driver_id: string | null;
+          id: string;
+          ledger_derived_balance: number;
+          notes: string | null;
+          resolved: boolean;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          stored_available_balance: number;
+          wallet_id: string;
+        };
+        Insert: {
+          detected_at?: string;
+          difference: number;
+          driver_id?: string | null;
+          id?: string;
+          ledger_derived_balance: number;
+          notes?: string | null;
+          resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id?: string | null;
+          stored_available_balance: number;
+          wallet_id: string;
+        };
+        Update: {
+          detected_at?: string;
+          difference?: number;
+          driver_id?: string | null;
+          id?: string;
+          ledger_derived_balance?: number;
+          notes?: string | null;
+          resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          restaurant_id?: string | null;
+          stored_available_balance?: number;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wallet_discrepancies_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wallet_discrepancies_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "wallet_discrepancies_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       wallet_transactions: {
         Row: {
           available_delta: number;
@@ -2651,6 +2718,17 @@ export type Database = {
           _window_seconds: number;
         };
         Returns: boolean;
+      };
+      check_wallet_reconciliation_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          difference: number;
+          driver_id: string | null;
+          ledger_derived_balance: number;
+          restaurant_id: string | null;
+          stored_balance: number;
+          wallet_id: string;
+        }[];
       };
       claim_delivery_secure: {
         Args: { _order_id: string };
@@ -4134,6 +4212,13 @@ export type Database = {
         Returns: {
           category: string;
           rows_deleted: number;
+        }[];
+      };
+      run_wallet_reconciliation_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          checked_count: number;
+          discrepancy_count: number;
         }[];
       };
       send_order_chat_message_secure: {
