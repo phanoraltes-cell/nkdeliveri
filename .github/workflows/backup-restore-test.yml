@@ -1,0 +1,97 @@
+name: Backup restore test
+
+# Audit remediation (2026-08-27, OPS-002): scripts/backup-database.sh,
+# restore-database.sh, and test-restore-backup.sh already existed with
+# real discipline (content verification, minimum thresholds, refuses to
+# target anything that looks like production) — but nothing ran them on a
+# schedule. A backup tool nobody exercises has no proven value: this
+# workflow pulls a real backup and proves it actually restores, weekly,
+# so that fact is discovered here rather than during a real incident.
+#
+# Never touches production for the RESTORE half — test-restore-backup.sh
+# targets the disposable `postgres:17` service container below and
+# actively refuses to run if TEST_DB_URL's host matches the production
+# host in SUPABASE_URL (see that script's own header comment). The BACKUP
+# half does read production (same as any manual `npm run db:backup` run).
+#
+# Requires repository secrets this workflow does NOT create:
+#   SUPABASE_ACCESS_TOKEN  — Supabase CLI personal access token
+#                            (supabase.com/dashboard/account/tokens)
+#   SUPABASE_PROJECT_REF   — the project ref `supabase link` needs
+#   SUPABASE_DB_PASSWORD   — production Postgres password, for the link
+# None of these are set by this file — add them under
+# Settings → Secrets and variables → Actions before the schedule below
+# runs, or trigger manually via workflow_dispatch to see a clear failure
+# naming whichever is missing.
+
+on:
+  schedule:
+    # Every Monday, 07:00 UTC — arbitrary but fixed, so a missed/failed
+    # run is easy to notice as "Monday's run didn't show up".
+    - cron: "0 7 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backup-and-restore-test:
+    name: Backup + restore into a disposable Postgres
+    runs-on: ubuntu-latest
+    services:
+      test-db:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test-restore-throwaway
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Link Supabase project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npx supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+
+      - name: Produce a fresh backup
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npm run db:backup
+
+      - name: Restore it into the disposable database and verify
+        env:
+          TEST_DB_URL: postgres://postgres:test-restore-throwaway@localhost:5433/postgres
+        run: |
+          DUMP_FILE=$(ls -t backups/full_*.sql | head -1)
+          if [ -z "$DUMP_FILE" ]; then
+            echo "No backup file produced — db:backup should have failed loudly before this step." >&2
+            exit 1
+          fi
+          npm run db:test-restore -- "$DUMP_FILE"
+
+      - name: Upload backup + restore-test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-restore-reports
+          path: |
+            backups/*.report.md
+            backups/*.restore-test.md
+          retention-days: 90
+          if-no-files-found: warn
