@@ -15,6 +15,7 @@ import { validateAdMediaFile } from "@/lib/file-validation";
 import { compressImageFile } from "@/lib/image-compression";
 import { captureVideoPoster } from "@/lib/video-poster";
 import {
+  bucketFromPublicUrl,
   deleteStorageFiles,
   getStoragePublicUrl,
   pathFromPublicUrl,
@@ -24,7 +25,22 @@ import {
 import { cn } from "@/lib/utils";
 import { EMPTY_MEDIA_VALUE, type MediaUploaderValue } from "@/lib/media-value";
 
-const BUCKET = "ads-media";
+// Split from a single 'ads-media' bucket (audit remediation, API-001): the
+// Storage engine only ever enforced one flat file_size_limit for the
+// whole bucket, so the 5MB-for-images ceiling validateAdMediaFile()
+// checks below existed purely client-side and was bypassable via a
+// direct Storage API call. Two purpose-sized buckets let the engine
+// itself enforce it — 5MB is only ever reachable by something the engine
+// already recognizes as an image MIME type. Video posters are always a
+// captured still frame (an image), so they always go to IMAGE_BUCKET
+// regardless of what the main media is.
+// Exported so dashboard.admin.ads.tsx (the parent form) can target the
+// same buckets for its own orphan-cleanup/thumbnail-lookup logic without
+// re-declaring these strings a second time.
+export const ADS_MEDIA_IMAGE_BUCKET = "ads-media-images";
+export const ADS_MEDIA_VIDEO_BUCKET = "ads-media-videos";
+const IMAGE_BUCKET = ADS_MEDIA_IMAGE_BUCKET;
+const VIDEO_BUCKET = ADS_MEDIA_VIDEO_BUCKET;
 const ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime";
 
@@ -59,7 +75,17 @@ type MediaUploaderProps = {
   onUploadingChange?: (uploading: boolean) => void;
 };
 
-type UploadedRef = { mediaPath: string | null; thumbnailPath: string | null };
+// mediaBucket tracked alongside mediaPath (not a fixed constant anymore)
+// because handleFile picks IMAGE_BUCKET or VIDEO_BUCKET per upload — every
+// later delete of this same path needs to target the bucket it actually
+// landed in. thumbnailPath has no matching field: a poster this instance
+// uploads is always IMAGE_BUCKET (see the constants above), so nothing to
+// track per-instance.
+type UploadedRef = {
+  mediaPath: string | null;
+  mediaBucket: string | null;
+  thumbnailPath: string | null;
+};
 
 function randomId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -91,14 +117,25 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
     // path that arrived via `value` from an existing DB row. That's what
     // makes it safe to auto-delete on replace/unmount without risking a
     // pre-existing ad's live media.
-    const uploadedRef = useRef<UploadedRef>({ mediaPath: null, thumbnailPath: null });
+    const uploadedRef = useRef<UploadedRef>({
+      mediaPath: null,
+      mediaBucket: null,
+      thumbnailPath: null,
+    });
 
     useImperativeHandle(ref, () => ({
       commit() {
-        uploadedRef.current = { mediaPath: null, thumbnailPath: null };
+        uploadedRef.current = { mediaPath: null, mediaBucket: null, thumbnailPath: null };
       },
       getThumbnailPath() {
-        return uploadedRef.current.thumbnailPath ?? pathFromPublicUrl(BUCKET, value.thumbnailUrl);
+        if (uploadedRef.current.thumbnailPath) return uploadedRef.current.thumbnailPath;
+        // Pre-existing (DB-sourced) thumbnail — derive its bucket from the
+        // URL itself (works for both legacy 'ads-media' rows and rows
+        // created after the bucket split) rather than assuming a fixed one.
+        return pathFromPublicUrl(
+          bucketFromPublicUrl(value.thumbnailUrl) ?? IMAGE_BUCKET,
+          value.thumbnailUrl,
+        );
       },
       getUploadedPaths() {
         return { ...uploadedRef.current };
@@ -115,13 +152,12 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
     useEffect(() => {
       return () => {
         abortRef.current?.abort();
-        const { mediaPath, thumbnailPath } = uploadedRef.current;
-        if (mediaPath || thumbnailPath) {
-          void deleteStorageFiles(
-            BUCKET,
-            [mediaPath, thumbnailPath].filter((p): p is string => !!p),
-          );
-        }
+        const { mediaPath, mediaBucket, thumbnailPath } = uploadedRef.current;
+        if (mediaPath && mediaBucket) void deleteStorageFiles(mediaBucket, [mediaPath]);
+        // A thumbnail this instance uploaded is always IMAGE_BUCKET (see
+        // handleFile) — never depends on mediaBucket, which is the VIDEO
+        // bucket whenever a thumbnail exists at all.
+        if (thumbnailPath) void deleteStorageFiles(IMAGE_BUCKET, [thumbnailPath]);
       };
     }, []);
 
@@ -148,14 +184,16 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
         const controller = new AbortController();
         abortRef.current = controller;
 
+        const mediaBucket = isVideo ? VIDEO_BUCKET : IMAGE_BUCKET;
+
         try {
           const uploadFile = isVideo ? file : await compressImageFile(file);
           const mediaPath = `ads/${randomId()}-${sanitizeFileName(uploadFile.name)}`;
-          await uploadFileWithProgress(BUCKET, mediaPath, uploadFile, {
+          await uploadFileWithProgress(mediaBucket, mediaPath, uploadFile, {
             onProgress: setProgress,
             signal: controller.signal,
           });
-          const mediaUrl = getStoragePublicUrl(BUCKET, mediaPath);
+          const mediaUrl = getStoragePublicUrl(mediaBucket, mediaPath);
 
           let thumbnailUrl: string | null = null;
           let thumbnailPath: string | null = null;
@@ -165,10 +203,10 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
             if (poster && !controller.signal.aborted) {
               thumbnailPath = `ads/${randomId()}-${sanitizeFileName(poster.name)}`;
               try {
-                await uploadFileWithProgress(BUCKET, thumbnailPath, poster, {
+                await uploadFileWithProgress(IMAGE_BUCKET, thumbnailPath, poster, {
                   signal: controller.signal,
                 });
-                thumbnailUrl = getStoragePublicUrl(BUCKET, thumbnailPath);
+                thumbnailUrl = getStoragePublicUrl(IMAGE_BUCKET, thumbnailPath);
               } catch {
                 // Poster is a nice-to-have (renderer falls back to a play
                 // icon over black without one) — a failure here must not
@@ -180,15 +218,13 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
 
           // Safe: `previousUpload` only ever holds paths this component
           // itself uploaded (see uploadedRef comment above).
-          if (previousUpload.mediaPath || previousUpload.thumbnailPath) {
-            void deleteStorageFiles(
-              BUCKET,
-              [previousUpload.mediaPath, previousUpload.thumbnailPath].filter(
-                (p): p is string => !!p,
-              ),
-            );
+          if (previousUpload.mediaPath && previousUpload.mediaBucket) {
+            void deleteStorageFiles(previousUpload.mediaBucket, [previousUpload.mediaPath]);
           }
-          uploadedRef.current = { mediaPath, thumbnailPath };
+          if (previousUpload.thumbnailPath) {
+            void deleteStorageFiles(IMAGE_BUCKET, [previousUpload.thumbnailPath]);
+          }
+          uploadedRef.current = { mediaPath, mediaBucket, thumbnailPath };
 
           onChange({
             mediaType: isVideo ? "video" : "image",
@@ -223,13 +259,11 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
     }
 
     async function handleRemove() {
-      const { mediaPath, thumbnailPath } = uploadedRef.current;
+      const { mediaPath, mediaBucket, thumbnailPath } = uploadedRef.current;
+      if (mediaPath && mediaBucket) await deleteStorageFiles(mediaBucket, [mediaPath]);
+      if (thumbnailPath) await deleteStorageFiles(IMAGE_BUCKET, [thumbnailPath]);
       if (mediaPath || thumbnailPath) {
-        await deleteStorageFiles(
-          BUCKET,
-          [mediaPath, thumbnailPath].filter((p): p is string => !!p),
-        );
-        uploadedRef.current = { mediaPath: null, thumbnailPath: null };
+        uploadedRef.current = { mediaPath: null, mediaBucket: null, thumbnailPath: null };
       }
       setError(null);
       setPendingFile(null);
@@ -408,13 +442,11 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
                 // it up now rather than leaving it an orphan forever
                 // (commit() would otherwise just stop tracking it without
                 // ever deleting it).
-                const { mediaPath, thumbnailPath } = uploadedRef.current;
+                const { mediaPath, mediaBucket, thumbnailPath } = uploadedRef.current;
+                if (mediaPath && mediaBucket) void deleteStorageFiles(mediaBucket, [mediaPath]);
+                if (thumbnailPath) void deleteStorageFiles(IMAGE_BUCKET, [thumbnailPath]);
                 if (mediaPath || thumbnailPath) {
-                  void deleteStorageFiles(
-                    BUCKET,
-                    [mediaPath, thumbnailPath].filter((p): p is string => !!p),
-                  );
-                  uploadedRef.current = { mediaPath: null, thumbnailPath: null };
+                  uploadedRef.current = { mediaPath: null, mediaBucket: null, thumbnailPath: null };
                 }
                 onChange({
                   mediaType: url ? "image" : "none",

@@ -13,12 +13,19 @@ import { PromotionalNotificationForm } from "@/components/dashboard/admin/promot
 import {
   MediaUploader,
   type MediaUploaderHandle,
+  ADS_MEDIA_IMAGE_BUCKET,
 } from "@/components/dashboard/admin/media-uploader";
 import { EMPTY_MEDIA_VALUE, type MediaUploaderValue } from "@/lib/media-value";
-import { deleteStorageFiles, pathFromPublicUrl } from "@/lib/storage-upload";
+import { bucketFromPublicUrl, deleteStorageFiles, pathFromPublicUrl } from "@/lib/storage-upload";
 import { AdMedia } from "@/components/ads/ad-media";
 
-const ADS_BUCKET = "ads-media";
+// Pre-split rows (created before 20260827140000_split_ads_media_bucket_by_
+// size.sql, audit remediation API-001) still have media_url/thumbnail_url
+// values pointing at this bucket — never dropped, still fully live for
+// those rows. Used only as a fallback when a stored URL can't be parsed
+// for its own bucket name (bucketFromPublicUrl handles the split-bucket
+// rows by reading the bucket back out of each row's own URL).
+const ADS_BUCKET_LEGACY = "ads-media";
 
 type Placement = Database["public"]["Tables"]["sponsored_placements"]["Row"] & {
   restaurants: { name: string } | null;
@@ -95,10 +102,27 @@ function AdminAds() {
       // DB-success-before-storage-cleanup ordering as the form's own save
       // flow. A failed file delete here is non-fatal (deleteStorageFiles
       // already logs it) and never re-creates the row.
-      const paths = [p.media_path, pathFromPublicUrl(ADS_BUCKET, p.thumbnail_url)].filter(
-        (x): x is string => !!x,
+      //
+      // Two separate calls, not one shared bucket (audit remediation,
+      // API-001): since the ads-media bucket split, a video ad's media
+      // (ads-media-videos) and its thumbnail (always ads-media-images,
+      // even for a video) can live in DIFFERENT buckets — bucketFromPublicUrl
+      // reads each one back from its own stored URL rather than assuming
+      // both came from the same place. Falls back to the pre-split legacy
+      // bucket for rows created before the split.
+      if (p.media_path) {
+        const mediaUrl = p.media_url || p.image_url || null;
+        void deleteStorageFiles(bucketFromPublicUrl(mediaUrl) ?? ADS_BUCKET_LEGACY, [p.media_path]);
+      }
+      const thumbnailPath = pathFromPublicUrl(
+        bucketFromPublicUrl(p.thumbnail_url) ?? ADS_BUCKET_LEGACY,
+        p.thumbnail_url,
       );
-      if (paths.length > 0) void deleteStorageFiles(ADS_BUCKET, paths);
+      if (thumbnailPath) {
+        void deleteStorageFiles(bucketFromPublicUrl(p.thumbnail_url) ?? ADS_BUCKET_LEGACY, [
+          thumbnailPath,
+        ]);
+      }
     },
     onSuccess: () => {
       toast.success("Anons efase");
@@ -300,7 +324,12 @@ function PlacementForm({
   // different ads, matching this component's pre-existing behavior.
   const previousMediaRef = useRef({
     mediaPath: placement?.media_path ?? null,
-    thumbnailPath: pathFromPublicUrl(ADS_BUCKET, placement?.thumbnail_url ?? null),
+    mediaBucket:
+      bucketFromPublicUrl(placement?.media_url || placement?.image_url) ?? ADS_BUCKET_LEGACY,
+    thumbnailPath: pathFromPublicUrl(
+      bucketFromPublicUrl(placement?.thumbnail_url ?? null) ?? ADS_MEDIA_IMAGE_BUCKET,
+      placement?.thumbnail_url ?? null,
+    ),
   });
 
   const restaurants = useQuery({
@@ -327,10 +356,15 @@ function PlacementForm({
   function cleanupOrphanUpload(): boolean {
     const orphans = uploaderRef.current?.getUploadedPaths();
     if (!orphans || (!orphans.mediaPath && !orphans.thumbnailPath)) return false;
-    void deleteStorageFiles(
-      ADS_BUCKET,
-      [orphans.mediaPath, orphans.thumbnailPath].filter((p): p is string => !!p),
-    );
+    // Two calls, not one shared bucket (audit remediation, API-001): a
+    // video ad's own media (ads-media-videos) and its thumbnail (always
+    // ads-media-images) can be in different buckets.
+    if (orphans.mediaPath && orphans.mediaBucket) {
+      void deleteStorageFiles(orphans.mediaBucket, [orphans.mediaPath]);
+    }
+    if (orphans.thumbnailPath) {
+      void deleteStorageFiles(ADS_MEDIA_IMAGE_BUCKET, [orphans.thumbnailPath]);
+    }
     uploaderRef.current?.commit();
     setMedia((m) => ({ ...EMPTY_MEDIA_VALUE, altText: m.altText }));
     return true;
@@ -380,15 +414,16 @@ function PlacementForm({
         const newThumbnailPath = uploaderRef.current?.getThumbnailPath() ?? null;
         uploaderRef.current?.commit();
         const prev = previousMediaRef.current;
-        const toDelete = [
-          prev.mediaPath && prev.mediaPath !== media.mediaPath ? prev.mediaPath : null,
-          prev.thumbnailPath && prev.thumbnailPath !== newThumbnailPath ? prev.thumbnailPath : null,
-        ].filter((p): p is string => !!p);
-        if (toDelete.length > 0) {
-          // Best-effort: deleteStorageFiles already logs its own failures
-          // and never throws — a cleanup failure must not invalidate an
-          // ad that's already saved and displaying correctly.
-          void deleteStorageFiles(ADS_BUCKET, toDelete);
+        // Best-effort, two calls not one shared bucket (audit remediation,
+        // API-001 — see cleanupOrphanUpload's own comment): deleteStorageFiles
+        // already logs its own failures and never throws — a cleanup
+        // failure must not invalidate an ad that's already saved and
+        // displaying correctly.
+        if (prev.mediaPath && prev.mediaPath !== media.mediaPath) {
+          void deleteStorageFiles(prev.mediaBucket, [prev.mediaPath]);
+        }
+        if (prev.thumbnailPath && prev.thumbnailPath !== newThumbnailPath) {
+          void deleteStorageFiles(ADS_MEDIA_IMAGE_BUCKET, [prev.thumbnailPath]);
         }
         toast.success("Anons mizajou");
       } else {

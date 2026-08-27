@@ -131,3 +131,24 @@ export function pathFromPublicUrl(bucket: string, url: string | null | undefined
     return url.slice(idx + marker.length);
   }
 }
+
+/**
+ * Recovers the BUCKET name itself from a public URL — added for the
+ * ads-media bucket split (audit remediation, API-001): once uploads
+ * started going to one of two purpose-sized buckets (ads-media-images/
+ * ads-media-videos) instead of a single 'ads-media', code that needs to
+ * delete/re-derive a path for an EXISTING row (uploaded before or after
+ * the split) can no longer assume a single hardcoded bucket constant. The
+ * public URL itself already encodes which bucket it came from
+ * (".../object/public/<bucket>/<path>"), so this reads it back from
+ * there rather than requiring a new DB column or a data migration.
+ */
+export function bucketFromPublicUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = "/object/public/";
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  const rest = url.slice(idx + marker.length);
+  const bucket = rest.split("/")[0];
+  return bucket || null;
+}

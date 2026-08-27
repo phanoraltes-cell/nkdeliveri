@@ -35,20 +35,23 @@ export const UPLOAD_LIMITS = {
   "payout-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "dispute-attachments": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "order-chat-attachments": { maxBytes: 8 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
-  // Single bucket, two different ceilings depending on what's actually
-  // picked (image vs video) — the storage bucket itself only enforces one
-  // flat 50MB ceiling (see the migration's own comment), so the 5MB image
-  // cap here is the ONLY enforcement point for that specific limit.
-  "ads-media": {
-    maxBytes: 50 * 1024 * 1024,
-    allowedTypes: [...AD_IMAGE_MIME_TYPES, ...AD_VIDEO_MIME_TYPES],
-  },
 } as const satisfies Record<string, { maxBytes: number; allowedTypes: readonly string[] }>;
+// No "ads-media" entry here (audit remediation, API-001, 2026-08-27): ad
+// media now uploads to one of two purpose-sized buckets, ads-media-images
+// (5MB) or ads-media-videos (50MB), each with its own matching
+// file_size_limit enforced by the Storage engine itself — see
+// 20260827140000_split_ads_media_bucket_by_size.sql. A single UPLOAD_LIMITS
+// entry can't express "two different ceilings depending on file kind"
+// anyway, which is exactly why validateAdMediaFile() below was always a
+// separate function rather than a call to validateUploadFile() with this
+// key — this table entry was dead code (0 callers ever passed "ads-media"
+// to validateUploadFile) even before the bucket split made its one flat
+// 50MB number actively wrong.
 
 export const AD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const AD_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
-/** Ads-media specific: the 5MB/50MB split UPLOAD_LIMITS can't express (one bucket, two ceilings by file kind). */
+/** Ads-media specific: client-side fast-fail mirroring the two buckets' own file_size_limit/allowed_mime_types (the Storage engine is the real enforcement point for both). */
 export function validateAdMediaFile(file: File): string | null {
   const isVideo = (AD_VIDEO_MIME_TYPES as readonly string[]).includes(file.type);
   const isImage = (AD_IMAGE_MIME_TYPES as readonly string[]).includes(file.type);
