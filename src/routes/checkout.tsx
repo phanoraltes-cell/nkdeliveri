@@ -21,6 +21,7 @@ import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions
 import { usePaymentProviderAvailability } from "@/hooks/usePaymentProviderAvailability";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/checkout-idempotency";
+import { useIsRestaurantOpen } from "@/hooks/useIsRestaurantOpen";
 import { isNetworkError, translateSupabaseError, NETWORK_GIVE_UP_MESSAGE } from "@/lib/rpc-errors";
 import {
   getDefaultProvider,
@@ -221,6 +222,14 @@ function Checkout() {
   const serviceFee = 0;
   const total = subtotal + deliveryFee + serviceFee;
 
+  // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
+  // — last checkpoint before the RPC's own re-check would otherwise reject
+  // at the very last click. `create_order_secure` still re-verifies
+  // server-side regardless of what this shows; this is display only.
+  const cartRestaurantId = items[0]?.restaurantId;
+  const isOpenQuery = useIsRestaurantOpen(cartRestaurantId);
+  const restaurantClosed = isOpenQuery.data === false;
+
   // "MonCash Otomatik"/"NatCash Otomatik" (checkout ids `moncash_auto`/
   // `natcash_auto`, both backed by the same PLOP gateway —
   // docs/PLOP_NATCASH_INTEGRATION_PLAN.md) move money through the same
@@ -258,6 +267,10 @@ function Checkout() {
       return;
     }
     if (items.length === 0) return;
+    if (restaurantClosed) {
+      toast.error("Restoran an fèmen kounye a. Tanpri eseye pita.");
+      return;
+    }
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
@@ -401,6 +414,11 @@ function Checkout() {
             </div>
           ) : (
             <>
+              {restaurantClosed && (
+                <div className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
+                  Nou fèmen kounye a. Tanpri eseye pita.
+                </div>
+              )}
               {items.map((it) => (
                 <div
                   key={it.productId}
@@ -661,9 +679,13 @@ function Checkout() {
               <Button
                 className="mt-6 h-auto w-full py-4 font-display font-extrabold"
                 onClick={submit}
-                disabled={submitting || platformFee.isLoading}
+                disabled={submitting || platformFee.isLoading || restaurantClosed}
               >
-                {submitting ? "Ap kreye…" : `Konfime kòmand la · ${formatHTG(total)}`}
+                {submitting
+                  ? "Ap kreye…"
+                  : restaurantClosed
+                    ? "Restoran an fèmen"
+                    : `Konfime kòmand la · ${formatHTG(total)}`}
               </Button>
             </>
           )}

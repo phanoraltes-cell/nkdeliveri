@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { SponsoredSection } from "@/components/restaurant/sponsored-section";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
+import { useIsRestaurantOpen } from "@/hooks/useIsRestaurantOpen";
 
 const DAY_SCHEMA_NAME: Record<string, string> = {
   mon: "Monday",
@@ -204,9 +205,18 @@ function RestaurantPage() {
   // r.delivery_fee no longer reflects the real charged fee since
   // create_order_secure stopped reading it.
   const deliveryFee = useDeliveryFee();
+  // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
+  // — must be called unconditionally, before the `if (!data)` early return,
+  // same discipline as `reviews`/`deliveryFee` above.
+  const isOpenQuery = useIsRestaurantOpen(restaurantId);
 
   if (!data) return null;
   const { r, cats } = data;
+  // Defaults to "open" while the check is still loading — a brief false-
+  // open display is harmless (create_order_secure re-verifies server-side
+  // regardless), whereas flashing "Fèmen" for a fraction of a second on
+  // every page load for an actually-open restaurant would not be.
+  const isOpen = isOpenQuery.data ?? true;
   // NKD-010: a product with stock_quantity === 0 doesn't appear on the
   // customer menu at all (not even disabled) — the owner's explicit
   // request. NULL/undefined (untracked, D1) and any positive count both
@@ -310,6 +320,11 @@ function RestaurantPage() {
                     Livrezon {formatHTG(deliveryFee.data)}
                   </span>
                 )}
+                {isOpenQuery.data === false && (
+                  <span className="rounded-full bg-red-600 px-2 py-0.5 font-bold text-white">
+                    Fèmen
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -378,6 +393,13 @@ function RestaurantPage() {
                         {p.stock_quantity === 0 ? (
                           <span className="rounded-full bg-ink/10 px-3 py-1.5 text-xs font-bold uppercase text-ink-soft">
                             Fini
+                          </span>
+                        ) : !isOpen ? (
+                          <span
+                            className="rounded-full bg-ink/10 px-3 py-1.5 text-xs font-bold uppercase text-ink-soft"
+                            title="Nou fèmen kounye a"
+                          >
+                            Fèmen
                           </span>
                         ) : (
                           <Button

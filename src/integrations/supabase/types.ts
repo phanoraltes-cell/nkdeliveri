@@ -2098,6 +2098,7 @@ export type Database = {
           min_order: number;
           name: string;
           opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
           owner_id: string | null;
           phone: string | null;
           rating: number | null;
@@ -2122,6 +2123,7 @@ export type Database = {
           min_order?: number;
           name: string;
           opening_hours?: Json | null;
+          opening_hours_grace_until?: string | null;
           owner_id?: string | null;
           phone?: string | null;
           rating?: number | null;
@@ -2146,6 +2148,7 @@ export type Database = {
           min_order?: number;
           name?: string;
           opening_hours?: Json | null;
+          opening_hours_grace_until?: string | null;
           owner_id?: string | null;
           phone?: string | null;
           rating?: number | null;
@@ -3736,6 +3739,17 @@ export type Database = {
           total_count: number;
         }[];
       };
+      get_restaurants_missing_hours_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          grace_expired: boolean;
+          id: string;
+          name: string;
+          opening_hours_grace_until: string | null;
+          slug: string;
+          status: Database["public"]["Enums"]["restaurant_status"];
+        }[];
+      };
       get_top_drivers_by_commission: {
         Args: { _from: string; _limit?: number; _to: string };
         Returns: {
@@ -3802,6 +3816,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      is_restaurant_open: {
+        Args: { _at?: string; _restaurant_id: string };
+        Returns: boolean;
       };
       is_valid_opening_hours_shape: { Args: { _hours: Json }; Returns: boolean };
       list_restaurant_employees_secure: {
@@ -4605,6 +4623,7 @@ export type Database = {
           min_order: number;
           name: string;
           opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
           owner_id: string | null;
           phone: string | null;
           rating: number | null;
@@ -4674,6 +4693,7 @@ export type Database = {
           min_order: number;
           name: string;
           opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
           owner_id: string | null;
           phone: string | null;
           rating: number | null;
@@ -4710,6 +4730,7 @@ export type Database = {
           min_order: number;
           name: string;
           opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
           owner_id: string | null;
           phone: string | null;
           rating: number | null;

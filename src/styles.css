@@ -75,6 +75,7 @@
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
+  --color-ink-warm: var(--ink-warm);
 
   /* Semantic status tokens — Refonte Frontend Premium, Phase 1 (P1).
      One source of truth for "state" colors (paid/pending/cancelled/in
@@ -147,6 +148,14 @@
   --cream: oklch(0.985 0.008 70); /* #FFF9F5 */
   --ink: oklch(0.23 0.005 0); /* #1F1F1F */
   --ink-soft: oklch(0.56 0.01 260); /* #6B7280 */
+  /* Brand-tinted near-black — same darkness as --ink (safe for white text)
+     but carries the brand's warm hue instead of neutral grey. Built for the
+     mobile Hero's image→panel handoff: fading a warm orange photo straight
+     to neutral --ink read as an unbranded "black zone" bolted under the
+     photo (2026-08-26 UI audit). This is the "brun chaud" backdrop the
+     photo's own gradient resolves to, so image and panel read as one warm
+     composition instead of photo-then-generic-dark-card. */
+  --ink-warm: oklch(0.21 0.03 35); /* ~#241a14 */
 
   --background: var(--cream);
   --foreground: var(--ink);

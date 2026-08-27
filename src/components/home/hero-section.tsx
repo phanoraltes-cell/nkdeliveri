@@ -33,6 +33,16 @@ import { Search, Clock, MapPin, Store, UtensilsCrossed, ShieldCheck, Banknote } 
 const heroLivreurWebp = "/hero-livreur-v2.webp";
 const heroLivreurPng = "/hero-livreur-v2.png";
 
+// Mobile-only replacement (owner-provided, 2026-08-26). Desktop keeps the
+// 1920×800 landscape asset above untouched — this is a separate 1024×1536
+// PORTRAIT (2:3) photo, and object-fit:cover behaves oppositely on it: a
+// portrait source in a landscape-ish container scales by WIDTH, not
+// height, so nothing is ever cropped horizontally (the full frame width
+// always shows) and object-position only needs to steer the VERTICAL crop.
+// See the mobile block's own comment for how its container height/gradient
+// were derived from this image's actual content coordinates.
+const heroMobileBg = "/bg-hero.png";
+
 // Why the <section>'s md/lg/xl min-height SHRINKS at narrower breakpoints
 // (counter-intuitive at a glance): object-fit:cover always scales the
 // 1920×800 (2.4:1) image to fully cover the section box, and this image
@@ -76,48 +86,68 @@ type HeroSectionProps = {
  *    ever overlaid on it — nothing to contrast-check, nothing that can
  *    drift onto his face on a future copy change), matching Uber Eats/
  *    DoorDash-style mobile heroes (and the prompt's own mobile diagram).
- *    Its own gradient fades that ONE image to solid --ink; the content
- *    panel below it is flat --ink with no image of its own — two earlier
- *    attempts (a plain bg-ink rectangle, then a second differently-
- *    cropped copy of the same photo) both left a visible seam where the
- *    owner could see the join. One image + a long fade to the exact flat
- *    color used right after it is what actually reads as continuous.
+ *    Its own gradient fades that ONE image through an amber glow to solid
+ *    --ink-warm; the content panel below it is flat --ink-warm with no
+ *    image of its own — two earlier attempts (a plain bg-ink rectangle,
+ *    then a second differently-cropped copy of the same photo) both left
+ *    a visible seam where the owner could see the join, and a third
+ *    (fading straight to neutral --ink) removed the seam but still read
+ *    as an unbranded black zone bolted under the photo. One image + a
+ *    warm-toned fade to the exact flat color used right after it is what
+ *    actually reads as one continuous, on-brand composition.
  */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
     <section id="hero" className="relative overflow-hidden md:min-h-[560px] xl:min-h-[640px]">
       {/* Mobile/tablet-portrait hero visual — ONE continuous image fading
-          to solid --ink via its own long gradient, not two separately-
-          cropped instances of the same photo stacked with a short fade
-          between them (the previous version). That still left a visible
-          seam: a close-up screenshot (owner-provided reference) showed a
-          sharp, warm, in-focus courier meeting a darker, blurrier,
-          DIFFERENT crop of the same photo right at the join — exactly the
-          "koupi/liy" the reference brief calls out. Extending this same
-          crop's own gradient the rest of the way to solid ink, then
-          handing off to a flat bg-ink panel of the identical color below
-          (see the content wrapper further down), means the only "seam"
-          left is the gradient itself — a fade, never a hard line — and
-          the image→panel handoff is invisible because both sides resolve
-          to the exact same flat color. Own stacking context, real height
-          in normal flow (not absolute), so it never needs a min-height
-          hack to avoid collapsing. Hidden at md+, where the full-bleed
-          version below takes over instead of stacking both. */}
-      <div className="relative h-[280px] w-full overflow-hidden sm:h-[340px] md:hidden">
-        <picture>
-          <source srcSet={heroLivreurWebp} type="image/webp" />
-          <img
-            src={heroLivreurPng}
-            alt=""
-            aria-hidden="true"
-            fetchPriority="high"
-            className="absolute inset-0 h-full w-full object-cover object-right"
-          />
-        </picture>
-        {/* Transparent for the top ~42% (courier stays fully bright) then
-            fades to solid --ink (#1F1F1F) by the bottom — a real fade
-            across most of the block's height, not a thin band. */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,transparent_42%,#1F1F1F_100%)]" />
+          to solid --ink-warm via its own gradient, then handing off to a
+          flat panel of that exact color below (see the content wrapper
+          further down) — no hard seam, because both sides resolve to the
+          same flat color. Own stacking context, real height in normal
+          flow (not absolute), so it never needs a min-height hack to
+          avoid collapsing. Hidden at md+, where the full-bleed desktop
+          version below takes over instead of stacking both.
+
+          aspect-[1024/1250] (not a fixed h-[…px] like the desktop asset
+          used) is deliberate:
+          bg-hero.png is a 1024×1536 PORTRAIT photo whose subject — cap
+          logo (~y190-260), face (~y350-560), chest "NK DELIVERI" (~y780-
+          880), backpack logo (~y880-1060), and paper-bag logo (~y1030-
+          1220) — occupies almost its entire height, unlike the old
+          landscape asset which had a compact, croppable subject. A fixed
+          px height (the right call for the old image) would show a
+          different FRACTION of this one at 375px vs 430px width; an aspect-ratio
+          container shows the identical 0-1250 slice of the source at every
+          width, verified against those coordinates (Playwright ruler
+          overlay) to include cap, face, and both branded bags with zero
+          horizontal crop (cover scales this portrait source by width in a
+          wider-than-image container, so nothing is ever cut left/right —
+          only object-position's vertical axis matters here). Taller than
+          the old 280-340px block as a direct, necessary consequence of the
+          source being portrait, not an accidental regression. */}
+      <div className="relative aspect-[1024/1250] w-full overflow-hidden md:hidden">
+        <img
+          src={heroMobileBg}
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-top"
+        />
+        {/* The paper bag's own logo text runs to ~97.6% of this crop's
+            height, leaving almost no slack for a long fade like the
+            desktop-asset version above used (62% of the box) without
+            darkening it. Fade is compressed into the last ~12% instead —
+            transparent through 88%, a light amber glow (not solid) by
+            95%, solid --ink-warm only in the final few percent — so the
+            handoff to the panel below still reads as one warm gradient,
+            not a hard cut, without washing out either bag's branding. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(to bottom, transparent 0%, transparent 88%, oklch(0.62 0.19 40 / 0.4) 95%, var(--ink-warm) 100%)",
+          }}
+        />
       </div>
 
       {/* Desktop/tablet-landscape background image — hidden below md, so
@@ -150,13 +180,18 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           with hand-placed coordinates otherwise — only max-width
           constrains it, so it can never drift onto the courier regardless
           of viewport width. */}
-      {/* bg-ink here is deliberately the EXACT same flat color the image
-          block's own gradient above fades to (#1F1F1F) — that's what
-          makes the handoff between "image with gradient" and "solid
-          panel" invisible, instead of needing a second image/gradient
-          layer here to fake continuity (the earlier, seam-prone
-          version). */}
-      <div className="relative z-10 overflow-hidden bg-ink px-5 pt-7 pb-10 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:bg-transparent md:px-0 md:pt-0 md:pb-0">
+      {/* bg-ink-warm here is deliberately the EXACT same flat color the
+          image block's own gradient above fades to — that's what makes
+          the handoff between "image with gradient" and "solid panel"
+          invisible, instead of needing a second image/gradient layer here
+          to fake continuity (the earlier, seam-prone version). Was bg-ink
+          (neutral near-black) until the 2026-08-26 audit: technically
+          seamless but unbranded, reading as a plain dark card rather than
+          a continuation of the photo above it. pb-10→pb-8 shortens the
+          flat run of solid color before the payment badge, since that
+          empty stretch was itself part of what made the panel feel like a
+          separate "black zone" rather than a compact content block. */}
+      <div className="relative z-10 overflow-hidden bg-ink-warm px-5 pt-7 pb-8 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:bg-transparent md:px-0 md:pt-0 md:pb-0">
         <div className="relative mx-auto w-full max-w-[1200px] md:px-5 md:pt-8 lg:pt-14 xl:pt-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -272,7 +307,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur sm:gap-x-3 sm:px-5 sm:py-3 md:absolute md:right-5 md:bottom-8 md:mt-0 md:flex-nowrap"
+            className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur sm:gap-x-3 sm:px-5 sm:py-3 md:absolute md:right-5 md:bottom-8 md:mt-0 md:flex-nowrap"
           >
             {/* w-full forces this label onto its own line inside the
                 flex-wrap row on mobile (so the badge reads as label line +
