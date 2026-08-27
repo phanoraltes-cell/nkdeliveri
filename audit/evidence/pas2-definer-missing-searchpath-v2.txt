@@ -1,0 +1,2 @@
+supabase/migrations/20260812100000_komand_admin_module.sql:613: public.get_customers_admin
+supabase/migrations/20260819100000_nkd020_customer_anonymization.sql:162: public.get_all_users_admin
