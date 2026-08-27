@@ -20,17 +20,11 @@ export const Route = createFileRoute("/api/cron/moncash-reconcile")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const expected = process.env.CRON_SECRET;
-        if (!expected) {
-          return new Response(JSON.stringify({ ok: false, error: "CRON_SECRET pa konfigire" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        const authHeader = request.headers.get("authorization");
-        if (authHeader !== `Bearer ${expected}`) {
-          return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-            status: 401,
+        const { isValidCronRequest } = await import("@/lib/cron-auth.server");
+        const auth = isValidCronRequest(request);
+        if (!auth.ok) {
+          return new Response(JSON.stringify({ ok: false, error: auth.error }), {
+            status: auth.status,
             headers: { "Content-Type": "application/json" },
           });
         }
