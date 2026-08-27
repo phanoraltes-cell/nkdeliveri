@@ -1,7 +1,17 @@
 import { motion } from "framer-motion";
 import { Layers, Timer, ShieldCheck, Headphones } from "lucide-react";
 
-const phoneMockup = "/Mockup.png";
+// -v2 filename (not a reused "Mockup.png"): the runtime CacheFirst rule in
+// src/sw.ts caches same-URL static assets for up to 30 days with zero
+// content-revision awareness, and this file is deliberately excluded from
+// the revisioned precache manifest (see vite.config.ts's globIgnores, kept
+// out on purpose for its own lazy-loading reasons). Any browser that had
+// already cached "/Mockup.png" under its old content keeps serving those
+// stale bytes indefinitely, network or no network — the exact bug
+// hero-livreur-v2.png's own comment documents fixing the same way. A new
+// filename is a guaranteed cache MISS for every client regardless of SW
+// state, independent of the runtime rule's revision-blindness.
+const phoneMockup = "/app-mockup-v2.png";
 
 const APP_BENEFITS = [
   { icon: Layers, title: "Plis chwa", desc: "Yon gwo seleksyon restoran ak plat pou tout gou." },
@@ -48,8 +58,13 @@ export function AppBenefitsSection() {
             src={phoneMockup}
             alt="Aplikasyon NK Deliveri"
             loading="lazy"
-            width={833}
-            height={1725}
+            // Actual file is 873×1802 — was declared as 833×1725 (a stale
+            // approximation from before this asset's last swap), which
+            // gives the browser a slightly wrong aspect ratio to reserve
+            // before the image loads and causes a small layout shift on
+            // load. Corrected to the real dimensions.
+            width={873}
+            height={1802}
             className="max-h-[520px] w-auto object-contain drop-shadow-[0_30px_40px_rgba(249,115,22,0.25)]"
           />
         </motion.div>

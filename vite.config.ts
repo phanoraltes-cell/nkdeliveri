@@ -132,12 +132,20 @@ export default defineConfig({
           //    Same CacheFirst runtime rule picks each one up the moment
           //    it's actually requested, still fully cached for offline
           //    after that.
-          //  - Mockup.png (753 kB, app-benefits-section.tsx): same
-          //    `loading="lazy"` deferral, same reasoning — added when the
-          //    section's phone mockup was swapped from phone-mockup.jpg
-          //    (61 kB) to this taller replacement, an eager precache
-          //    would silently undo that deferral for the largest single
-          //    image on the home page.
+          //  - app-mockup-v2.png (was Mockup.png, ~1.5 MB, app-benefits-
+          //    section.tsx): same `loading="lazy"` deferral, same
+          //    reasoning — an eager precache would silently undo that
+          //    deferral for the largest single image on the home page.
+          //    Renamed from Mockup.png (2026-08-27): reusing that
+          //    filename for new content hit the exact staleness bug
+          //    hero-livreur.png's own comment describes below — being
+          //    excluded from the revisioned precache manifest here means
+          //    this file is ONLY ever cached via src/sw.ts's runtime
+          //    CacheFirst "static-assets" rule, which has no content-
+          //    revision awareness and served stale image bytes to
+          //    returning visitors for up to 30 days after the content
+          //    swap. A new filename is a guaranteed cache MISS regardless
+          //    of any client's existing SW cache state.
           //  - scooter.png (1.4 MB, newsletter-section.tsx): same
           //    `loading="lazy"` deferral, same reasoning — replaced
           //    scooter.jpg (61 kB) as the newsletter card's image. At
@@ -170,7 +178,7 @@ export default defineConfig({
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
-            "Mockup.png",
+            "app-mockup-v2.png",
             "scooter.png",
             "scooter.jpg",
           ],
