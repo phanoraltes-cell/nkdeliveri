@@ -119,26 +119,35 @@ jobs:
       # problem (confirmed pre-existing on baseline, before any of this
       # session's changes).
       #
-      # Fix: boot the stack with an EMPTY migrations directory so
-      # `start`'s own auto-replay has nothing to do and never runs its
-      # competing insert, then apply every file ourselves via plain
-      # `psql -f` in filename (= chronological) order — each file then
-      # triggers only the ONE insert it already contains (its own, for
-      # the 8 legacy files; none at all for the rest, which rely on the
-      # CLI's normal tracking during real `db push`/local dev, not
-      # exercised by this validation-only job). This still validates
-      # every migration's SQL applies cleanly in order against a fresh
-      # database — the actual purpose of this step — it just performs
-      # the replay directly instead of through `start`'s bundled one.
+      # Fix: temporarily pull ONLY the files matching that self-insert
+      # pattern out of supabase/migrations/ (auto-detected via grep, so
+      # any future Rule A11 migration is picked up automatically — no
+      # hardcoded version list to keep in sync), let `supabase start`
+      # auto-replay every remaining "normal" file exactly as it always
+      # has (this is what creates the supabase_migrations.schema_migrations
+      # table and its rows in the first place — confirmed: a first
+      # attempt at this fix that pulled ALL migrations out found `start`
+      # never creates that table when it has nothing to replay, so the
+      # legacy files' own insert then failed with
+      # "relation ... does not exist" instead), then put the Rule A11
+      # files back and apply just those via plain `psql -f` — by then the
+      # table already exists (created above) and each file's own guarded
+      # insert succeeds normally, with the CLI's competing insert never
+      # in the picture since these files weren't present during `start`.
       - name: Apply every migration to a fresh local database
         run: |
-          mkdir -p /tmp/migrations-holding
-          mv supabase/migrations/*.sql /tmp/migrations-holding/
+          mkdir -p /tmp/rule-a11-holding
+          rule_a11_files=$(grep -lE '^INSERT INTO supabase_migrations\.schema_migrations' supabase/migrations/*.sql || true)
+          for f in $rule_a11_files; do
+            mv "$f" /tmp/rule-a11-holding/
+          done
           supabase start
           eval "$(supabase status -o env)"
-          mv /tmp/migrations-holding/*.sql supabase/migrations/
-          for f in supabase/migrations/*.sql; do
-            echo "Applying $f"
+          for f in $rule_a11_files; do
+            mv "/tmp/rule-a11-holding/$(basename "$f")" "$f"
+          done
+          for f in $rule_a11_files; do
+            echo "Applying (Rule A11 bookkeeping) $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
 
