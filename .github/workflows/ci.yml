@@ -97,13 +97,50 @@ jobs:
           version: latest
 
       # `supabase start` boots a full local stack (Postgres + Auth +
-      # PostgREST + Realtime + Storage) via Docker and applies every file
-      # under supabase/migrations/ in order against a fresh database —
-      # the most realistic validation possible without live project
-      # credentials. Any migration that fails to apply (bad ordering,
-      # missing dependency, syntax error) fails this step.
+      # PostgREST + Realtime + Storage) via Docker. On a fresh volume it
+      # ALSO auto-replays every file under supabase/migrations/, and for
+      # each one it unconditionally runs its own
+      # `INSERT INTO supabase_migrations.schema_migrations(...)` right
+      # after the file's SQL finishes — no ON CONFLICT guard.
+      #
+      # 8 legacy migrations (20260818140000 through 20260821120000,
+      # "Rule A11" — see audit/findings.jsonl OPS-004) already perform
+      # that exact insert themselves, guarded by
+      # `ON CONFLICT (version) DO NOTHING`. That convention exists for a
+      # migration applied by hand via the SQL Editor, and Q-1
+      # (audit/HANDOFF-SQL.md, 2026-08-28) confirmed all 8 are already
+      # applied to production this way — so their SQL content is out of
+      # scope to edit here, and touching it would risk drift from what
+      # actually ran. When the CLI instead replays these files itself
+      # during `supabase start`, its own insert loses the race for the
+      # same primary key and the step fails with
+      # "duplicate key value violates unique constraint
+      # schema_migrations_pkey" — a CI-replay artifact, not a real schema
+      # problem (confirmed pre-existing on baseline, before any of this
+      # session's changes).
+      #
+      # Fix: boot the stack with an EMPTY migrations directory so
+      # `start`'s own auto-replay has nothing to do and never runs its
+      # competing insert, then apply every file ourselves via plain
+      # `psql -f` in filename (= chronological) order — each file then
+      # triggers only the ONE insert it already contains (its own, for
+      # the 8 legacy files; none at all for the rest, which rely on the
+      # CLI's normal tracking during real `db push`/local dev, not
+      # exercised by this validation-only job). This still validates
+      # every migration's SQL applies cleanly in order against a fresh
+      # database — the actual purpose of this step — it just performs
+      # the replay directly instead of through `start`'s bundled one.
       - name: Apply every migration to a fresh local database
-        run: supabase start
+        run: |
+          mkdir -p /tmp/migrations-holding
+          mv supabase/migrations/*.sql /tmp/migrations-holding/
+          supabase start
+          eval "$(supabase status -o env)"
+          mv /tmp/migrations-holding/*.sql supabase/migrations/
+          for f in supabase/migrations/*.sql; do
+            echo "Applying $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
 
       # C-01 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) —
       # persisted regression proof that direct writes to public.user_roles

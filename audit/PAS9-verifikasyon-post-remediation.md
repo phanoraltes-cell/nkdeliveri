@@ -31,27 +31,31 @@ Ekri konplè nan `audit/findings.jsonl`. Rezime:
 - Sou `2d8a037` (baseline, anvan menm PAS 1 kòmanse): **menm 4 te deja `failure`**
 - Okenn nouvo echèk pa te kreye pandan remediation an — men okenn ansyen echèk pa t korije nonplis (sof kontribisyon pa mwen a chak nan yo, gade anba)
 
-| Travay                       | Kòz rasin                                                                | Pre-egzistan? | Kontribisyon PAS 9                                             | Efò pou repare                       |
-| ---------------------------- | ------------------------------------------------------------------------ | ------------- | -------------------------------------------------------------- | ------------------------------------ |
-| Lint/typecheck/build         | Format check (Prettier) — 31 fichye `docs/*.md` eritye, jamè fòmate      | ✅ Wi         | Fòmate 8 fichye `audit/*.md` pa mwen (kontribisyon retire)     | L (31 fichye eritye + desizyon ekip) |
-| Validate Supabase migrations | 8 migrasyon eritye ak patwon "Rule A11" ki kraze rejwe CLI a sou baz vid | ✅ Wi         | Retire patwon an nan 2 migrasyon pa mwen (kontribisyon retire) | M — depann repons OPS-004            |
-| E2E accessibility/...        | 14 tès echwe, pa envestige                                               | ✅ Wi         | Okenn — pa touche                                              | L (mande envestigasyon separe)       |
-| E2E client/restaurant/...    | 18 tès echwe (notifications, order-chat, elt.)                           | ✅ Wi         | Okenn — pa touche                                              | L (mande envestigasyon separe)       |
+| Travay                       | Kòz rasin                                                                | Pre-egzistan? | Kontribisyon PAS 9                                                                                           | Efò pou repare                       |
+| ---------------------------- | ------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Lint/typecheck/build         | Format check (Prettier) — 31 fichye `docs/*.md` eritye, jamè fòmate      | ✅ Wi         | Fòmate 8 fichye `audit/*.md` pa mwen (kontribisyon retire)                                                   | L (31 fichye eritye + desizyon ekip) |
+| Validate Supabase migrations | 8 migrasyon eritye ak patwon "Rule A11" ki kraze rejwe CLI a sou baz vid | ✅ Wi         | Retire patwon an nan 2 migrasyon pa mwen (kontribisyon retire) + korije etap CI a (OPS-004 rezoud, gade 9.3) | S — fèt                              |
+| E2E accessibility/...        | 14 tès echwe, pa envestige                                               | ✅ Wi         | Okenn — pa touche                                                                                            | L (mande envestigasyon separe)       |
+| E2E client/restaurant/...    | 18 tès echwe (notifications, order-chat, elt.)                           | ✅ Wi         | Okenn — pa touche                                                                                            | L (mande envestigasyon separe)       |
 
 **Pa gen okenn tantativ repare CI a nan pas sa a** — 3 nan 4 mande yon desizyon ekip (dèt Prettier, migrasyon eritye, envestigasyon E2E), konfòm ak enstriksyon an.
 
 ---
 
-## 9.3 — OPS-004 (nouvo finding, MEDIUM, NOT VERIFIED) + HANDOFF
+## 9.3 — OPS-004 — RESOLVED (CONFIRMED apre Q-1) + Q-2 à Q-5 toujou an atant
 
-Kesyon santral la — èske 8 migrasyon eritye yo aplike sou production — **pa gen repons san SQL**. 5 blòk `Q-1` a `Q-5` (LEKTI SÈLMAN) ekri nan `audit/HANDOFF-SQL.md`, kouvri:
+Kesyon santral la — èske 8 migrasyon eritye yo aplike sou production — te mande yon repons SQL. Repons lan rive: **Q-1** egzekite pa itilizatè a (2026-08-28, Dashboard SQL Editor, LEKTI SÈLMAN) te retounen 9 liy, ki gen ladan **tout 8 vèsyon eritye yo** (`20260818140000` → `20260821120000`). Branch "yo prezan" nan tablo desizyon an konfime:
 
-- `Q-1`/`Q-2` — estati 8 migrasyon eritye + 2 pa mwen, ak konparezon konte pou detekte drift
+**Aksyon aplike** (jan branch la te presize davans): **PA touche kontni 8 fichye migrasyon eritye yo.** Olye de sa, `.github/workflows/ci.yml` etap "Apply every migration to a fresh local database" chanje — deplase `supabase/migrations/*.sql` tanporèman anvan `supabase start` (pou anpeche pwòp rejwe/anrejistreman CLI a fè pwòp INSERT konfli a), epi aplike chak fichye apre ak `psql -f` senp (menm patwon ak etap C-01 ki egziste deja nan menm job la). Detay konplè nan `audit/findings.jsonl` (OPS-004, kounye a `CONFIRMED`/`LOW`/`P3`).
+
+**Q-2 à Q-5 rete an atant** (`audit/HANDOFF-SQL.md`), toujou nesesè pou:
+
+- `Q-2` — konparezon konte total pou detekte lòt drift potansyèl (pa gen enpak sou OPS-004, ki deja rezoud pa Q-1)
 - `Q-3` — DB-001 (GRANT retire?)
 - `Q-4` — FIN-001 (tab/RPC rekonsilyasyon egziste?)
 - `Q-5` — API-001 (bucket ads-media-images/videos egziste?)
 
-**Tou de branch yo dokimante davans** nan tablo `OPS-004` (findings.jsonl) ak nan `HANDOFF-SQL.md`. Mwen p ap devine — estati rete `NOT VERIFIED` jiskaske ou kole soti yo.
+Estati sa yo rete `NOT VERIFIED` jiskaske ou kole soti yo.
 
 ---
 
