@@ -10,28 +10,29 @@
 
 ## 2. RLS — kouvèti jeneral
 
-| Chèk | Rezilta | Prèv |
-|---|---|---|
-| Tab ki gen `ENABLE ROW LEVEL SECURITY` | **54/54** | Boucle sou tout tab, grep filtre kòmantè |
-| Tab ki janm gen `DISABLE ROW LEVEL SECURITY` (reyèl, pa kòmantè) | **0** | `grep -hn "DISABLE ROW LEVEL SECURITY"` san rezilta |
-| Tab ak RLS ON men 0 policy (kandida bug) | 5 jwenn, **5/5 verifye epi rezoud** | Gade §3 |
-| Policy `USING (true)` (potansyèlman twò pèmisiv) | 12 okirans, **11 done piblik entansyonèl, 1 istorik korije** | Gade §4 |
+| Chèk                                                             | Rezilta                                                      | Prèv                                                |
+| ---------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| Tab ki gen `ENABLE ROW LEVEL SECURITY`                           | **54/54**                                                    | Boucle sou tout tab, grep filtre kòmantè            |
+| Tab ki janm gen `DISABLE ROW LEVEL SECURITY` (reyèl, pa kòmantè) | **0**                                                        | `grep -hn "DISABLE ROW LEVEL SECURITY"` san rezilta |
+| Tab ak RLS ON men 0 policy (kandida bug)                         | 5 jwenn, **5/5 verifye epi rezoud**                          | Gade §3                                             |
+| Policy `USING (true)` (potansyèlman twò pèmisiv)                 | 12 okirans, **11 done piblik entansyonèl, 1 istorik korije** | Gade §4                                             |
 
 ## 3. Tab "zewo policy" — verifikasyon endividyèl
 
-| Tab | Vèdik | Prèv |
-|---|---|---|
-| `admin_backup_codes` | **ENTANSYONÈL** — `REVOKE ALL ... FROM PUBLIC, anon, authenticated`, aksè sèlman via 3 RPC (`generate/verify/get_status_admin_backup_codes_secure`) | [20260813100000_admin_backup_codes.sql:38-39](supabase/migrations/20260813100000_admin_backup_codes.sql#L38) |
-| `admin_backup_code_state` | **ENTANSYONÈL** — menm patwon | Menm fichye, liy 63-64 |
-| `platform_delivery_zones` | **ENTANSYONÈL** — sèl aksè via `private.create_order_secure` (SECURITY DEFINER, bypass RLS pa konsepsyon) | [20260816120000_nkd015_delivery_fee_config.sql](supabase/migrations/20260816120000_nkd015_delivery_fee_config.sql) |
-| `platform_payout_settings` | **GRANT MÒ/KONFIZAN** (pa danjere, men initil) — gade DB-001 | — |
-| `push_subscriptions` | **FO-POZITIF** — 2 policy reyèl egziste ("Users manage own push subs", "Admins can view all push subs"), gwoup otomatik mwen an te rate yo akoz sentaks CREATE POLICY sou plizyè liy | [20260703071050...sql](supabase/migrations/20260703071050_b45e82fb-88ee-4630-906c-a54ff8cce6c4.sql) |
+| Tab                        | Vèdik                                                                                                                                                                                | Prèv                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `admin_backup_codes`       | **ENTANSYONÈL** — `REVOKE ALL ... FROM PUBLIC, anon, authenticated`, aksè sèlman via 3 RPC (`generate/verify/get_status_admin_backup_codes_secure`)                                  | [20260813100000_admin_backup_codes.sql:38-39](supabase/migrations/20260813100000_admin_backup_codes.sql#L38)       |
+| `admin_backup_code_state`  | **ENTANSYONÈL** — menm patwon                                                                                                                                                        | Menm fichye, liy 63-64                                                                                             |
+| `platform_delivery_zones`  | **ENTANSYONÈL** — sèl aksè via `private.create_order_secure` (SECURITY DEFINER, bypass RLS pa konsepsyon)                                                                            | [20260816120000_nkd015_delivery_fee_config.sql](supabase/migrations/20260816120000_nkd015_delivery_fee_config.sql) |
+| `platform_payout_settings` | **GRANT MÒ/KONFIZAN** (pa danjere, men initil) — gade DB-001                                                                                                                         | —                                                                                                                  |
+| `push_subscriptions`       | **FO-POZITIF** — 2 policy reyèl egziste ("Users manage own push subs", "Admins can view all push subs"), gwoup otomatik mwen an te rate yo akoz sentaks CREATE POLICY sou plizyè liy | [20260703071050...sql](supabase/migrations/20260703071050_b45e82fb-88ee-4630-906c-a54ff8cce6c4.sql)                |
 
 ## 4. `USING (true)` — envantè
 
 11 okirans se done ki VLE di piblik pa konsepsyon (menu/pwodwi/avi restoran, konfigirasyon peman piblik, kategori). Sèl ka enteresan istorikman:
 
 **`profiles`** — 3 jenerasyon:
+
 1. `20260702234435`: "viewable by everyone" (`USING (true)`, tout moun, menм `anon`) — **koupab**
 2. `20260703063224` (**pwochen jou**): restriksyone a `authenticated` sèlman, men toujou `USING (true)` — **toujou twò laj**
 3. `20260703070152` (**menм jou**): "Users view own profile" — `auth.uid() = id OR has_role(admin) OR has_role(super_admin)` — **KORÈK, eta final, konfime pa okenn override apre**
@@ -46,20 +47,20 @@
 
 11 fonksyon verifye MANYÈLMAN (pi kritik yo, chwazi selon itilizasyon reyèl nan kòd aplikasyon an, PAS 1):
 
-| Fonksyon | `SECURITY` | `search_path` fikse | Chèk wòl anndan |
-|---|---|---|---|
-| `initiate_payout_secure` | DEFINER | ✅ | admin/super_admin + step-up STRICT |
-| `complete_collect_payment_secure` | DEFINER | ✅ | (webhook-only, pa itilizatè dirèk) |
-| `complete_pending_payout_secure` | DEFINER | ✅ | — |
-| `fail_pending_payout_secure` | DEFINER | ✅ | — |
-| `anonymize_customer_secure` | DEFINER | ✅ | admin/super_admin |
-| `add_user_role_secure` | DEFINER | ✅ | step-up STRICT (dapre migrasyon) |
-| `remove_user_role_secure` | DEFINER | ✅ | step-up STRICT |
-| `has_role` (public) | **INVOKER** (pa konsepsyon) | ✅ | Anpeche yon itilizatè tcheke wòl yon LÒT moun sof si li menм admin |
-| `check_rate_limit_secure` | DEFINER | ✅ | — |
-| `check_auth_rate_limit_secure` | DEFINER | ✅ | — |
-| `get_customers_admin` | DEFINER | ✅ (fo-pozitif otomatik korije) | admin/super_admin |
-| `get_all_users_admin` | DEFINER | ✅ (fo-pozitif otomatik korije) | admin/super_admin + limit clamping (500 max) |
+| Fonksyon                          | `SECURITY`                  | `search_path` fikse             | Chèk wòl anndan                                                    |
+| --------------------------------- | --------------------------- | ------------------------------- | ------------------------------------------------------------------ |
+| `initiate_payout_secure`          | DEFINER                     | ✅                              | admin/super_admin + step-up STRICT                                 |
+| `complete_collect_payment_secure` | DEFINER                     | ✅                              | (webhook-only, pa itilizatè dirèk)                                 |
+| `complete_pending_payout_secure`  | DEFINER                     | ✅                              | —                                                                  |
+| `fail_pending_payout_secure`      | DEFINER                     | ✅                              | —                                                                  |
+| `anonymize_customer_secure`       | DEFINER                     | ✅                              | admin/super_admin                                                  |
+| `add_user_role_secure`            | DEFINER                     | ✅                              | step-up STRICT (dapre migrasyon)                                   |
+| `remove_user_role_secure`         | DEFINER                     | ✅                              | step-up STRICT                                                     |
+| `has_role` (public)               | **INVOKER** (pa konsepsyon) | ✅                              | Anpeche yon itilizatè tcheke wòl yon LÒT moun sof si li menм admin |
+| `check_rate_limit_secure`         | DEFINER                     | ✅                              | —                                                                  |
+| `check_auth_rate_limit_secure`    | DEFINER                     | ✅                              | —                                                                  |
+| `get_customers_admin`             | DEFINER                     | ✅ (fo-pozitif otomatik korije) | admin/super_admin                                                  |
+| `get_all_users_admin`             | DEFINER                     | ✅ (fo-pozitif otomatik korije) | admin/super_admin + limit clamping (500 max)                       |
 
 **11/11 CONFIRMED kòrèk.** Yon sweep otomatik konplè sou tout 151 fichye (fenèt 20-liy) te idantifye sèlman 2 lòt kandida ("manke search_path") — toude se `get_customers_admin`/`get_all_users_admin` yo menм, ki te deja verifye kòrèk manyèlman (fenèt 20-liy pa t ase long pou `RETURNS TABLE` ak plizyè kolòn).
 
@@ -83,7 +84,7 @@
 - **~140 fonksyon `SECURITY DEFINER` PA verifye endividyèlman** (echantiyon 11 sèlman, chwazi pa risk).
 - **Pa gen chèk endèks manke** (FK san endèks, kolòn filtè san endèks) — mande yon zouti EXPLAIN ANALYZE sou done reyèl, enposib san DB.
 - **Pa gen tès done enkonsistan reyèl** (orphan records, doub) — mande yon requèt SELECT sou done reyèl, enposib san DB.
-- Pa gen okenn tès *runtime* pou konfime yon policy vrèman blòk yon itilizatè B ki eseye li done itilizatè A — tout konklizyon baze sou lekti kondisyon SQL la, pa yon tès reyèl ak 2 kont.
+- Pa gen okenn tès _runtime_ pou konfime yon policy vrèman blòk yon itilizatè B ki eseye li done itilizatè A — tout konklizyon baze sou lekti kondisyon SQL la, pa yon tès reyèl ak 2 kont.
 
 ---
 

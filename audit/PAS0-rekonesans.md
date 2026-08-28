@@ -65,14 +65,14 @@ Itilizatè a pa t ranpli chan `stack_deklare` nan BLÒK 1 → **pa gen konparezo
 
 ## 3. Kòmpozan kle idantifye
 
-| Kòmpozan | Kote | Kantite |
-|---|---|---|
-| API routes (fichye) | `src/routes/api.*.ts` | 6 (cron×2, webhook×3, csp-report×1) |
-| Server functions (`*.functions.ts`) | `src/lib/*.functions.ts` | 18 |
-| Routes UI otantifye | `src/routes/_authenticated/**` | (sou-ansanm nan 77 routes total) |
-| Payment providers (kòd kustom) | `src/lib/payment-providers/*.server.ts` | Stripe, MonCash, Plop |
-| Service worker kustom | `src/sw.ts` | 1 |
-| Migrasyon SQL | `supabase/migrations/*.sql` | 151 |
+| Kòmpozan                            | Kote                                    | Kantite                             |
+| ----------------------------------- | --------------------------------------- | ----------------------------------- |
+| API routes (fichye)                 | `src/routes/api.*.ts`                   | 6 (cron×2, webhook×3, csp-report×1) |
+| Server functions (`*.functions.ts`) | `src/lib/*.functions.ts`                | 18                                  |
+| Routes UI otantifye                 | `src/routes/_authenticated/**`          | (sou-ansanm nan 77 routes total)    |
+| Payment providers (kòd kustom)      | `src/lib/payment-providers/*.server.ts` | Stripe, MonCash, Plop               |
+| Service worker kustom               | `src/sw.ts`                             | 1                                   |
+| Migrasyon SQL                       | `supabase/migrations/*.sql`             | 151                                 |
 
 ## 4. Envantè varyab anviwònman (non sèlman, pa valè)
 
@@ -84,18 +84,18 @@ Itilizatè a pa t ranpli chan `stack_deklare` nan BLÒK 1 → **pa gen konparezo
 
 ## 5. Top 10 fichye ki gen plis risk (gwosè × sansiblite)
 
-| # | Fichye | Liy | Poukisa li nan lis la |
-|---|---|---|---|
-| 1 | `src/routes/checkout.tsx` | 697 | Flux peman kliyan konplè |
-| 2 | `src/routes/_authenticated/dashboard.admin.collect.tsx` | 590 | Admin — koleksyon lajan |
-| 3 | `src/routes/_authenticated/dashboard.admin.ads.tsx` | 576 | Admin — jesyon piblisite/peman |
-| 4 | `src/routes/_authenticated/dashboard.admin.payouts.tsx` | 535 | Admin — **sòti lajan** (payout) |
-| 5 | `src/lib/payment-providers/moncash-client.server.ts` | 519 | Kliyan API MonCash |
-| 6 | `src/components/dashboard/admin/komand-detail-dialog.tsx` | 518 | Admin — detay kòmand |
-| 7 | `src/routes/_authenticated/dashboard.driver.history.tsx` | 509 | Chofè — istwa/pèfòmans |
-| 8 | `src/routes/_authenticated/dashboard.admin.finance.tsx` | 509 | Admin — finans global |
-| 9 | `src/routes/_authenticated/dashboard.restaurant.orders.tsx` | 487 | Restoran — kòmand |
-| 10 | `src/routes/_authenticated/dashboard.admin.payout-migration.tsx` | 485 | Admin — **zouti migrasyon payout** (aksyon danjere potansyèl, itilize yon sèl fwa?) |
+| #   | Fichye                                                           | Liy | Poukisa li nan lis la                                                               |
+| --- | ---------------------------------------------------------------- | --- | ----------------------------------------------------------------------------------- |
+| 1   | `src/routes/checkout.tsx`                                        | 697 | Flux peman kliyan konplè                                                            |
+| 2   | `src/routes/_authenticated/dashboard.admin.collect.tsx`          | 590 | Admin — koleksyon lajan                                                             |
+| 3   | `src/routes/_authenticated/dashboard.admin.ads.tsx`              | 576 | Admin — jesyon piblisite/peman                                                      |
+| 4   | `src/routes/_authenticated/dashboard.admin.payouts.tsx`          | 535 | Admin — **sòti lajan** (payout)                                                     |
+| 5   | `src/lib/payment-providers/moncash-client.server.ts`             | 519 | Kliyan API MonCash                                                                  |
+| 6   | `src/components/dashboard/admin/komand-detail-dialog.tsx`        | 518 | Admin — detay kòmand                                                                |
+| 7   | `src/routes/_authenticated/dashboard.driver.history.tsx`         | 509 | Chofè — istwa/pèfòmans                                                              |
+| 8   | `src/routes/_authenticated/dashboard.admin.finance.tsx`          | 509 | Admin — finans global                                                               |
+| 9   | `src/routes/_authenticated/dashboard.restaurant.orders.tsx`      | 487 | Restoran — kòmand                                                                   |
+| 10  | `src/routes/_authenticated/dashboard.admin.payout-migration.tsx` | 485 | Admin — **zouti migrasyon payout** (aksyon danjere potansyèl, itilize yon sèl fwa?) |
 
 `src/lib/manage-user.functions.ts` ak `src/lib/payment-providers/plop-client.server.ts` (481 liy) rete kandida priyorite pou PAS 1/3 menм si yo pa nan Top 10 gwosè a — non fonksyon an (`manage-user`) sijere yon aksyon privilejye.
 

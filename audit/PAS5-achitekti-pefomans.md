@@ -10,13 +10,13 @@ Kòd la swiv yon separasyon klè: **kliyan an rete "fen"** (afiche done, kolekte
 
 ## Pèfòmans — Frontend
 
-| Chèk | Rezilta |
-|---|---|
-| `jspdf` (~500KB) | **0 import statik** nan tout `src/` — toujou `await import()` |
-| `leaflet`/`react-leaflet` | Sèl konpozan `LeafletMap.tsx` gen import statik li; tout paran li yo (dashboard admin/driver, tracking livrezon) chaje l atravè `ActiveDeliveriesSection` ki li menм lazy | 
-| `recharts` (~350KB, dapre kòmantè kòd) | `RevenueChart` chaje ak `React.lazy()`, kòmantè eksplisit ("recharts (~350KB) is only needed once this page has mounted") |
-| `manualChunks` (vite.config.ts) | Vandè lou separe nan pwòp chunk (leaflet, charts, pdf, motion, react, tanstack, supabase) — evite yon "vandè jeyan" inik |
-| Chunk >500kB rete apre split (`vendor-pdf` 779kB brut / 235kB gzip) | Prezan, MEN deja dèyè yon `import()` dinamik (route dashboard sèlman) — pa nan chaj inisyal la |
+| Chèk                                                                | Rezilta                                                                                                                                                                   |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jspdf` (~500KB)                                                    | **0 import statik** nan tout `src/` — toujou `await import()`                                                                                                             |
+| `leaflet`/`react-leaflet`                                           | Sèl konpozan `LeafletMap.tsx` gen import statik li; tout paran li yo (dashboard admin/driver, tracking livrezon) chaje l atravè `ActiveDeliveriesSection` ki li menм lazy |
+| `recharts` (~350KB, dapre kòmantè kòd)                              | `RevenueChart` chaje ak `React.lazy()`, kòmantè eksplisit ("recharts (~350KB) is only needed once this page has mounted")                                                 |
+| `manualChunks` (vite.config.ts)                                     | Vandè lou separe nan pwòp chunk (leaflet, charts, pdf, motion, react, tanstack, supabase) — evite yon "vandè jeyan" inik                                                  |
+| Chunk >500kB rete apre split (`vendor-pdf` 779kB brut / 235kB gzip) | Prezan, MEN deja dèyè yon `import()` dinamik (route dashboard sèlman) — pa nan chaj inisyal la                                                                            |
 
 **CONFIRMED**: efò code-splitting entansyonèl e byen dokimante, pa yon aksidan.
 

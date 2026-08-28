@@ -217,8 +217,17 @@ $$;
 REVOKE ALL ON FUNCTION public.run_wallet_reconciliation_secure() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.run_wallet_reconciliation_secure() TO service_role;
 
-INSERT INTO supabase_migrations.schema_migrations (version, name)
-VALUES ('20260827130000', 'audit_remediation_dead_grant_and_reconciliation')
-ON CONFLICT (version) DO NOTHING;
-
+-- No manual `INSERT INTO supabase_migrations.schema_migrations` here,
+-- unlike the "Rule A11" convention some migrations from 20260818140000
+-- onward follow (that pattern exists for a migration applied by hand via
+-- SQL Editor, bypassing the CLI entirely — see that file's own comment).
+-- This one is applied through the normal CLI/db-push path, which already
+-- records it automatically; a redundant manual INSERT here is exactly
+-- what makes CI's "Validate Supabase migrations (local replay)" job fail
+-- with `duplicate key value violates unique constraint
+-- "schema_migrations_pkey"` on every migration using that pattern —
+-- confirmed pre-existing on origin/main before this migration ever
+-- existed (fails at 20260818140000, the first file to use it), not
+-- something introduced here. Left out deliberately so this migration
+-- (the first one CI would actually reach unmodified) validates cleanly.
 COMMIT;

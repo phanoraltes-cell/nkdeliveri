@@ -4,17 +4,17 @@
 
 ## Storage — envantè 9 bucket
 
-| Bucket | Piblik | Limit gwosè | MIME allowlist | Istwa |
-|---|---|---|---|---|
-| `menu-photos` | ✅ | 5MB | jpeg/png/webp | Limit ajoute retwoaktivman ([20260713120000](supabase/migrations/20260713120000_secure_storage_buckets.sql)) |
-| `restaurant-assets` | ✅ | 5MB | jpeg/png/webp | Menm |
-| `avatars` | ✅ | 3MB | jpeg/png/webp | Menm |
-| `driver-documents` | ❌ (prive) | 8MB | jpeg/png/webp/pdf | Menm — done idantite chofè |
-| `payment-proofs` | ❌ (prive) | 8MB | jpeg/png/webp/pdf | Menm |
-| `payout-proofs` | ❌ (prive) | 8MB | jpeg/png/webp/pdf | Limit depi kreyasyon |
-| `dispute-attachments` | ❌ (prive) | 8MB | jpeg/png/webp/pdf | Limit depi kreyasyon |
-| `order-chat-attachments` | ❌ (prive) | 8MB | jpeg/png/webp/heic | Limit depi kreyasyon |
-| `ads-media` | ✅ | 50MB (yon sèl valè) | imaj+videyo | Gade API-001 |
+| Bucket                   | Piblik     | Limit gwosè         | MIME allowlist     | Istwa                                                                                                        |
+| ------------------------ | ---------- | ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `menu-photos`            | ✅         | 5MB                 | jpeg/png/webp      | Limit ajoute retwoaktivman ([20260713120000](supabase/migrations/20260713120000_secure_storage_buckets.sql)) |
+| `restaurant-assets`      | ✅         | 5MB                 | jpeg/png/webp      | Menm                                                                                                         |
+| `avatars`                | ✅         | 3MB                 | jpeg/png/webp      | Menm                                                                                                         |
+| `driver-documents`       | ❌ (prive) | 8MB                 | jpeg/png/webp/pdf  | Menm — done idantite chofè                                                                                   |
+| `payment-proofs`         | ❌ (prive) | 8MB                 | jpeg/png/webp/pdf  | Menm                                                                                                         |
+| `payout-proofs`          | ❌ (prive) | 8MB                 | jpeg/png/webp/pdf  | Limit depi kreyasyon                                                                                         |
+| `dispute-attachments`    | ❌ (prive) | 8MB                 | jpeg/png/webp/pdf  | Limit depi kreyasyon                                                                                         |
+| `order-chat-attachments` | ❌ (prive) | 8MB                 | jpeg/png/webp/heic | Limit depi kreyasyon                                                                                         |
+| `ads-media`              | ✅         | 50MB (yon sèl valè) | imaj+videyo        | Gade API-001                                                                                                 |
 
 **Istwa enpòtan**: 5 premye bucket yo te kreye SAN `file_size_limit`/`allowed_mime_types` (okenn limit motè-Storage pou tout aplikasyon an nan premye 10 jou yo). Ekip la menм te jwenn sa ("Security remediation Phase 1, item 2") epi korije l retwoaktivman ak `UPDATE storage.buckets`, sinkwonize ak `src/lib/file-validation.ts` (menм limit yo, dokimante kòm "single source of truth" pou UI a, otorite reyèl la se motè Storage a). **CONFIRMED korije, eta aktyèl la bon.**
 

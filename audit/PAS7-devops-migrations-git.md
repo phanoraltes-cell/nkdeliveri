@@ -4,11 +4,11 @@
 
 ## Reyalite production — 3 enside reyèl, konfime, e rezoud
 
-| # | Sentòm | Kòz rasin | Rezoud pa | Estati |
-|---|---|---|---|---|
-| 1 | `npm ci` echwe nan CI (`Missing: lru-cache@11.5.2 from lock file`) | `package-lock.json` dezsenkwonize ak `package.json`, egziste anvan menм chanjman resan yo | Regenere lockfile ak npm 10.9.8 (menm vèsyon ak CI) | ✅ Commit `b1e3f02`, verifye `npm ci` pase apre |
-| 2 | Vercel: `"Deployment was blocked"` sou 3 commit youn apre lòt | Konfli non pwojè Vercel (rapòte pa itilizatè a, konfime pa chanjman estati apre rezolisyon) | Retrigger deplwaman apre koneksyon konfli a rezoud (pa itilizatè a, deyò pòte odit sa a) | ✅ Commit `ecef211`, "Deployment has completed" konfime |
-| 3 | Nouvo `Mockup.png`/`bg-hero.png` pa parèt pou vizitè ki retounen | Cache PWA `CacheFirst` (`src/sw.ts`) san konsyans revizyon, 30 jou maxAge, sou yon URL ki REYITILIZE (menм non fichye ak kontni diferan) | Chanje non fichye a (`app-mockup-v2.png`) — garanti yon cache MISS pou tout kliyan | ✅ Commit `2d8a037`, verifye 200 + gwosè kòrèk sou live site |
+| #   | Sentòm                                                             | Kòz rasin                                                                                                                                | Rezoud pa                                                                                | Estati                                                       |
+| --- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | `npm ci` echwe nan CI (`Missing: lru-cache@11.5.2 from lock file`) | `package-lock.json` dezsenkwonize ak `package.json`, egziste anvan menм chanjman resan yo                                                | Regenere lockfile ak npm 10.9.8 (menm vèsyon ak CI)                                      | ✅ Commit `b1e3f02`, verifye `npm ci` pase apre              |
+| 2   | Vercel: `"Deployment was blocked"` sou 3 commit youn apre lòt      | Konfli non pwojè Vercel (rapòte pa itilizatè a, konfime pa chanjman estati apre rezolisyon)                                              | Retrigger deplwaman apre koneksyon konfli a rezoud (pa itilizatè a, deyò pòte odit sa a) | ✅ Commit `ecef211`, "Deployment has completed" konfime      |
+| 3   | Nouvo `Mockup.png`/`bg-hero.png` pa parèt pou vizitè ki retounen   | Cache PWA `CacheFirst` (`src/sw.ts`) san konsyans revizyon, 30 jou maxAge, sou yon URL ki REYITILIZE (menм non fichye ak kontni diferan) | Chanje non fichye a (`app-mockup-v2.png`) — garanti yon cache MISS pou tout kliyan       | ✅ Commit `2d8a037`, verifye 200 + gwosè kòrèk sou live site |
 
 **Konklizyon**: chèn deplwaman an gen 2 pwen fay REYÈL ki deja manifeste (lockfile drift, cache PWA san revizyon), toude korije pandan sesyon sa a — pa yon ipotèz teyorik, se yon evènman ki reyèlman rive e obsève dirèkteman.
 

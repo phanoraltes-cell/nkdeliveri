@@ -66,6 +66,8 @@ CREATE POLICY "ads-media-videos admin delete" ON storage.objects FOR DELETE TO a
     AND (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'super_admin'))
   );
 
-INSERT INTO supabase_migrations.schema_migrations (version, name)
-VALUES ('20260827140000', 'split_ads_media_bucket_by_size')
-ON CONFLICT (version) DO NOTHING;
+-- No manual `INSERT INTO supabase_migrations.schema_migrations` here — see
+-- 20260827130000_audit_remediation_dead_grant_and_reconciliation.sql's own
+-- comment on why that "Rule A11" pattern (present on several migrations
+-- from 20260818140000 onward) breaks CI's local-replay validation and was
+-- deliberately left out of this migration.

@@ -4,14 +4,14 @@
 
 ## SEO — verifye nan kòd
 
-| Chèk | Rezilta |
-|---|---|
-| Title/description/canonical/OG/Twitter | `pageMeta()` ([src/lib/seo.ts](src/lib/seo.ts)) bay tout 12 tag yo nan yon sèl apèl — **17 wout** itilize l |
-| Kouvèti sou wout PIBLIK | **100%** (0 wout piblik san meta, verifye pa yon boucle sou tout `src/routes` eksepte `_authenticated/`) |
-| Wout dashboard san meta pwòp yo | 20 jwenn, **tout** eritye `noIndexMeta()` paran `_authenticated/route.tsx` a (TanStack Router fizyone `head()` sou tout chèn nan) — **pa yon gap, se DRY entansyonèl** |
-| `robots.txt` | Bloke `/dashboard`, `/admin`, `/api`, `/private`, `/auth`, `/checkout`, `/orders`, `/profile` — pwente `Sitemap:` |
-| `sitemap.xml` | Egziste (`src/routes/sitemap[.]xml.ts`) |
-| JSON-LD | Yon helper dedye (`jsonLdScript`) egziste pou done estriktire |
+| Chèk                                   | Rezilta                                                                                                                                                                |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title/description/canonical/OG/Twitter | `pageMeta()` ([src/lib/seo.ts](src/lib/seo.ts)) bay tout 12 tag yo nan yon sèl apèl — **17 wout** itilize l                                                            |
+| Kouvèti sou wout PIBLIK                | **100%** (0 wout piblik san meta, verifye pa yon boucle sou tout `src/routes` eksepte `_authenticated/`)                                                               |
+| Wout dashboard san meta pwòp yo        | 20 jwenn, **tout** eritye `noIndexMeta()` paran `_authenticated/route.tsx` a (TanStack Router fizyone `head()` sou tout chèn nan) — **pa yon gap, se DRY entansyonèl** |
+| `robots.txt`                           | Bloke `/dashboard`, `/admin`, `/api`, `/private`, `/auth`, `/checkout`, `/orders`, `/profile` — pwente `Sitemap:`                                                      |
+| `sitemap.xml`                          | Egziste (`src/routes/sitemap[.]xml.ts`)                                                                                                                                |
+| JSON-LD                                | Yon helper dedye (`jsonLdScript`) egziste pou done estriktire                                                                                                          |
 
 **CONFIRMED — kouvèti SEO konplè e san duplication.**
 
@@ -27,9 +27,9 @@
 
 Playwright, sèvè dev lokal, **3 paj piblik** (akèy, lis restoran, konekte) × **7 lajè** (320/360/390/414/768/1024/1440px) = **21 konbinezon**:
 
-| Rezilta | Kantite |
-|---|---|
-| Debòdman orizontal (`scrollWidth > clientWidth`) | **0/21** |
+| Rezilta                                                     | Kantite     |
+| ----------------------------------------------------------- | ----------- |
+| Debòdman orizontal (`scrollWidth > clientWidth`)            | **0/21**    |
 | Chevochman/kontni koupe (enspeksyon vizyèl 2 kaptirè mobil) | Okenn jwenn |
 
 Ekran konekte (`/auth`) ak lis restoran (`/restaurants`) tou de klè, byen espase, bouton Google OAuth vizib, kat restoran byen fòme, pye paj (footer) òganize.
