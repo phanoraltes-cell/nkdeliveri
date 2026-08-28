@@ -159,6 +159,28 @@ export default defineConfig({
           //    longer referenced anywhere in src/ after the swap above —
           //    same "unused, don't pay for it upfront" reasoning as
           //    payment-global/** below.
+          //  - bg-hero.png (1.9 MB, was hero-section.tsx's mobile hero):
+          //    replaced by bg-hero-v2.png/.webp (BRIEF — HERO MOBIL PWA,
+          //    2026-08-28, re-crop + overlay work). Same "unused, don't
+          //    pay for it upfront" reasoning as scooter.jpg above — kept
+          //    on disk, not deleted.
+          //  - bg-hero-v2.png (2.44 MB, canvas-re-encoded <picture>
+          //    fallback for the file above): excluded here for the exact
+          //    reason hero-livreur.png once was below — it exceeds
+          //    Workbox's 2 MiB injectManifest limit and fails the build
+          //    outright otherwise ("Configure
+          //    injectManifest.maximumFileSizeToCacheInBytes..."). Unlike
+          //    that incident this isn't temporary: raising the limit
+          //    isn't worth it for a fallback essentially no real visitor
+          //    fetches (WebP support is >97% globally) — it's only ever
+          //    cached via src/sw.ts's runtime CacheFirst rule instead,
+          //    same tradeoff as every other excluded entry in this list.
+          //    bg-hero-v2.webp (144.6 kB, what actually loads for nearly
+          //    every visitor) is DELIBERATELY left OUT of this list, same
+          //    as hero-livreur-v2 below: fetchPriority="high", not
+          //    lazy-loaded, so an eager precache is exactly what's wanted
+          //    for a repeat visitor, not something to defer, and it's
+          //    nowhere near the size limit.
           //  - hero-livreur.png was excluded here for one session (grew
           //    past Workbox's 2 MiB injectManifest limit at an intermediate
           //    canvas-extended size and briefly failed the build outright).
@@ -185,6 +207,8 @@ export default defineConfig({
             "app-mockup-v2.png",
             "scooter.png",
             "scooter.jpg",
+            "bg-hero.png",
+            "bg-hero-v2.png",
           ],
         },
       }),
