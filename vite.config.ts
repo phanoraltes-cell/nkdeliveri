@@ -132,20 +132,23 @@ export default defineConfig({
           //    Same CacheFirst runtime rule picks each one up the moment
           //    it's actually requested, still fully cached for offline
           //    after that.
-          //  - app-mockup-v2.png (was Mockup.png, ~1.5 MB, app-benefits-
-          //    section.tsx): same `loading="lazy"` deferral, same
-          //    reasoning — an eager precache would silently undo that
-          //    deferral for the largest single image on the home page.
-          //    Renamed from Mockup.png (2026-08-27): reusing that
-          //    filename for new content hit the exact staleness bug
-          //    hero-livreur.png's own comment describes below — being
-          //    excluded from the revisioned precache manifest here means
-          //    this file is ONLY ever cached via src/sw.ts's runtime
-          //    CacheFirst "static-assets" rule, which has no content-
-          //    revision awareness and served stale image bytes to
-          //    returning visitors for up to 30 days after the content
-          //    swap. A new filename is a guaranteed cache MISS regardless
-          //    of any client's existing SW cache state.
+          //  - app-mockup-v3.png (~365 kB, app-benefits-section.tsx): same
+          //    `loading="lazy"` deferral, same reasoning — an eager
+          //    precache would silently undo that deferral for a
+          //    prominent home-page image. Renamed from app-mockup-v2.png
+          //    (2026-08-28, itself renamed from Mockup.png on 2026-08-27):
+          //    reusing either filename for new content hits the exact
+          //    staleness bug hero-livreur.png's own comment describes
+          //    below — being excluded from the revisioned precache
+          //    manifest here means this file is ONLY ever cached via
+          //    src/sw.ts's runtime CacheFirst "static-assets" rule, which
+          //    has no content-revision awareness and would serve stale
+          //    image bytes to returning visitors for up to 30 days after
+          //    the next content swap. A new filename is a guaranteed cache
+          //    MISS regardless of any client's existing SW cache state.
+          //    v2 kept on disk (not deleted) but no longer referenced —
+          //    same "unused, don't pay for it upfront" reasoning as
+          //    scooter.jpg below.
           //  - scooter.png (1.4 MB, newsletter-section.tsx): same
           //    `loading="lazy"` deferral, same reasoning — replaced
           //    scooter.jpg (61 kB) as the newsletter card's image. At
@@ -178,6 +181,7 @@ export default defineConfig({
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
+            "app-mockup-v3.png",
             "app-mockup-v2.png",
             "scooter.png",
             "scooter.jpg",
