@@ -9,6 +9,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -27,6 +28,7 @@ function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending] = useState(false);
+  const captcha = useTurnstile();
 
   useEffect(() => {
     // Surface OAuth failures (e.g. user cancelled consent, provider
@@ -85,7 +87,11 @@ function LoginPage() {
       if (rlErr) throw rlErr;
       if (!allowed) throw new Error("Too many sign-in attempts — rate limit exceeded");
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken: captcha.token ?? undefined },
+      });
       if (error) throw error;
       toast.success("Byenveni!");
       nav({ to: search.next || "/dashboard" });
@@ -94,6 +100,7 @@ function LoginPage() {
       if (isEmailNotConfirmedError(e)) setNeedsConfirmation(true);
     } finally {
       setLoading(false);
+      captcha.reset();
     }
   }
 
@@ -194,6 +201,7 @@ function LoginPage() {
                 </Link>
               </div>
             </div>
+            <div ref={captcha.containerRef} className="flex justify-center" />
             <Button className="h-auto w-full py-3" disabled={loading}>
               {loading ? "..." : "Konekte"}
             </Button>

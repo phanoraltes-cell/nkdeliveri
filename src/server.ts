@@ -38,11 +38,20 @@ type ServerEntry = {
 // navigation redirects (`window.location.href = ...`), which no CSP
 // directive governs, and Google Maps has no code path left at all as of
 // 1208cd1 (migrated to Leaflet/OSM/OSRM).
+//
+// frame-src/connect-src carry an added https://challenges.cloudflare.com —
+// SEC-003 remediation (audit/findings.jsonl, src/hooks/useTurnstile.ts).
+// Cloudflare Turnstile renders its challenge inside a cross-origin iframe
+// from that host and exchanges the verification token over XHR to the same
+// host; without both grants the widget silently fails to load (or floods
+// /api/csp-report with violation reports — see API-002) instead of
+// producing a captchaToken, which would make every signInWithPassword/
+// signUp/resetPasswordForEmail call fail Supabase Auth's own CAPTCHA check.
 const CSP_BASE =
-  "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint";
+  "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src https://challenges.cloudflare.com; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io https://challenges.cloudflare.com; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint";
 
 function buildCsp(nonce: string): string {
-  return `script-src 'self' 'nonce-${nonce}'; ${CSP_BASE}`;
+  return `script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com; ${CSP_BASE}`;
 }
 
 // Companion to the `report-to csp-endpoint` directive above — the

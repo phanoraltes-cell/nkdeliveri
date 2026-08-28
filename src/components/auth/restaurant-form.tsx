@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { HoursPicker, type WeeklyHours } from "@/components/hours-picker";
 import { buildRestaurantHoursMetadata } from "./restaurant-form.logic";
 import { CURRENT_TERMS_VERSION } from "@/lib/legal";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 export function RestaurantForm() {
   const [f, setF] = useState({
@@ -37,6 +38,7 @@ export function RestaurantForm() {
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const { loading, wrap } = useSubmit(() => {});
+  const captcha = useTurnstile();
   const finalizeDocs = useServerFn(finalizeRegistrationDocuments);
 
   function submit(e: React.FormEvent) {
@@ -44,20 +46,25 @@ export function RestaurantForm() {
     if (f.password !== f.confirm) return toast.error("Modpas yo pa menm");
     if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
     wrap(async () => {
-      const { userId, hasSession } = await baseSignUp(f.email, f.password, {
-        account_type: "restaurant",
-        first_name: f.ownerName,
-        phone: f.phone,
-        restaurant_name: f.restaurantName,
-        restaurant_description: f.description,
-        restaurant_cuisine: f.cuisine,
-        restaurant_address: f.address,
-        ...buildRestaurantHoursMetadata(hours),
-        // NKD-022: only sent because the checkbox below is required to
-        // submit (line above) — handle_new_user() stamps
-        // profiles.terms_accepted_at from this, never unconditionally.
-        terms_version: CURRENT_TERMS_VERSION,
-      });
+      const { userId, hasSession } = await baseSignUp(
+        f.email,
+        f.password,
+        {
+          account_type: "restaurant",
+          first_name: f.ownerName,
+          phone: f.phone,
+          restaurant_name: f.restaurantName,
+          restaurant_description: f.description,
+          restaurant_cuisine: f.cuisine,
+          restaurant_address: f.address,
+          ...buildRestaurantHoursMetadata(hours),
+          // NKD-022: only sent because the checkbox below is required to
+          // submit (line above) — handle_new_user() stamps
+          // profiles.terms_accepted_at from this, never unconditionally.
+          terms_version: CURRENT_TERMS_VERSION,
+        },
+        captcha.token ?? undefined,
+      );
       // Runs server-side with the service role — works even without a
       // client session, so logo/cover are never silently lost when email
       // confirmation is pending. Its own try/catch: the account is already
@@ -87,7 +94,7 @@ export function RestaurantForm() {
         }
       }
       return { hasSession };
-    }, "Restoran w kreye! Kont ou an atant valdasyon.");
+    }, "Restoran w kreye! Kont ou an atant valdasyon.").finally(() => captcha.reset());
   }
 
   return (
@@ -216,6 +223,7 @@ export function RestaurantForm() {
             patenarya ak platfòm NK Deliveri.
           </span>
         </label>
+        <div ref={captcha.containerRef} className="flex justify-center" />
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont restoran"}
         </Button>

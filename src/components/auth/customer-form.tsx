@@ -7,6 +7,7 @@ import { useSubmit } from "@/hooks/useSubmit";
 import { FormCard } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legal";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 export function CustomerForm() {
   const [f, setF] = useState({
@@ -20,25 +21,31 @@ export function CustomerForm() {
     terms: false,
   });
   const { loading, wrap } = useSubmit(() => {});
+  const captcha = useTurnstile();
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (f.password !== f.confirm) return toast.error("Modpas yo pa menm");
     if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
     wrap(
       () =>
-        baseSignUp(f.email, f.password, {
-          account_type: "customer",
-          first_name: f.firstName,
-          last_name: f.lastName,
-          phone: f.phone,
-          address: f.address,
-          // NKD-022: only sent because the checkbox below is required to
-          // submit (line above) — handle_new_user() stamps
-          // profiles.terms_accepted_at from this, never unconditionally.
-          terms_version: CURRENT_TERMS_VERSION,
-        }),
+        baseSignUp(
+          f.email,
+          f.password,
+          {
+            account_type: "customer",
+            first_name: f.firstName,
+            last_name: f.lastName,
+            phone: f.phone,
+            address: f.address,
+            // NKD-022: only sent because the checkbox below is required to
+            // submit (line above) — handle_new_user() stamps
+            // profiles.terms_accepted_at from this, never unconditionally.
+            terms_version: CURRENT_TERMS_VERSION,
+          },
+          captcha.token ?? undefined,
+        ),
       "Kont kliyan ou kreye!",
-    );
+    ).finally(() => captcha.reset());
   }
   return (
     <FormCard>
@@ -137,6 +144,7 @@ export function CustomerForm() {
             NK Deliveri.
           </span>
         </label>
+        <div ref={captcha.containerRef} className="flex justify-center" />
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont kliyan"}
         </Button>

@@ -9,6 +9,7 @@ import { translateAuthError } from "@/lib/auth-errors";
 import { Mail } from "lucide-react";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => noIndexMeta("Reyinisyalize modpas — NK Deliveri"),
@@ -19,6 +20,7 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const captcha = useTurnstile();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +38,7 @@ function ForgotPassword() {
 
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: window.location.origin + "/auth/reset-password",
+        captchaToken: captcha.token ?? undefined,
       });
       if (error) throw error;
       setSent(true);
@@ -43,6 +46,7 @@ function ForgotPassword() {
       toast.error(translateAuthError(e));
     } finally {
       setLoading(false);
+      captcha.reset();
     }
   }
 
@@ -74,6 +78,7 @@ function ForgotPassword() {
                   aria-label="Email"
                   className={inputCls()}
                 />
+                <div ref={captcha.containerRef} className="flex justify-center" />
                 <Button className="h-auto w-full py-3" disabled={loading}>
                   {loading ? "Ap voye…" : "Voye lyen an"}
                 </Button>

@@ -9,6 +9,7 @@ import { useSubmit } from "@/hooks/useSubmit";
 import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legal";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 export function DriverForm() {
   const [f, setF] = useState({
@@ -27,6 +28,7 @@ export function DriverForm() {
   const [license, setLicense] = useState<File | null>(null);
   const [vehiclePhoto, setVehiclePhoto] = useState<File | null>(null);
   const { loading, wrap } = useSubmit(() => {});
+  const captcha = useTurnstile();
   const finalizeDocs = useServerFn(finalizeRegistrationDocuments);
 
   function submit(e: React.FormEvent) {
@@ -35,19 +37,24 @@ export function DriverForm() {
     if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
     if (!idDoc) return toast.error("Foto pyès idantite w obligatwa");
     wrap(async () => {
-      const { userId, hasSession } = await baseSignUp(f.email, f.password, {
-        account_type: "driver",
-        first_name: f.firstName,
-        last_name: f.lastName,
-        phone: f.phone,
-        address: f.address,
-        vehicle_type: f.vehicleType,
-        license_plate: f.licensePlate,
-        // NKD-022: only sent because the checkbox below is required to
-        // submit (line above) — handle_new_user() stamps
-        // profiles.terms_accepted_at from this, never unconditionally.
-        terms_version: CURRENT_TERMS_VERSION,
-      });
+      const { userId, hasSession } = await baseSignUp(
+        f.email,
+        f.password,
+        {
+          account_type: "driver",
+          first_name: f.firstName,
+          last_name: f.lastName,
+          phone: f.phone,
+          address: f.address,
+          vehicle_type: f.vehicleType,
+          license_plate: f.licensePlate,
+          // NKD-022: only sent because the checkbox below is required to
+          // submit (line above) — handle_new_user() stamps
+          // profiles.terms_accepted_at from this, never unconditionally.
+          terms_version: CURRENT_TERMS_VERSION,
+        },
+        captcha.token ?? undefined,
+      );
       // Runs server-side with the service role — the ID document (required
       // for admin approval) is never silently dropped if email confirmation
       // is pending or the browser closes right after signup. Its own
@@ -78,7 +85,7 @@ export function DriverForm() {
         );
       }
       return { hasSession };
-    }, "Kont livrè kreye! An atant valdasyon.");
+    }, "Kont livrè kreye! An atant valdasyon.").finally(() => captcha.reset());
   }
 
   return (
@@ -214,6 +221,7 @@ export function DriverForm() {
             NK Deliveri kòm livrè.
           </span>
         </label>
+        <div ref={captcha.containerRef} className="flex justify-center" />
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont livrè"}
         </Button>

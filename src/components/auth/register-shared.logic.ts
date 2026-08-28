@@ -6,7 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
  * (react-refresh/only-export-components cleanup, remediation 07) so that
  * file only exports components. No behavior change, relocation only.
  */
-export async function baseSignUp(email: string, password: string, data: Record<string, string>) {
+export async function baseSignUp(
+  email: string,
+  password: string,
+  data: Record<string, string>,
+  // SEC-003 remediation — see src/hooks/useTurnstile.ts. Optional so this
+  // stays callable (and every existing call site keeps compiling) even
+  // where a caller hasn't been updated to pass one; undefined just means
+  // Supabase Auth's own CAPTCHA check (if enabled) rejects the call.
+  captchaToken?: string,
+) {
   const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
     _email: email.trim(),
     _action: "sign_up",
@@ -22,6 +31,7 @@ export async function baseSignUp(email: string, password: string, data: Record<s
     options: {
       emailRedirectTo: window.location.origin + "/dashboard",
       data,
+      captchaToken,
     },
   });
   if (error) throw error;
