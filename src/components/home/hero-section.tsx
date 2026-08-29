@@ -323,15 +323,15 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-bold text-white"
             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
           >
-            <span>10+ Restoran</span>
+            <span>20+ Restoran</span>
             <span aria-hidden="true" className="text-white/50">
               ·
             </span>
-            <span>50+ Plat</span>
+            <span>100+ Plat</span>
             <span aria-hidden="true" className="text-white/50">
               ·
             </span>
-            <span>~30 min</span>
+            <span>~40 min</span>
           </div>
         </div>
       </div>
