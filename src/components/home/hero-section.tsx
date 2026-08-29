@@ -42,8 +42,8 @@ const heroLivreurPng = "/hero-livreur-v2.png";
 // by WIDTH, not height, so nothing is ever cropped horizontally (the
 // full frame width always shows) and object-position only needs to
 // steer the VERTICAL crop. See the mobile block's own comment for how
-// its container height/gradient were derived from this image's actual
-// content coordinates.
+// its container height was derived from this image's actual content
+// coordinates.
 //
 // -v2 filenames, cropped 1024×1365 (top-anchored, same source): the
 // original 1024×1536 PNG was 1.9 MB with no .webp sibling — 38× the
@@ -117,27 +117,28 @@ type HeroSectionProps = {
  *    below the photo in the same flat --ink-warm panel as before — only
  *    the badge and search bar moved, matching Uber Eats/DoorDash-style
  *    mobile heroes (and the prompt's own mobile diagram). The photo's own
- *    gradient fades it through an amber glow to solid --ink-warm; the
- *    panel below is flat --ink-warm with no image of its own — two
- *    earlier attempts (a plain bg-ink rectangle, then a second
- *    differently-cropped copy of the same photo) both left a visible seam
- *    where the owner could see the join, and a third (fading straight to
- *    neutral --ink) removed the seam but still read as an unbranded black
- *    zone bolted under the photo. One image + a warm-toned fade to the
- *    exact flat color used right after it is what actually reads as one
- *    continuous, on-brand composition.
+ *    fade-to-panel gradient was removed on request (2026-08-28, mobile
+ *    only) — the photo now shows plain/full through its own bottom edge,
+ *    a hard cut straight into the flat --ink-warm panel below. An
+ *    earlier version faded it through an amber glow specifically to
+ *    avoid the visible seam two even-earlier attempts (a plain bg-ink
+ *    rectangle, then a second differently-cropped copy of the same
+ *    photo) both left where the owner could see the join — the hard cut
+ *    reintroduces that same seam by construction; accepted as the
+ *    simpler look this time; revert to a gradient if the seam reads
+ *    poorly in practice.
  */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
     <section id="hero" className="relative overflow-hidden md:min-h-[560px] xl:min-h-[640px]">
-      {/* Mobile/tablet-portrait hero visual — ONE continuous image fading
-          to solid --ink-warm via its own gradient, then handing off to a
-          flat panel of that exact color below (see the content wrapper
-          further down) — no hard seam, because both sides resolve to the
-          same flat color. Own stacking context, real height in normal
-          flow (not absolute), so it never needs a min-height hack to
-          avoid collapsing. Hidden at md+, where the full-bleed desktop
-          version below takes over instead of stacking both.
+      {/* Mobile/tablet-portrait hero visual — the plain photo (no fade
+          overlay, removed 2026-08-28 on request: "senp, sèlman imaj
+          livrè a") handing off with a hard cut into the flat --ink-warm
+          panel below (see the content wrapper further down). Own
+          stacking context, real height in normal flow (not absolute), so
+          it never needs a min-height hack to avoid collapsing. Hidden at
+          md+, where the full-bleed desktop version below takes over
+          instead of stacking both.
 
           aspect-[1024/1365] (not a fixed h-[…px] like the desktop asset
           used) is deliberate:
@@ -169,23 +170,6 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             className="absolute inset-0 h-full w-full object-cover object-top"
           />
         </picture>
-        {/* The paper bag's own logo text now ends at ~89% of this taller
-            crop (was ~97.6% of the shorter 1250px one), leaving genuine
-            room for a smoother fade than the old compressed-into-12%
-            version: transparent through 82%, a light amber glow (not
-            solid) by 90%, solid --ink-warm only in the final 10% — starts
-            slightly before the bag logo fully ends (same tolerance the
-            old version already used), so the handoff to the panel below
-            still reads as one warm gradient, not a hard cut, without
-            washing out the branding. */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(to bottom, transparent 0%, transparent 82%, oklch(0.62 0.19 40 / 0.4) 90%, var(--ink-warm) 100%)",
-          }}
-        />
-
         {/* Badge — BRIEF — HERO MOBIL PWA (2026-08-28): anchored to
             zone-kepi (HERO_MOBILE_ZONES.kepi), not a hand-picked offset.
             -translate-y-1/2 centers it within the zone band regardless of
@@ -201,12 +185,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             was already true of the existing desktop badge/search-button,
             out of scope to fix here ("pa touche desktop"), but a NEW
             element can't ship failing what this brief itself makes
-            non-negotiable. --ink-warm (already used two lines below for
-            this same photo's own fade) measures 17.87:1 with white —
-            reusing an existing token, not inventing a second color
-            system. Also solves the "orange pill can blend into the
-            orange cap" problem an earlier draft used a separate radial-
-            gradient vignette for — a dark pill doesn't need one. */}
+            non-negotiable. --ink-warm (already used by the flat panel
+            this photo hands off into, further down) measures 17.87:1
+            with white — reusing an existing token, not inventing a
+            second color system. Also solves the "orange pill can blend
+            into the orange cap" problem an earlier draft used a
+            separate radial-gradient vignette for — a dark pill doesn't
+            need one. */}
         <div
           className="absolute z-10 left-[max(1.25rem,var(--sal))]"
           style={{
@@ -295,11 +280,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           with hand-placed coordinates otherwise — only max-width
           constrains it, so it can never drift onto the courier regardless
           of viewport width. */}
-      {/* bg-ink-warm here is deliberately the EXACT same flat color the
-          image block's own gradient above fades to — that's what makes
-          the handoff between "image with gradient" and "solid panel"
-          invisible, instead of needing a second image/gradient layer here
-          to fake continuity (the earlier, seam-prone version). Was bg-ink
+      {/* bg-ink-warm here (below md; the panel right after the mobile
+          photo's hard cut, 2026-08-28) is the same warm-toned dark used
+          by the badge/search-button pills anchored on the photo above —
+          one consistent accent color across the mobile hero, not
+          matched to a gradient anymore (the fade this color once blended
+          into was removed on request; the photo now cuts hard into this
+          panel — see the mobile block's own comment). Was bg-ink
           (neutral near-black) until the 2026-08-26 audit: technically
           seamless but unbranded, reading as a plain dark card rather than
           a continuation of the photo above it. pb-10→pb-8 shortens the
