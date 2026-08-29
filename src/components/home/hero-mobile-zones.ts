@@ -41,9 +41,17 @@ export const FACE_EXCLUSION_ZONE = { top: 24, bottom: 43 } as const;
 // below correctly fails on (verified: reverting to 25 fails the guard
 // test, exactly as it should). 23 leaves a full percentage point of
 // clean gap instead of an exact boundary touch.
+//
+// tit (2026-08-28): heading + subtitle moved onto the photo itself
+// (user request: "fè tèks la parèt sou imaj livre a", remove the flat
+// panel entirely) — anchored below zone-pwatrin, over the hands/bag
+// area. Anchored by `top` only (not centered like the other two): this
+// block's height varies with how many lines the heading/subtitle wrap
+// to, and a fixed band bottom is a soft budget, not a hard clip.
 export const HERO_MOBILE_ZONES = {
   kepi: { top: 10, bottom: 23 },
   pwatrin: { top: 51, bottom: 70 },
+  tit: { top: 74, bottom: 97 },
 } as const;
 
 /**

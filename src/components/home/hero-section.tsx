@@ -102,43 +102,49 @@ type HeroSectionProps = {
  *  - md and up: classic full-bleed background-image hero. Image + gradient
  *    absolutely fill the <section>; text content sits in normal flow on
  *    top, capped to ~40% width so it never reaches the courier's zone.
- *  - below md: the courier gets his own top block, with exactly two UI
- *    elements now anchored directly onto anatomical zones of the photo —
- *    badge on the cap, search bar on the chest, face zone left completely
- *    clear (BRIEF — HERO MOBIL PWA, 2026-08-28; see hero-mobile-zones.ts
- *    for the enforced, tested zone contract). This REVERSES an earlier
- *    decision (until 2026-08-27) to never overlay text on this photo at
- *    all, made specifically to avoid the class of bug a naive fixed
- *    object-position overlay causes across varying phone heights — the
- *    brief's own "art direction, not pixel-pinning" method (percentage
- *    zones anchored to the photo's own aspect-ratio box, not the
- *    viewport) is what makes reintroducing an overlay safe this time.
- *    Heading, subtitle, trust stats, and the payment badge still live
- *    below the photo in the same flat --ink-warm panel as before — only
- *    the badge and search bar moved, matching Uber Eats/DoorDash-style
- *    mobile heroes (and the prompt's own mobile diagram). The photo's own
- *    fade-to-panel gradient was removed on request (2026-08-28, mobile
- *    only) — the photo now shows plain/full through its own bottom edge,
- *    a hard cut straight into the flat --ink-warm panel below. An
- *    earlier version faded it through an amber glow specifically to
- *    avoid the visible seam two even-earlier attempts (a plain bg-ink
- *    rectangle, then a second differently-cropped copy of the same
- *    photo) both left where the owner could see the join — the hard cut
- *    reintroduces that same seam by construction; accepted as the
- *    simpler look this time; revert to a gradient if the seam reads
- *    poorly in practice.
+ *  - below md: the courier gets his own top block, now carrying nearly
+ *    all of the hero's content directly on top of it — badge on the cap,
+ *    search bar on the chest, heading+subtitle over the hands/bag area,
+ *    face zone left completely clear (BRIEF — HERO MOBIL PWA,
+ *    2026-08-28, and a follow-up request the same day; see
+ *    hero-mobile-zones.ts for the enforced, tested zone contract). This
+ *    REVERSES an earlier decision (until 2026-08-27) to never overlay
+ *    text on this photo at all, made specifically to avoid the class of
+ *    bug a naive fixed object-position overlay causes across varying
+ *    phone heights — the brief's own "art direction, not pixel-pinning"
+ *    method (percentage zones anchored to the photo's own aspect-ratio
+ *    box, not the viewport) is what makes reintroducing an overlay safe
+ *    this time.
+ *    Went through two more iterations the same day, each on direct
+ *    feedback: first the photo-to-panel fade gradient was removed
+ *    ("koule degrade... retire net... fè li senp"), then the flat
+ *    --ink-warm panel itself was removed entirely and heading+subtitle
+ *    moved onto the photo too ("fè teks la parèt sou imaj livre a...
+ *    retire bg marron an"). Only trust stats and the payment badge still
+ *    render below the photo now, on the page's own plain bg-cream (no
+ *    background of their own) — matching Uber Eats/DoorDash-style
+ *    mobile heroes where the photo carries nearly everything and only
+ *    secondary content trails below it. No gradient/scrim of any kind
+ *    remains on the mobile photo; the two on-photo text blocks
+ *    (heading/subtitle) rely on text-shadow, not a background, for
+ *    legibility — see that block's own comment for why that's different
+ *    from the solid-pill treatment the badge/search-button use.
  */
 export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
   return (
     <section id="hero" className="relative overflow-hidden md:min-h-[560px] xl:min-h-[640px]">
-      {/* Mobile/tablet-portrait hero visual — the plain photo (no fade
-          overlay, removed 2026-08-28 on request: "senp, sèlman imaj
-          livrè a") handing off with a hard cut into the flat --ink-warm
-          panel below (see the content wrapper further down). Own
-          stacking context, real height in normal flow (not absolute), so
-          it never needs a min-height hack to avoid collapsing. Hidden at
-          md+, where the full-bleed desktop version below takes over
-          instead of stacking both.
+      {/* Mobile/tablet-portrait hero visual — the plain photo, no fade
+          overlay of any kind (removed 2026-08-28 on request: "senp,
+          sèlman imaj livrè a") and no panel handoff below it either (the
+          flat --ink-warm panel this used to fade into was itself removed
+          the same day — see this file's own top comment). Badge, search
+          bar, and now heading+subtitle all render directly on top of
+          this image (further down); only trust stats and the payment
+          badge still live below it, on the page's own plain background.
+          Own stacking context, real height in normal flow (not
+          absolute), so it never needs a min-height hack to avoid
+          collapsing. Hidden at md+, where the full-bleed desktop version
+          below takes over instead of stacking both.
 
           aspect-[1024/1365] (not a fixed h-[…px] like the desktop asset
           used) is deliberate:
@@ -248,6 +254,47 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             </button>
           </form>
         </div>
+
+        {/* Heading + subtitle — moved onto the photo (2026-08-28, user
+            request: "fè tèks la parèt sou imaj livre a", the flat panel
+            they used to live in is gone entirely — no more bg-ink-warm
+            below md). Anchored to zone-tit's TOP (not centered like the
+            two elements above): this block's height depends on how many
+            lines the heading/subtitle wrap to, so it flows down from a
+            fixed start instead of trying to center a variable-height
+            block in a fixed band. Text-shadow, not a background pill or
+            a scrim, carries legibility over the busy hands/bag area
+            below it — the brief's own "no uniform scrim" rule, extended
+            here to mean no LOCAL scrim either, per this same request.
+            Same copy as the shared/desktop heading further down — that
+            instance is now hidden below md instead of duplicating text
+            with a subtly different edit two places to keep in sync. */}
+        <div
+          className="absolute z-10 left-[max(1.25rem,var(--sal))] right-[max(1.25rem,var(--sar))]"
+          style={{ top: `${HERO_MOBILE_ZONES.tit.top}%` }}
+        >
+          {/* Both lines white, not text-brand for the second one like the
+              shared/desktop heading uses: this exact spot sits on top of
+              the kraft bag's own printed "NK DELIVERI" logo, which is
+              the SAME orange — text-brand here collided directly with
+              it (Playwright screenshot, 2026-08-28), reading as visual
+              noise instead of two separate things. White stays legible
+              against both the tan bag and the orange shirt around it. */}
+          <h1
+            className="mb-2 font-display text-2xl font-extrabold leading-[1.05] tracking-tight text-white"
+            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.55)" }}
+          >
+            Manje lakay,
+            <br />
+            livre lakay ou
+          </h1>
+          <p
+            className="max-w-[32ch] text-[13px] leading-snug text-white/90"
+            style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
+          >
+            Manje kreyòl otantik, livre cho lakay ou nan mwens pase 45 minit.
+          </p>
+        </div>
       </div>
 
       {/* Desktop/tablet-landscape background image — hidden below md, so
@@ -280,20 +327,17 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           with hand-placed coordinates otherwise — only max-width
           constrains it, so it can never drift onto the courier regardless
           of viewport width. */}
-      {/* bg-ink-warm here (below md; the panel right after the mobile
-          photo's hard cut, 2026-08-28) is the same warm-toned dark used
-          by the badge/search-button pills anchored on the photo above —
-          one consistent accent color across the mobile hero, not
-          matched to a gradient anymore (the fade this color once blended
-          into was removed on request; the photo now cuts hard into this
-          panel — see the mobile block's own comment). Was bg-ink
-          (neutral near-black) until the 2026-08-26 audit: technically
-          seamless but unbranded, reading as a plain dark card rather than
-          a continuation of the photo above it. pb-10→pb-8 shortens the
-          flat run of solid color before the payment badge, since that
-          empty stretch was itself part of what made the panel feel like a
-          separate "black zone" rather than a compact content block. */}
-      <div className="relative z-10 overflow-hidden bg-ink-warm px-5 pt-7 pb-8 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:bg-transparent md:px-0 md:pt-0 md:pb-0">
+      {/* No background below md (2026-08-28, user request: "retire bg
+          marron an" — the flat --ink-warm panel this used to be is
+          gone). Badge, heading, subtitle, and the search form all moved
+          onto the photo itself (above); only the trust stats and payment
+          badge still render here on mobile now, sitting directly on the
+          page's own bg-cream (from the outer wrapper in routes/index.tsx)
+          — their own text colors were dark-ink from the start (payment
+          badge) or switched from white to dark-ink here (trust stats,
+          see that block's own comment) to stay legible against a light
+          background instead of a dark one. */}
+      <div className="relative z-10 overflow-hidden px-5 pt-5 pb-8 md:absolute md:inset-0 md:flex md:items-start md:overflow-visible md:px-0 md:pt-0 md:pb-0">
         <div className="relative mx-auto w-full max-w-[1200px] md:px-5 md:pt-8 lg:pt-14 xl:pt-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -312,28 +356,30 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               Livre lakay ou nan Gonaïves
             </span>
 
-            {/* Heading */}
-            {/* Explicit sizes per breakpoint, not a vw-based clamp() — the
-                heading's actual available width is the narrow text COLUMN
-                (300-480px at md-xl), not the raw viewport, and clamp(vw)
-                doesn't know that: at md it sized the heading for a 900px
-                viewport while the column was only 300px, wrapping "livre
-                lakay ou" across 3-4 lines instead of one (Playwright
-                screenshot). Sized per breakpoint against each column's
-                real width instead. */}
-            <h1 className="mb-5 font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-white md:text-3xl lg:text-5xl xl:text-6xl">
+            {/* Heading — hidden below md (2026-08-28): this exact copy now
+                lives anchored on the mobile photo instead (zone-tit,
+                above). Explicit sizes per breakpoint, not a vw-based
+                clamp() — the heading's actual available width is the
+                narrow text COLUMN (300-480px at md-xl), not the raw
+                viewport, and clamp(vw) doesn't know that: at md it sized
+                the heading for a 900px viewport while the column was
+                only 300px, wrapping "livre lakay ou" across 3-4 lines
+                instead of one (Playwright screenshot). Sized per
+                breakpoint against each column's real width instead. */}
+            <h1 className="mb-5 hidden font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-white md:block lg:text-5xl xl:text-6xl">
               Manje lakay,
               <br />
               <span className="text-brand">livre lakay ou</span>
             </h1>
 
-            {/* Subtitle — shortened from a 3-line sentence to fit 1-2 lines
+            {/* Subtitle — hidden below md, same reason as the heading
+                above. Shortened from a 3-line sentence to fit 1-2 lines
                 on a small phone (was pushing the search CTA well below the
                 first viewport at 320-390px). "Gonaïves" dropped here
                 deliberately, not lost — the badge right above already
                 states it, repeating it a second time in the very next line
                 added length without adding information. */}
-            <p className="mb-7 max-w-[38ch] text-[15px] leading-relaxed text-white/80">
+            <p className="mb-7 hidden max-w-[38ch] text-[15px] leading-relaxed text-white/80 md:block">
               Manje kreyòl otantik, livre cho lakay ou nan mwens pase 45 minit.
             </p>
 
@@ -372,20 +418,24 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
                 equal-weight icon grid below (which pushed the Hero taller
                 than the first viewport on a short phone). Numbers stay
                 readable at a glance; security is a secondary line, not a
-                4th equal box — the brief's own literal target format. */}
-            <div className="mt-6 md:hidden">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-white">
+                4th equal box — the brief's own literal target format.
+                text-ink/text-ink-soft, not white (2026-08-28): this block
+                now sits below the photo on the page's own light bg-cream,
+                not the removed dark panel — white-on-cream would be
+                unreadable. */}
+            <div className="mt-2 md:hidden">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-ink">
                 <span>10+ Restoran</span>
-                <span aria-hidden="true" className="text-white/40">
+                <span aria-hidden="true" className="text-ink-soft/50">
                   ·
                 </span>
                 <span>50+ Plat</span>
-                <span aria-hidden="true" className="text-white/40">
+                <span aria-hidden="true" className="text-ink-soft/50">
                   ·
                 </span>
                 <span>~30 min</span>
               </div>
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-white/60">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-soft">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Peman an sekirite
               </p>
