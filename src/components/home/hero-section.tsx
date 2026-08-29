@@ -81,9 +81,9 @@ const heroMobilePng = "/bg-hero-v2.png";
 // fix at every width in the QA list.
 
 const HERO_STATS = [
-  { n: "10+", l: "Restoran", Icon: Store },
-  { n: "50+", l: "Plat disponib", Icon: UtensilsCrossed },
-  { n: "30 min", l: "Livrezon mwayèn", Icon: Clock },
+  { n: "20+", l: "Restoran", Icon: Store },
+  { n: "100+", l: "Plat disponib", Icon: UtensilsCrossed },
+  { n: "40 min", l: "Livrezon mwayèn", Icon: Clock },
   { n: "Sekirite", l: "Peman an sekirite", Icon: ShieldCheck },
 ];
 
