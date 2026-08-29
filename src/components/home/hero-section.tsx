@@ -453,22 +453,13 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               </button>
             </form>
 
-            {/* Security line only — mobile only. The numeric stats row
-                that used to render right above this (10+ Restoran · 50+
-                Plat · ~30 min) moved onto the photo itself, 2026-08-28
-                ("chanje koulè yo pou li ka vizib sou imaj la tou") —
-                duplicated there, not repositioned here, same pattern as
-                badge/search/heading. This security line wasn't part of
-                that request and stays put, below the photo on the
-                page's own light bg-cream — already switched from white
-                to text-ink-soft in the previous commit alongside the
-                numeric row, so no further color change needed here. */}
-            <div className="mt-2 md:hidden">
-              <p className="flex items-center gap-1.5 text-xs text-ink-soft">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                Peman an sekirite
-              </p>
-            </div>
+            {/* The mobile-only security line that used to render here
+                (below the photo, next to the numeric stats row before
+                that moved onto the photo) was removed entirely
+                2026-08-28 on request ("efase seksyon peman sekirize...
+                Peman an sekirite"). Desktop's own security indicator
+                lives independently in the full-icon-treatment grid
+                below (HERO_STATS' "Sekirite" entry) — untouched. */}
 
             {/* Full icon treatment — md+ only, where there's no vertical
                 constraint forcing the compact version above. */}
@@ -489,29 +480,27 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
 
           {/* Payment badge — anchored to the Hero's own content container
               (this div), never the viewport, so it can't drift off-frame
-              at an unusual viewport size. Normal flow below md (matches
-              the mobile diagram's own last row); pinned bottom-right of
-              the hero at md+.
-              Frame (bg-white/95, rounded-2xl, shadow, backdrop-blur,
-              padding) moved to md:-only (2026-08-28, user request:
-              "anleve div ki ankadre metod peman yo") — mobile now renders
-              the label + logos as a plain unframed row directly on the
-              page's own bg-cream; desktop keeps the exact same white
-              pill it always had, unchanged, just re-expressed as
-              md:-prefixed classes instead of base ones. */}
+              at an unusual viewport size. Hidden entirely below md
+              (2026-08-28, user request: "efase seksyon peman
+              sekirize... Peman disponib") — pinned bottom-right of the
+              hero at md+, unchanged there. Its frame (bg-white/95,
+              rounded-2xl, shadow, backdrop-blur, padding) was already
+              md:-only from the previous commit (mobile used to render
+              this unframed before today's request removed it from
+              mobile altogether); left as md:-prefixed since only
+              desktop reaches these classes now anyway. */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3 md:absolute md:right-5 md:bottom-8 md:mt-0 md:flex-nowrap md:rounded-2xl md:bg-white/95 md:px-5 md:py-3 md:shadow-[0_12px_28px_rgba(0,0,0,0.15)] md:backdrop-blur"
+            className="hidden md:absolute md:right-5 md:bottom-8 md:inline-flex md:max-w-full md:flex-nowrap md:items-center md:gap-x-3 md:gap-y-2 md:rounded-2xl md:bg-white/95 md:px-5 md:py-3 md:shadow-[0_12px_28px_rgba(0,0,0,0.15)] md:backdrop-blur"
           >
-            {/* w-full forces this label onto its own line inside the
-                flex-wrap row on mobile (so the badge reads as label line +
-                icons line, not an unpredictable mid-row wrap) — reverts to
-                auto width from `sm:` up, where there's room to sit inline. */}
-            <span className="w-full text-xs font-semibold whitespace-nowrap text-ink sm:w-auto sm:text-sm">
-              Peman disponib
-            </span>
+            {/* Was w-full sm:w-auto (forced this label onto its own line
+                above the icons in the mobile flex-wrap row) — simplified
+                to one fixed width now that the whole badge is hidden
+                below md: at the only breakpoint this ever renders,
+                flex-nowrap never wraps in the first place. */}
+            <span className="text-sm font-semibold whitespace-nowrap text-ink">Peman disponib</span>
             <img
               src="/moncash-logo-hero.png"
               alt="MonCash"
