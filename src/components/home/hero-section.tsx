@@ -198,11 +198,19 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             into the orange cap" problem an earlier draft used a
             separate radial-gradient vignette for — a dark pill doesn't
             need one. */}
+        {/* Centered (2026-08-28, user request) — was left-aligned at
+            left-[max(1.25rem,var(--sal))]. left-1/2 + translate(-50%,
+            -50%) centers it both ways from a single point; the two
+            translate axes have to live in the same transform, since a
+            second `-translate-x-1/2` Tailwind class would set its own
+            `transform` and silently overwrite the inline
+            translateY(-50%) used to center in the zone band, not stack
+            with it. */}
         <div
-          className="absolute z-10 left-[max(1.25rem,var(--sal))]"
+          className="absolute z-10 left-1/2"
           style={{
             top: `${zoneCenterPercent(HERO_MOBILE_ZONES.kepi)}%`,
-            transform: "translateY(-50%)",
+            transform: "translate(-50%, -50%)",
           }}
         >
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-ink-warm px-4 py-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)]">
@@ -255,33 +263,50 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
           </form>
         </div>
 
-        {/* Heading + subtitle — moved onto the photo (2026-08-28, user
-            request: "fè tèks la parèt sou imaj livre a", the flat panel
-            they used to live in is gone entirely — no more bg-ink-warm
-            below md). Anchored to zone-tit's TOP (not centered like the
-            two elements above): this block's height depends on how many
-            lines the heading/subtitle wrap to, so it flows down from a
-            fixed start instead of trying to center a variable-height
-            block in a fixed band. Text-shadow, not a background pill or
-            a scrim, carries legibility over the busy hands/bag area
-            below it — the brief's own "no uniform scrim" rule, extended
-            here to mean no LOCAL scrim either, per this same request.
-            Same copy as the shared/desktop heading further down — that
-            instance is now hidden below md instead of duplicating text
-            with a subtly different edit two places to keep in sync. */}
+        {/* Heading + subtitle + trust stats — moved onto the photo
+            (2026-08-28, user requests: "fè tèks la parèt sou imaj livre
+            a", then "santre" the text and move the stats line onto the
+            image too "pou li ka vizib sou imaj la tou"). The flat panel
+            these used to live in is gone entirely — no more bg-ink-warm
+            below md. Centered (text-center + a centered flex column for
+            the stats row), replacing the original left-aligned block.
+            Anchored to zone-tit's TOP (not centered like kepi/pwatrin
+            above): this block's height depends on how many lines the
+            heading/subtitle wrap to plus the stats row, so it flows down
+            from a fixed start instead of trying to center a
+            variable-height block in a fixed band. Text-shadow, not a
+            background pill or a scrim, carries legibility over the busy
+            hands/bag area below it — the brief's own "no uniform scrim"
+            rule, extended here to mean no LOCAL scrim either, per the
+            same request. Heading/subtitle copy matches the shared/desktop
+            instance further down — that one is hidden below md instead
+            of duplicating text with a subtly different edit two places
+            to keep in sync; the stats row duplicates HERO_STATS' first
+            three entries by hand (compact single-line format, not the
+            icon-grid desktop uses — same divergence the original
+            trust-compact block already had before this move).
+            mb-1/mt-1.5 (not mb-2/mt-3) on the heading/stats-row below:
+            measured margin between this block's bottom and the photo's
+            own bottom edge at only 3.8px on iPhone SE (375×667, the
+            shortest supported height) before this tightening — enough
+            to fit today, but no real safety margin against any font-
+            metric variance. Tightened to 13.8px/19px/26.7px measured
+            margin across all 3 required breakpoints (SE/iPhone 14/
+            Pixel 8) instead. */}
         <div
-          className="absolute z-10 left-[max(1.25rem,var(--sal))] right-[max(1.25rem,var(--sar))]"
+          className="absolute z-10 left-[max(1.25rem,var(--sal))] right-[max(1.25rem,var(--sar))] text-center"
           style={{ top: `${HERO_MOBILE_ZONES.tit.top}%` }}
         >
-          {/* Both lines white, not text-brand for the second one like the
-              shared/desktop heading uses: this exact spot sits on top of
-              the kraft bag's own printed "NK DELIVERI" logo, which is
-              the SAME orange — text-brand here collided directly with
-              it (Playwright screenshot, 2026-08-28), reading as visual
-              noise instead of two separate things. White stays legible
-              against both the tan bag and the orange shirt around it. */}
+          {/* Both heading lines white, not text-brand for the second one
+              like the shared/desktop heading uses: this exact spot sits
+              on top of the kraft bag's own printed "NK DELIVERI" logo,
+              which is the SAME orange — text-brand here collided
+              directly with it (Playwright screenshot, 2026-08-28),
+              reading as visual noise instead of two separate things.
+              White stays legible against both the tan bag and the
+              orange shirt around it. */}
           <h1
-            className="mb-2 font-display text-2xl font-extrabold leading-[1.05] tracking-tight text-white"
+            className="mb-1 font-display text-2xl font-extrabold leading-[1.05] tracking-tight text-white"
             style={{ textShadow: "0 2px 10px rgba(0,0,0,0.55)" }}
           >
             Manje lakay,
@@ -289,11 +314,25 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             livre lakay ou
           </h1>
           <p
-            className="max-w-[32ch] text-[13px] leading-snug text-white/90"
+            className="mx-auto max-w-[32ch] text-[13px] leading-snug text-white/90"
             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
           >
             Manje kreyòl otantik, livre cho lakay ou nan mwens pase 45 minit.
           </p>
+          <div
+            className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-bold text-white"
+            style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
+          >
+            <span>10+ Restoran</span>
+            <span aria-hidden="true" className="text-white/50">
+              ·
+            </span>
+            <span>50+ Plat</span>
+            <span aria-hidden="true" className="text-white/50">
+              ·
+            </span>
+            <span>~30 min</span>
+          </div>
         </div>
       </div>
 
@@ -414,28 +453,18 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               </button>
             </form>
 
-            {/* Compact trust indicators — mobile only, replacing the 4-way
-                equal-weight icon grid below (which pushed the Hero taller
-                than the first viewport on a short phone). Numbers stay
-                readable at a glance; security is a secondary line, not a
-                4th equal box — the brief's own literal target format.
-                text-ink/text-ink-soft, not white (2026-08-28): this block
-                now sits below the photo on the page's own light bg-cream,
-                not the removed dark panel — white-on-cream would be
-                unreadable. */}
+            {/* Security line only — mobile only. The numeric stats row
+                that used to render right above this (10+ Restoran · 50+
+                Plat · ~30 min) moved onto the photo itself, 2026-08-28
+                ("chanje koulè yo pou li ka vizib sou imaj la tou") —
+                duplicated there, not repositioned here, same pattern as
+                badge/search/heading. This security line wasn't part of
+                that request and stays put, below the photo on the
+                page's own light bg-cream — already switched from white
+                to text-ink-soft in the previous commit alongside the
+                numeric row, so no further color change needed here. */}
             <div className="mt-2 md:hidden">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-ink">
-                <span>10+ Restoran</span>
-                <span aria-hidden="true" className="text-ink-soft/50">
-                  ·
-                </span>
-                <span>50+ Plat</span>
-                <span aria-hidden="true" className="text-ink-soft/50">
-                  ·
-                </span>
-                <span>~30 min</span>
-              </div>
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-soft">
+              <p className="flex items-center gap-1.5 text-xs text-ink-soft">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Peman an sekirite
               </p>
@@ -462,12 +491,19 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               (this div), never the viewport, so it can't drift off-frame
               at an unusual viewport size. Normal flow below md (matches
               the mobile diagram's own last row); pinned bottom-right of
-              the hero at md+. */}
+              the hero at md+.
+              Frame (bg-white/95, rounded-2xl, shadow, backdrop-blur,
+              padding) moved to md:-only (2026-08-28, user request:
+              "anleve div ki ankadre metod peman yo") — mobile now renders
+              the label + logos as a plain unframed row directly on the
+              page's own bg-cream; desktop keeps the exact same white
+              pill it always had, unchanged, just re-expressed as
+              md:-prefixed classes instead of base ones. */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_12px_28px_rgba(0,0,0,0.15)] backdrop-blur sm:gap-x-3 sm:px-5 sm:py-3 md:absolute md:right-5 md:bottom-8 md:mt-0 md:flex-nowrap"
+            className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3 md:absolute md:right-5 md:bottom-8 md:mt-0 md:flex-nowrap md:rounded-2xl md:bg-white/95 md:px-5 md:py-3 md:shadow-[0_12px_28px_rgba(0,0,0,0.15)] md:backdrop-blur"
           >
             {/* w-full forces this label onto its own line inside the
                 flex-wrap row on mobile (so the badge reads as label line +
