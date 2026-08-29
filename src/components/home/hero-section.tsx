@@ -407,7 +407,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
                 breakpoint against each column's real width instead. */}
             <h1 className="mb-5 hidden font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-white md:block lg:text-5xl xl:text-6xl">
               Manje lakay,
-              <br />
+              
               <span className="text-brand">livre lakay ou</span>
             </h1>
 
