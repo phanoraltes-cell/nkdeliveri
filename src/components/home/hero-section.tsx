@@ -281,10 +281,25 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             same request. Heading/subtitle copy matches the shared/desktop
             instance further down — that one is hidden below md instead
             of duplicating text with a subtly different edit two places
-            to keep in sync; the stats row duplicates HERO_STATS' first
-            three entries by hand (compact single-line format, not the
-            icon-grid desktop uses — same divergence the original
-            trust-compact block already had before this move).
+            to keep in sync.
+            Stats row (2026-08-29, user request: icons/logos were missing
+            here, and "Sekirite" wasn't shown at all): now reads
+            HERO_STATS[i].n directly for every number instead of a
+            hardcoded copy — the earlier hand-copied version silently
+            went stale the moment HERO_STATS' own numbers were updated
+            (10+/50+/30 min → 20+/100+/40 min) elsewhere, exactly the
+            failure mode a duplicated literal invites. Captions stay
+            short-form and hardcoded, same divergence-from-desktop the
+            original trust-compact block already had (desktop's own
+            labels — "Plat disponib", "Livrezon mwayèn", "Peman an
+            sekirite" — are captions under a large number, not inline
+            text; "min"/"Sekirite" already read as complete on one line
+            without theirs). Icons are the same lucide components
+            HERO_STATS already carries per entry (Store/UtensilsCrossed/
+            Clock/ShieldCheck) — indexed directly rather than mapped,
+            since this is a fixed 4-item, fixed-order list, not a
+            variable one; a .map() here would buy no flexibility this
+            file actually uses.
             mb-1/mt-1.5 (not mb-2/mt-3) on the heading/stats-row below:
             measured margin between this block's bottom and the photo's
             own bottom edge at only 3.8px on iPhone SE (375×667, the
@@ -320,18 +335,25 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             Manje kreyòl otantik, livre cho lakay ou nan mwens pase 45 minit.
           </p>
           <div
-            className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-bold text-white"
+            className="mt-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-bold text-white"
             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
           >
-            <span>20+ Restoran</span>
-            <span aria-hidden="true" className="text-white/50">
-              ·
+            <span className="inline-flex items-center gap-1">
+              <Store className="h-3 w-3 shrink-0" aria-hidden="true" />
+              {HERO_STATS[0].n} Restoran
             </span>
-            <span>100+ Plat</span>
-            <span aria-hidden="true" className="text-white/50">
-              ·
+            <span className="inline-flex items-center gap-1">
+              <UtensilsCrossed className="h-3 w-3 shrink-0" aria-hidden="true" />
+              {HERO_STATS[1].n} Plat
             </span>
-            <span>~40 min</span>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+              {HERO_STATS[2].n}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden="true" />
+              {HERO_STATS[3].n}
+            </span>
           </div>
         </div>
       </div>
@@ -407,7 +429,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
                 breakpoint against each column's real width instead. */}
             <h1 className="mb-5 hidden font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-white md:block lg:text-5xl xl:text-6xl">
               Manje lakay,
-              
+              <br />
               <span className="text-brand">livre lakay ou</span>
             </h1>
 
