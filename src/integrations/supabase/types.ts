@@ -2253,6 +2253,8 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          /** Tach 8 Objektif B — videyo yon plat siyati, restaurant-videos bucket. */
+          dish_video_url: string | null;
           id: string;
           /** Manual "louvri/fèmen" toggle — AND-gated in is_restaurant_open() alongside opening_hours. Default true via backfill so no pre-existing restaurant goes dark on migration. */
           is_open: boolean;
@@ -2270,6 +2272,8 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          /** Tach 8 Objektif B — lis URL foto ekip la (jsonb tablo tèks), DEFAULT '[]'. */
+          team_photos: Json;
           updated_at: string;
         };
         Insert: {
@@ -2280,6 +2284,7 @@ export type Database = {
           cuisine?: string | null;
           delivery_fee?: number;
           description?: string | null;
+          dish_video_url?: string | null;
           id?: string;
           is_open?: boolean;
           lat?: number | null;
@@ -2296,6 +2301,7 @@ export type Database = {
           rating?: number | null;
           slug: string;
           status?: Database["public"]["Enums"]["restaurant_status"];
+          team_photos?: Json;
           updated_at?: string;
         };
         Update: {
@@ -2306,6 +2312,7 @@ export type Database = {
           cuisine?: string | null;
           delivery_fee?: number;
           description?: string | null;
+          dish_video_url?: string | null;
           id?: string;
           is_open?: boolean;
           lat?: number | null;
@@ -2322,6 +2329,7 @@ export type Database = {
           rating?: number | null;
           slug?: string;
           status?: Database["public"]["Enums"]["restaurant_status"];
+          team_photos?: Json;
           updated_at?: string;
         };
         Relationships: [];
@@ -5182,10 +5190,12 @@ export type Database = {
           _cover_url: string;
           _cuisine: string;
           _description: string;
+          _dish_video_url?: string;
           _logo_url: string;
           _name: string;
           _phone: string;
           _restaurant_id: string;
+          _team_photos?: Json;
         };
         Returns: {
           address: string | null;
@@ -5195,7 +5205,9 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
+          is_open: boolean;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -5210,6 +5222,7 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
         };
         SetofOptions: {

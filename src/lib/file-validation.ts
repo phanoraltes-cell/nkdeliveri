@@ -29,6 +29,12 @@ export const AD_VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime"
 export const UPLOAD_LIMITS = {
   "menu-photos": { maxBytes: 5 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
   "restaurant-assets": { maxBytes: 5 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
+  // Tach 8 Objektif B — bucket separe (pa restaurant-assets, ki gen yon
+  // limit 5MB imaj-sèlman aplike nan motè Storage a) pou videyo yon plat
+  // siyati, menm limit/tip ak ads-media-videos. Valè literal (pa
+  // AD_VIDEO_MAX_BYTES) espre: sa a deklare PI WO pase AD_VIDEO_MAX_BYTES
+  // nan fichye a — yon referans dirèk ta yon TDZ ReferenceError.
+  "restaurant-videos": { maxBytes: 50 * 1024 * 1024, allowedTypes: AD_VIDEO_MIME_TYPES },
   avatars: { maxBytes: 3 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
   "driver-documents": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payment-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },

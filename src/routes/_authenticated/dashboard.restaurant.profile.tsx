@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Upload } from "lucide-react";
+import { Upload, X, Video } from "lucide-react";
 import { inputClsCompact as inputCls } from "@/lib/utils";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/restaurant/profi
   component: RestaurantProfile,
 });
 
-async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: File) {
+async function uploadAsset(restaurantId: string, kind: "logo" | "cover" | "team", file: File) {
   assertValidUploadFile(file, "restaurant-assets");
   const path = `${restaurantId}/${kind}-${Date.now()}-${file.name}`;
   const { error } = await supabase.storage
@@ -31,6 +31,19 @@ async function uploadAsset(restaurantId: string, kind: "logo" | "cover", file: F
     .upload(path, file, { upsert: false });
   if (error) throw error;
   return supabase.storage.from("restaurant-assets").getPublicUrl(path).data.publicUrl;
+}
+
+// Tach 8 Objektif B — bucket separe pou videyo (wè migrasyon 20260830090000
+// pou poukisa: restaurant-assets se imaj-sèlman, 5MB, aplike nan motè
+// Storage a).
+async function uploadDishVideo(restaurantId: string, file: File) {
+  assertValidUploadFile(file, "restaurant-videos");
+  const path = `${restaurantId}/dish-video-${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage
+    .from("restaurant-videos")
+    .upload(path, file, { upsert: false });
+  if (error) throw error;
+  return supabase.storage.from("restaurant-videos").getPublicUrl(path).data.publicUrl;
 }
 
 function RestaurantProfile() {
@@ -54,6 +67,16 @@ function RestaurantProfile() {
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [hours, setHours] = useState<WeeklyHours>({});
+  // Tach 8 Objektif B — `teamPhotos` se sous verite kouran an (ranje ki
+  // deja sove PLIS/MENN retire nan sesyon sa a); `newTeamPhotoFiles` se
+  // fichye ki fèk chwazi, poko telechaje — telechajman reyèl la fèt
+  // dedan `saveProfile` sèlman (menm moman ak logo/cover), pa imedyatman
+  // lè yon fichye chwazi, pou pa kite yon fichye òfelen si itilizatè a
+  // kite paj la san l pa sove.
+  const [teamPhotos, setTeamPhotos] = useState<string[]>([]);
+  const [newTeamPhotoFiles, setNewTeamPhotoFiles] = useState<File[]>([]);
+  const [dishVideo, setDishVideo] = useState<File | null>(null);
+  const [dishVideoUrl, setDishVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!restaurant) return;
@@ -64,6 +87,8 @@ function RestaurantProfile() {
       phone: restaurant.phone ?? "",
       address: restaurant.address ?? "",
     });
+    setTeamPhotos((restaurant.team_photos as string[] | null) ?? []);
+    setDishVideoUrl(restaurant.dish_video_url ?? null);
     const h = (restaurant.opening_hours as WeeklyHours | null) ?? {};
     const next: WeeklyHours = {};
     for (const d of HOURS_DAYS) {
@@ -84,6 +109,12 @@ function RestaurantProfile() {
       let coverUrl: string | null = null;
       if (logo) logoUrl = await uploadAsset(restaurant.id, "logo", logo);
       if (cover) coverUrl = await uploadAsset(restaurant.id, "cover", cover);
+      const newPhotoUrls = await Promise.all(
+        newTeamPhotoFiles.map((file) => uploadAsset(restaurant.id, "team", file)),
+      );
+      const finalTeamPhotos = [...teamPhotos, ...newPhotoUrls];
+      let newDishVideoUrl: string | null = null;
+      if (dishVideo) newDishVideoUrl = await uploadDishVideo(restaurant.id, dishVideo);
       // The generator types these args as non-nullable because the SQL
       // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
       // NULL for these columns regardless, so these casts just correct an
@@ -97,13 +128,19 @@ function RestaurantProfile() {
         _address: (f.address || null) as string,
         _logo_url: logoUrl as string,
         _cover_url: coverUrl as string,
+        _team_photos: finalTeamPhotos,
+        _dish_video_url: newDishVideoUrl as string,
       });
       if (error) throw error;
+      return { finalTeamPhotos };
     },
-    onSuccess: () => {
+    onSuccess: ({ finalTeamPhotos }) => {
       toast.success("Pwofil mizajou");
       setLogo(null);
       setCover(null);
+      setTeamPhotos(finalTeamPhotos);
+      setNewTeamPhotoFiles([]);
+      setDishVideo(null);
       qc.invalidateQueries({ queryKey: ["me-restaurant-full"] });
     },
     onError: (e) => toast.error(e.message),
@@ -202,6 +239,84 @@ function RestaurantProfile() {
               onChange={(e) => setCover(e.target.files?.[0] ?? null)}
             />
           </label>
+        </div>
+
+        {/* Tach 8 Objektif B — paj piblik restoran an (restaurants.$slug.tsx)
+            montre sa yo nan yon seksyon "Sou nou" apre meni an. */}
+        <div className="mt-5 border-t border-brand-soft/40 pt-4">
+          <span className="mb-2 block text-xs font-bold uppercase text-ink-soft">
+            Foto ekip la (paj piblik)
+          </span>
+          {(teamPhotos.length > 0 || newTeamPhotoFiles.length > 0) && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {teamPhotos.map((url, i) => (
+                <div key={url} className="group relative">
+                  <img
+                    src={url}
+                    alt={`Ekip ${i + 1}`}
+                    width={72}
+                    height={72}
+                    className="h-[72px] w-[72px] rounded-xl border border-brand-soft/60 object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Retire foto sa a"
+                    onClick={() => setTeamPhotos((prev) => prev.filter((u) => u !== url))}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white shadow"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {newTeamPhotoFiles.map((file, i) => (
+                <div
+                  key={`${file.name}-${i}`}
+                  className="flex h-[72px] w-[72px] items-center justify-center rounded-xl border-2 border-dashed border-brand-soft/60 p-1 text-center text-[10px] text-ink-soft"
+                >
+                  {file.name}
+                </div>
+              ))}
+            </div>
+          )}
+          <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-soft px-3 py-2 text-xs text-ink-soft hover:bg-brand-soft/20">
+            <Upload className="h-3.5 w-3.5" /> Ajoute foto ekip
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                if (files.length) setNewTeamPhotoFiles((prev) => [...prev, ...files]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 border-t border-brand-soft/40 pt-4">
+          <span className="mb-2 block text-xs font-bold uppercase text-ink-soft">
+            Videyo yon plat siyati (paj piblik)
+          </span>
+          {dishVideoUrl && !dishVideo && (
+            <video
+              src={dishVideoUrl}
+              controls
+              muted
+              className="mb-2 max-h-40 rounded-xl border border-brand-soft/60"
+            />
+          )}
+          <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-brand-soft px-3 py-2 text-xs text-ink-soft hover:bg-brand-soft/20">
+            <Video className="h-3.5 w-3.5" />
+            {dishVideo?.name || (dishVideoUrl ? "Chanje videyo a" : "Ajoute yon videyo")}
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              className="hidden"
+              onChange={(e) => setDishVideo(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="mt-1 text-xs text-ink-soft">Maksimòm 50MB — mp4, webm, oswa mov.</p>
         </div>
 
         <Button

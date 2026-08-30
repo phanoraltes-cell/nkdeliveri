@@ -7,7 +7,7 @@ import { formatHTG } from "@/lib/format";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Star, Heart, Store } from "lucide-react";
+import { Plus, ArrowLeft, Star, Heart, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
@@ -435,6 +435,55 @@ function RestaurantPage() {
             </div>
           );
         })}
+
+        {/* Tach 8 Objektif B — deskripsyon la te DEJA egziste (kolòn +
+            fòm pwopriyetè a) men li pa t janm afiche isit la, sèlman
+            itilize pou meta SEO pi wo a. Foto ekip/videyo plat se nouvo
+            chan. Seksyon antye a pa afiche ditou si restoran an pa ranpli
+            okenn nan yo. */}
+        {!!(r.description || (r.team_photos as string[])?.length || r.dish_video_url) && (
+          <div className="mt-10 border-t border-brand-soft/60 pt-6">
+            <h2 className="mb-4 font-display text-xl font-extrabold">Sou nou</h2>
+            {r.description && (
+              <p className="mb-5 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
+                {r.description}
+              </p>
+            )}
+            {!!(r.team_photos as string[])?.length && (
+              <div className="mb-5">
+                <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-ink">
+                  <Users className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Ekip la
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {(r.team_photos as string[]).map((url, i) => (
+                    <img
+                      key={url}
+                      src={url}
+                      alt={`Ekip ${r.name} ${i + 1}`}
+                      loading="lazy"
+                      width={100}
+                      height={100}
+                      className="h-24 w-24 rounded-2xl object-cover shadow-brand-xs"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {r.dish_video_url && (
+              <div>
+                <h3 className="mb-3 text-sm font-bold text-ink">Videyo yon plat siyati</h3>
+                <video
+                  src={r.dish_video_url}
+                  controls
+                  muted
+                  loop
+                  playsInline
+                  className="w-full max-w-md rounded-2xl shadow-brand-xs"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-10 border-t border-brand-soft/60 pt-6">
           <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-extrabold">
