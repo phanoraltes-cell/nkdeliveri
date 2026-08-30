@@ -51,7 +51,7 @@ const PLACEMENT_MEDIA_FRAME: Record<string, string | null> = {
   search_results: null,
   restaurant_page: "aspect-[23/15]", // matches sponsored-section.tsx's real 230×150 card exactly
   dashboard: null,
-  popup: "aspect-[4/3]", // matches popup-ad-modal.tsx's own fallback frame
+  popup: "aspect-[16/9]", // matches popup-ad-modal.tsx's hero image frame (premium redesign)
 };
 
 // Fields the redesigned form still has no editor for (cta_label,
@@ -650,15 +650,19 @@ function PlacementForm({
               dimansyon imaj/videyo a (media.mediaWidth/mediaHeight,
               mezire otomatikman anwo pa MediaUploader) — tonbe tounen sou
               kad fiks plasman an sèlman si dimansyon yo pa ko mezire.
-              "popup" se yon EKSEPSYON deklare (demand itilizatè apre
-              premye vèsyon an): li itilize yon wotè FIKS toujou (h-40),
-              JAMÈ rapò dimansyon dinamik — se egzakteman sa ki te lakòz
-              popup la parèt "plen ekran" pou yon imaj vètikal, wè
-              popup-ad-modal.tsx pou menm kòmantè a. */}
+              "popup" se yon EKSEPSYON deklare (redesign "Premium Sponsored
+              Advertisement Card"): li itilize yon rapò dimansyon FIKS
+              toujou (16/9) ak `object-cover`, JAMÈ rapò dimansyon dinamik
+              nan imaj la — menm tretman ak "hero" imaj piblisite a nan
+              popup-ad-modal.tsx (ranplase ansyen kad h-40/object-contain
+              lan, ki te la sèlman kòm premye repons rapid ak bug "plen
+              ekran" an; kounye a rapò fiks 16/9 la rezoud menm bug la yon
+              fason pi solid — wotè toujou pwopòsyonèl a largè a, jamè yon
+              wotè imans pou yon imaj vètikal). */}
           <div
             className={
               f.placement === "popup"
-                ? "flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-ink/5"
+                ? "aspect-[16/9] overflow-hidden rounded-2xl bg-ink/5"
                 : media.mediaWidth && media.mediaHeight
                   ? "overflow-hidden rounded-2xl bg-ink/5"
                   : `overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`
@@ -678,7 +682,11 @@ function PlacementForm({
                 title: f.title || "Apèsi anons",
               }}
               icon={Megaphone}
-              className="h-full w-full object-contain"
+              className={
+                f.placement === "popup"
+                  ? "h-full w-full object-cover"
+                  : "h-full w-full object-contain"
+              }
             />
           </div>
         </div>

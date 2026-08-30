@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Megaphone, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Megaphone, X, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useActivePlacements } from "@/hooks/useActivePlacements";
 import { AdMedia } from "@/components/ads/ad-media";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 // Demand itilizatè apre premye vèsyon an (Tach 5): 3 chanjman konpòtman
 // eksplisit — (1) tay redwi, jamè "plen ekran" kèlkeswa rapò dimansyon
@@ -89,6 +90,11 @@ export function PopupAdModal() {
   const hasMedia = !!(ad.media_url || ad.image_url || ad.restaurant_cover_url);
   const href =
     ad.link_url ?? (ad.restaurant_slug ? `/restaurants/${ad.restaurant_slug}` : undefined);
+  // `cta_label` — chan ki egziste deja nan `sponsored_placements` (jere pa
+  // `create_sponsored_placement_secure`/`update_sponsored_placement_secure`,
+  // wè types.ts) men ki pa gen editè admin ankò — li ka rete vid pou
+  // pifò anons, "Wè plis" la se yon repli, pa yon valè envante.
+  const ctaLabel = ad.cta_label || "Wè plis";
 
   return (
     <Dialog
@@ -100,104 +106,134 @@ export function PopupAdModal() {
         if (!next) close();
       }}
     >
-      {/* Tay KONPAKT eksplisit — `w-[calc(100%-2rem)]` garanti omwen 1rem
-          respire chak bò sou yon ti ekran telefòn, `max-w-sm` (384px)
-          plafonn li sou desktop, `max-h-[80vh]` + `overflow-y-auto`
-          anpeche l janm depase wotè ekran an kèlkeswa longè deskripsyon
-          an. Ansyen vèsyon an te kite imaj la deside wotè kontenè a atravè
-          `aspectRatio` sou LARGÈ w-full (100vw sou mobil) — pou yon imaj
-          vètikal sa te vin "plen ekran". Kounye a se lekontrè: imaj la
-          BONE a `h-40` FIKS (pi ba), li redwi pwòp li anndan bwat sa a
-          (object-contain, jamè koupe) olye kontenè a grandi pou li. */}
-      <DialogContent className="w-[calc(100%-2rem)] max-w-sm max-h-[80vh] gap-0 overflow-y-auto rounded-3xl p-0 [&>button]:hidden">
+      {/* Redesign "Premium Sponsored Advertisement Card" (demand itilizatè)
+          — sèlman prezantasyon/UI: menm Radix Dialog (backdrop dim+blur,
+          animasyon fade+zoom, focus-trap, Esc, aria-labelledby/describedby
+          otomatik via DialogTitle/DialogDescription) ak menm konpòtman
+          karousèl/fèmti/CTA ki te la deja, jis abiye pi byen.
+          Mobil (<768px): kat konpakt anpile (imaj → kontni), `w-[calc(100%-2rem)]`
+          + `max-h-[88vh] overflow-y-auto` anpeche l janm depase viewport la.
+          Desktop (≥768px): 2 kolòn (kontni agoch, imaj adwat), `max-w-[760px]`
+          pou l gen "breathing room" san l pran tout ekran an. */}
+      <DialogContent
+        className={cn(
+          "w-[calc(100%-2rem)] max-w-sm max-h-[88vh] gap-0 overflow-y-auto rounded-[22px] border-brand-soft/40 bg-card p-0 shadow-brand-lg [&>button]:hidden",
+          "md:w-[calc(100%-3rem)] md:max-w-[760px] md:rounded-[28px]",
+        )}
+      >
         {/* Bouton fèmen pèsonalize — ranplase X default Radix la (ki te ka
             pèdi nan yon imaj plen kontras) ak youn ki toujou vizib (fon
-            blan solid, lonbraj), pozisyone anlè imaj la kèlkeswa koulè l.
-            Anvlopi nan yon <div> (pa yon <button> dirèk anba DialogContent)
-            espre: className `[&>button]:hidden` pi wo a kache SÈLMAN X
-            default Radix la (ki se yon <button> dirèk anba menm Content
-            lan) — san `<div>` sa a, règ la ta kache bouton pèsonalize sa a
-            tou, paske toude ta "dirèk anba" menm eleman paran an. */}
+            blan translusid, lonbraj, ti agrandisman nan hover), pozisyone
+            anlè imaj la kèlkeswa koulè l. Anvlopi nan yon <div> (pa yon
+            <button> dirèk anba DialogContent) espre: className
+            `[&>button]:hidden` pi wo a kache SÈLMAN X default Radix la (ki
+            se yon <button> dirèk anba menm Content lan) — san `<div>` sa
+            a, règ la ta kache bouton pèsonalize sa a tou, paske toude ta
+            "dirèk anba" menm eleman paran an. Konpòtman fèmti a rete
+            IDANTIK (menm fonksyon `close()`) — sèlman abiman an chanje. */}
         <div>
           <button
             type="button"
             onClick={close}
             aria-label="Fèmen"
-            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-md transition hover:bg-ink/10"
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-ink shadow-md backdrop-blur transition duration-200 hover:scale-105 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {hasMedia && (
-          // Wotè FIKS (pa yon rapò dimansyon dinamik jan lòt anons yo
-          // itilize, Tach 4) — espre pou popup la, paske se egzakteman sa
-          // ki te lakòz pwoblèm nan: yon imaj vètikal ki gen kontrent
-          // rapò dimansyon SOU LARGÈ w-full (100vw sou mobil) ta pwodwi
-          // yon wotè imans. Yon bwat fiks + object-contain garanti popup
-          // la rete konpakt kèlkeswa fòm/oryantasyon imaj admin an telechaje.
-          <div className="flex h-40 w-full items-center justify-center overflow-hidden bg-ink/5">
-            <AdMedia
-              ad={{ ...ad, image_url: ad.image_url ?? ad.restaurant_cover_url }}
-              icon={Megaphone}
-              loading="eager"
-              width={ad.media_width ?? 600}
-              height={ad.media_height ?? 450}
-              className="h-full w-full object-contain"
-            />
-          </div>
-        )}
-
-        <div className="p-5 pt-4">
-          <span className="mb-1 inline-flex w-fit items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-            Piblisite
-          </span>
-          <DialogTitle className="text-base">{ad.title}</DialogTitle>
-          {ad.description && (
-            <DialogDescription className="line-clamp-3 text-xs">{ad.description}</DialogDescription>
+        <div
+          className={cn(
+            "flex flex-col",
+            // Sèlman lè gen medya: grid 2-kolòn depi 768px (kontni ~56%,
+            // imaj ~44%). San medya, yon sèl kolòn tou depi desktop.
+            hasMedia ? "md:grid md:grid-cols-[1fr_44%] md:items-stretch" : "md:block",
           )}
-          {href && (
-            <a
-              href={href}
-              onClick={close}
-              className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-brand px-6 text-sm font-bold text-white shadow-brand-sm transition hover:bg-brand-deep"
-            >
-              Wè plis
-            </a>
-          )}
-
-          {/* Karousèl — sèlman si plizyè anons popup aktif anmenm tan. */}
-          {ads.length > 1 && (
-            <div className="mt-3 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={prev}
-                aria-label="Anons anvan"
-                className="flex h-7 w-7 items-center justify-center rounded-full text-ink-soft transition hover:bg-brand-soft/40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-1.5">
-                {ads.map((a, i) => (
-                  <span
-                    key={a.id}
-                    aria-hidden="true"
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === index ? "w-4 bg-brand" : "w-1.5 bg-brand-soft"
-                    }`}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={next}
-                aria-label="Pwochen anons"
-                className="flex h-7 w-7 items-center justify-center rounded-full text-ink-soft transition hover:bg-brand-soft/40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+        >
+          {hasMedia && (
+            // Rapò dimansyon FIKS (16/9) — pa rapò dimansyon dinamik imaj
+            // la (se egzakteman sa ki te lakòz "plen ekran" a sou yon imaj
+            // vètikal). `object-cover` ranpli bwat la san l pa deforme,
+            // sèlman koupe depasman an — tretman estanda pou yon "hero"
+            // imaj piblisite premium. Sou desktop, `md:aspect-auto` +
+            // `absolute inset-0` kite grid la (ki egalize wotè kolòn yo
+            // otomatikman) deside wotè a, olye rapò 16/9 la.
+            <div className="relative order-1 aspect-[16/9] w-full overflow-hidden bg-ink/5 md:order-2 md:aspect-auto">
+              <AdMedia
+                ad={{ ...ad, image_url: ad.image_url ?? ad.restaurant_cover_url }}
+                icon={Megaphone}
+                loading="eager"
+                width={ad.media_width ?? 600}
+                height={ad.media_height ?? 450}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
             </div>
           )}
+
+          <div
+            className={cn(
+              "order-2 flex flex-col p-5 sm:p-6",
+              hasMedia && "md:order-1 md:justify-center md:p-8",
+            )}
+          >
+            <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-brand-soft/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-deep">
+              <Megaphone className="h-3 w-3" aria-hidden="true" />
+              Piblisite
+            </span>
+            <DialogTitle className="text-xl font-extrabold leading-[1.15] tracking-tight text-ink sm:text-2xl md:text-[1.85rem]">
+              {ad.title}
+            </DialogTitle>
+            {ad.description && (
+              <DialogDescription className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft sm:text-[15px] md:line-clamp-4 md:text-base">
+                {ad.description}
+              </DialogDescription>
+            )}
+            {href && (
+              <a
+                href={href}
+                onClick={close}
+                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-full bg-brand px-6 text-sm font-bold text-white shadow-brand-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-deep sm:h-14 sm:text-base"
+              >
+                {ctaLabel}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            )}
+
+            {/* Karousèl — sèlman si plizyè anons popup aktif anmenm tan.
+                Menm lojik (index, otomatik 6s) ak anvan, sèlman sib tap
+                pi gwo (36px) pou pi bon aksesibilite tactile. */}
+            {ads.length > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={prev}
+                  aria-label="Anons anvan"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-brand-soft/40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div className="flex items-center gap-1.5">
+                  {ads.map((a, i) => (
+                    <span
+                      key={a.id}
+                      aria-hidden="true"
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === index ? "w-4 bg-brand" : "w-1.5 bg-brand-soft"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={next}
+                  aria-label="Pwochen anons"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-brand-soft/40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
