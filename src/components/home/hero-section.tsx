@@ -184,20 +184,22 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             nan Gonaïves") — "lakay ou" dropped as redundant with the H1
             immediately below in the panel ("Manje lakay, livre lakay
             ou"), not a meaning change.
-            bg-ink-warm, NOT bg-brand (the shared/desktop badge's own
-            color, unchanged there): measured (not estimated) contrast —
+            bg-ink-warm, NOT bg-brand: measured (not estimated) contrast —
             white text on bg-brand is 2.80:1, failing WCAG AA even for
             large text (needs 3:1) well before normal text's 4.5:1. This
-            was already true of the existing desktop badge/search-button,
-            out of scope to fix here ("pa touche desktop"), but a NEW
-            element can't ship failing what this brief itself makes
-            non-negotiable. --ink-warm (already used by the flat panel
-            this photo hands off into, further down) measures 17.87:1
-            with white — reusing an existing token, not inventing a
-            second color system. Also solves the "orange pill can blend
-            into the orange cap" problem an earlier draft used a
-            separate radial-gradient vignette for — a dark pill doesn't
-            need one. */}
+            was already true of the existing desktop badge/search-button
+            when this mobile badge was first built ("pa touche desktop" —
+            out of scope at the time); a later accessibility pass
+            (2026-08-30, commit fix: improve desktop hero contrast)
+            applied the same bg-brand→bg-ink-warm swap to both desktop
+            elements, so this token is now shared consistently everywhere
+            this badge/button pattern appears, not just here. --ink-warm
+            (already used by the flat panel this photo hands off into,
+            further down) measures 17.87:1 with white — reusing an
+            existing token, not inventing a second color system. Also
+            solves the "orange pill can blend into the orange cap"
+            problem an earlier draft used a separate radial-gradient
+            vignette for — a dark pill doesn't need one. */}
         {/* Centered (2026-08-28, user request) — was left-aligned at
             left-[max(1.25rem,var(--sal))]. left-1/2 + translate(-50%,
             -50%) centers it both ways from a single point; the two
@@ -251,9 +253,12 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               aria-label="Chèche yon restoran oswa yon plat…"
               className="min-w-0 flex-1 rounded-full bg-transparent px-2 py-3 text-sm outline-none placeholder:text-ink-soft focus-visible:ring-2 focus-visible:ring-brand/40"
             />
-            {/* bg-ink-warm, not bg-brand (the shared/desktop button's own
-                color, unchanged there) — same 2.80:1-fails-AA measured
-                reason as the badge above; 17.87:1 with white. */}
+            {/* bg-ink-warm, not bg-brand — same 2.80:1-fails-AA measured
+                reason as the badge above; 17.87:1 with white. The
+                desktop "Chèche" button below (and its badge) used to be
+                the one bg-brand exception to this, until the 2026-08-30
+                accessibility pass ("fix: improve desktop hero contrast")
+                switched both to this same token too. */}
             <button
               type="submit"
               className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink-warm px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(0,0,0,0.35)] transition hover:opacity-90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
@@ -412,7 +417,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
                 exact badge now lives anchored on the mobile photo instead
                 (zone-kepi, above) with shortened copy — desktop keeps this
                 full-text version, in its original position, untouched. */}
-            <span className="mb-4 hidden items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_16px_rgba(249,115,22,0.4)] md:inline-flex">
+            <span className="mb-4 hidden items-center gap-1.5 rounded-full bg-ink-warm px-4 py-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white shadow-[0_4px_16px_rgba(249,115,22,0.4)] md:inline-flex">
               <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
               Livre lakay ou nan Gonaïves
             </span>
@@ -469,7 +474,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               />
               <button
                 type="submit"
-                className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
+                className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink-warm px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.4)] transition hover:bg-brand-deep hover:shadow-[0_12px_28px_rgba(249,115,22,0.5)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand"
               >
                 <Search className="h-4 w-4" /> Chèche
               </button>
