@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Flag, AlertTriangle, Clock, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sendReportUpdatePush } from "@/lib/send-report-push.functions";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/data-table";
@@ -31,6 +33,7 @@ const PAGE_SIZE = 20;
 
 function AdminReports() {
   const qc = useQueryClient();
+  const sendPush = useServerFn(sendReportUpdatePush);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [targetType, setTargetType] = useState("");
@@ -91,6 +94,14 @@ function AdminReports() {
     invalidateAll();
   }
 
+  async function notifyUpdate(reportId: string) {
+    try {
+      await sendPush({ data: { reportId } });
+    } catch (e) {
+      console.warn("push send failed", e);
+    }
+  }
+
   const setStatusMutation = useMutation({
     mutationFn: async ({ newStatus, note }: { newStatus: "open" | "reviewing"; note: string }) => {
       if (!detailTarget) throw new Error("Pa gen dosye chwazi");
@@ -100,6 +111,7 @@ function AdminReports() {
         _admin_note: note || undefined,
       });
       if (error) throw error;
+      await notifyUpdate(detailTarget.id);
       return data;
     },
     onSuccess: (row) => {
@@ -117,6 +129,7 @@ function AdminReports() {
         _admin_note: note,
       });
       if (error) throw error;
+      await notifyUpdate(detailTarget.id);
       return data;
     },
     onSuccess: (row) => {
@@ -135,6 +148,7 @@ function AdminReports() {
         _admin_note: note,
       });
       if (error) throw error;
+      await notifyUpdate(detailTarget.id);
       return data;
     },
     onSuccess: (row) => {
@@ -152,6 +166,7 @@ function AdminReports() {
         _question: question,
       });
       if (error) throw error;
+      await notifyUpdate(detailTarget.id);
       return data;
     },
     onSuccess: (row) => {

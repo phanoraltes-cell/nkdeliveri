@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Flag, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { sendReportOpenedPush } from "@/lib/send-report-push.functions";
 import { assertValidUploadFile } from "@/lib/file-validation";
 import { inputClsCompact } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ type ReportSectionProps = {
 export function ReportSection({ orderId, orderStatus, orderUpdatedAt }: ReportSectionProps) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const sendOpenedPush = useServerFn(sendReportOpenedPush);
   const [formOpen, setFormOpen] = useState(false);
   const [target, setTarget] = useState<TargetChoice>("restaurant");
   const [reasonRestaurant, setReasonRestaurant] = useState(REPORT_REASON_CODES.restaurant[0].value);
@@ -114,6 +117,16 @@ export function ReportSection({ orderId, orderStatus, orderUpdatedAt }: ReportSe
         });
         if (error) throw error;
         results.push(data);
+        // TACH 2 — push bay admin sèlman pou dosye REYÈLMAN nouvo (pa lè
+        // RPC la retounen yon dosye ki te deja egziste, wè kòmantè
+        // "anyExisting" pi ba pou menm mezi-tan an).
+        if (Date.now() - new Date(data.created_at).getTime() < 5000) {
+          try {
+            await sendOpenedPush({ data: { reportId: data.id } });
+          } catch (e) {
+            console.warn("push send failed", e);
+          }
+        }
       }
       return results;
     },

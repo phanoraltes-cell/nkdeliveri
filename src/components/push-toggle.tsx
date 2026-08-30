@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Bell, BellOff, Send } from "lucide-react";
 import { toast } from "sonner";
 import { isPushSupported, subscribeToPush, unsubscribeFromPush } from "@/lib/push";
 import { NotificationPermissionDialog } from "@/components/notification-permission-dialog";
 import { NotificationPermissionDeniedHelp } from "@/components/notification-permission-denied-help";
 import { recordPermissionPromptDismissal } from "@/lib/notification-permission";
+import { sendTestPush } from "@/lib/send-test-push.functions";
+import { Button } from "@/components/ui/button";
+
+// TACH 2 (siyalman A) — "iOS Safari: push mache sèlman lè PWA a enstale
+// sou ekran dakèy la" — `navigator.standalone` se mak Safari-sèlman ki
+// endike sa (menm deteksyon ak install-prompt.tsx, ki responsab afichaj
+// bouton "enstale" a; isit la se sèlman yon mesaj kout pou eksplike
+// poukisa switch la ka rete san efè si sa poko fèt).
+function isIosNotStandalone(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const nav = navigator as Navigator & { standalone?: boolean };
+  return isIOS && nav.standalone !== true;
+}
 
 export function PushToggle() {
   const [supported, setSupported] = useState(true);
@@ -12,6 +28,8 @@ export function PushToggle() {
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const sendTest = useServerFn(sendTestPush);
 
   useEffect(() => {
     if (!isPushSupported()) {
@@ -29,9 +47,24 @@ export function PushToggle() {
   if (!supported) {
     return (
       <div className="rounded-2xl border border-brand-soft/60 bg-cream px-4 py-3 text-sm text-ink-soft">
-        Navigatè sa a pa sipòte notifikasyon push.
+        {isIosNotStandalone()
+          ? "Sou iPhone/iPad, notifikasyon push mache sèlman apre w enstale NK Deliveri sou ekran dakèy ou (Pataje → Ajoute sou ekran dakèy la)."
+          : "Navigatè sa a pa sipòte notifikasyon push."}
       </div>
     );
+  }
+
+  async function sendSelfTest() {
+    setTesting(true);
+    try {
+      const res = await sendTest();
+      if (res.sent > 0) toast.success("Notifikasyon tès voye — tann yon ti moman.");
+      else toast.error("Pa gen abònman aktif pou resevwa l — aktive notifikasyon anvan.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Echèk voye tès la");
+    } finally {
+      setTesting(false);
+    }
   }
 
   // Browsers never re-show their own permission popup once denied — the
@@ -86,19 +119,26 @@ export function PushToggle() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onToggleClick}
-        disabled={busy}
-        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
-          enabled
-            ? "bg-emerald-600 text-white hover:bg-emerald-700"
-            : "bg-brand-soft text-brand-deep hover:bg-brand hover:text-white"
-        } disabled:opacity-60`}
-      >
-        {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-        {enabled ? "Push aktive" : "Aktive notifikasyon push"}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggleClick}
+          disabled={busy}
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+            enabled
+              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+              : "bg-brand-soft text-brand-deep hover:bg-brand hover:text-white"
+          } disabled:opacity-60`}
+        >
+          {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+          {enabled ? "Push aktive" : "Aktive notifikasyon push"}
+        </button>
+        {enabled && (
+          <Button variant="outline" size="sm" disabled={testing} onClick={sendSelfTest}>
+            <Send className="h-3.5 w-3.5" /> Voye yon tès
+          </Button>
+        )}
+      </div>
 
       <NotificationPermissionDialog
         open={explainOpen}

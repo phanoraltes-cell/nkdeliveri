@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sendReportUpdatePush } from "@/lib/send-report-push.functions";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ export function SharedReportsSection({
   backTo: "/dashboard/restaurant" | "/dashboard/driver";
 }) {
   const qc = useQueryClient();
+  const sendPush = useServerFn(sendReportUpdatePush);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const reports = useQuery({
@@ -46,6 +49,11 @@ export function SharedReportsSection({
         _explanation: explanation,
       });
       if (error) throw error;
+      try {
+        await sendPush({ data: { reportId } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: (_d, { reportId }) => {
       toast.success("Repons ou voye bay admin");

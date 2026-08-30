@@ -78,6 +78,7 @@ import { Route as AuthenticatedDashboardAdminPayoutMigrationRouteImport } from '
 import { Route as AuthenticatedDashboardAdminPaymentsRouteImport } from './routes/_authenticated/dashboard.admin.payments'
 import { Route as AuthenticatedDashboardAdminPaymentProvidersRouteImport } from './routes/_authenticated/dashboard.admin.payment-providers'
 import { Route as AuthenticatedDashboardAdminPartnersRouteImport } from './routes/_authenticated/dashboard.admin.partners'
+import { Route as AuthenticatedDashboardAdminNotificationLogRouteImport } from './routes/_authenticated/dashboard.admin.notification-log'
 import { Route as AuthenticatedDashboardAdminKomandRouteImport } from './routes/_authenticated/dashboard.admin.komand'
 import { Route as AuthenticatedDashboardAdminFinanceRouteImport } from './routes/_authenticated/dashboard.admin.finance'
 import { Route as AuthenticatedDashboardAdminDriversRouteImport } from './routes/_authenticated/dashboard.admin.drivers'
@@ -480,6 +481,12 @@ const AuthenticatedDashboardAdminPartnersRoute =
     path: '/partners',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminNotificationLogRoute =
+  AuthenticatedDashboardAdminNotificationLogRouteImport.update({
+    id: '/notification-log',
+    path: '/notification-log',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminKomandRoute =
   AuthenticatedDashboardAdminKomandRouteImport.update({
     id: '/komand',
@@ -596,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
+  '/dashboard/admin/notification-log': typeof AuthenticatedDashboardAdminNotificationLogRoute
   '/dashboard/admin/partners': typeof AuthenticatedDashboardAdminPartnersRoute
   '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
@@ -673,6 +681,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
+  '/dashboard/admin/notification-log': typeof AuthenticatedDashboardAdminNotificationLogRoute
   '/dashboard/admin/partners': typeof AuthenticatedDashboardAdminPartnersRoute
   '/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
@@ -757,6 +766,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/drivers': typeof AuthenticatedDashboardAdminDriversRoute
   '/_authenticated/dashboard/admin/finance': typeof AuthenticatedDashboardAdminFinanceRoute
   '/_authenticated/dashboard/admin/komand': typeof AuthenticatedDashboardAdminKomandRoute
+  '/_authenticated/dashboard/admin/notification-log': typeof AuthenticatedDashboardAdminNotificationLogRoute
   '/_authenticated/dashboard/admin/partners': typeof AuthenticatedDashboardAdminPartnersRoute
   '/_authenticated/dashboard/admin/payment-providers': typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   '/_authenticated/dashboard/admin/payments': typeof AuthenticatedDashboardAdminPaymentsRoute
@@ -841,6 +851,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
     | '/dashboard/admin/komand'
+    | '/dashboard/admin/notification-log'
     | '/dashboard/admin/partners'
     | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
@@ -918,6 +929,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/drivers'
     | '/dashboard/admin/finance'
     | '/dashboard/admin/komand'
+    | '/dashboard/admin/notification-log'
     | '/dashboard/admin/partners'
     | '/dashboard/admin/payment-providers'
     | '/dashboard/admin/payments'
@@ -1001,6 +1013,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/drivers'
     | '/_authenticated/dashboard/admin/finance'
     | '/_authenticated/dashboard/admin/komand'
+    | '/_authenticated/dashboard/admin/notification-log'
     | '/_authenticated/dashboard/admin/partners'
     | '/_authenticated/dashboard/admin/payment-providers'
     | '/_authenticated/dashboard/admin/payments'
@@ -1553,6 +1566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminPartnersRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/notification-log': {
+      id: '/_authenticated/dashboard/admin/notification-log'
+      path: '/notification-log'
+      fullPath: '/dashboard/admin/notification-log'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminNotificationLogRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/komand': {
       id: '/_authenticated/dashboard/admin/komand'
       path: '/komand'
@@ -1653,6 +1673,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminDriversRoute: typeof AuthenticatedDashboardAdminDriversRoute
   AuthenticatedDashboardAdminFinanceRoute: typeof AuthenticatedDashboardAdminFinanceRoute
   AuthenticatedDashboardAdminKomandRoute: typeof AuthenticatedDashboardAdminKomandRoute
+  AuthenticatedDashboardAdminNotificationLogRoute: typeof AuthenticatedDashboardAdminNotificationLogRoute
   AuthenticatedDashboardAdminPartnersRoute: typeof AuthenticatedDashboardAdminPartnersRoute
   AuthenticatedDashboardAdminPaymentProvidersRoute: typeof AuthenticatedDashboardAdminPaymentProvidersRoute
   AuthenticatedDashboardAdminPaymentsRoute: typeof AuthenticatedDashboardAdminPaymentsRoute
@@ -1692,6 +1713,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminFinanceRoute,
     AuthenticatedDashboardAdminKomandRoute:
       AuthenticatedDashboardAdminKomandRoute,
+    AuthenticatedDashboardAdminNotificationLogRoute:
+      AuthenticatedDashboardAdminNotificationLogRoute,
     AuthenticatedDashboardAdminPartnersRoute:
       AuthenticatedDashboardAdminPartnersRoute,
     AuthenticatedDashboardAdminPaymentProvidersRoute:

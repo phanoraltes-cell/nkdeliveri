@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { pushToUsers, enforceRateLimit } from "@/lib/push-dispatch.server";
+import { smsFallback } from "@/lib/sms-dispatch.server";
 
 const OrderIdSchema = z.object({ orderId: z.string().uuid() });
 
@@ -28,13 +29,24 @@ export const sendNewOrderPush = createServerFn({ method: "POST" })
     const ownerId = order.restaurants?.owner_id;
     if (!ownerId) return { sent: 0 };
 
-    return pushToUsers([ownerId], {
+    // TACH 2 — evènman "aksyon rapid nesesè" pou restoran: insistent (rete
+    // sou ekran an jiskaske yo louvri l) + SMS kòm sekou si push la echwe
+    // nèt (okenn abònman aktif/echèk voye).
+    const result = await pushToUsers([ownerId], {
       title: "Nouvo kòmand! 🛎️",
       body: `Kòmand ${order.order_number} fèk antre.`,
       url: `/dashboard/restaurant/orders`,
       tag: `new-order-${data.orderId}`,
       data: { orderId: data.orderId },
+      insistent: true,
     });
+    await smsFallback({
+      userId: ownerId,
+      eventType: `new-order-${data.orderId}`,
+      body: `NK Deliveri: nouvo kòmand ${order.order_number}. Louvri app la pou konfime.`,
+      pushSent: result.sentByUser[ownerId] ?? 0,
+    });
+    return result;
   });
 
 /** Called right after claim_delivery_secure succeeds — confirms the assignment to the driver. */
@@ -58,13 +70,21 @@ export const sendDeliveryAssignedPush = createServerFn({ method: "POST" })
     }
 
     const order = delivery.orders;
-    return pushToUsers([driverUserId], {
+    const result = await pushToUsers([driverUserId], {
       title: "Nouvo livrezon pou ou 🛵",
       body: `Kòmand ${order?.order_number ?? ""} — ${order?.delivery_address ?? ""}`,
       url: `/dashboard/driver`,
       tag: `assigned-${data.orderId}`,
       data: { orderId: data.orderId },
+      insistent: true,
     });
+    await smsFallback({
+      userId: driverUserId,
+      eventType: `assigned-${data.orderId}`,
+      body: `NK Deliveri: nouvo livrezon pou ou (${order?.order_number ?? ""}). Louvri app la.`,
+      pushSent: result.sentByUser[driverUserId] ?? 0,
+    });
+    return result;
   });
 
 /** Called right after a driver marks a delivery "delivered" — notifies the customer. */
@@ -92,11 +112,18 @@ export const sendOrderDeliveredPush = createServerFn({ method: "POST" })
     const customerId = order?.customer_id;
     if (!customerId) return { sent: 0 };
 
-    return pushToUsers([customerId], {
+    const result = await pushToUsers([customerId], {
       title: "Kòmand ou delivre! ✅",
       body: `Kòmand ${order?.order_number ?? ""} rive. Bon apeti!`,
       url: `/orders/${data.orderId}`,
       tag: `delivered-${data.orderId}`,
       data: { orderId: data.orderId },
     });
+    await smsFallback({
+      userId: customerId,
+      eventType: `delivered-${data.orderId}`,
+      body: `NK Deliveri: kòmand ${order?.order_number ?? ""} livre. Bon apeti!`,
+      pushSent: result.sentByUser[customerId] ?? 0,
+    });
+    return result;
   });

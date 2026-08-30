@@ -29,6 +29,13 @@ const fromMock = vi.fn((table: string) => {
   if (table === "notification_preferences") {
     return { select: () => ({ in: async () => ({ data: [], error: null }) }) };
   }
+  // TACH 2 — pushToUsers now logs every attempt to notification_log (best
+  // effort, via sms-dispatch.server's logNotification) — a no-op insert
+  // mock so that new behavior doesn't add noise to these SSRF-focused
+  // tests, which don't care about the log itself.
+  if (table === "notification_log") {
+    return { insert: async () => ({ error: null }) };
+  }
   throw new Error(`unexpected table in test mock: ${table}`);
 });
 

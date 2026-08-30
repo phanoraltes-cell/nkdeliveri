@@ -899,6 +899,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_log: {
+        Row: {
+          body: string | null;
+          channel: string;
+          created_at: string;
+          error: string | null;
+          event_type: string;
+          id: number;
+          status: string;
+          title: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          body?: string | null;
+          channel: string;
+          created_at?: string;
+          error?: string | null;
+          event_type: string;
+          id?: number;
+          status: string;
+          title?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          body?: string | null;
+          channel?: string;
+          created_at?: string;
+          error?: string | null;
+          event_type?: string;
+          id?: number;
+          status?: string;
+          title?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       notification_preferences: {
         Row: {
           prefs: Json;

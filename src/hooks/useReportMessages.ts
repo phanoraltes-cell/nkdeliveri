@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { sendReportUpdatePush } from "@/lib/send-report-push.functions";
 
 /**
- * TACH 1 (SIYALMAN) — fil mesaj admin<->kliyan pou yon dosye siyalman.
- * Pa gen okenn apèl push isit la espre: spec la limenm eksplisit
- * ("Nouvo siyalman -> notifikasyon bay admin (se tach 2 ki jere kanal
- * yo)") — Tach 1 kreye sèlman ranje `notifications` a (deja fèt sou sèvè a
- * nan add_report_message_secure) + Realtime; Tach 2 se sa k ap deside/
- * konekte push/SMS pou tout evènman yo, san modifye kòd sa a ankò.
+ * TACH 1 kreye ranje `notifications` a (in-app + Realtime, nan
+ * add_report_message_secure). TACH 2 ajoute apèl push la isit la — menm
+ * modèl egzat ak useDisputeMessages.ts.
  */
 export function useReportMessages(reportId: string | undefined) {
   const qc = useQueryClient();
+  const sendPush = useServerFn(sendReportUpdatePush);
 
   const messages = useQuery({
     queryKey: ["report-messages", reportId],
@@ -34,6 +34,11 @@ export function useReportMessages(reportId: string | undefined) {
         _message: message,
       });
       if (error) throw error;
+      try {
+        await sendPush({ data: { reportId: reportId! } });
+      } catch (e) {
+        console.warn("push send failed", e);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["report-messages", reportId] });

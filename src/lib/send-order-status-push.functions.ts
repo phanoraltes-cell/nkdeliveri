@@ -49,11 +49,27 @@ export const sendOrderStatusPush = createServerFn({ method: "POST" })
     if (!copy) return { sent: 0, skipped: true };
 
     const { pushToUsers } = await import("@/lib/push-dispatch.server");
-    return pushToUsers([order.customer_id], {
+    const result = await pushToUsers([order.customer_id], {
       title: copy.title,
       body: copy.body(order.order_number),
       url: `/orders/${order.id}`,
       tag: `order-status-${order.id}`,
       data: { orderId: order.id, status: order.status },
     });
+
+    // TACH 2 — spec la mande SMS kòm sekou espesifikman pou "kòmand livre
+    // OSWA anile" bay kliyan an (livre a jere nan sendOrderDeliveredPush,
+    // ki separe paske li deklannche pa yon lòt evènman — livrè a ki make
+    // "delivered", pa yon chanjman estati jeneral).
+    if (order.status === "cancelled") {
+      const { smsFallback } = await import("@/lib/sms-dispatch.server");
+      await smsFallback({
+        userId: order.customer_id,
+        eventType: `order-status-cancelled-${order.id}`,
+        body: `NK Deliveri: kòmand ${order.order_number} anile.`,
+        pushSent: result.sentByUser[order.customer_id] ?? 0,
+      });
+    }
+
+    return result;
   });

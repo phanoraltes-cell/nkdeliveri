@@ -45,10 +45,26 @@ export async function pushToUsers(
     url: string;
     tag: string;
     data?: Record<string, unknown>;
+    // TACH 2 (siyalman C) — sèlman pou evènman ki mande yon aksyon rapid
+    // (nouvo kòmand pou restoran, nouvo asiyasyon pou livrè): notifikasyon
+    // an rete VIZIB sou ekran an jiskaske itilizatè a enteraji ak li
+    // (requireInteraction), olye disparèt pou kont li apre kèk segond.
+    // IMPORTANT — limit onèt: spec la mande yon repetisyon otomatik "jiska
+    // 3 fwa si moun nan poko louvri l nan 60 segond". Sa a PA aplike isit
+    // la: chak repetisyon ta mande yon NOUVO mesaj Push voye pa sèvè a
+    // (Push se yon sèl-kou pa design), e kenbe yon fonksyon serverless
+    // Vercel louvri pandan 60s pou fè sa a se yon risk fyabilite reyèl
+    // (limit tan platfòm la, kout ki ka echwe san rezon). `requireInteraction`
+    // sèl la deja bay pi gwo pati benefis la (notifikasyon an pa ka "pase
+    // inapèsi" yon fwa li rive) san risk sa a — repetisyon otomatik ta
+    // mande yon vrè travay pwograme dirab (pa egziste kounye a), siyale
+    // kòm limit nan rapò final la.
+    insistent?: boolean;
   },
 ) {
-  if (userIds.length === 0) return { sent: 0 };
+  if (userIds.length === 0) return { sent: 0, sentByUser: {} as Record<string, number> };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { logNotification } = await import("@/lib/sms-dispatch.server");
 
   const [{ data: subs, error: subsErr }, { data: prefRows, error: prefErr }] = await Promise.all([
     supabaseAdmin
@@ -66,14 +82,35 @@ export async function pushToUsers(
   // lookup failure doesn't get mistaken for that change itself failing.
   if (subsErr) console.error("[pushToUsers] failed to load subscriptions", subsErr);
   if (prefErr) console.error("[pushToUsers] failed to load preferences", prefErr);
-  if (!subs || subs.length === 0) return { sent: 0 };
 
-  // sound/vibration default to on, same "enabled unless explicitly turned
-  // off" convention private.notify_secure already uses for every category
-  // except promotions.
   const prefsByUser = new Map(
     (prefRows ?? []).map((r) => [r.user_id, r.prefs as Record<string, unknown>]),
   );
+
+  // TACH 2 (siyalman E) — switch pa kanal "Push sou telefòn" (kle
+  // `push_enabled` nan MENM jsonb preferans lan, defo aktive). Verifye ISIT
+  // LA (pa nan appelant yo) pou chak appelant deja jwenn menm konpòtman an
+  // gratis, san yo pa bezwen re-enplemante l chak fwa.
+  const pushDisabledUsers = new Set(
+    userIds.filter((uid) => prefsByUser.get(uid)?.push_enabled === false),
+  );
+  const eligibleSubs = (subs ?? []).filter((s) => !pushDisabledUsers.has(s.user_id));
+
+  if (!eligibleSubs.length) {
+    await Promise.all(
+      userIds.map((uid) =>
+        logNotification(supabaseAdmin, {
+          userId: uid,
+          eventType: payload.tag,
+          channel: "push",
+          title: payload.title,
+          status: "skipped",
+          error: pushDisabledUsers.has(uid) ? "push_disabled" : "no_subscription",
+        }),
+      ),
+    );
+    return { sent: 0, sentByUser: {} as Record<string, number> };
+  }
 
   const { buildPushPayload } = await import("@block65/webcrypto-web-push");
   const vapid = {
@@ -83,9 +120,12 @@ export async function pushToUsers(
   };
 
   let sent = 0;
+  const sentByUser: Record<string, number> = {};
+  const attemptedUsers = new Set<string>();
   const deadEndpoints: string[] = [];
   await Promise.all(
-    subs.map(async (s) => {
+    eligibleSubs.map(async (s) => {
+      attemptedUsers.add(s.user_id);
       try {
         const prefs = prefsByUser.get(s.user_id);
         const soundOn = prefs?.sound !== false;
@@ -95,7 +135,12 @@ export async function pushToUsers(
         // only lever, and it's honored by sw.ts's push handler, not here;
         // this just decides what to tell it to do for this recipient.
         const message = {
-          data: JSON.stringify({ ...payload, silent: !soundOn, vibrate: vibrationOn }),
+          data: JSON.stringify({
+            ...payload,
+            silent: !soundOn,
+            vibrate: vibrationOn,
+            requireInteraction: payload.insistent === true,
+          }),
           options: { ttl: 60 * 60 * 24 },
         };
         // The web-push package's PushSubscription type carries expirationTime
@@ -141,7 +186,10 @@ export async function pushToUsers(
           return;
         }
         if (res.status === 404 || res.status === 410) deadEndpoints.push(s.endpoint);
-        else if (res.ok || res.status === 201) sent++;
+        else if (res.ok || res.status === 201) {
+          sent++;
+          sentByUser[s.user_id] = (sentByUser[s.user_id] ?? 0) + 1;
+        }
       } catch (err) {
         console.warn("[push] send failed", err);
       }
@@ -150,5 +198,30 @@ export async function pushToUsers(
   if (deadEndpoints.length > 0) {
     await supabaseAdmin.from("push_subscriptions").delete().in("endpoint", deadEndpoints);
   }
-  return { sent };
+
+  // TACH 2 (siyalman F) — jounal fyabilite, YON RANJE PA ITILIZATÈ demande
+  // (pa pa aparèy — plizyè aparèy pou menm moun se yon detay livrezon, pa
+  // yon evènman diferan pou depanaj).
+  await Promise.all(
+    userIds.map((uid) => {
+      const status: "sent" | "failed" | "skipped" = pushDisabledUsers.has(uid)
+        ? "skipped"
+        : !attemptedUsers.has(uid)
+          ? "skipped"
+          : (sentByUser[uid] ?? 0) > 0
+            ? "sent"
+            : "failed";
+      return logNotification(supabaseAdmin, {
+        userId: uid,
+        eventType: payload.tag,
+        channel: "push",
+        title: payload.title,
+        body: payload.body,
+        status,
+        error: status === "skipped" && !pushDisabledUsers.has(uid) ? "no_subscription" : undefined,
+      });
+    }),
+  );
+
+  return { sent, sentByUser };
 }

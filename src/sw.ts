@@ -66,6 +66,11 @@ type PushPayload = {
   // on or off, which is the one lever actually available here.
   silent?: boolean;
   vibrate?: boolean;
+  // TACH 2 (siyalman C) — sèt SÈLMAN pou evènman "aksyon rapid nesesè"
+  // (nouvo kòmand pou restoran, nouvo asiyasyon pou livrè), wè
+  // push-dispatch.server.ts pou rezonman konplè (ak limit onèt sou
+  // repetisyon otomatik).
+  requireInteraction?: boolean;
 };
 
 self.addEventListener("push", (event) => {
@@ -84,7 +89,7 @@ self.addEventListener("push", (event) => {
     badge: "/app-icon-192.png",
     tag: payload.tag,
     data: { url: targetUrl, ...(payload.data || {}) },
-    requireInteraction: false,
+    requireInteraction: payload.requireInteraction === true,
     silent: payload.silent === true,
     // A pattern, not a boolean — Notification.vibrate expects
     // milliseconds on/off. Empty array = no vibration. Browsers that

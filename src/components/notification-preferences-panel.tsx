@@ -132,6 +132,36 @@ export function NotificationPreferencesPanel({ userId }: { userId: string }) {
               <Vibrate className="h-3.5 w-3.5 text-brand-deep" /> Vibrasyon (sou telefòn)
             </label>
           </div>
+
+          {/* TACH 2 (siyalman E) — switch pa KANAL (olye pa tip evènman
+              sèlman, grid anwo a): "Push sou telefòn" ak "SMS" — chak
+              defo aktive, tou de kle nan MENM jsonb la (push_enabled/
+              sms_enabled), li nan push-dispatch.server.ts/
+              sms-dispatch.server.ts. "Nan sit la" pa gen switch: se
+              deja toujou aktif (pa gen mwayen dezaktive afichaj in-app
+              la san kache tout done a). */}
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-brand-soft/40 pt-3">
+            <label className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm text-ink transition hover:bg-brand-soft/30">
+              <input
+                type="checkbox"
+                checked={prefs.push_enabled ?? true}
+                onChange={() => toggle("push_enabled", true)}
+                disabled={save.isPending}
+                className="h-4 w-4 shrink-0 accent-brand"
+              />
+              Push sou telefòn
+            </label>
+            <label className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm text-ink transition hover:bg-brand-soft/30">
+              <input
+                type="checkbox"
+                checked={prefs.sms_enabled ?? true}
+                onChange={() => toggle("sms_enabled", true)}
+                disabled={save.isPending}
+                className="h-4 w-4 shrink-0 accent-brand"
+              />
+              SMS (si push pa mache)
+            </label>
+          </div>
         </>
       )}
     </div>
