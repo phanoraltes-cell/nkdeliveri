@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { registerPWA } from "@/lib/pwa-register";
 import { AuthProvider } from "@/hooks/useAuth";
 import { InstallPrompt } from "@/components/install-prompt";
+import { PopupAdModal } from "@/components/ads/popup-ad-modal";
 import { BottomNav } from "@/components/bottom-nav";
 import { SITE_URL, SITE_NAME, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { jsonLdScript } from "@/lib/seo";
@@ -281,6 +282,7 @@ function RootComponent() {
             mobileOffset={{ bottom: "calc(4rem + var(--sab) + 1rem)" }}
           />
           <InstallPrompt />
+          <PopupAdModal />
         </MotionConfig>
       </AuthProvider>
     </QueryClientProvider>

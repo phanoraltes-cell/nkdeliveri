@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * error state — an ad zone is never load-bearing for the page around it.
  */
 export function useActivePlacements(
-  placement: "home_banner" | "search_results" | "restaurant_page" | "dashboard",
+  placement: "home_banner" | "search_results" | "restaurant_page" | "dashboard" | "popup",
   limit = 3,
 ) {
   return useQuery({

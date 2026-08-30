@@ -36,19 +36,22 @@ const PLACEMENT_LABEL: Record<string, string> = {
   search_results: "Rezilta rechèch",
   restaurant_page: "Paj restoran",
   dashboard: "Dashboard",
+  popup: "Popup (modal)",
 };
 
-// Only these two placements actually render the ad's OWN media
-// (ad-banner-section.tsx, sponsored-section.tsx) — "search_results" shows
-// the boosted restaurant's own cover photo instead (restaurants.index.tsx),
-// and "dashboard" is a small text-only card with no image slot at all
-// (dashboard-ad-card.tsx, by design — "never a takeover"). The live-preview
-// frame below only makes sense for the two that do.
+// Only these placements actually render the ad's OWN media
+// (ad-banner-section.tsx, sponsored-section.tsx, popup-ad-modal.tsx) —
+// "search_results" shows the boosted restaurant's own cover photo instead
+// (restaurants.index.tsx), and "dashboard" is a small text-only card with
+// no image slot at all (dashboard-ad-card.tsx, by design — "never a
+// takeover"). The live-preview frame below only makes sense for the ones
+// that do.
 const PLACEMENT_MEDIA_FRAME: Record<string, string | null> = {
   home_banner: "aspect-[16/9]",
   search_results: null,
   restaurant_page: "aspect-[23/15]", // matches sponsored-section.tsx's real 230×150 card exactly
   dashboard: null,
+  popup: "aspect-[4/3]", // matches popup-ad-modal.tsx's own fallback frame
 };
 
 // Fields the redesigned form still has no editor for (cta_label,
@@ -490,6 +493,12 @@ function PlacementForm({
             </option>
           ))}
         </select>
+        {f.placement === "popup" && (
+          <p className="text-xs text-ink-soft sm:col-span-2">
+            Popup la parèt yon sèl fwa pou chak 24 èdtan bay menm vizitè a, epi li pa parèt jamè
+            pandan checkout — sa se otomatik, pa gen anyen pou konfigire.
+          </p>
+        )}
         <select
           aria-label="Restoran (opsyonèl)"
           className={inputCls()}
