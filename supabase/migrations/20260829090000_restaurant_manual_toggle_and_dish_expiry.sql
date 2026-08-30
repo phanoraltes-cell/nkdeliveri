@@ -19,10 +19,11 @@
 --     opening_hours_grace_until (20260821100000): yon kolòn ki kontwole
 --     aksè a jodi a pa ka kòmanse nan yon eta ki kraze pak aktyèl la.
 --   • products.published_at: rete NULL pou tout plat ki deja egziste (AUKENN
---     backfill) — sa vle di expires_at (kolòn kalkile pi ba) rete NULL tou,
---     donk okenn plat aktyèl pa janm ekspire. Sik 24-èdtan an se yon
---     OPSYON pwopriyetè a chwazi (klike "Pibliye"), pa yon migrasyon k ap
---     efase tout meni yo san avètisman 24 èdtan apre yo aplike script la.
+--     backfill) — sa vle di expires_at (ekri an menm tan ak li, wè §2/§5 pi
+--     ba) rete NULL tou, donk okenn plat aktyèl pa janm ekspire. Sik
+--     24-èdtan an se yon OPSYON pwopriyetè a chwazi (klike "Pibliye"), pa
+--     yon migrasyon k ap efase tout meni yo san avètisman 24 èdtan apre yo
+--     aplike script la.
 --
 -- Otorizasyon RPC — swiv presedan 20260709090000 (restaurant_staff_feature):
 --   • publish_product_secure / publish_all_products_secure: ekri sou
@@ -47,15 +48,32 @@ UPDATE public.restaurants SET is_open = true WHERE is_open = false;
 
 -- ---------------------------------------------------------------------------
 -- 2) products.published_at / expires_at — ekspirasyon 24h opsyonèl, jamè
---    backfill (wè nòt sekirite anwo). expires_at se yon kolòn KALKILE
---    (STORED) — pa janm ekri l dirèkteman nan okenn RPC, li swiv
---    published_at otomatikman.
+--    backfill (wè nòt sekirite anwo).
+--
+--    KOREKSYON (premye tantativ te echwe): expires_at te kòmanse kòm yon
+--    kolòn GENERATED ALWAYS AS (published_at + interval '24 hours') STORED.
+--    Postgres rejte sa ak erè 42P17 "generation expression is not
+--    immutable" — operatè `timestamptz + interval` (fonksyon
+--    `timestamptz_pl_interval`) make STABLE nan pg_proc, pa IMMUTABLE, paske
+--    yon `interval` an jeneral ka gen jou/mwa ki depann de règ chanjman lè
+--    (DST), menm si nan ka SPESIFIK nou an li se sèlman èdtan. Postgres pa
+--    gade valè literal la, li gade siyati fonksyon an sèlman — donk okenn
+--    kolòn GENERATED pa ka itilize operatè sa a sou yon `timestamptz`, menm
+--    jan.
+--
+--    Solisyon: `expires_at` se yon kolòn NÒMAL (pa GENERATED), ekri
+--    EKSPLISITMAN nan menm INSTRIKSYON UPDATE ak `published_at`, toulede
+--    fwa, nan SÈL DE RPC ki gen dwa ekri yo (§5 pi ba,
+--    publish_product_secure / publish_all_products_secure) — okenn lòt
+--    chemen ekriti pa egziste pou de kolòn sa yo (menm jan
+--    create/update_product_secure pa janm touche yo), donk konsistans lan
+--    garanti pa disiplin "yon sèl ekriven", menm jan ak plizyè lòt chan
+--    kalkile nan baz done sa a (egzanp: orders.status_history).
 ALTER TABLE public.products
   ADD COLUMN IF NOT EXISTS published_at timestamptz;
 
 ALTER TABLE public.products
-  ADD COLUMN IF NOT EXISTS expires_at timestamptz
-  GENERATED ALWAYS AS (published_at + interval '24 hours') STORED;
+  ADD COLUMN IF NOT EXISTS expires_at timestamptz;
 
 -- ---------------------------------------------------------------------------
 -- 3) is_restaurant_open() — CREATE OR REPLACE sèlman (menm siyati, pa gen
@@ -185,8 +203,10 @@ GRANT EXECUTE ON FUNCTION public.set_restaurant_open_secure(uuid, boolean) TO au
 
 -- ---------------------------------------------------------------------------
 -- 5) publish_product_secure / publish_all_products_secure — sèl chemen
---    ekriti pou published_at (pwopriyetè/admin/anplwaye, wè nòt otorizasyon
---    anwo). expires_at swiv otomatikman (kolòn kalkile).
+--    ekriti pou published_at ET expires_at (pwopriyetè/admin/anplwaye, wè
+--    nòt otorizasyon anwo). De chan yo ekri ansanm, nan menm INSTRIKSYON
+--    UPDATE — wè nòt koreksyon §2 pi wo pou poukisa expires_at pa yon
+--    kolòn GENERATED.
 CREATE OR REPLACE FUNCTION public.publish_product_secure(_product_id uuid)
 RETURNS public.products
 LANGUAGE plpgsql
@@ -200,7 +220,8 @@ BEGIN
   IF NOT private.is_restaurant_staff_or_manager(v_row.restaurant_id) THEN
     RAISE EXCEPTION 'Forbidden' USING ERRCODE = '42501';
   END IF;
-  UPDATE public.products SET published_at = now(), updated_at = now()
+  UPDATE public.products
+  SET published_at = now(), expires_at = now() + interval '24 hours', updated_at = now()
   WHERE id = _product_id
   RETURNING * INTO v_row;
   RETURN v_row;
@@ -221,7 +242,7 @@ BEGIN
     RAISE EXCEPTION 'Forbidden' USING ERRCODE = '42501';
   END IF;
   UPDATE public.products
-  SET published_at = now(), updated_at = now()
+  SET published_at = now(), expires_at = now() + interval '24 hours', updated_at = now()
   WHERE restaurant_id = _restaurant_id
     AND archived_at IS NULL;
   GET DIAGNOSTICS v_count = ROW_COUNT;

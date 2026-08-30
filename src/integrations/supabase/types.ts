@@ -1694,7 +1694,7 @@ export type Database = {
           created_at: string;
           description: string | null;
           dish_type: string | null;
-          /** GENERATED ALWAYS AS (published_at + interval '24 hours') STORED — never write directly. */
+          /** Set alongside published_at (= published_at + 24h) by publish_product_secure/publish_all_products_secure only. */
           expires_at: string | null;
           id: string;
           image_url: string | null;
