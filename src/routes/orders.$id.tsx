@@ -50,7 +50,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference, created_at))",
+          "id, order_number, status, subtotal, delivery_fee, service_fee, discount_amount, promo_code, total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference, created_at))",
         )
         .eq("id", id)
         .maybeSingle();
@@ -409,6 +409,12 @@ function OrderDetail() {
                   <span>Sou-total</span>
                   <span>{formatHTG(o.subtotal)}</span>
                 </div>
+                {o.discount_amount > 0 && (
+                  <div className="flex justify-between font-semibold text-status-good">
+                    <span>Rabè{o.promo_code ? ` (${o.promo_code})` : ""}</span>
+                    <span>-{formatHTG(o.discount_amount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-ink-soft">
                   <span>Frè livrezon</span>
                   <span>{formatHTG(o.delivery_fee)}</span>

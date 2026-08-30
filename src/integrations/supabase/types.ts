@@ -63,6 +63,7 @@ export type Database = {
           _idempotency_key?: string;
           _items: Json;
           _method: Database["public"]["Enums"]["payment_method"];
+          _promo_code?: string;
           _restaurant_id: string;
           _wants_location_sharing?: boolean;
         };
@@ -1064,9 +1065,13 @@ export type Database = {
           delivery_lat: number | null;
           delivery_lng: number | null;
           delivery_notes: string | null;
+          /** Set once by create_order_secure when a promo code applied — never recomputed client-side. */
+          discount_amount: number;
           id: string;
           idempotency_key: string | null;
           order_number: string;
+          /** The code text as applied at order time (kept even if the promo_codes row is later edited/deleted). */
+          promo_code: string | null;
           restaurant_id: string;
           service_fee: number;
           status: Database["public"]["Enums"]["order_status"];
@@ -1088,9 +1093,11 @@ export type Database = {
           delivery_lat?: number | null;
           delivery_lng?: number | null;
           delivery_notes?: string | null;
+          discount_amount?: number;
           id?: string;
           idempotency_key?: string | null;
           order_number?: string;
+          promo_code?: string | null;
           restaurant_id: string;
           service_fee?: number;
           status?: Database["public"]["Enums"]["order_status"];
@@ -1112,9 +1119,11 @@ export type Database = {
           delivery_lat?: number | null;
           delivery_lng?: number | null;
           delivery_notes?: string | null;
+          discount_amount?: number;
           id?: string;
           idempotency_key?: string | null;
           order_number?: string;
+          promo_code?: string | null;
           restaurant_id?: string;
           service_fee?: number;
           status?: Database["public"]["Enums"]["order_status"];
@@ -1803,6 +1812,54 @@ export type Database = {
           terms_accepted_at?: string | null;
           terms_version?: string | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      promo_codes: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at: string | null;
+          id: string;
+          max_uses: number | null;
+          min_order_amount: number | null;
+          starts_at: string | null;
+          updated_at: string;
+          uses_count: number;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at?: string | null;
+          id?: string;
+          max_uses?: number | null;
+          min_order_amount?: number | null;
+          starts_at?: string | null;
+          updated_at?: string;
+          uses_count?: number;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          discount_type?: string;
+          discount_value?: number;
+          ends_at?: string | null;
+          id?: string;
+          max_uses?: number | null;
+          min_order_amount?: number | null;
+          starts_at?: string | null;
+          updated_at?: string;
+          uses_count?: number;
         };
         Relationships: [];
       };
@@ -2992,6 +3049,7 @@ export type Database = {
           _idempotency_key?: string;
           _items: Json;
           _method: Database["public"]["Enums"]["payment_method"];
+          _promo_code?: string;
           _restaurant_id: string;
           _wants_location_sharing?: boolean;
         };
@@ -3058,11 +3116,13 @@ export type Database = {
           created_at: string;
           description: string | null;
           dish_type: string | null;
+          expires_at: string | null;
           id: string;
           image_url: string | null;
           name: string;
           popular: boolean;
           price: number;
+          published_at: string | null;
           restaurant_id: string;
           sort_order: number;
           stock_quantity: number | null;
@@ -3073,6 +3133,32 @@ export type Database = {
           to: "products";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      create_promo_code_secure: {
+        Args: {
+          _code: string;
+          _discount_type: string;
+          _discount_value: number;
+          _ends_at?: string;
+          _max_uses?: number;
+          _min_order_amount?: number;
+          _starts_at?: string;
+        };
+        Returns: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at: string | null;
+          id: string;
+          max_uses: number | null;
+          min_order_amount: number | null;
+          starts_at: string | null;
+          updated_at: string;
+          uses_count: number;
         };
       };
       create_promotion_secure: {
@@ -3167,6 +3253,10 @@ export type Database = {
       };
       delete_product_secure: {
         Args: { _product_id: string };
+        Returns: undefined;
+      };
+      delete_promo_code_secure: {
+        Args: { _id: string };
         Returns: undefined;
       };
       delete_promotion_secure: {
@@ -3910,6 +4000,24 @@ export type Database = {
         Returns: boolean;
       };
       is_valid_opening_hours_shape: { Args: { _hours: Json }; Returns: boolean };
+      list_promo_codes_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at: string | null;
+          id: string;
+          max_uses: number | null;
+          min_order_amount: number | null;
+          starts_at: string | null;
+          updated_at: string;
+          uses_count: number;
+        }[];
+      };
       list_restaurant_employees_secure: {
         Args: { _restaurant_id: string };
         Returns: {
@@ -4679,11 +4787,13 @@ export type Database = {
           created_at: string;
           description: string | null;
           dish_type: string | null;
+          expires_at: string | null;
           id: string;
           image_url: string | null;
           name: string;
           popular: boolean;
           price: number;
+          published_at: string | null;
           restaurant_id: string;
           sort_order: number;
           stock_quantity: number | null;
@@ -4694,6 +4804,33 @@ export type Database = {
           to: "products";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      update_promo_code_secure: {
+        Args: {
+          _active: boolean;
+          _discount_type: string;
+          _discount_value: number;
+          _ends_at?: string;
+          _id: string;
+          _max_uses?: number;
+          _min_order_amount?: number;
+          _starts_at?: string;
+        };
+        Returns: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          discount_type: string;
+          discount_value: number;
+          ends_at: string | null;
+          id: string;
+          max_uses: number | null;
+          min_order_amount: number | null;
+          starts_at: string | null;
+          updated_at: string;
+          uses_count: number;
         };
       };
       update_promotion_secure: {
@@ -4964,6 +5101,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      validate_promo_code_secure: {
+        Args: { _code: string; _subtotal: number };
+        Returns: { discount_amount: number; message: string; valid: boolean }[];
       };
       verify_admin_backup_code_secure: {
         Args: { _code: string };

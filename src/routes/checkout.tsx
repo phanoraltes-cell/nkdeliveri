@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/useCart";
 import { formatHTG } from "@/lib/format";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Trash2, MapPin, Banknote } from "lucide-react";
+import { Minus, Plus, Trash2, MapPin, Banknote, Tag, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -220,7 +220,64 @@ function Checkout() {
   const platformFee = useDeliveryFee();
   const deliveryFee = items.length > 0 ? (platformFee.data ?? 0) : 0;
   const serviceFee = 0;
-  const total = subtotal + deliveryFee + serviceFee;
+
+  // Tach 2 — kòd pwomo. `atSubtotal` gade valè sou-total la te genyen lè
+  // kòd la aplike: yon pousantaj rabè depann de sou-total, donk si panye a
+  // chanje apre (kantite, atik retire) apesi a ka vin fo. Effect anba a
+  // efase apesi a otomatikman nan ka sa a — SÈVÈ a (create_order_secure)
+  // refè tout kalkil la ankò kanmenm nan tout ka, sa a se pou UI a rete
+  // koyeran, pa yon mezi sekirite.
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discountAmount: number;
+    atSubtotal: number;
+  } | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
+
+  useEffect(() => {
+    if (appliedPromo && appliedPromo.atSubtotal !== subtotal) {
+      setAppliedPromo(null);
+      toast.info("Panye a chanje — tanpri re-aplike kòd pwomo a.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
+
+  async function applyPromoCode() {
+    const code = promoCodeInput.trim();
+    if (!code) return;
+    setCheckingPromo(true);
+    try {
+      const { data, error } = await supabase.rpc("validate_promo_code_secure", {
+        _code: code,
+        _subtotal: subtotal,
+      });
+      if (error) throw error;
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result?.valid) {
+        toast.error(result?.message || "Kòd pwomo sa a envalid.");
+        return;
+      }
+      setAppliedPromo({
+        code: code.toUpperCase(),
+        discountAmount: Number(result.discount_amount),
+        atSubtotal: subtotal,
+      });
+      toast.success(result.message || "Kòd pwomo aplike!");
+    } catch (e) {
+      toast.error(translateSupabaseError(e));
+    } finally {
+      setCheckingPromo(false);
+    }
+  }
+
+  function removePromoCode() {
+    setAppliedPromo(null);
+    setPromoCodeInput("");
+  }
+
+  const discountAmount = appliedPromo?.discountAmount ?? 0;
+  const total = subtotal - discountAmount + deliveryFee + serviceFee;
 
   // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
   // — last checkpoint before the RPC's own re-check would otherwise reject
@@ -288,6 +345,9 @@ function Checkout() {
         _method: orderMethod,
         _wants_location_sharing: wantsLocationSharing,
         _idempotency_key: idempotencyKey,
+        // Sèvè a (create_order_secure) refè TOUT kalkil rabè a ankò tou
+        // sèl — sa a se sèlman ki kòd kliyan an te antre, jamè yon montan.
+        _promo_code: appliedPromo?.code,
       });
       if ("networkFailure" in orderResult) {
         // Deliberately not a hard error state — the order may well have
@@ -477,11 +537,66 @@ function Checkout() {
                 </div>
               ))}
 
+              <div className="mt-4 border-t-2 border-dashed border-brand-soft pt-4">
+                <label
+                  htmlFor="checkout-promo"
+                  className="mb-2 flex items-center gap-1.5 text-sm font-bold"
+                >
+                  <Tag className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Kòd pwomo
+                </label>
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between rounded-xl border-2 border-status-good bg-status-good-soft px-3 py-2 text-sm font-bold text-status-good">
+                    <span>
+                      {appliedPromo.code} · -{formatHTG(appliedPromo.discountAmount)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={removePromoCode}
+                      aria-label="Retire kòd pwomo a"
+                      className="text-status-good hover:opacity-70"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      id="checkout-promo"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void applyPromoCode();
+                        }
+                      }}
+                      placeholder="Antre yon kòd…"
+                      className={inputCls() + " flex-1"}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      isLoading={checkingPromo}
+                      disabled={!promoCodeInput.trim()}
+                      onClick={applyPromoCode}
+                    >
+                      Aplike
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="mt-4 space-y-1 text-sm">
                 <div className="flex justify-between text-ink-soft">
                   <span>Sou-total</span>
                   <span>{formatHTG(subtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between font-semibold text-status-good">
+                    <span>Rabè ({appliedPromo?.code})</span>
+                    <span>-{formatHTG(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-ink-soft">
                   <span>Frè livrezon</span>
                   <span>{formatHTG(deliveryFee)}</span>

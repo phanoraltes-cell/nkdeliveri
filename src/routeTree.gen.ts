@@ -68,6 +68,7 @@ import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardAdminSecurityRouteImport } from './routes/_authenticated/dashboard.admin.security'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
 import { Route as AuthenticatedDashboardAdminRefundsRouteImport } from './routes/_authenticated/dashboard.admin.refunds'
+import { Route as AuthenticatedDashboardAdminPromoCodesRouteImport } from './routes/_authenticated/dashboard.admin.promo-codes'
 import { Route as AuthenticatedDashboardAdminPayoutsRouteImport } from './routes/_authenticated/dashboard.admin.payouts'
 import { Route as AuthenticatedDashboardAdminPayoutSettingsRouteImport } from './routes/_authenticated/dashboard.admin.payout-settings'
 import { Route as AuthenticatedDashboardAdminPayoutMigrationRouteImport } from './routes/_authenticated/dashboard.admin.payout-migration'
@@ -414,6 +415,12 @@ const AuthenticatedDashboardAdminRefundsRoute =
     path: '/refunds',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminPromoCodesRoute =
+  AuthenticatedDashboardAdminPromoCodesRouteImport.update({
+    id: '/promo-codes',
+    path: '/promo-codes',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminPayoutsRoute =
   AuthenticatedDashboardAdminPayoutsRouteImport.update({
     id: '/payouts',
@@ -558,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
+  '/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
@@ -629,6 +637,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
+  '/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
@@ -707,6 +716,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/payout-migration': typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   '/_authenticated/dashboard/admin/payout-settings': typeof AuthenticatedDashboardAdminPayoutSettingsRoute
   '/_authenticated/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
+  '/_authenticated/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/_authenticated/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/_authenticated/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
@@ -785,6 +795,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
     | '/dashboard/admin/payouts'
+    | '/dashboard/admin/promo-codes'
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
@@ -856,6 +867,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payout-migration'
     | '/dashboard/admin/payout-settings'
     | '/dashboard/admin/payouts'
+    | '/dashboard/admin/promo-codes'
     | '/dashboard/admin/refunds'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
@@ -933,6 +945,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/payout-migration'
     | '/_authenticated/dashboard/admin/payout-settings'
     | '/_authenticated/dashboard/admin/payouts'
+    | '/_authenticated/dashboard/admin/promo-codes'
     | '/_authenticated/dashboard/admin/refunds'
     | '/_authenticated/dashboard/admin/restaurants'
     | '/_authenticated/dashboard/admin/security'
@@ -1405,6 +1418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRefundsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/promo-codes': {
+      id: '/_authenticated/dashboard/admin/promo-codes'
+      path: '/promo-codes'
+      fullPath: '/dashboard/admin/promo-codes'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminPromoCodesRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/payouts': {
       id: '/_authenticated/dashboard/admin/payouts'
       path: '/payouts'
@@ -1537,6 +1557,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminPayoutMigrationRoute: typeof AuthenticatedDashboardAdminPayoutMigrationRoute
   AuthenticatedDashboardAdminPayoutSettingsRoute: typeof AuthenticatedDashboardAdminPayoutSettingsRoute
   AuthenticatedDashboardAdminPayoutsRoute: typeof AuthenticatedDashboardAdminPayoutsRoute
+  AuthenticatedDashboardAdminPromoCodesRoute: typeof AuthenticatedDashboardAdminPromoCodesRoute
   AuthenticatedDashboardAdminRefundsRoute: typeof AuthenticatedDashboardAdminRefundsRoute
   AuthenticatedDashboardAdminRestaurantsRoute: typeof AuthenticatedDashboardAdminRestaurantsRoute
   AuthenticatedDashboardAdminSecurityRoute: typeof AuthenticatedDashboardAdminSecurityRoute
@@ -1576,6 +1597,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminPayoutSettingsRoute,
     AuthenticatedDashboardAdminPayoutsRoute:
       AuthenticatedDashboardAdminPayoutsRoute,
+    AuthenticatedDashboardAdminPromoCodesRoute:
+      AuthenticatedDashboardAdminPromoCodesRoute,
     AuthenticatedDashboardAdminRefundsRoute:
       AuthenticatedDashboardAdminRefundsRoute,
     AuthenticatedDashboardAdminRestaurantsRoute:
