@@ -2151,6 +2151,115 @@ export type Database = {
           },
         ];
       };
+      report_messages: {
+        Row: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["report_message_author"];
+          created_at: string;
+          id: string;
+          message: string;
+          report_id: string;
+        };
+        Insert: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["report_message_author"];
+          created_at?: string;
+          id?: string;
+          message: string;
+          report_id: string;
+        };
+        Update: {
+          author_id?: string;
+          author_role?: Database["public"]["Enums"]["report_message_author"];
+          created_at?: string;
+          id?: string;
+          message?: string;
+          report_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_messages_report_id_fkey";
+            columns: ["report_id"];
+            isOneToOne: false;
+            referencedRelation: "reports";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reports: {
+        Row: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        Insert: {
+          admin_note?: string | null;
+          created_at?: string;
+          description: string;
+          evidence_urls?: string[];
+          id?: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution?: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          shared_with_target_at?: string | null;
+          status?: Database["public"]["Enums"]["report_status"];
+          target_explanation?: string | null;
+          target_explanation_at?: string | null;
+          target_explanation_question?: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at?: string;
+        };
+        Update: {
+          admin_note?: string | null;
+          created_at?: string;
+          description?: string;
+          evidence_urls?: string[];
+          id?: string;
+          order_id?: string;
+          reason_code?: string;
+          reporter_id?: string;
+          resolution?: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          shared_with_target_at?: string | null;
+          status?: Database["public"]["Enums"]["report_status"];
+          target_explanation?: string | null;
+          target_explanation_at?: string | null;
+          target_explanation_question?: string | null;
+          target_id?: string;
+          target_type?: Database["public"]["Enums"]["report_target_type"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reports_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       contract_signatures: {
         Row: {
           contract_version_id: string;
@@ -3862,6 +3971,220 @@ export type Database = {
           total_count: number;
           updated_at: string;
         }[];
+      };
+      get_reports_admin: {
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+          _target_type?: string;
+        };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          order_number: string;
+          order_total: number;
+          reason_code: string;
+          reporter_email: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_founded_reports_90d: number;
+          target_id: string;
+          target_name: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          total_count: number;
+          updated_at: string;
+        }[];
+      };
+      get_shared_reports_for_target_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          description: string;
+          id: string;
+          order_id: string;
+          order_number: string;
+          reason_code: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        }[];
+      };
+      create_report_secure: {
+        Args: {
+          _description: string;
+          _evidence_urls?: string[];
+          _order_id: string;
+          _reason_code: string;
+          _target_type: string;
+        };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+      };
+      add_report_message_secure: {
+        Args: { _message: string; _report_id: string };
+        Returns: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["report_message_author"];
+          created_at: string;
+          id: string;
+          message: string;
+          report_id: string;
+        };
+      };
+      set_report_status_secure: {
+        Args: { _admin_note?: string; _report_id: string; _status: string };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+      };
+      reject_report_secure: {
+        Args: { _admin_note: string; _report_id: string };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+      };
+      resolve_report_secure: {
+        Args: { _admin_note: string; _report_id: string; _resolution: string };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+      };
+      request_target_explanation_secure: {
+        Args: { _question: string; _report_id: string };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+      };
+      submit_target_explanation_secure: {
+        Args: { _explanation: string; _report_id: string };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
       };
       get_driver_commissions_secure: {
         Args: {
@@ -5609,6 +5932,10 @@ export type Database = {
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
       payout_status: "paid" | "confirmed" | "disputed" | "resolved";
       refund_status: "requested" | "approved" | "rejected" | "completed";
+      report_message_author: "customer" | "admin";
+      report_resolution: "none" | "warning" | "refund" | "partial_refund" | "suspension";
+      report_status: "open" | "reviewing" | "resolved" | "rejected";
+      report_target_type: "courier" | "restaurant";
       restaurant_status: "pending" | "pending_contract" | "approved" | "suspended" | "rejected";
     };
     CompositeTypes: {

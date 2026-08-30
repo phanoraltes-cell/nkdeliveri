@@ -46,6 +46,9 @@ export const UPLOAD_LIMITS = {
   "payment-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payout-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "dispute-attachments": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
+  // Tach 1 (SIYALMAN) — foto sèlman (pa dokiman/pdf), jiska 3 pa dosye,
+  // menm plafon 8MB ak driver-documents/dispute-attachments.
+  "report-evidence": { maxBytes: 8 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
   "order-chat-attachments": { maxBytes: 8 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
 } as const satisfies Record<string, { maxBytes: number; allowedTypes: readonly string[] }>;
 // No "ads-media" entry here (audit remediation, API-001, 2026-08-27): ad

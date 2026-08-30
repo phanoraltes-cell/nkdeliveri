@@ -19,6 +19,7 @@ import { OrderReviewSection } from "@/components/order/order-review-section";
 import { RefundSection } from "@/components/order/refund-section";
 import { CancelOrderSection } from "@/components/order/cancel-order-section";
 import { DisputeSection } from "@/components/order/dispute-section";
+import { ReportSection } from "@/components/order/report-section";
 import { CashConfirmationSection } from "@/components/order/cash-confirmation-section";
 import { CustomerLocationToggle } from "@/components/order/customer-location-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +51,7 @@ function OrderDetail() {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, order_number, status, subtotal, delivery_fee, service_fee, discount_amount, promo_code, promotion_discount_amount, promotions(title), total, currency, delivery_address, contact_phone, delivery_notes, created_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference, created_at))",
+          "id, order_number, status, subtotal, delivery_fee, service_fee, discount_amount, promo_code, promotion_discount_amount, promotions(title), total, currency, delivery_address, contact_phone, delivery_notes, created_at, updated_at, restaurant_id, restaurants(name, slug), order_items(product_name, quantity, unit_price, line_total), payments(id, method, status, transaction_ref, sender_phone, review_notes, reviewed_at, receiver_type, receiver_number, receiver_account_name, cash_confirmation_status, customer_confirmed_at, payment_transactions(id, status, external_reference, created_at))",
         )
         .eq("id", id)
         .maybeSingle();
@@ -469,6 +470,13 @@ function OrderDetail() {
             <div id="dispute" className="scroll-mt-20">
               <DisputeSection orderId={o.id} orderStatus={o.status} />
             </div>
+
+            {/* Tach 1 (SIYALMAN) — separe de DisputeSection anwo a espre
+                (chat kolaboratif ouvè a tout pati) : sa a se yon plent
+                konfidansyèl kont YON sib spesifik, ki parèt sèlman apre
+                kòmand la fin livre/anile (wè report-section.tsx pou
+                rezonman konplè). */}
+            <ReportSection orderId={o.id} orderStatus={o.status} orderUpdatedAt={o.updated_at} />
 
             {o.status === "delivered" && (
               <OrderReviewSection

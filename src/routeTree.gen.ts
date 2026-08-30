@@ -47,6 +47,7 @@ import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_
 import { Route as ApiWebhooksStripeCollectRouteImport } from './routes/api.webhooks.stripe.collect'
 import { Route as ApiWebhooksMoncashCollectRouteImport } from './routes/api.webhooks.moncash.collect'
 import { Route as AuthenticatedDashboardRestaurantRevenueRouteImport } from './routes/_authenticated/dashboard.restaurant.revenue'
+import { Route as AuthenticatedDashboardRestaurantReportsRouteImport } from './routes/_authenticated/dashboard.restaurant.reports'
 import { Route as AuthenticatedDashboardRestaurantPromotionsRouteImport } from './routes/_authenticated/dashboard.restaurant.promotions'
 import { Route as AuthenticatedDashboardRestaurantProfileRouteImport } from './routes/_authenticated/dashboard.restaurant.profile'
 import { Route as AuthenticatedDashboardRestaurantPayoutsRouteImport } from './routes/_authenticated/dashboard.restaurant.payouts'
@@ -55,6 +56,7 @@ import { Route as AuthenticatedDashboardRestaurantMenuRouteImport } from './rout
 import { Route as AuthenticatedDashboardRestaurantEmployeesRouteImport } from './routes/_authenticated/dashboard.restaurant.employees'
 import { Route as AuthenticatedDashboardRestaurantDisputesRouteImport } from './routes/_authenticated/dashboard.restaurant.disputes'
 import { Route as AuthenticatedDashboardRestaurantCommissionsRouteImport } from './routes/_authenticated/dashboard.restaurant.commissions'
+import { Route as AuthenticatedDashboardDriverReportsRouteImport } from './routes/_authenticated/dashboard.driver.reports'
 import { Route as AuthenticatedDashboardDriverProfileRouteImport } from './routes/_authenticated/dashboard.driver.profile'
 import { Route as AuthenticatedDashboardDriverPayoutsRouteImport } from './routes/_authenticated/dashboard.driver.payouts'
 import { Route as AuthenticatedDashboardDriverHistoryRouteImport } from './routes/_authenticated/dashboard.driver.history'
@@ -67,6 +69,7 @@ import { Route as AuthenticatedDashboardCustomerChatRouteImport } from './routes
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
 import { Route as AuthenticatedDashboardAdminSecurityRouteImport } from './routes/_authenticated/dashboard.admin.security'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
+import { Route as AuthenticatedDashboardAdminReportsRouteImport } from './routes/_authenticated/dashboard.admin.reports'
 import { Route as AuthenticatedDashboardAdminRefundsRouteImport } from './routes/_authenticated/dashboard.admin.refunds'
 import { Route as AuthenticatedDashboardAdminPromoCodesRouteImport } from './routes/_authenticated/dashboard.admin.promo-codes'
 import { Route as AuthenticatedDashboardAdminPayoutsRouteImport } from './routes/_authenticated/dashboard.admin.payouts'
@@ -291,6 +294,12 @@ const AuthenticatedDashboardRestaurantRevenueRoute =
     path: '/revenue',
     getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
   } as any)
+const AuthenticatedDashboardRestaurantReportsRoute =
+  AuthenticatedDashboardRestaurantReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
+  } as any)
 const AuthenticatedDashboardRestaurantPromotionsRoute =
   AuthenticatedDashboardRestaurantPromotionsRouteImport.update({
     id: '/promotions',
@@ -338,6 +347,12 @@ const AuthenticatedDashboardRestaurantCommissionsRoute =
     id: '/commissions',
     path: '/commissions',
     getParentRoute: () => AuthenticatedDashboardRestaurantRoute,
+  } as any)
+const AuthenticatedDashboardDriverReportsRoute =
+  AuthenticatedDashboardDriverReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedDashboardDriverRoute,
   } as any)
 const AuthenticatedDashboardDriverProfileRoute =
   AuthenticatedDashboardDriverProfileRouteImport.update({
@@ -409,6 +424,12 @@ const AuthenticatedDashboardAdminRestaurantsRoute =
   AuthenticatedDashboardAdminRestaurantsRouteImport.update({
     id: '/restaurants',
     path: '/restaurants',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminReportsRoute =
+  AuthenticatedDashboardAdminReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
 const AuthenticatedDashboardAdminRefundsRoute =
@@ -583,6 +604,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
+  '/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
@@ -595,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/dashboard/driver/reports': typeof AuthenticatedDashboardDriverReportsRoute
   '/dashboard/restaurant/commissions': typeof AuthenticatedDashboardRestaurantCommissionsRoute
   '/dashboard/restaurant/disputes': typeof AuthenticatedDashboardRestaurantDisputesRoute
   '/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
@@ -603,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
   '/dashboard/restaurant/profile': typeof AuthenticatedDashboardRestaurantProfileRoute
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
+  '/dashboard/restaurant/reports': typeof AuthenticatedDashboardRestaurantReportsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
   '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
@@ -657,6 +681,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
+  '/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
@@ -669,6 +694,7 @@ export interface FileRoutesByTo {
   '/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/dashboard/driver/reports': typeof AuthenticatedDashboardDriverReportsRoute
   '/dashboard/restaurant/commissions': typeof AuthenticatedDashboardRestaurantCommissionsRoute
   '/dashboard/restaurant/disputes': typeof AuthenticatedDashboardRestaurantDisputesRoute
   '/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
@@ -677,6 +703,7 @@ export interface FileRoutesByTo {
   '/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
   '/dashboard/restaurant/profile': typeof AuthenticatedDashboardRestaurantProfileRoute
   '/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
+  '/dashboard/restaurant/reports': typeof AuthenticatedDashboardRestaurantReportsRoute
   '/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
   '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
@@ -738,6 +765,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/payouts': typeof AuthenticatedDashboardAdminPayoutsRoute
   '/_authenticated/dashboard/admin/promo-codes': typeof AuthenticatedDashboardAdminPromoCodesRoute
   '/_authenticated/dashboard/admin/refunds': typeof AuthenticatedDashboardAdminRefundsRoute
+  '/_authenticated/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/_authenticated/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
@@ -750,6 +778,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/driver/history': typeof AuthenticatedDashboardDriverHistoryRoute
   '/_authenticated/dashboard/driver/payouts': typeof AuthenticatedDashboardDriverPayoutsRoute
   '/_authenticated/dashboard/driver/profile': typeof AuthenticatedDashboardDriverProfileRoute
+  '/_authenticated/dashboard/driver/reports': typeof AuthenticatedDashboardDriverReportsRoute
   '/_authenticated/dashboard/restaurant/commissions': typeof AuthenticatedDashboardRestaurantCommissionsRoute
   '/_authenticated/dashboard/restaurant/disputes': typeof AuthenticatedDashboardRestaurantDisputesRoute
   '/_authenticated/dashboard/restaurant/employees': typeof AuthenticatedDashboardRestaurantEmployeesRoute
@@ -758,6 +787,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/restaurant/payouts': typeof AuthenticatedDashboardRestaurantPayoutsRoute
   '/_authenticated/dashboard/restaurant/profile': typeof AuthenticatedDashboardRestaurantProfileRoute
   '/_authenticated/dashboard/restaurant/promotions': typeof AuthenticatedDashboardRestaurantPromotionsRoute
+  '/_authenticated/dashboard/restaurant/reports': typeof AuthenticatedDashboardRestaurantReportsRoute
   '/_authenticated/dashboard/restaurant/revenue': typeof AuthenticatedDashboardRestaurantRevenueRoute
   '/api/webhooks/moncash/collect': typeof ApiWebhooksMoncashCollectRoute
   '/api/webhooks/stripe/collect': typeof ApiWebhooksStripeCollectRoute
@@ -819,6 +849,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payouts'
     | '/dashboard/admin/promo-codes'
     | '/dashboard/admin/refunds'
+    | '/dashboard/admin/reports'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
     | '/dashboard/admin/users'
@@ -831,6 +862,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/driver/profile'
+    | '/dashboard/driver/reports'
     | '/dashboard/restaurant/commissions'
     | '/dashboard/restaurant/disputes'
     | '/dashboard/restaurant/employees'
@@ -839,6 +871,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/payouts'
     | '/dashboard/restaurant/profile'
     | '/dashboard/restaurant/promotions'
+    | '/dashboard/restaurant/reports'
     | '/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
     | '/api/webhooks/stripe/collect'
@@ -893,6 +926,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/payouts'
     | '/dashboard/admin/promo-codes'
     | '/dashboard/admin/refunds'
+    | '/dashboard/admin/reports'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
     | '/dashboard/admin/users'
@@ -905,6 +939,7 @@ export interface FileRouteTypes {
     | '/dashboard/driver/history'
     | '/dashboard/driver/payouts'
     | '/dashboard/driver/profile'
+    | '/dashboard/driver/reports'
     | '/dashboard/restaurant/commissions'
     | '/dashboard/restaurant/disputes'
     | '/dashboard/restaurant/employees'
@@ -913,6 +948,7 @@ export interface FileRouteTypes {
     | '/dashboard/restaurant/payouts'
     | '/dashboard/restaurant/profile'
     | '/dashboard/restaurant/promotions'
+    | '/dashboard/restaurant/reports'
     | '/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
     | '/api/webhooks/stripe/collect'
@@ -973,6 +1009,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/payouts'
     | '/_authenticated/dashboard/admin/promo-codes'
     | '/_authenticated/dashboard/admin/refunds'
+    | '/_authenticated/dashboard/admin/reports'
     | '/_authenticated/dashboard/admin/restaurants'
     | '/_authenticated/dashboard/admin/security'
     | '/_authenticated/dashboard/admin/users'
@@ -985,6 +1022,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver/history'
     | '/_authenticated/dashboard/driver/payouts'
     | '/_authenticated/dashboard/driver/profile'
+    | '/_authenticated/dashboard/driver/reports'
     | '/_authenticated/dashboard/restaurant/commissions'
     | '/_authenticated/dashboard/restaurant/disputes'
     | '/_authenticated/dashboard/restaurant/employees'
@@ -993,6 +1031,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/restaurant/payouts'
     | '/_authenticated/dashboard/restaurant/profile'
     | '/_authenticated/dashboard/restaurant/promotions'
+    | '/_authenticated/dashboard/restaurant/reports'
     | '/_authenticated/dashboard/restaurant/revenue'
     | '/api/webhooks/moncash/collect'
     | '/api/webhooks/stripe/collect'
@@ -1297,6 +1336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantRevenueRouteImport
       parentRoute: typeof AuthenticatedDashboardRestaurantRoute
     }
+    '/_authenticated/dashboard/restaurant/reports': {
+      id: '/_authenticated/dashboard/restaurant/reports'
+      path: '/reports'
+      fullPath: '/dashboard/restaurant/reports'
+      preLoaderRoute: typeof AuthenticatedDashboardRestaurantReportsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRestaurantRoute
+    }
     '/_authenticated/dashboard/restaurant/promotions': {
       id: '/_authenticated/dashboard/restaurant/promotions'
       path: '/promotions'
@@ -1352,6 +1398,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/restaurant/commissions'
       preLoaderRoute: typeof AuthenticatedDashboardRestaurantCommissionsRouteImport
       parentRoute: typeof AuthenticatedDashboardRestaurantRoute
+    }
+    '/_authenticated/dashboard/driver/reports': {
+      id: '/_authenticated/dashboard/driver/reports'
+      path: '/reports'
+      fullPath: '/dashboard/driver/reports'
+      preLoaderRoute: typeof AuthenticatedDashboardDriverReportsRouteImport
+      parentRoute: typeof AuthenticatedDashboardDriverRoute
     }
     '/_authenticated/dashboard/driver/profile': {
       id: '/_authenticated/dashboard/driver/profile'
@@ -1435,6 +1488,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurants'
       fullPath: '/dashboard/admin/restaurants'
       preLoaderRoute: typeof AuthenticatedDashboardAdminRestaurantsRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/reports': {
+      id: '/_authenticated/dashboard/admin/reports'
+      path: '/reports'
+      fullPath: '/dashboard/admin/reports'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminReportsRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
     '/_authenticated/dashboard/admin/refunds': {
@@ -1601,6 +1661,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminPayoutsRoute: typeof AuthenticatedDashboardAdminPayoutsRoute
   AuthenticatedDashboardAdminPromoCodesRoute: typeof AuthenticatedDashboardAdminPromoCodesRoute
   AuthenticatedDashboardAdminRefundsRoute: typeof AuthenticatedDashboardAdminRefundsRoute
+  AuthenticatedDashboardAdminReportsRoute: typeof AuthenticatedDashboardAdminReportsRoute
   AuthenticatedDashboardAdminRestaurantsRoute: typeof AuthenticatedDashboardAdminRestaurantsRoute
   AuthenticatedDashboardAdminSecurityRoute: typeof AuthenticatedDashboardAdminSecurityRoute
   AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
@@ -1647,6 +1708,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminPromoCodesRoute,
     AuthenticatedDashboardAdminRefundsRoute:
       AuthenticatedDashboardAdminRefundsRoute,
+    AuthenticatedDashboardAdminReportsRoute:
+      AuthenticatedDashboardAdminReportsRoute,
     AuthenticatedDashboardAdminRestaurantsRoute:
       AuthenticatedDashboardAdminRestaurantsRoute,
     AuthenticatedDashboardAdminSecurityRoute:
@@ -1689,6 +1752,7 @@ interface AuthenticatedDashboardDriverRouteChildren {
   AuthenticatedDashboardDriverHistoryRoute: typeof AuthenticatedDashboardDriverHistoryRoute
   AuthenticatedDashboardDriverPayoutsRoute: typeof AuthenticatedDashboardDriverPayoutsRoute
   AuthenticatedDashboardDriverProfileRoute: typeof AuthenticatedDashboardDriverProfileRoute
+  AuthenticatedDashboardDriverReportsRoute: typeof AuthenticatedDashboardDriverReportsRoute
   AuthenticatedDashboardDriverIndexRoute: typeof AuthenticatedDashboardDriverIndexRoute
 }
 
@@ -1710,6 +1774,8 @@ const AuthenticatedDashboardDriverRouteChildren: AuthenticatedDashboardDriverRou
       AuthenticatedDashboardDriverPayoutsRoute,
     AuthenticatedDashboardDriverProfileRoute:
       AuthenticatedDashboardDriverProfileRoute,
+    AuthenticatedDashboardDriverReportsRoute:
+      AuthenticatedDashboardDriverReportsRoute,
     AuthenticatedDashboardDriverIndexRoute:
       AuthenticatedDashboardDriverIndexRoute,
   }
@@ -1728,6 +1794,7 @@ interface AuthenticatedDashboardRestaurantRouteChildren {
   AuthenticatedDashboardRestaurantPayoutsRoute: typeof AuthenticatedDashboardRestaurantPayoutsRoute
   AuthenticatedDashboardRestaurantProfileRoute: typeof AuthenticatedDashboardRestaurantProfileRoute
   AuthenticatedDashboardRestaurantPromotionsRoute: typeof AuthenticatedDashboardRestaurantPromotionsRoute
+  AuthenticatedDashboardRestaurantReportsRoute: typeof AuthenticatedDashboardRestaurantReportsRoute
   AuthenticatedDashboardRestaurantRevenueRoute: typeof AuthenticatedDashboardRestaurantRevenueRoute
   AuthenticatedDashboardRestaurantIndexRoute: typeof AuthenticatedDashboardRestaurantIndexRoute
 }
@@ -1750,6 +1817,8 @@ const AuthenticatedDashboardRestaurantRouteChildren: AuthenticatedDashboardResta
       AuthenticatedDashboardRestaurantProfileRoute,
     AuthenticatedDashboardRestaurantPromotionsRoute:
       AuthenticatedDashboardRestaurantPromotionsRoute,
+    AuthenticatedDashboardRestaurantReportsRoute:
+      AuthenticatedDashboardRestaurantReportsRoute,
     AuthenticatedDashboardRestaurantRevenueRoute:
       AuthenticatedDashboardRestaurantRevenueRoute,
     AuthenticatedDashboardRestaurantIndexRoute:

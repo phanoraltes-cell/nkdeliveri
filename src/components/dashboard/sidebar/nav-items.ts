@@ -14,6 +14,7 @@ import {
   MapPin,
   RotateCcw,
   AlertTriangle,
+  Flag,
   Banknote,
   Percent,
   MessageCircle,
@@ -59,6 +60,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/restaurant/promotions", label: "Pwomosyon", icon: Megaphone },
     { to: "/dashboard/restaurant/employees", label: "Anplwaye", icon: UserCog },
     { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/restaurant/reports", label: "Siyalman", icon: Flag },
     { to: "/dashboard/restaurant/revenue", label: "Revni", icon: Gauge },
     { to: "/dashboard/restaurant/commissions", label: "Komisyon", icon: Percent },
     { to: "/dashboard/restaurant/payouts", label: "Peman", icon: Wallet },
@@ -69,6 +71,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/restaurant/menu", label: "Meni", icon: UtensilsCrossed },
     { to: "/dashboard/restaurant/promotions", label: "Pwomosyon", icon: Megaphone },
     { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/restaurant/reports", label: "Siyalman", icon: Flag },
   ],
   driver: [
     { to: "/dashboard/driver", label: "Akèy", icon: LayoutDashboard },
@@ -76,6 +79,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/driver/history", label: "Istwa livrezon", icon: History },
     { to: "/dashboard/driver/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/driver/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/driver/reports", label: "Siyalman", icon: Flag },
     { to: "/dashboard/driver/earnings", label: "Revni", icon: Wallet },
     { to: "/dashboard/driver/commissions", label: "Komisyon", icon: Percent },
     { to: "/dashboard/driver/payouts", label: "Peman", icon: CreditCard },
@@ -88,6 +92,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/admin/reports", label: "Siyalman", icon: Flag },
     { to: "/dashboard/admin/komand", label: "Komand", icon: Radar },
     { to: "/dashboard/admin/finance", label: "Tablo Finansye", icon: BarChart3, section: "Finans" },
     { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
@@ -126,6 +131,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/drivers", label: "Livrè", icon: Bike },
     { to: "/dashboard/admin/chat", label: "Chat", icon: MessageCircle },
     { to: "/dashboard/admin/disputes", label: "Litij", icon: AlertTriangle },
+    { to: "/dashboard/admin/reports", label: "Siyalman", icon: Flag },
     { to: "/dashboard/admin/komand", label: "Komand", icon: Radar },
     { to: "/dashboard/admin/finance", label: "Tablo Finansye", icon: BarChart3, section: "Finans" },
     { to: "/dashboard/admin/payments", label: "Peman Kliyan", icon: CreditCard, section: "Finans" },
@@ -166,6 +172,7 @@ const RESTAURANT_STAFF_OPERATIONAL_NAV: NavItem[] = [
   { to: "/dashboard/restaurant", label: "Akèy", icon: LayoutDashboard },
   { to: "/dashboard/restaurant/orders", label: "Kòmand", icon: ShoppingBag },
   { to: "/dashboard/restaurant/disputes", label: "Litij", icon: AlertTriangle },
+  { to: "/dashboard/restaurant/reports", label: "Siyalman", icon: Flag },
 ];
 
 export function getNavItems(role: string, employeeRole?: string | null): NavItem[] {
