@@ -500,6 +500,51 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
             </div>
           </motion.div>
 
+          {/* Metòd peman — vèsyon mobil (demand itilizatè, 2026-08-30):
+              anba md, `motion.div` anwo a rann VID nèt sou telefòn (tout pitit
+              li yo se `hidden ... md:block/flex`), kite yon ti espas plan san
+              anyen ladan l anvan pwochen seksyon an (KategoriPlaSection). Kat sa
+              a ranpli espas vid sa a ak MENM 4 lojo yo (MonCash/Kach/NatCash/Kat
+              Kredi) ki deja itilize nan "Peman badge" desktop la (pi ba, kache
+              anba md) ak nan footer a (site-footer.tsx) — okenn nouvo lojo
+              envante, sèlman menm enfòmasyon an rann vizib pou itilizatè mobil
+              yo tou, ki jodi a pa gen okenn mwayen wè metòd peman yo san yo pa
+              defile jis rive nan footer a. `md:hidden` — desktop kenbe egzakteman
+              menm badge pozisyone anba a, san chanjman. */}
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-brand-soft/50 bg-white px-4 py-3 shadow-brand-xs md:hidden">
+            <span className="text-xs font-semibold whitespace-nowrap text-ink-soft">
+              Peman disponib
+            </span>
+            <img
+              src="/moncash-logo-hero.png"
+              alt="MonCash"
+              width={28}
+              height={28}
+              loading="lazy"
+              className="h-7 w-7 shrink-0 rounded object-cover"
+            />
+            <div className="flex h-7 shrink-0 items-center justify-center gap-1 rounded border border-brand-soft/60 bg-cream px-2">
+              <Banknote className="h-3.5 w-3.5 shrink-0 text-brand-deep" aria-hidden="true" />
+              <span className="text-[0.65rem] font-bold text-ink">Kach</span>
+            </div>
+            <img
+              src="/natcash-logo-new.png"
+              alt="NatCash"
+              width={28}
+              height={28}
+              loading="lazy"
+              className="h-7 w-7 shrink-0 rounded object-cover"
+            />
+            <img
+              src="/katkredi.png"
+              alt="Kat Kredi"
+              width={28}
+              height={28}
+              loading="lazy"
+              className="h-7 w-7 shrink-0 rounded object-cover"
+            />
+          </div>
+
           {/* Payment badge — anchored to the Hero's own content container
               (this div), never the viewport, so it can't drift off-frame
               at an unusual viewport size. Hidden entirely below md
