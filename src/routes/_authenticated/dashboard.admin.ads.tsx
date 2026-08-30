@@ -649,15 +649,22 @@ function PlacementForm({
               object-contain (jamè koupe) nan yon kontenè ki swiv VRE rapò
               dimansyon imaj/videyo a (media.mediaWidth/mediaHeight,
               mezire otomatikman anwo pa MediaUploader) — tonbe tounen sou
-              kad fiks plasman an sèlman si dimansyon yo pa ko mezire. */}
+              kad fiks plasman an sèlman si dimansyon yo pa ko mezire.
+              "popup" se yon EKSEPSYON deklare (demand itilizatè apre
+              premye vèsyon an): li itilize yon wotè FIKS toujou (h-40),
+              JAMÈ rapò dimansyon dinamik — se egzakteman sa ki te lakòz
+              popup la parèt "plen ekran" pou yon imaj vètikal, wè
+              popup-ad-modal.tsx pou menm kòmantè a. */}
           <div
             className={
-              media.mediaWidth && media.mediaHeight
-                ? "overflow-hidden rounded-2xl bg-ink/5"
-                : `overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`
+              f.placement === "popup"
+                ? "flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-ink/5"
+                : media.mediaWidth && media.mediaHeight
+                  ? "overflow-hidden rounded-2xl bg-ink/5"
+                  : `overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`
             }
             style={
-              media.mediaWidth && media.mediaHeight
+              f.placement !== "popup" && media.mediaWidth && media.mediaHeight
                 ? { aspectRatio: `${media.mediaWidth} / ${media.mediaHeight}` }
                 : undefined
             }
