@@ -158,6 +158,10 @@ function AdminAds() {
         // it's reached, but stays explicit (not passthroughExtraFields())
         // since it's no longer merely "echoed", it's enforced.
         _description: p.description ?? undefined,
+        // Tach 4 — echo, menm rezon ak lòt chan medya yo: toggle active/
+        // inactive pa dwe janm efase dimansyon estoke yo.
+        _media_width: p.media_width ?? undefined,
+        _media_height: p.media_height ?? undefined,
         ...passthroughExtraFields(p),
       });
       if (error) throw error;
@@ -291,6 +295,8 @@ function mediaFromPlacement(p: Placement | null): MediaUploaderValue {
     mediaPath: p.media_path ?? null,
     thumbnailUrl: p.thumbnail_url ?? null,
     altText: p.alt_text ?? "",
+    mediaWidth: p.media_width ?? null,
+    mediaHeight: p.media_height ?? null,
   };
 }
 
@@ -399,6 +405,8 @@ function PlacementForm({
           _media_path: media.mediaPath ?? undefined,
           _thumbnail_url: media.thumbnailUrl ?? undefined,
           _alt_text: media.altText || undefined,
+          _media_width: media.mediaWidth ?? undefined,
+          _media_height: media.mediaHeight ?? undefined,
           ...passthroughExtraFields(placement),
         });
         if (error) {
@@ -441,6 +449,8 @@ function PlacementForm({
           _media_path: media.mediaPath ?? undefined,
           _thumbnail_url: media.thumbnailUrl ?? undefined,
           _alt_text: media.altText || undefined,
+          _media_width: media.mediaWidth ?? undefined,
+          _media_height: media.mediaHeight ?? undefined,
         });
         if (error) {
           cleanupOrphanUpload();
@@ -571,12 +581,22 @@ function PlacementForm({
           <span className="mb-2 block text-xs font-bold uppercase text-ink-soft">
             Apèsi nan kad "{PLACEMENT_LABEL[f.placement]}" la
           </span>
-          {/* Same crop (object-cover, fixed ratio) AdMedia will actually
-              render on the site — shows the admin exactly how their
-              photo/video will be framed/cropped before they save, instead
-              of the uncropped raw preview MediaUploader shows above. */}
+          {/* Tach 4 — menm afichaj EGZAK AdMedia ap itilize sou sit la:
+              object-contain (jamè koupe) nan yon kontenè ki swiv VRE rapò
+              dimansyon imaj/videyo a (media.mediaWidth/mediaHeight,
+              mezire otomatikman anwo pa MediaUploader) — tonbe tounen sou
+              kad fiks plasman an sèlman si dimansyon yo pa ko mezire. */}
           <div
-            className={`overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`}
+            className={
+              media.mediaWidth && media.mediaHeight
+                ? "overflow-hidden rounded-2xl bg-ink/5"
+                : `overflow-hidden rounded-2xl bg-ink/5 ${PLACEMENT_MEDIA_FRAME[f.placement]}`
+            }
+            style={
+              media.mediaWidth && media.mediaHeight
+                ? { aspectRatio: `${media.mediaWidth} / ${media.mediaHeight}` }
+                : undefined
+            }
           >
             <AdMedia
               ad={{
@@ -587,7 +607,7 @@ function PlacementForm({
                 title: f.title || "Apèsi anons",
               }}
               icon={Megaphone}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useActivePlacements } from "@/hooks/useActivePlacements";
 import { AdMedia } from "@/components/ads/ad-media";
+import { getAdAspectRatio } from "@/lib/ad-aspect-ratio";
 import { Store } from "lucide-react";
 
 /**
@@ -20,6 +21,12 @@ export function AdBannerSection() {
   // and the legacy image_url both empty) — AdMedia already prefers
   // media_url over image_url on its own.
   const hasMedia = !!(ad.media_url || ad.image_url || ad.restaurant_cover_url);
+  // Tach 4 — jamè koupe: itilize VRE rapò dimansyon imaj/videyo a
+  // (media_width/media_height, mezire pa MediaUploader) lè li disponib.
+  // Yon anons kreye anvan sa (oswa ki tonbe sou foto kouvèti restoran an,
+  // ki pa gen dimansyon estoke) tonbe tounen sou ansyen kad 16:9 fiks la —
+  // menm konpòtman ak jodi a, sèlman object-contain olye object-cover.
+  const ratio = getAdAspectRatio(ad);
 
   const content = (
     <div className="relative grid overflow-hidden rounded-[32px] bg-brand-deep text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.4fr_1fr]">
@@ -30,23 +37,32 @@ export function AdBannerSection() {
         <h2 className="font-display text-[clamp(1.4rem,2.4vw,1.9rem)] font-extrabold leading-tight">
           {ad.title}
         </h2>
+        {ad.description && (
+          <p className="mt-2 max-w-[46ch] text-sm text-white/85">{ad.description}</p>
+        )}
       </div>
       {hasMedia && (
-        // Fixed 16:9 frame on mobile (this column previously had no defined
-        // height at all — its rendered size just happened to fall out of
-        // the <img>'s own intrinsic ratio, which silently broke the moment
-        // an ad's media became a <video>, since a video with no CSS height
-        // and no width/height attributes collapses to 0). Desktop keeps its
-        // existing behavior: the image column fills whatever height the
-        // grid row already resolves to, via absolute+inset.
-        <div className="relative aspect-[16/9] md:aspect-auto">
+        // Kontenè a itilize `ratio` (vre dimansyon medya a) kòm rapò
+        // dimansyon lè li disponib, san bezwen `aspect-[16/9]` fiks la —
+        // sou mobil, wotè kad la swiv medya a egzakteman. Sou desktop, kòn
+        // nan gwoup kontinye ranpli wotè liy grid la (absolute+inset), kad
+        // la sèvi sèlman kòm yon "minimòm" pou evite yon efondreman a 0
+        // pandan chajman.
+        <div
+          className={
+            ratio
+              ? "relative bg-black/10 md:aspect-auto"
+              : "relative aspect-[16/9] bg-black/10 md:aspect-auto"
+          }
+          style={ratio ? { aspectRatio: ratio } : undefined}
+        >
           <AdMedia
             ad={{ ...ad, image_url: ad.image_url ?? ad.restaurant_cover_url }}
             icon={Store}
             loading="lazy"
-            width={1024}
-            height={768}
-            className="h-full w-full object-cover object-center md:absolute md:inset-0"
+            width={ad.media_width ?? 1024}
+            height={ad.media_height ?? 768}
+            className="h-full w-full object-contain object-center md:absolute md:inset-0"
           />
         </div>
       )}

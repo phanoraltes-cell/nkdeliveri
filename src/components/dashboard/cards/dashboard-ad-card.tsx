@@ -18,6 +18,9 @@ export function DashboardAdCard() {
             Piblisite
           </span>
           <div className="mt-1 font-display text-base font-extrabold text-ink">{ad.title}</div>
+          {ad.description && (
+            <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{ad.description}</p>
+          )}
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-200/70 text-amber-800">
           <Megaphone className="h-5 w-5" aria-hidden="true" />

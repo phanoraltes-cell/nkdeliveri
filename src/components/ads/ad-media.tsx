@@ -15,6 +15,9 @@ export type AdMediaSource = {
   image_url?: string | null;
   thumbnail_url?: string | null;
   alt_text?: string | null;
+  /** Tach 4 — natirèl dimansyon medya a, mezire pa MediaUploader; wè lib/ad-aspect-ratio.ts. */
+  media_width?: number | null;
+  media_height?: number | null;
   title: string;
 };
 

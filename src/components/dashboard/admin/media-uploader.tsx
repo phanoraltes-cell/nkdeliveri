@@ -93,6 +93,30 @@ function randomId(): string {
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// Tach 4 — natirèl dimansyon medya a, pou call sites (AdMedia) ka konstwi
+// yon kontenè AK VRE rapò dimansyon lan olye yon rapò FIKS ki koupe imaj.
+// Rezoud `null` (jamè rejte) sou nenpòt echèk (CORS, lyen kraze, fòma pa
+// sipòte) — yon anons san dimansyon estoke tonbe tounen sou rapò default
+// plasman an, pa yon eta erè.
+function measureImageDimensions(url: string): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+function measureVideoDimensions(url: string): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
+    video.onerror = () => resolve(null);
+    video.src = url;
+  });
+}
+
 export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>(
   function MediaUploader({ value, onChange, disabled, onUploadingChange }, ref) {
     const [uploading, setUploading] = useState(false);
@@ -122,6 +146,9 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
       mediaBucket: null,
       thumbnailPath: null,
     });
+    // Tach 4 — dènye URL tape nan tab "Lyen imaj" a, gade pou handleLinkBlur
+    // ka verifye li poko demode anvan li ekri yon mezi ki fèt an reta.
+    const linkUrlRef = useRef<string | null>(null);
 
     useImperativeHandle(ref, () => ({
       commit() {
@@ -226,12 +253,24 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
           }
           uploadedRef.current = { mediaPath, mediaBucket, thumbnailPath };
 
+          // Mezire sou `uploadFile` (apre konpresyon pou yon imaj), pa sou
+          // `file` orijinal la — dimansyon yo dwe matche EGZAKTEMAN sa ki
+          // reyèlman telechaje/sèvi, pa fichye orijinal la si konpresyon an
+          // te redimansyone l.
+          const objectUrl = URL.createObjectURL(uploadFile);
+          const dims = isVideo
+            ? await measureVideoDimensions(objectUrl)
+            : await measureImageDimensions(objectUrl);
+          URL.revokeObjectURL(objectUrl);
+
           onChange({
             mediaType: isVideo ? "video" : "image",
             mediaUrl,
             mediaPath,
             thumbnailUrl,
             altText: value.altText,
+            mediaWidth: dims?.width ?? null,
+            mediaHeight: dims?.height ?? null,
           });
           setPendingFile(null);
         } catch (err) {
@@ -268,6 +307,20 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
       setError(null);
       setPendingFile(null);
       onChange({ ...EMPTY_MEDIA_VALUE, altText: value.altText });
+    }
+
+    // Tach 4 — lyen ekstèn (tab "Lyen imaj"): mezire sou `blur` (pa sou
+    // chak touch), pou pa lanse yon chaje imaj pou chak lèt kliyan tape.
+    // `linkUrlRef` gade dènye URL tape a — si admin an chanje/efase l
+    // pandan mezi a ap fèt, rezilta a jete olye ekri sou yon lòt valè.
+    function handleLinkBlur() {
+      const url = linkUrlRef.current;
+      if (!url || value.mediaType !== "image" || value.mediaPath || value.mediaWidth != null)
+        return;
+      void measureImageDimensions(url).then((dims) => {
+        if (!dims || linkUrlRef.current !== url || value.mediaUrl !== url) return;
+        onChange({ ...value, mediaWidth: dims.width, mediaHeight: dims.height });
+      });
     }
 
     function handleDrop(e: DragEvent<HTMLDivElement>) {
@@ -436,6 +489,7 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
               disabled={disabled}
               onChange={(e) => {
                 const url = e.target.value.trim();
+                linkUrlRef.current = url || null;
                 // Switching to a typed link abandons any file this
                 // instance uploaded (e.g. the admin uploaded, then changed
                 // their mind and pasted an external URL instead) — clean
@@ -454,8 +508,11 @@ export const MediaUploader = forwardRef<MediaUploaderHandle, MediaUploaderProps>
                   mediaPath: null,
                   thumbnailUrl: null,
                   altText: value.altText,
+                  mediaWidth: null,
+                  mediaHeight: null,
                 });
               }}
+              onBlur={handleLinkBlur}
             />
             <p className="mt-1 text-xs text-ink-soft">
               Itilize sa a si imaj la deja ann liy yon lòt kote (pa jere nan resif nou).
