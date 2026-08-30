@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Radar,
   FileSignature,
+  Handshake,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -114,6 +115,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
     { to: "/dashboard/admin/contracts", label: "Kontra Restoran", icon: FileSignature },
+    { to: "/dashboard/admin/partners", label: "Patnè Ofisyèl", icon: Handshake },
     { to: "/dashboard/admin/security", label: "Sekirite kont", icon: ShieldCheck },
   ],
   super_admin: [
@@ -151,6 +153,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     },
     { to: "/dashboard/admin/ads", label: "Piblisite", icon: Megaphone },
     { to: "/dashboard/admin/contracts", label: "Kontra Restoran", icon: FileSignature },
+    { to: "/dashboard/admin/partners", label: "Patnè Ofisyèl", icon: Handshake },
     { to: "/dashboard/admin/security", label: "Sekirite kont", icon: ShieldCheck },
   ],
 };

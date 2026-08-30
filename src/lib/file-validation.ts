@@ -36,6 +36,12 @@ export const UPLOAD_LIMITS = {
   // nan fichye a — yon referans dirèk ta yon TDZ ReferenceError.
   "restaurant-videos": { maxBytes: 50 * 1024 * 1024, allowedTypes: AD_VIDEO_MIME_TYPES },
   avatars: { maxBytes: 3 * 1024 * 1024, allowedTypes: IMAGE_MIME_TYPES },
+  // Tach 10 — piti espre (lojo, pa foto): menm limit/tip ak bucket la
+  // (20260830110000), plis "image/svg+xml" pou lojo vektè.
+  "partner-logos": {
+    maxBytes: 2 * 1024 * 1024,
+    allowedTypes: [...IMAGE_MIME_TYPES, "image/svg+xml"],
+  },
   "driver-documents": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payment-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },
   "payout-proofs": { maxBytes: 8 * 1024 * 1024, allowedTypes: DOCUMENT_MIME_TYPES },

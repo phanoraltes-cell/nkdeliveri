@@ -1164,6 +1164,42 @@ export type Database = {
           },
         ];
       };
+      partners: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          link_url: string | null;
+          logo_url: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          link_url?: string | null;
+          logo_url: string;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          link_url?: string | null;
+          logo_url?: string;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       payment_methods: {
         Row: {
           code: string;
@@ -3184,6 +3220,20 @@ export type Database = {
         };
         Returns: string;
       };
+      create_partner_secure: {
+        Args: { _link_url?: string; _logo_url: string; _name: string; _sort_order?: number };
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          link_url: string | null;
+          logo_url: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+      };
       create_pending_payout_secure: {
         Args: {
           _amount?: number;
@@ -3388,6 +3438,10 @@ export type Database = {
       };
       delete_menu_category_secure: {
         Args: { _category_id: string };
+        Returns: undefined;
+      };
+      delete_partner_secure: {
+        Args: { _id: string };
         Returns: undefined;
       };
       delete_product_secure: {
@@ -4151,6 +4205,20 @@ export type Database = {
         Returns: boolean;
       };
       is_valid_opening_hours_shape: { Args: { _hours: Json }; Returns: boolean };
+      list_partners_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          link_url: string | null;
+          logo_url: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        }[];
+      };
       list_promo_codes_admin: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4899,12 +4967,18 @@ export type Database = {
           currency: string;
           customer_id: string;
           delivery_address: string;
+          delivery_failed_at: string | null;
           delivery_fee: number;
           delivery_lat: number | null;
           delivery_lng: number | null;
           delivery_notes: string | null;
+          discount_amount: number;
           id: string;
+          idempotency_key: string | null;
           order_number: string;
+          promo_code: string | null;
+          promotion_discount_amount: number;
+          promotion_id: string | null;
           restaurant_id: string;
           service_fee: number;
           status: Database["public"]["Enums"]["order_status"];
@@ -4919,6 +4993,27 @@ export type Database = {
           to: "orders";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      update_partner_secure: {
+        Args: {
+          _id: string;
+          _is_active: boolean;
+          _link_url: string;
+          _logo_url: string;
+          _name: string;
+          _sort_order: number;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          link_url: string | null;
+          logo_url: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
         };
       };
       update_delivery_zone_fee_secure: {

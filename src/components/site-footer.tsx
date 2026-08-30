@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Banknote, Facebook, Instagram } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/site-config";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 // lucide-react has no TikTok mark (it only ships Feather's original small
 // social set — Facebook/Instagram/Twitter/Linkedin/Youtube, confirmed by
@@ -28,6 +30,26 @@ export function SiteFooter() {
   // user already signed in one scroll away from a header that got this
   // right.
   const { user } = useAuth();
+
+  // Tach 10 — kache antyèman si pa gen okenn patnè aktif (pa yon seksyon
+  // vid/plasholdè). `.eq("is_active", true)` eksplisit isit la menm si
+  // RLS deja filtre pou anon/authenticated — konpòtman an rete idantik
+  // kèlkeswa ki moun k ap gade footer la (ata yon admin konekte pa dwe
+  // wè yon patnè dezaktive sou sit piblik la).
+  const partners = useQuery({
+    queryKey: ["footer-partners"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners")
+        .select("id, name, logo_url, link_url")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const navLinks = [
     { to: "/", label: "Akèy" },
     { to: "/restaurants", label: "Restoran" },
@@ -185,6 +207,48 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
+
+      {/* Tach 10 — seksyon antye a pa afiche ditou si pa gen okenn patnè
+          aktif (jamè yon zòn vid/plasholdè sou sit la). */}
+      {!!partners.data?.length && (
+        <div className="border-t border-white/20 px-5 py-6">
+          <div className="mx-auto max-w-[1100px]">
+            <span className="mb-3 block text-center text-xs font-semibold uppercase tracking-wide text-ink">
+              Patnè Ofisyèl NK Deliveri
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {partners.data.map((p) => {
+                const logo = (
+                  <img
+                    src={p.logo_url}
+                    alt={p.name}
+                    title={p.name}
+                    width={56}
+                    height={56}
+                    loading="lazy"
+                    className="h-14 w-14 rounded-xl bg-white object-contain p-1.5 shadow-brand-xs"
+                  />
+                );
+                return p.link_url ? (
+                  <a
+                    key={p.id}
+                    href={p.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={p.name}
+                    className="transition hover:opacity-80"
+                  >
+                    {logo}
+                  </a>
+                ) : (
+                  <span key={p.id}>{logo}</span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-ink">
         © {new Date().getFullYear()} NK Deliveri — Tout dwa rezève
       </div>
