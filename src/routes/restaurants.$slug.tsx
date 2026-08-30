@@ -71,11 +71,16 @@ const restQuery = (slug: string) =>
         .eq("restaurant_id", r.id)
         .order("sort_order");
       if (catsErr) throw catsErr;
+      // Tach 1, Objektif B — pla ki ekspire (expires_at <= kounye a) pa dwe
+      // parèt bay kliyan, menm si `available` rete true paske pwopriyetè a
+      // pa janm re-klike "Pibliye". Yon plat ki pa janm pibliye
+      // (expires_at NULL) pa afekte ditou.
       const { data: prods, error: prodsErr } = await supabase
         .from("products")
         .select("*")
         .eq("restaurant_id", r.id)
-        .eq("available", true);
+        .eq("available", true)
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
       if (prodsErr) throw prodsErr;
       return { r, cats: cats ?? [], prods: prods ?? [] };
     },

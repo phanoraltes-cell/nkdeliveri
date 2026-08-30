@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
+import { toast } from "sonner";
 import {
   Store,
   ClipboardList,
@@ -14,6 +15,8 @@ import {
   ChefHat,
   Flame,
   Inbox,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +27,7 @@ import { DashboardAdCard } from "@/components/dashboard/cards/dashboard-ad-card"
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import {
   DashboardShortcutGrid,
@@ -50,11 +54,31 @@ type RecentOrder = Pick<
 
 function RestaurantDashboard() {
   const { user } = Route.useRouteContext();
+  const qc = useQueryClient();
   const { data: restaurant, isLoading } = useMyRestaurant(user?.id);
 
   const pending = restaurant?.status === "pending";
   const isOwner = restaurant?.isOwner ?? false;
   const restaurantId = restaurant?.id;
+
+  // Tach 1, Objektif A — pòtay louvri/fèmen manyèl. Pwopriyetè/admin sèlman
+  // (set_restaurant_open_secure li menm ranfòse sa a sèvè-kote); anplwaye
+  // wè estati a (li li nan `restaurant` deja chaje) men pa gen bouton pou
+  // chanje l — konsistan ak yo pa gen aksè "Pwofil restoran" non plis.
+  const toggleOpen = useMutation({
+    mutationFn: async (nextOpen: boolean) => {
+      const { error } = await supabase.rpc("set_restaurant_open_secure", {
+        _restaurant_id: restaurantId!,
+        _is_open: nextOpen,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, nextOpen) => {
+      toast.success(nextOpen ? "Restoran ou louvri kounye a" : "Restoran ou fèmen kounye a");
+      qc.invalidateQueries({ queryKey: ["my-restaurant-or-staff", user?.id] });
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   const todayStats = useQuery({
     queryKey: ["restaurant-today-stats", restaurantId],
@@ -208,12 +232,38 @@ function RestaurantDashboard() {
           </p>
         </div>
         {restaurant && isOwner && (
-          <StatusBadge
-            tone={pending ? "warn" : restaurant.status === "approved" ? "good" : "bad"}
-            className="px-3 py-1 text-xs"
-          >
-            {restaurant.status}
-          </StatusBadge>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <StatusBadge
+              tone={pending ? "warn" : restaurant.status === "approved" ? "good" : "bad"}
+              className="px-3 py-1 text-xs"
+            >
+              {restaurant.status}
+            </StatusBadge>
+            {restaurant.status === "approved" && (
+              <Button
+                type="button"
+                size="sm"
+                variant={restaurant.isOpen ? "outline" : "default"}
+                isLoading={toggleOpen.isPending}
+                onClick={() => toggleOpen.mutate(!restaurant.isOpen)}
+                className={
+                  restaurant.isOpen
+                    ? "border-status-good text-status-good hover:bg-status-good-soft"
+                    : "bg-status-bad text-white hover:bg-status-bad"
+                }
+              >
+                {restaurant.isOpen ? (
+                  <>
+                    <Power className="h-4 w-4" /> Fèmen restoran
+                  </>
+                ) : (
+                  <>
+                    <PowerOff className="h-4 w-4" /> Louvri restoran
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         )}
       </div>
 

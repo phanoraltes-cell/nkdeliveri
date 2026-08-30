@@ -1694,11 +1694,15 @@ export type Database = {
           created_at: string;
           description: string | null;
           dish_type: string | null;
+          /** GENERATED ALWAYS AS (published_at + interval '24 hours') STORED — never write directly. */
+          expires_at: string | null;
           id: string;
           image_url: string | null;
           name: string;
           popular: boolean;
           price: number;
+          /** Set by publish_product_secure/publish_all_products_secure; null = never expires. */
+          published_at: string | null;
           restaurant_id: string;
           sort_order: number;
           stock_quantity: number | null;
@@ -1716,6 +1720,7 @@ export type Database = {
           name: string;
           popular?: boolean;
           price: number;
+          published_at?: string | null;
           restaurant_id: string;
           sort_order?: number;
           stock_quantity?: number | null;
@@ -1733,6 +1738,7 @@ export type Database = {
           name?: string;
           popular?: boolean;
           price?: number;
+          published_at?: string | null;
           restaurant_id?: string;
           sort_order?: number;
           stock_quantity?: number | null;
@@ -2090,6 +2096,8 @@ export type Database = {
           delivery_fee: number;
           description: string | null;
           id: string;
+          /** Manual "louvri/fèmen" toggle — AND-gated in is_restaurant_open() alongside opening_hours. Default true via backfill so no pre-existing restaurant goes dark on migration. */
+          is_open: boolean;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -2115,6 +2123,7 @@ export type Database = {
           delivery_fee?: number;
           description?: string | null;
           id?: string;
+          is_open?: boolean;
           lat?: number | null;
           latitude?: number | null;
           lng?: number | null;
@@ -2140,6 +2149,7 @@ export type Database = {
           delivery_fee?: number;
           description?: string | null;
           id?: string;
+          is_open?: boolean;
           lat?: number | null;
           latitude?: number | null;
           lng?: number | null;
@@ -3912,6 +3922,23 @@ export type Database = {
           user_id: string;
         }[];
       };
+      list_restaurants_public: {
+        Args: { _limit?: number; _offset?: number; _search?: string; _sort?: string };
+        Returns: {
+          address: string | null;
+          avg_prep_time: number;
+          cover_url: string | null;
+          cuisine: string | null;
+          delivery_fee: number;
+          id: string;
+          is_open_now: boolean;
+          logo_url: string | null;
+          name: string;
+          rating: number | null;
+          slug: string;
+          total_count: number;
+        }[];
+      };
       log_ad_event_secure: {
         Args: {
           _event_type: string;
@@ -3978,6 +4005,32 @@ export type Database = {
           to: "disputes";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      publish_all_products_secure: {
+        Args: { _restaurant_id: string };
+        Returns: number;
+      };
+      publish_product_secure: {
+        Args: { _product_id: string };
+        Returns: {
+          archived_at: string | null;
+          available: boolean;
+          category_id: string | null;
+          created_at: string;
+          description: string | null;
+          dish_type: string | null;
+          expires_at: string | null;
+          id: string;
+          image_url: string | null;
+          name: string;
+          popular: boolean;
+          price: number;
+          published_at: string | null;
+          restaurant_id: string;
+          sort_order: number;
+          stock_quantity: number | null;
+          updated_at: string;
         };
       };
       push_customer_location_secure: {
@@ -4296,6 +4349,35 @@ export type Database = {
           to: "komand_assistance";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      set_restaurant_open_secure: {
+        Args: { _is_open: boolean; _restaurant_id: string };
+        Returns: {
+          address: string | null;
+          avg_prep_time: number;
+          cover_url: string | null;
+          created_at: string;
+          cuisine: string | null;
+          delivery_fee: number;
+          description: string | null;
+          id: string;
+          is_open: boolean;
+          lat: number | null;
+          latitude: number | null;
+          lng: number | null;
+          logo_url: string | null;
+          longitude: number | null;
+          min_order: number;
+          name: string;
+          opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
+          owner_id: string | null;
+          phone: string | null;
+          rating: number | null;
+          slug: string;
+          status: Database["public"]["Enums"]["restaurant_status"];
+          updated_at: string;
         };
       };
       stamp_storage_object_owner_secure: {

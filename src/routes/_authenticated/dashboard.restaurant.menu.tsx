@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { CategoryManager } from "@/components/dashboard/restaurant/category-manager";
 import { ProductGrid } from "@/components/dashboard/restaurant/product-grid";
@@ -125,6 +125,37 @@ function RestaurantMenu() {
     onError: (e) => toast.error(e.message),
   });
 
+  // Tach 1, Objektif B — pla otomatikman ekspire 24h apre yo pibliye
+  // (expires_at, kolòn kalkile sèvè-kote). Toude mitasyon sa yo se sèl
+  // chemen ekriti pou published_at (publish_product_secure /
+  // publish_all_products_secure, wè migrasyon 20260829090000).
+  const publishProduct = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("publish_product_secure", { _product_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Plat pibliye pou 24 èdtan");
+      invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const publishAllProducts = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("publish_all_products_secure", {
+        _restaurant_id: restaurant!.id,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count ?? 0} plat pibliye pou 24 èdtan`);
+      invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const visibleProducts = (products.data ?? []).filter(
     (p) => activeCat === "all" || p.category_id === activeCat,
   );
@@ -163,11 +194,22 @@ function RestaurantMenu() {
       />
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-bold">Plat</h2>
-          <Button onClick={() => setShowAddProduct(true)}>
-            <Plus className="h-4 w-4" /> Ajoute yon plat
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              isLoading={publishAllProducts.isPending}
+              disabled={!products.data?.length}
+              onClick={() => publishAllProducts.mutate()}
+            >
+              <Upload className="h-4 w-4" /> Pibliye tout pla yo
+            </Button>
+            <Button onClick={() => setShowAddProduct(true)}>
+              <Plus className="h-4 w-4" /> Ajoute yon plat
+            </Button>
+          </div>
         </div>
 
         {(showAddProduct || editingProduct) && restaurant && (
@@ -187,6 +229,8 @@ function RestaurantMenu() {
           products={visibleProducts}
           onEdit={setEditingProduct}
           onDelete={(id) => deleteProduct.mutate(id)}
+          onPublish={(id) => publishProduct.mutate(id)}
+          publishingId={publishProduct.isPending ? publishProduct.variables : null}
         />
       </section>
     </div>

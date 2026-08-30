@@ -34,24 +34,22 @@ const listQuery = (q: string, page: number, sort: SortKey) =>
     queryKey: ["restaurants-all", q, page, sort],
     queryFn: async () => {
       const from = (page - 1) * PAGE_SIZE;
-      let query = supabase
-        .from("restaurants")
-        .select(
-          "id,slug,name,cuisine,logo_url,cover_url,rating,avg_prep_time,delivery_fee,address",
-          { count: "exact" },
-        )
-        .eq("status", "approved");
-      // Search moved server-side alongside pagination: filtering the
-      // already-fetched page client-side (as this used to) would silently
-      // only search whatever page happened to be loaded.
-      if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
-      const { data, error, count } = await query
-        .order(sort === "prep_time" ? "avg_prep_time" : "rating", {
-          ascending: sort === "prep_time",
-        })
-        .range(from, from + PAGE_SIZE - 1);
+      // Tach 1, Objektif A — konvèti nan yon RPC (list_restaurants_public)
+      // paske PostgREST pa ka triye pa rezilta yon fonksyon SQL abitrè
+      // (is_restaurant_open). Prezève EGZAKTEMAN menm konpòtman ansyen
+      // kòd la (rechèch pa non, 2 tri, paj, kantite total) — sèl ajout la
+      // se "louvri anvan fèmen" kòm tri prensipal + `is_open_now` pou
+      // montre yon badj "Fèmen" nan chak kat.
+      const { data, error } = await supabase.rpc("list_restaurants_public", {
+        _search: q.trim() || undefined,
+        _sort: sort,
+        _limit: PAGE_SIZE,
+        _offset: from,
+      });
       if (error) throw error;
-      return { rows: data ?? [], totalCount: count ?? 0 };
+      const rows = data ?? [];
+      const totalCount = rows[0]?.total_count ?? 0;
+      return { rows, totalCount };
     },
   });
 
@@ -258,6 +256,12 @@ function RestaurantsPage() {
                 >
                   <Heart className={`h-4 w-4 ${isFavorite(r.id) ? "fill-current" : ""}`} />
                 </button>
+                {/* Tach 1, Objektif A — pòtay louvri/fèmen manyèl pwopriyetè a. */}
+                {!r.is_open_now && (
+                  <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-2.5 py-1 text-[10px] font-bold uppercase text-white shadow-md">
+                    Fèmen
+                  </span>
+                )}
               </div>
               <div className="p-4">
                 <h3 className="font-display text-base font-extrabold">{r.name}</h3>
