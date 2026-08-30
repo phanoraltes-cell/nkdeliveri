@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/restaurant
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "An atant",
+  pending_contract: "Ap tann siyati kontra",
   approved: "Apwouve",
   rejected: "Refize",
   suspended: "Sispann",

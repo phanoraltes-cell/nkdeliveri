@@ -33,7 +33,11 @@ export function PendingRestaurantsSection({
 }: PendingRestaurantsSectionProps) {
   return (
     <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-      <h2 className="mb-4 font-display text-xl font-bold text-ink">Restoran an atant valdasyon</h2>
+      <h2 className="mb-1 font-display text-xl font-bold text-ink">Restoran an atant valdasyon</h2>
+      <p className="mb-4 text-xs text-ink-soft">
+        "Apwouve" voye restoran an nan etap siyati kontra — li vin aktif sèlman apre pwopriyetè a
+        siyen.
+      </p>
       {isLoading && <div className="text-ink-soft">Chajman...</div>}
       {restaurants?.length === 0 && (
         <div className="text-sm text-ink-soft">Pa gen okenn restoran an atant.</div>

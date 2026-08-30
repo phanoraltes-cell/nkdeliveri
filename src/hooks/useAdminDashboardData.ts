@@ -129,7 +129,7 @@ export function useAdminDashboardData() {
       status,
     }: {
       id: string;
-      status: "approved" | "rejected" | "suspended";
+      status: "pending_contract" | "approved" | "rejected" | "suspended";
     }) => {
       const { error } = await supabase.rpc("update_restaurant_status_secure", {
         _restaurant_id: id,
@@ -137,10 +137,16 @@ export function useAdminDashboardData() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { status }) => {
       qc.invalidateQueries({ queryKey: ["pending-restaurants"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success("Estati restoran aktyalize");
+      // Tach 7 — yon "apwouve" pa fini ankò: restoran an ap tann pwopriyetè
+      // a siyen kontra a anvan li vin reyèlman 'approved'.
+      toast.success(
+        status === "pending_contract"
+          ? "Aplikasyon apwouve — kontra a ap tann siyati pwopriyetè a"
+          : "Estati restoran aktyalize",
+      );
     },
     onError: (e) => toast.error(e.message),
   });

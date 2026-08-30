@@ -163,7 +163,11 @@ function AdminDashboard() {
                   restaurants={pendingRestaurants.data}
                   isLoading={pendingRestaurants.isLoading}
                   pendingId={updateResto.isPending ? updateResto.variables?.id : undefined}
-                  onApprove={(id) => updateResto.mutate({ id, status: "approved" })}
+                  // Tach 7 — apwouve yon aplikasyon pa fè restoran an 'approved'
+                  // dirèkteman ankò: li vin 'pending_contract', pwopriyetè a
+                  // dwe siyen kontra a li menm (sign_restaurant_contract_secure)
+                  // anvan li reyèlman 'approved' — wè dashboard.restaurant.index.tsx.
+                  onApprove={(id) => updateResto.mutate({ id, status: "pending_contract" })}
                   onReject={(id) => updateResto.mutate({ id, status: "rejected" })}
                 />
               )}

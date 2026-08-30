@@ -35,6 +35,7 @@ import {
 } from "@/components/dashboard/dashboard-shortcut-grid";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
+import { ContractSigningCard } from "@/components/dashboard/restaurant/contract-signing-card";
 
 // See dashboard.admin.index.tsx for why this is lazy: recharts (~350KB) is
 // only needed once this page has mounted.
@@ -58,6 +59,11 @@ function RestaurantDashboard() {
   const { data: restaurant, isLoading } = useMyRestaurant(user?.id);
 
   const pending = restaurant?.status === "pending";
+  // Tach 7 — etap siyati kontra, apre aplikasyon apwouve men anvan restoran
+  // an reyèlman aktif. Blòk tout paj la pou pwopriyetè a (li dwe siyen
+  // anvan li ka wè done operasyonèl ki poko egziste kanmenm — zewo kòmand
+  // posib pandan restoran an pa 'approved').
+  const pendingContract = restaurant?.status === "pending_contract";
   const isOwner = restaurant?.isOwner ?? false;
   const restaurantId = restaurant?.id;
 
@@ -234,10 +240,16 @@ function RestaurantDashboard() {
         {restaurant && isOwner && (
           <div className="flex shrink-0 flex-col items-end gap-2">
             <StatusBadge
-              tone={pending ? "warn" : restaurant.status === "approved" ? "good" : "bad"}
+              tone={
+                pending || pendingContract
+                  ? "warn"
+                  : restaurant.status === "approved"
+                    ? "good"
+                    : "bad"
+              }
               className="px-3 py-1 text-xs"
             >
-              {restaurant.status}
+              {pendingContract ? "ap tann siyati" : restaurant.status}
             </StatusBadge>
             {restaurant.status === "approved" && (
               <Button
@@ -281,88 +293,116 @@ function RestaurantDashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label="Kòmand jodi a"
-          value={todayStats.data?.ordersToday ?? "—"}
-          icon={ShoppingBag}
-        />
-        <KpiCard label="An atant" value={todayStats.data?.pending ?? "—"} icon={ClipboardList} />
-        <KpiCard label="Ap prepare" value={todayStats.data?.preparing ?? "—"} icon={ChefHat} />
-        {isOwner && (
-          <KpiCard
-            label="Revni jodi a"
-            value={todayStats.data ? formatHTG(todayStats.data.revenueToday) : "—"}
-            icon={Wallet}
-          />
-        )}
-      </div>
-
-      <DashboardAdCard />
-
-      {isOwner && (
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
-          <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
-          {weeklyRevenue.isLoading ? (
-            <Skeleton className="h-[240px] w-full rounded-xl" />
-          ) : (
-            <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
-              <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
-            </Suspense>
-          )}
-        </section>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
-          <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
-            <Flame className="h-5 w-5 text-brand-deep" /> Plat popilè (30 jou)
-          </h2>
-          {!popularDishes.isLoading && !popularDishes.data?.length && (
-            <div className="text-sm text-ink-soft">Poko gen ase kòmand pou montre plat popilè.</div>
-          )}
-          <ul className="space-y-1.5">
-            {popularDishes.data?.map((d, i) => (
-              <li
-                key={d.name}
-                className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm"
-              >
-                <span className="min-w-0 truncate font-semibold text-ink">
-                  {i + 1}. {d.name}
-                </span>
-                <span className="shrink-0 text-xs font-bold text-brand-deep">{d.qty} vann</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="mb-3 font-display text-lg font-bold text-ink">Dènye kòmand</h2>
-          <DataTable<RecentOrder>
-            rows={recentOrders.data ?? []}
-            getRowKey={(o) => o.id}
-            mobileTitleKey="order_number"
-            emptyState={
-              <EmptyState
-                icon={Inbox}
-                title="Pa gen kòmand"
-                description="Kòmand ki fèk antre yo ap parèt isit la."
+      {/* Tach 7 — blòk tout kontni operasyonèl la (KPI, revni, kòmand)
+          pandan etap siyati a: yo ta tout vid/san sans kanmenm depi
+          restoran an pa 'approved' toujou, donk pa ka janm resevwa kòmand.
+          isOwner ki siyen; anplwaye jis wè yon bannyè enfòmatif — se
+          pwopriyetè a sèlman ki gen dwa legal siyen (RPC a ranfòse sa a
+          sèvè-kote tou). */}
+      {pendingContract && isOwner && restaurantId && user?.id ? (
+        <ContractSigningCard restaurantId={restaurantId} userId={user.id} />
+      ) : pendingContract ? (
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
+          <div className="flex items-center gap-2 font-bold text-amber-900">
+            <Clock className="h-5 w-5" /> Ap tann siyati kontra
+          </div>
+          <p className="mt-1 text-sm text-amber-800">
+            Aplikasyon restoran an apwouve — l ap tann pwopriyetè a siyen kontra platfòm lan anvan
+            li vin aktif.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              label="Kòmand jodi a"
+              value={todayStats.data?.ordersToday ?? "—"}
+              icon={ShoppingBag}
+            />
+            <KpiCard
+              label="An atant"
+              value={todayStats.data?.pending ?? "—"}
+              icon={ClipboardList}
+            />
+            <KpiCard label="Ap prepare" value={todayStats.data?.preparing ?? "—"} icon={ChefHat} />
+            {isOwner && (
+              <KpiCard
+                label="Revni jodi a"
+                value={todayStats.data ? formatHTG(todayStats.data.revenueToday) : "—"}
+                icon={Wallet}
               />
-            }
-            columns={[
-              { key: "order_number", header: "Kòmand", cell: (o) => o.order_number },
-              { key: "total", header: "Total", cell: (o) => formatHTG(Number(o.total)) },
-              {
-                key: "status",
-                header: "Estati",
-                cell: (o) => ORDER_STATUS_LABEL[o.status] ?? o.status,
-              },
-            ]}
-          />
-        </section>
-      </div>
+            )}
+          </div>
 
-      <DashboardShortcutGrid items={tiles} />
+          <DashboardAdCard />
+
+          {isOwner && (
+            <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
+              <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
+              {weeklyRevenue.isLoading ? (
+                <Skeleton className="h-[240px] w-full rounded-xl" />
+              ) : (
+                <Suspense fallback={<Skeleton className="h-[240px] w-full rounded-xl" />}>
+                  <RevenueChart data={weeklyRevenue.data ?? []} formatValue={formatHTG} />
+                </Suspense>
+              )}
+            </section>
+          )}
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
+              <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
+                <Flame className="h-5 w-5 text-brand-deep" /> Plat popilè (30 jou)
+              </h2>
+              {!popularDishes.isLoading && !popularDishes.data?.length && (
+                <div className="text-sm text-ink-soft">
+                  Poko gen ase kòmand pou montre plat popilè.
+                </div>
+              )}
+              <ul className="space-y-1.5">
+                {popularDishes.data?.map((d, i) => (
+                  <li
+                    key={d.name}
+                    className="flex items-center justify-between rounded-lg bg-brand-soft/20 px-3 py-2 text-sm"
+                  >
+                    <span className="min-w-0 truncate font-semibold text-ink">
+                      {i + 1}. {d.name}
+                    </span>
+                    <span className="shrink-0 text-xs font-bold text-brand-deep">{d.qty} vann</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="mb-3 font-display text-lg font-bold text-ink">Dènye kòmand</h2>
+              <DataTable<RecentOrder>
+                rows={recentOrders.data ?? []}
+                getRowKey={(o) => o.id}
+                mobileTitleKey="order_number"
+                emptyState={
+                  <EmptyState
+                    icon={Inbox}
+                    title="Pa gen kòmand"
+                    description="Kòmand ki fèk antre yo ap parèt isit la."
+                  />
+                }
+                columns={[
+                  { key: "order_number", header: "Kòmand", cell: (o) => o.order_number },
+                  { key: "total", header: "Total", cell: (o) => formatHTG(Number(o.total)) },
+                  {
+                    key: "status",
+                    header: "Estati",
+                    cell: (o) => ORDER_STATUS_LABEL[o.status] ?? o.status,
+                  },
+                ]}
+              />
+            </section>
+          </div>
+
+          <DashboardShortcutGrid items={tiles} />
+        </>
+      )}
     </div>
   );
 }

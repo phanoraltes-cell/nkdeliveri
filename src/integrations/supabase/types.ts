@@ -2090,6 +2090,81 @@ export type Database = {
           },
         ];
       };
+      restaurant_contract_signatures: {
+        Row: {
+          contract_version_id: string;
+          id: string;
+          restaurant_id: string;
+          revoke_reason: string | null;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          signature_name: string;
+          signed_at: string;
+          signed_by: string;
+        };
+        Insert: {
+          contract_version_id: string;
+          id?: string;
+          restaurant_id: string;
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_name: string;
+          signed_at?: string;
+          signed_by: string;
+        };
+        Update: {
+          contract_version_id?: string;
+          id?: string;
+          restaurant_id?: string;
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_name?: string;
+          signed_at?: string;
+          signed_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_contract_signatures_contract_version_id_fkey";
+            columns: ["contract_version_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurant_contract_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "restaurant_contract_signatures_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      restaurant_contract_versions: {
+        Row: {
+          content: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          version: number;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          version: number;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       restaurant_employees: {
         Row: {
           created_at: string;
@@ -3061,6 +3136,16 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_contract_version_secure: {
+        Args: { _content: string };
+        Returns: {
+          content: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          version: number;
+        };
+      };
       create_menu_category_secure: {
         Args: { _name: string; _restaurant_id: string; _sort_order?: number };
         Returns: {
@@ -3572,6 +3657,16 @@ export type Database = {
           month: string;
           total_commission: number;
         }[];
+      };
+      get_current_contract_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          content: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          version: number;
+        };
       };
       get_customer_activity_summary: {
         Args: { _customer_id: string };
@@ -4416,6 +4511,35 @@ export type Database = {
         Args: { _session_id: string };
         Returns: undefined;
       };
+      revoke_restaurant_contract_secure: {
+        Args: { _reason: string; _restaurant_id: string };
+        Returns: {
+          address: string | null;
+          avg_prep_time: number;
+          cover_url: string | null;
+          created_at: string;
+          cuisine: string | null;
+          delivery_fee: number;
+          description: string | null;
+          id: string;
+          is_open: boolean;
+          lat: number | null;
+          latitude: number | null;
+          lng: number | null;
+          logo_url: string | null;
+          longitude: number | null;
+          min_order: number;
+          name: string;
+          opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
+          owner_id: string | null;
+          phone: string | null;
+          rating: number | null;
+          slug: string;
+          status: Database["public"]["Enums"]["restaurant_status"];
+          updated_at: string;
+        };
+      };
       run_data_retention_cleanup_secure: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4509,6 +4633,35 @@ export type Database = {
       };
       set_restaurant_open_secure: {
         Args: { _is_open: boolean; _restaurant_id: string };
+        Returns: {
+          address: string | null;
+          avg_prep_time: number;
+          cover_url: string | null;
+          created_at: string;
+          cuisine: string | null;
+          delivery_fee: number;
+          description: string | null;
+          id: string;
+          is_open: boolean;
+          lat: number | null;
+          latitude: number | null;
+          lng: number | null;
+          logo_url: string | null;
+          longitude: number | null;
+          min_order: number;
+          name: string;
+          opening_hours: Json | null;
+          opening_hours_grace_until: string | null;
+          owner_id: string | null;
+          phone: string | null;
+          rating: number | null;
+          slug: string;
+          status: Database["public"]["Enums"]["restaurant_status"];
+          updated_at: string;
+        };
+      };
+      sign_restaurant_contract_secure: {
+        Args: { _restaurant_id: string; _signature_name: string };
         Returns: {
           address: string | null;
           avg_prep_time: number;
@@ -5203,7 +5356,7 @@ export type Database = {
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
       payout_status: "paid" | "confirmed" | "disputed" | "resolved";
       refund_status: "requested" | "approved" | "rejected" | "completed";
-      restaurant_status: "pending" | "approved" | "suspended" | "rejected";
+      restaurant_status: "pending" | "pending_contract" | "approved" | "suspended" | "rejected";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -5377,7 +5530,7 @@ export const Constants = {
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],
       payout_status: ["paid", "confirmed", "disputed", "resolved"],
       refund_status: ["requested", "approved", "rejected", "completed"],
-      restaurant_status: ["pending", "approved", "suspended", "rejected"],
+      restaurant_status: ["pending", "pending_contract", "approved", "suspended", "rejected"],
     },
   },
 } as const;
