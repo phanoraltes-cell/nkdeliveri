@@ -77,7 +77,7 @@ function Privacy() {
 
           <Section title="3. Kiyès ki ka wè done ou yo">
             <p>
-              Baz done nou an itilize règ sekirite (RLS) ki limite chak done a moun ki bezwen l :
+              Baz done nou an itilize règ sekirite ki limite chak done a moun ki bezwen l sèlman :
             </p>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
@@ -114,13 +114,11 @@ function Privacy() {
           </Section>
 
           <Section title="5. Founisè twazyèm pati">
-            <p>Nou travay ak kèk founisè tès pou fè platfòm nan fonksyone :</p>
+            <p>Nou travay ak kèk founisè pou fè platfòm nan fonksyone :</p>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
-                <strong>Supabase :</strong> ebèjman baz done nou an ak sistèm otantifikasyon an.
-              </li>
-              <li>
-                <strong>Vercel :</strong> ebèjman sit entènèt la.
+                <strong>Founisè enfrastrikti cloud :</strong> pou ebèje sit entènèt la, baz done nou
+                an, ak sistèm otantifikasyon (koneksyon) an.
               </li>
               <li>
                 <strong>MonCash / NatCash :</strong> trete peman lè ou chwazi youn nan metòd sa yo —
@@ -131,8 +129,8 @@ function Privacy() {
                 nimewo kat ou a.
               </li>
               <li>
-                <strong>OpenStreetMap :</strong> kat/lokalizasyon pou montre restoran ak swiv
-                livrezon.
+                <strong>Founisè kat/lokalizasyon :</strong> pou montre restoran sou yon kat ak swiv
+                pozisyon pandan yon livrezon.
               </li>
             </ul>
           </Section>
