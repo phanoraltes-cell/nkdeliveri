@@ -70,6 +70,11 @@ function RestaurantPromotions() {
       // params lack a `DEFAULT NULL` marker it recognizes — Postgres accepts
       // NULL for these columns regardless, so these casts just correct an
       // overly-strict generated type, no behavior change.
+      // Pase TOUT chan yo, ni sa toggleActive pa touche (scope/dish_ids/
+      // auto_apply) — update_promotion_secure ekri chak paramèt li resevwa
+      // san kondisyon, donk yon apèl ki OMÈT yo ta REYINISYALIZE yo sou
+      // valè default (menu/NULL/false), efase konfigirasyon aplikasyon
+      // otomatik pwopriyetè a te deja mete.
       const { error } = await supabase.rpc("update_promotion_secure", {
         _promotion_id: p.id,
         _title: p.title,
@@ -80,6 +85,9 @@ function RestaurantPromotions() {
         _starts_at: p.starts_at as string,
         _ends_at: p.ends_at as string,
         _active: !p.active,
+        _scope: p.scope,
+        _dish_ids: p.dish_ids as string[],
+        _auto_apply: p.auto_apply,
       });
       if (error) throw error;
     },
@@ -143,11 +151,12 @@ function RestaurantPromotions() {
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2 font-display text-lg font-extrabold">
+                <div className="flex flex-wrap items-center gap-2 font-display text-lg font-extrabold">
                   {p.title}
                   <StatusBadge tone={p.active ? "good" : "neutral"}>
                     {p.active ? "Aktif" : "Dezaktive"}
                   </StatusBadge>
+                  {p.auto_apply && <StatusBadge tone="info">Otomatik</StatusBadge>}
                 </div>
                 {p.description && <div className="text-sm text-ink-soft">{p.description}</div>}
                 <div className="mt-1 text-sm font-bold text-brand-deep">
@@ -159,6 +168,9 @@ function RestaurantPromotions() {
                       Kòd: {p.code}
                     </span>
                   )}
+                  <span className="ml-2 text-xs font-normal text-ink-soft">
+                    {p.scope === "dish" ? `${p.dish_ids?.length ?? 0} plat sible` : "Tout meni an"}
+                  </span>
                 </div>
                 {(p.starts_at || p.ends_at) && (
                   <div className="mt-1 text-xs text-ink-soft">
@@ -225,9 +237,38 @@ function PromoForm({
     code: promo?.code ?? "",
     starts_at: promo?.starts_at ? promo.starts_at.slice(0, 10) : "",
     ends_at: promo?.ends_at ? promo.ends_at.slice(0, 10) : "",
+    scope: promo?.scope ?? "menu",
+    dish_ids: (promo?.dish_ids as string[] | null) ?? [],
+    auto_apply: promo?.auto_apply ?? false,
   });
   const [saving, setSaving] = useState(false);
   const sendPromotionPush = useServerFn(sendNewPromotionPush);
+
+  // Tach 3 — lis plat pou pikè "plat espesifik" la. Chaje sèlman lè fòm lan
+  // ouvè (restaurantId toujou disponib) — yon restoran ki gen anpil plat
+  // pa dwe peye kou rekèt sa a si li pa janm bezwen sible yon plat espesifik.
+  const products = useQuery({
+    queryKey: ["restaurant-products-for-promo", restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("restaurant_id", restaurantId)
+        .is("archived_at", null)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  function toggleDish(id: string) {
+    setF((prev) => ({
+      ...prev,
+      dish_ids: prev.dish_ids.includes(id)
+        ? prev.dish_ids.filter((d) => d !== id)
+        : [...prev.dish_ids, id],
+    }));
+  }
 
   async function save() {
     if (!f.title.trim()) return toast.error("Tit pwomosyon an obligatwa");
@@ -235,6 +276,8 @@ function PromoForm({
     if (!Number.isFinite(value) || value <= 0) return toast.error("Valè rabè a envalid");
     if (f.discount_type === "percentage" && value > 100)
       return toast.error("Rabè an pousantaj pa ka depase 100%");
+    if (f.scope === "dish" && f.dish_ids.length === 0)
+      return toast.error("Chwazi omwen yon plat pou yon pwomosyon plat espesifik");
     setSaving(true);
     try {
       // The generator types these args as non-nullable because the SQL
@@ -249,6 +292,9 @@ function PromoForm({
         _code: (f.code || null) as string,
         _starts_at: (f.starts_at ? new Date(f.starts_at).toISOString() : null) as string,
         _ends_at: (f.ends_at ? new Date(f.ends_at).toISOString() : null) as string,
+        _scope: f.scope,
+        _dish_ids: f.scope === "dish" ? f.dish_ids : undefined,
+        _auto_apply: f.auto_apply,
       };
       if (promo) {
         const { error } = await supabase.rpc("update_promotion_secure", {
@@ -351,6 +397,78 @@ function PromoForm({
           onChange={(e) => setF({ ...f, description: e.target.value })}
         />
       </div>
+
+      {/* Tach 3 — aplikasyon otomatik nan pri a. Separe de tout chan pi wo
+          yo (ki te toujou la, pi wo, sèlman pou afichaj/anons) paske sa a
+          gen yon vrè konsekans finansye: si aktive, rabè a soustrè de pri
+          reyèl kliyan peye a, san yo pa antre okenn kòd. */}
+      <div className="mt-3 rounded-xl border-2 border-dashed border-brand-soft p-3">
+        <label className="flex items-start gap-2 text-sm font-bold">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={f.auto_apply}
+            onChange={(e) => setF({ ...f, auto_apply: e.target.checked })}
+          />
+          <span>
+            Aplike rabè a otomatikman nan pri a
+            <span className="mt-0.5 block text-xs font-normal text-ink-soft">
+              Kliyan pa bezwen antre okenn kòd — rabè a soustrè dirèkteman. San sa, pwomosyon an
+              rete yon senp anons/bannyè.
+            </span>
+          </span>
+        </label>
+
+        {f.auto_apply && (
+          <div className="mt-3">
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">Sible</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setF({ ...f, scope: "menu" })}
+                className={`rounded-lg border-2 px-3 py-1.5 text-xs font-bold ${
+                  f.scope === "menu"
+                    ? "border-brand bg-brand-soft text-brand-deep"
+                    : "border-brand-soft text-ink-soft"
+                }`}
+              >
+                Tout meni an
+              </button>
+              <button
+                type="button"
+                onClick={() => setF({ ...f, scope: "dish" })}
+                className={`rounded-lg border-2 px-3 py-1.5 text-xs font-bold ${
+                  f.scope === "dish"
+                    ? "border-brand bg-brand-soft text-brand-deep"
+                    : "border-brand-soft text-ink-soft"
+                }`}
+              >
+                Plat espesifik
+              </button>
+            </div>
+
+            {f.scope === "dish" && (
+              <div className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-brand-soft/60 p-2">
+                {products.data?.length ? (
+                  products.data.map((p) => (
+                    <label key={p.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={f.dish_ids.includes(p.id)}
+                        onChange={() => toggleDish(p.id)}
+                      />
+                      {p.name}
+                    </label>
+                  ))
+                ) : (
+                  <div className="text-xs text-ink-soft">Ou pa gen plat nan meni w ankò.</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <Button className="mt-4" disabled={saving} onClick={save}>
         {saving ? "Ap sove…" : "Sove pwomosyon"}
       </Button>

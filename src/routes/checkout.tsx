@@ -221,12 +221,41 @@ function Checkout() {
   const deliveryFee = items.length > 0 ? (platformFee.data ?? 0) : 0;
   const serviceFee = 0;
 
-  // Tach 2 — kòd pwomo. `atSubtotal` gade valè sou-total la te genyen lè
-  // kòd la aplike: yon pousantaj rabè depann de sou-total, donk si panye a
-  // chanje apre (kantite, atik retire) apesi a ka vin fo. Effect anba a
-  // efase apesi a otomatikman nan ka sa a — SÈVÈ a (create_order_secure)
-  // refè tout kalkil la ankò kanmenm nan tout ka, sa a se pou UI a rete
-  // koyeran, pa yon mezi sekirite.
+  // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
+  // — last checkpoint before the RPC's own re-check would otherwise reject
+  // at the very last click. `create_order_secure` still re-verifies
+  // server-side regardless of what this shows; this is display only.
+  const cartRestaurantId = items[0]?.restaurantId;
+  const isOpenQuery = useIsRestaurantOpen(cartRestaurantId);
+  const restaurantClosed = isOpenQuery.data === false;
+
+  // Tach 3 — pwomosyon restoran OTOMATIK (menu antye oswa plat espesifik).
+  // Zewo aksyon kliyan: si yon pwomosyon `auto_apply=true` matche panye a,
+  // li parèt otomatikman. Menm fonksyon
+  // (compute_restaurant_promotion_discount) ke create_order_secure rele
+  // pou verite final la — apesi a pa ka janm "gaye" de kalkil sèvè a.
+  const itemsPayload = items.map((it) => ({ product_id: it.productId, quantity: it.qty }));
+  const restaurantPromotion = useQuery({
+    queryKey: ["active-restaurant-promotion", cartRestaurantId, itemsPayload],
+    enabled: !!cartRestaurantId && items.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("compute_restaurant_promotion_discount", {
+        _restaurant_id: cartRestaurantId!,
+        _items: itemsPayload,
+      });
+      if (error) throw error;
+      return Array.isArray(data) ? (data[0] ?? null) : null;
+    },
+  });
+  const promotionDiscount = Number(restaurantPromotion.data?.discount_amount ?? 0);
+  const subtotalAfterPromotion = subtotal - promotionDiscount;
+
+  // Tach 2 — kòd pwomo. `atSubtotal` gade valè (apre pwomosyon restoran an,
+  // Tach 3) la te genyen lè kòd la aplike: yon pousantaj rabè depann de
+  // sa, donk si panye a chanje apre (kantite, atik retire) apesi a ka vin
+  // fo. Effect anba a efase apesi a otomatikman nan ka sa a — SÈVÈ a
+  // (create_order_secure) refè tout kalkil la ankò kanmenm nan tout ka, sa
+  // a se pou UI a rete koyeran, pa yon mezi sekirite.
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{
     code: string;
@@ -236,12 +265,12 @@ function Checkout() {
   const [checkingPromo, setCheckingPromo] = useState(false);
 
   useEffect(() => {
-    if (appliedPromo && appliedPromo.atSubtotal !== subtotal) {
+    if (appliedPromo && appliedPromo.atSubtotal !== subtotalAfterPromotion) {
       setAppliedPromo(null);
       toast.info("Panye a chanje — tanpri re-aplike kòd pwomo a.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal]);
+  }, [subtotalAfterPromotion]);
 
   async function applyPromoCode() {
     const code = promoCodeInput.trim();
@@ -250,7 +279,7 @@ function Checkout() {
     try {
       const { data, error } = await supabase.rpc("validate_promo_code_secure", {
         _code: code,
-        _subtotal: subtotal,
+        _subtotal: subtotalAfterPromotion,
       });
       if (error) throw error;
       const result = Array.isArray(data) ? data[0] : data;
@@ -261,7 +290,7 @@ function Checkout() {
       setAppliedPromo({
         code: code.toUpperCase(),
         discountAmount: Number(result.discount_amount),
-        atSubtotal: subtotal,
+        atSubtotal: subtotalAfterPromotion,
       });
       toast.success(result.message || "Kòd pwomo aplike!");
     } catch (e) {
@@ -277,15 +306,7 @@ function Checkout() {
   }
 
   const discountAmount = appliedPromo?.discountAmount ?? 0;
-  const total = subtotal - discountAmount + deliveryFee + serviceFee;
-
-  // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
-  // — last checkpoint before the RPC's own re-check would otherwise reject
-  // at the very last click. `create_order_secure` still re-verifies
-  // server-side regardless of what this shows; this is display only.
-  const cartRestaurantId = items[0]?.restaurantId;
-  const isOpenQuery = useIsRestaurantOpen(cartRestaurantId);
-  const restaurantClosed = isOpenQuery.data === false;
+  const total = subtotalAfterPromotion - discountAmount + deliveryFee + serviceFee;
 
   // "MonCash Otomatik"/"NatCash Otomatik" (checkout ids `moncash_auto`/
   // `natcash_auto`, both backed by the same PLOP gateway —
@@ -591,6 +612,12 @@ function Checkout() {
                   <span>Sou-total</span>
                   <span>{formatHTG(subtotal)}</span>
                 </div>
+                {promotionDiscount > 0 && restaurantPromotion.data && (
+                  <div className="flex justify-between font-semibold text-status-good">
+                    <span>🎉 {restaurantPromotion.data.title}</span>
+                    <span>-{formatHTG(promotionDiscount)}</span>
+                  </div>
+                )}
                 {discountAmount > 0 && (
                   <div className="flex justify-between font-semibold text-status-good">
                     <span>Rabè ({appliedPromo?.code})</span>

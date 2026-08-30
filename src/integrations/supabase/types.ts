@@ -1072,6 +1072,9 @@ export type Database = {
           order_number: string;
           /** The code text as applied at order time (kept even if the promo_codes row is later edited/deleted). */
           promo_code: string | null;
+          /** Tach 3 — set once by create_order_secure when an auto-apply restaurant promotion matched. */
+          promotion_discount_amount: number;
+          promotion_id: string | null;
           restaurant_id: string;
           service_fee: number;
           status: Database["public"]["Enums"]["order_status"];
@@ -1098,6 +1101,8 @@ export type Database = {
           idempotency_key?: string | null;
           order_number?: string;
           promo_code?: string | null;
+          promotion_discount_amount?: number;
+          promotion_id?: string | null;
           restaurant_id: string;
           service_fee?: number;
           status?: Database["public"]["Enums"]["order_status"];
@@ -1124,6 +1129,8 @@ export type Database = {
           idempotency_key?: string | null;
           order_number?: string;
           promo_code?: string | null;
+          promotion_discount_amount?: number;
+          promotion_id?: string | null;
           restaurant_id?: string;
           service_fee?: number;
           status?: Database["public"]["Enums"]["order_status"];
@@ -1139,6 +1146,13 @@ export type Database = {
             columns: ["address_id"];
             isOneToOne: false;
             referencedRelation: "addresses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_promotion_id_fkey";
+            columns: ["promotion_id"];
+            isOneToOne: false;
+            referencedRelation: "promotions";
             referencedColumns: ["id"];
           },
           {
@@ -1902,42 +1916,54 @@ export type Database = {
       promotions: {
         Row: {
           active: boolean;
+          /** Tach 3: apliye otomatikman nan pri a — DEFAULT false, opt-in (wè migrasyon 20260829150000). */
+          auto_apply: boolean;
           code: string | null;
           created_at: string;
           description: string | null;
           discount_type: string;
           discount_value: number;
+          /** Only set (and required) when scope = 'dish'. */
+          dish_ids: string[] | null;
           ends_at: string | null;
           id: string;
           restaurant_id: string;
+          /** 'menu' (whole order) or 'dish' (only dish_ids). */
+          scope: string;
           starts_at: string | null;
           title: string;
           updated_at: string;
         };
         Insert: {
           active?: boolean;
+          auto_apply?: boolean;
           code?: string | null;
           created_at?: string;
           description?: string | null;
           discount_type: string;
           discount_value: number;
+          dish_ids?: string[] | null;
           ends_at?: string | null;
           id?: string;
           restaurant_id: string;
+          scope?: string;
           starts_at?: string | null;
           title: string;
           updated_at?: string;
         };
         Update: {
           active?: boolean;
+          auto_apply?: boolean;
           code?: string | null;
           created_at?: string;
           description?: string | null;
           discount_type?: string;
           discount_value?: number;
+          dish_ids?: string[] | null;
           ends_at?: string | null;
           id?: string;
           restaurant_id?: string;
+          scope?: string;
           starts_at?: string | null;
           title?: string;
           updated_at?: string;
@@ -2922,6 +2948,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      compute_restaurant_promotion_discount: {
+        Args: { _items: Json; _restaurant_id: string };
+        Returns: { discount_amount: number; promotion_id: string; title: string }[];
+      };
       confirm_cash_payment_secure: {
         Args: { _order_id: string };
         Returns: {
@@ -3163,25 +3193,31 @@ export type Database = {
       };
       create_promotion_secure: {
         Args: {
+          _auto_apply?: boolean;
           _code: string;
           _description: string;
           _discount_type: string;
           _discount_value: number;
+          _dish_ids?: string[];
           _ends_at: string;
           _restaurant_id: string;
+          _scope?: string;
           _starts_at: string;
           _title: string;
         };
         Returns: {
           active: boolean;
+          auto_apply: boolean;
           code: string | null;
           created_at: string;
           description: string | null;
           discount_type: string;
           discount_value: number;
+          dish_ids: string[] | null;
           ends_at: string | null;
           id: string;
           restaurant_id: string;
+          scope: string;
           starts_at: string | null;
           title: string;
           updated_at: string;
@@ -4836,25 +4872,31 @@ export type Database = {
       update_promotion_secure: {
         Args: {
           _active: boolean;
+          _auto_apply?: boolean;
           _code: string;
           _description: string;
           _discount_type: string;
           _discount_value: number;
+          _dish_ids?: string[];
           _ends_at: string;
           _promotion_id: string;
+          _scope?: string;
           _starts_at: string;
           _title: string;
         };
         Returns: {
           active: boolean;
+          auto_apply: boolean;
           code: string | null;
           created_at: string;
           description: string | null;
           discount_type: string;
           discount_value: number;
+          dish_ids: string[] | null;
           ends_at: string | null;
           id: string;
           restaurant_id: string;
+          scope: string;
           starts_at: string | null;
           title: string;
           updated_at: string;
