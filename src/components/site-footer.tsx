@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Banknote, Facebook, Instagram } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/site-config";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useActivePartners } from "@/hooks/useActivePartners";
 
 // lucide-react has no TikTok mark (it only ships Feather's original small
 // social set — Facebook/Instagram/Twitter/Linkedin/Youtube, confirmed by
@@ -32,23 +31,8 @@ export function SiteFooter() {
   const { user } = useAuth();
 
   // Tach 10 — kache antyèman si pa gen okenn patnè aktif (pa yon seksyon
-  // vid/plasholdè). `.eq("is_active", true)` eksplisit isit la menm si
-  // RLS deja filtre pou anon/authenticated — konpòtman an rete idantik
-  // kèlkeswa ki moun k ap gade footer la (ata yon admin konekte pa dwe
-  // wè yon patnè dezaktive sou sit piblik la).
-  const partners = useQuery({
-    queryKey: ["footer-partners"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("partners")
-        .select("id, name, logo_url, link_url")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  // vid/plasholdè). Menm hook pataje ak partners-section.tsx (paj akèy).
+  const partners = useActivePartners();
 
   const navLinks = [
     { to: "/", label: "Akèy" },

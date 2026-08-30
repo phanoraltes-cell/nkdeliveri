@@ -18,6 +18,7 @@ import { PopularRestaurantsSection } from "@/components/home/popular-restaurants
 import { AppBenefitsSection } from "@/components/home/app-benefits-section";
 import { PopularDishesSection } from "@/components/home/popular-dishes-section";
 import { NewsletterSection } from "@/components/home/newsletter-section";
+import { PartnersSection } from "@/components/home/partners-section";
 
 export const Route = createFileRoute("/")({
   // Title/description/OG already come from the root's defaults — this page
@@ -106,6 +107,8 @@ function Index() {
         />
 
         <NewsletterSection />
+
+        <PartnersSection />
       </main>
 
       <SiteFooter />
