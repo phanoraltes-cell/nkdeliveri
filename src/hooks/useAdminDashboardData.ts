@@ -173,6 +173,27 @@ export function useAdminDashboardData() {
     onError: (e) => toast.error(e.message),
   });
 
+  // Ekstansyon Tach 7 (de tip kontra) — RPC SEPARE de updateDriver anwo a
+  // espre: sa a chanje DE chan an menm tan (status + account_status), yon
+  // sèl aksyon atomik pou "apwouve yon aplikasyon an atant". updateDriver
+  // (jeneral) rete itilize pou reyaktive/sispann yon livrè ki DEJA
+  // apwouve/siyen — li pa ta dwe janm re-deklannche yon egzijans siyati
+  // kontra pou yon moun ki deja aktif.
+  const approveDriverPendingContract = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("approve_driver_pending_contract_secure", {
+        _driver_id: id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pending-drivers"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast.success("Aplikasyon apwouve — kontra a ap tann siyati livrè a");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   return {
     onlineDrivers,
     approvedRestaurants,
@@ -182,5 +203,6 @@ export function useAdminDashboardData() {
     pendingDrivers,
     updateResto,
     updateDriver,
+    approveDriverPendingContract,
   };
 }

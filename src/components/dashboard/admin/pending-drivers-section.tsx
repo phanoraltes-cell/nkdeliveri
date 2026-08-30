@@ -35,7 +35,10 @@ export function PendingDriversSection({
 }: PendingDriversSectionProps) {
   return (
     <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
-      <h2 className="mb-4 font-display text-xl font-bold text-ink">Livrè an atant valdasyon</h2>
+      <h2 className="mb-1 font-display text-xl font-bold text-ink">Livrè an atant valdasyon</h2>
+      <p className="mb-4 text-xs text-ink-soft">
+        "Apwouve" voye livrè a nan etap siyati kontra — kont li vin aktif sèlman apre li siyen.
+      </p>
       {isLoading && <div className="text-ink-soft">Chajman...</div>}
       {drivers?.length === 0 && (
         <div className="text-sm text-ink-soft">Pa gen okenn livrè an atant.</div>

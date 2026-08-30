@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DashboardShortcutGrid } from "@/components/dashboard/dashboard-shortcut-grid";
 import { ActiveDeliveriesSection } from "@/components/dashboard/driver/active-deliveries-section";
+import { DriverContractSigningCard } from "@/components/dashboard/driver/driver-contract-signing-card";
 import { useWeeklySeries } from "@/hooks/useWeeklySeries";
 
 // recharts (~350KB) is only needed once this page has mounted. (LeafletMap
@@ -80,6 +81,13 @@ function DriverDashboard() {
   });
 
   const pending = driver?.status === "pending";
+  // Ekstansyon Tach 7 — etap siyati kontra livrè, apre aplikasyon apwouve
+  // men anvan kont lan reyèlman aktif. Dimansyon SEPARE de `status`
+  // (account_status, wè migrasyon 20260830130000) — `showDashboardBody`
+  // blòk TOUT kontni operasyonèl la nan de ka yo (an atant OSWA an atant
+  // siyati), menm jan ak dashboard.restaurant.index.tsx.
+  const pendingContract = driver?.account_status === "pending_contract";
+  const showDashboardBody = !pending && !pendingContract && !!driver;
   const online = driver?.status === "online";
 
   const driverStats = useQuery({
@@ -215,10 +223,10 @@ function DriverDashboard() {
         </div>
         {driver && (
           <StatusBadge
-            tone={pending ? "warn" : online ? "good" : "neutral"}
+            tone={pending || pendingContract ? "warn" : online ? "good" : "neutral"}
             className="px-3 py-1 text-xs"
           >
-            {driver.status}
+            {pendingContract ? "ap tann siyati" : driver.status}
           </StatusBadge>
         )}
       </div>
@@ -237,7 +245,11 @@ function DriverDashboard() {
         </div>
       )}
 
-      {!pending && driver && (
+      {pendingContract && driver && (
+        <DriverContractSigningCard driverId={driver.id} userId={user!.id} />
+      )}
+
+      {showDashboardBody && (
         <button
           onClick={() => toggle.mutate(!online)}
           className={`inline-flex items-center gap-2 rounded-full px-5 py-3 font-bold text-white shadow-md transition ${
@@ -249,7 +261,7 @@ function DriverDashboard() {
         </button>
       )}
 
-      {!pending && driver && (
+      {showDashboardBody && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Livrezon jodi a"
@@ -276,7 +288,7 @@ function DriverDashboard() {
 
       <DashboardAdCard />
 
-      {!pending && driver && (
+      {showDashboardBody && (
         <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">
           <h2 className="mb-4 font-display text-xl font-bold text-ink">Revni 7 dènye jou</h2>
           {weeklyEarnings.isLoading ? (
@@ -289,11 +301,11 @@ function DriverDashboard() {
         </section>
       )}
 
-      {!pending && driver && (
+      {showDashboardBody && (
         <ActiveDeliveriesSection driverId={driver.id} active={active} markers={markers} />
       )}
 
-      {!pending && driver && (
+      {showDashboardBody && (
         <section>
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <MessageSquareText className="h-5 w-5 text-brand-deep" /> Dènye avi
@@ -323,40 +335,45 @@ function DriverDashboard() {
         </section>
       )}
 
-      <DashboardShortcutGrid
-        items={[
-          {
-            icon: MapPin,
-            title: "Livrezon disponib",
-            desc: "Pran nouvo livrezon",
-            to: "/dashboard/driver/available",
-          },
-          {
-            icon: ClipboardList,
-            title: "Livrezon m yo",
-            desc: "Aktyèl ak istwa",
-            to: "/dashboard/driver/history",
-          },
-          {
-            icon: DollarSign,
-            title: "Revni m yo",
-            desc: "Peman ak komisyon",
-            to: "/dashboard/driver/earnings",
-          },
-          {
-            icon: Wallet,
-            title: "Peman ak Komisyon",
-            desc: "Nimewo + frekans peman",
-            to: "/dashboard/driver/payouts",
-          },
-          {
-            icon: Bike,
-            title: "Pwofil livrè",
-            desc: "Modifye enfo w yo",
-            to: "/dashboard/driver/profile",
-          },
-        ]}
-      />
+      {/* pendingContract sèlman (pa `pending`, ki gade konpòtman orijinal
+          la — pa yon chanjman mwen fè): dènye etap la se yon ekran fokis
+          sèlman sou siyati a, menm jan ak dashboard.restaurant.index.tsx. */}
+      {!pendingContract && (
+        <DashboardShortcutGrid
+          items={[
+            {
+              icon: MapPin,
+              title: "Livrezon disponib",
+              desc: "Pran nouvo livrezon",
+              to: "/dashboard/driver/available",
+            },
+            {
+              icon: ClipboardList,
+              title: "Livrezon m yo",
+              desc: "Aktyèl ak istwa",
+              to: "/dashboard/driver/history",
+            },
+            {
+              icon: DollarSign,
+              title: "Revni m yo",
+              desc: "Peman ak komisyon",
+              to: "/dashboard/driver/earnings",
+            },
+            {
+              icon: Wallet,
+              title: "Peman ak Komisyon",
+              desc: "Nimewo + frekans peman",
+              to: "/dashboard/driver/payouts",
+            },
+            {
+              icon: Bike,
+              title: "Pwofil livrè",
+              desc: "Modifye enfo w yo",
+              to: "/dashboard/driver/profile",
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }

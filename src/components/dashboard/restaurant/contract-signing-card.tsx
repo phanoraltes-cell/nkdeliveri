@@ -27,7 +27,9 @@ export function ContractSigningCard({
   const contract = useQuery({
     queryKey: ["current-restaurant-contract"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_current_contract_secure");
+      const { data, error } = await supabase.rpc("get_current_contract_secure", {
+        _contract_type: "restaurant",
+      });
       if (error) throw error;
       // Aggregate RPC (LIMIT 1) — vin kòm yon senp objè, pa yon tablo,
       // depi PostgREST wè li kòm "isOneToOne" via SetofOptions, men rete

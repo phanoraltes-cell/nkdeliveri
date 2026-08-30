@@ -572,6 +572,8 @@ export type Database = {
       };
       drivers: {
         Row: {
+          /** Dimansyon konfòmite ORTOGONAL de `status` (migrasyon 20260821120000, D1) — is_driver_eligible() sèl otorite ki konbine tou de. */
+          account_status: string;
           address: string | null;
           commission_rate: number;
           created_at: string;
@@ -581,6 +583,8 @@ export type Database = {
           id: string;
           id_doc_url: string | null;
           last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
           license_doc_url: string | null;
           license_plate: string | null;
           moncash_account_name: string | null;
@@ -588,14 +592,20 @@ export type Database = {
           natcash_account_name: string | null;
           natcash_number: string | null;
           payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
           phone: string | null;
           status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
           updated_at: string;
           user_id: string;
           vehicle_photo_url: string | null;
           vehicle_type: string | null;
         };
         Insert: {
+          account_status?: string;
           address?: string | null;
           commission_rate?: number;
           created_at?: string;
@@ -605,6 +615,8 @@ export type Database = {
           id?: string;
           id_doc_url?: string | null;
           last_name?: string | null;
+          last_permit_reminder_sent_at?: string | null;
+          last_permit_reminder_stage?: number | null;
           license_doc_url?: string | null;
           license_plate?: string | null;
           moncash_account_name?: string | null;
@@ -612,14 +624,20 @@ export type Database = {
           natcash_account_name?: string | null;
           natcash_number?: string | null;
           payout_frequency?: string;
+          permit_expires_at?: string | null;
+          permit_grace_until?: string | null;
+          permit_status?: string;
           phone?: string | null;
           status?: Database["public"]["Enums"]["driver_status"];
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
           updated_at?: string;
           user_id: string;
           vehicle_photo_url?: string | null;
           vehicle_type?: string | null;
         };
         Update: {
+          account_status?: string;
           address?: string | null;
           commission_rate?: number;
           created_at?: string;
@@ -629,6 +647,8 @@ export type Database = {
           id?: string;
           id_doc_url?: string | null;
           last_name?: string | null;
+          last_permit_reminder_sent_at?: string | null;
+          last_permit_reminder_stage?: number | null;
           license_doc_url?: string | null;
           license_plate?: string | null;
           moncash_account_name?: string | null;
@@ -636,8 +656,13 @@ export type Database = {
           natcash_account_name?: string | null;
           natcash_number?: string | null;
           payout_frequency?: string;
+          permit_expires_at?: string | null;
+          permit_grace_until?: string | null;
+          permit_status?: string;
           phone?: string | null;
           status?: Database["public"]["Enums"]["driver_status"];
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
           updated_at?: string;
           user_id?: string;
           vehicle_photo_url?: string | null;
@@ -2126,11 +2151,12 @@ export type Database = {
           },
         ];
       };
-      restaurant_contract_signatures: {
+      contract_signatures: {
         Row: {
           contract_version_id: string;
+          driver_id: string | null;
           id: string;
-          restaurant_id: string;
+          restaurant_id: string | null;
           revoke_reason: string | null;
           revoked_at: string | null;
           revoked_by: string | null;
@@ -2140,8 +2166,9 @@ export type Database = {
         };
         Insert: {
           contract_version_id: string;
+          driver_id?: string | null;
           id?: string;
-          restaurant_id: string;
+          restaurant_id?: string | null;
           revoke_reason?: string | null;
           revoked_at?: string | null;
           revoked_by?: string | null;
@@ -2151,8 +2178,9 @@ export type Database = {
         };
         Update: {
           contract_version_id?: string;
+          driver_id?: string | null;
           id?: string;
-          restaurant_id?: string;
+          restaurant_id?: string | null;
           revoke_reason?: string | null;
           revoked_at?: string | null;
           revoked_by?: string | null;
@@ -2165,7 +2193,14 @@ export type Database = {
             foreignKeyName: "restaurant_contract_signatures_contract_version_id_fkey";
             columns: ["contract_version_id"];
             isOneToOne: false;
-            referencedRelation: "restaurant_contract_versions";
+            referencedRelation: "contract_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contract_signatures_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
             referencedColumns: ["id"];
           },
           {
@@ -2177,8 +2212,9 @@ export type Database = {
           },
         ];
       };
-      restaurant_contract_versions: {
+      contract_versions: {
         Row: {
+          contract_type: string;
           content: string;
           created_at: string;
           created_by: string | null;
@@ -2186,6 +2222,7 @@ export type Database = {
           version: number;
         };
         Insert: {
+          contract_type?: string;
           content: string;
           created_at?: string;
           created_by?: string | null;
@@ -2193,6 +2230,7 @@ export type Database = {
           version: number;
         };
         Update: {
+          contract_type?: string;
           content?: string;
           created_at?: string;
           created_by?: string | null;
@@ -2891,6 +2929,41 @@ export type Database = {
         Args: { _customer_id: string; _reason?: string };
         Returns: undefined;
       };
+      approve_driver_pending_contract_secure: {
+        Args: { _driver_id: string };
+        Returns: {
+          account_status: string;
+          address: string | null;
+          commission_rate: number;
+          created_at: string;
+          current_lat: number | null;
+          current_lng: number | null;
+          first_name: string | null;
+          id: string;
+          id_doc_url: string | null;
+          last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
+          license_doc_url: string | null;
+          license_plate: string | null;
+          moncash_account_name: string | null;
+          moncash_number: string | null;
+          natcash_account_name: string | null;
+          natcash_number: string | null;
+          payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
+          phone: string | null;
+          status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
+          updated_at: string;
+          user_id: string;
+          vehicle_photo_url: string | null;
+          vehicle_type: string | null;
+        };
+      };
       charge_restaurant_monthly_fee_secure: {
         Args: { _period?: string; _restaurant_id: string };
         Returns: {
@@ -3181,8 +3254,9 @@ export type Database = {
         };
       };
       create_contract_version_secure: {
-        Args: { _content: string };
+        Args: { _content: string; _contract_type: string };
         Returns: {
+          contract_type: string;
           content: string;
           created_at: string;
           created_by: string | null;
@@ -3721,8 +3795,9 @@ export type Database = {
         }[];
       };
       get_current_contract_secure: {
-        Args: Record<PropertyKey, never>;
+        Args: { _contract_type: string };
         Returns: {
+          contract_type: string;
           content: string;
           created_at: string;
           created_by: string | null;
@@ -4583,6 +4658,41 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      revoke_driver_contract_secure: {
+        Args: { _driver_id: string; _reason: string };
+        Returns: {
+          account_status: string;
+          address: string | null;
+          commission_rate: number;
+          created_at: string;
+          current_lat: number | null;
+          current_lng: number | null;
+          first_name: string | null;
+          id: string;
+          id_doc_url: string | null;
+          last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
+          license_doc_url: string | null;
+          license_plate: string | null;
+          moncash_account_name: string | null;
+          moncash_number: string | null;
+          natcash_account_name: string | null;
+          natcash_number: string | null;
+          payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
+          phone: string | null;
+          status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
+          updated_at: string;
+          user_id: string;
+          vehicle_photo_url: string | null;
+          vehicle_type: string | null;
+        };
+      };
       revoke_my_session_secure: {
         Args: { _session_id: string };
         Returns: undefined;
@@ -4734,6 +4844,41 @@ export type Database = {
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
           updated_at: string;
+        };
+      };
+      sign_driver_contract_secure: {
+        Args: { _driver_id: string; _signature_name: string };
+        Returns: {
+          account_status: string;
+          address: string | null;
+          commission_rate: number;
+          created_at: string;
+          current_lat: number | null;
+          current_lng: number | null;
+          first_name: string | null;
+          id: string;
+          id_doc_url: string | null;
+          last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
+          license_doc_url: string | null;
+          license_plate: string | null;
+          moncash_account_name: string | null;
+          moncash_number: string | null;
+          natcash_account_name: string | null;
+          natcash_number: string | null;
+          payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
+          phone: string | null;
+          status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
+          updated_at: string;
+          user_id: string;
+          vehicle_photo_url: string | null;
+          vehicle_type: string | null;
         };
       };
       sign_restaurant_contract_secure: {

@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { Banknote, Facebook, Instagram } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/site-config";
 import { useAuth } from "@/hooks/useAuth";
-import { useActivePartners } from "@/hooks/useActivePartners";
 
 // lucide-react has no TikTok mark (it only ships Feather's original small
 // social set — Facebook/Instagram/Twitter/Linkedin/Youtube, confirmed by
@@ -29,10 +28,6 @@ export function SiteFooter() {
   // user already signed in one scroll away from a header that got this
   // right.
   const { user } = useAuth();
-
-  // Tach 10 — kache antyèman si pa gen okenn patnè aktif (pa yon seksyon
-  // vid/plasholdè). Menm hook pataje ak partners-section.tsx (paj akèy).
-  const partners = useActivePartners();
 
   const navLinks = [
     { to: "/", label: "Akèy" },
@@ -192,46 +187,10 @@ export function SiteFooter() {
         </div>
       </div>
 
-      {/* Tach 10 — seksyon antye a pa afiche ditou si pa gen okenn patnè
-          aktif (jamè yon zòn vid/plasholdè sou sit la). */}
-      {!!partners.data?.length && (
-        <div className="border-t border-white/20 px-5 py-6">
-          <div className="mx-auto max-w-[1100px]">
-            <span className="mb-3 block text-center text-xs font-semibold uppercase tracking-wide text-ink">
-              Patnè Ofisyèl NK Deliveri
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              {partners.data.map((p) => {
-                const logo = (
-                  <img
-                    src={p.logo_url}
-                    alt={p.name}
-                    title={p.name}
-                    width={56}
-                    height={56}
-                    loading="lazy"
-                    className="h-14 w-14 rounded-xl bg-white object-contain p-1.5 shadow-brand-xs"
-                  />
-                );
-                return p.link_url ? (
-                  <a
-                    key={p.id}
-                    href={p.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={p.name}
-                    className="transition hover:opacity-80"
-                  >
-                    {logo}
-                  </a>
-                ) : (
-                  <span key={p.id}>{logo}</span>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Seksyon "Patnè Ofisyèl" la retire nan footer a espre (demand
+          itilizatè) — li rete SÈLMAN sou paj akèy la kounye a (apre
+          NewsletterSection/scooter, wè partners-section.tsx), pou plis
+          vizibilite san repete l sou tout paj sit la. */}
 
       <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-ink">
         © {new Date().getFullYear()} NK Deliveri — Tout dwa rezève

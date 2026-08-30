@@ -53,6 +53,7 @@ function AdminDashboard() {
     pendingDrivers,
     updateResto,
     updateDriver,
+    approveDriverPendingContract,
   } = useAdminDashboardData();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -175,8 +176,19 @@ function AdminDashboard() {
                 <PendingDriversSection
                   drivers={pendingDrivers.data}
                   isLoading={pendingDrivers.isLoading}
-                  pendingId={updateDriver.isPending ? updateDriver.variables?.id : undefined}
-                  onApprove={(id) => updateDriver.mutate({ id, status: "approved" })}
+                  pendingId={
+                    updateDriver.isPending
+                      ? updateDriver.variables?.id
+                      : approveDriverPendingContract.isPending
+                        ? approveDriverPendingContract.variables
+                        : undefined
+                  }
+                  // Ekstansyon Tach 7 (de tip kontra) — "Apwouve" pa fè
+                  // livrè a 'approved' antyèman ankò: li chanje status EPI
+                  // account_status an menm tan (RPC dedye), livrè a dwe
+                  // siyen kontra pa li anvan li reyèlman aktif — wè
+                  // driver-contract-signing-card.tsx.
+                  onApprove={(id) => approveDriverPendingContract.mutate(id)}
                   onReject={(id) => updateDriver.mutate({ id, status: "rejected" })}
                 />
               )}
