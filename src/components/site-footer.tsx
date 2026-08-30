@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Banknote, Facebook, Instagram } from "lucide-react";
-import { SOCIAL_LINKS } from "@/lib/site-config";
+import { Banknote, Facebook, Instagram, Mail, MapPin } from "lucide-react";
+import { CONTACT_EMAIL, PRIMARY_CITY, SOCIAL_LINKS } from "@/lib/site-config";
 import { useAuth } from "@/hooks/useAuth";
 
 // lucide-react has no TikTok mark (it only ships Feather's original small
@@ -33,6 +33,7 @@ export function SiteFooter() {
     { to: "/", label: "Akèy" },
     { to: "/restaurants", label: "Restoran" },
     { to: "/orders", label: "Kòmand mwen" },
+    { to: "/contact", label: "Kontak" },
     { to: "/profile", label: "Pwofil" },
     user
       ? ({ to: "/dashboard", label: "Dashboard" } as const)
@@ -41,9 +42,15 @@ export function SiteFooter() {
 
   const companyLinks = [
     { to: "/about", label: "Apwopo" },
-    { to: "/contact", label: "Kontak" },
     { to: "/faq", label: "FAQ" },
-    { to: "/auth/register", label: "Vin yon livrè" },
+  ] as const;
+
+  // "Pou patnè" — de bò "Vin restoran patnè"/"Vin livrè" a mennen nan MENM
+  // paj enskripsyon (auth.register.tsx) ki kite itilizatè a chwazi ki tip
+  // kont li vle kreye — pa gen de paj/wout separe pou kreye.
+  const partnerLinks = [
+    { to: "/auth/register", label: "Vin restoran patnè" },
+    { to: "/auth/register", label: "Vin livrè" },
   ] as const;
 
   const legalLinks = [
@@ -85,8 +92,48 @@ export function SiteFooter() {
           <p className="mt-2 max-w-[40ch] text-sm text-white/85">
             Manje lakay, livre lakay ou. Sèvis livrezon manje nan Gonaïves.
           </p>
+        </div>
+        <nav aria-label="Navigasyon footer" className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Navigasyon</span>
+          {navLinks.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="inline-block w-fit rounded py-1 text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <nav aria-label="Pou patnè" className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Pou patnè</span>
+          {partnerLinks.map((l) => (
+            <Link
+              key={l.label}
+              to={l.to}
+              className="inline-block w-fit rounded py-1 text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold uppercase tracking-wide text-ink text-xs">
+            Kontakte nou
+          </span>
+          <span className="inline-flex items-center gap-2 text-white/90">
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {PRIMARY_CITY.name}, {PRIMARY_CITY.countryName}
+          </span>
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-flex w-fit items-center gap-2 rounded text-white/90 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {CONTACT_EMAIL}
+          </a>
           {SOCIAL_LINKS.length > 0 && (
-            <div className="mt-3 flex gap-2.5">
+            <div className="mt-1 flex gap-2.5">
               {SOCIAL_LINKS.map((s) => {
                 const Icon = SOCIAL_ICONS[s.icon];
                 // No real account URL yet (site-config.ts) — show the icon
@@ -119,78 +166,59 @@ export function SiteFooter() {
             </div>
           )}
         </div>
-        <nav aria-label="Navigasyon footer" className="flex flex-col gap-2 text-sm">
-          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Navigasyon</span>
-          {navLinks.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="inline-block w-fit rounded py-1 text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <nav aria-label="Konpayi" className="flex flex-col gap-2 text-sm">
-          <span className="font-semibold uppercase tracking-wide text-ink text-xs">Konpayi</span>
-          {companyLinks.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="inline-block w-fit rounded py-1 text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex flex-col gap-4">
-          <nav aria-label="Legal" className="flex flex-col gap-2 text-sm">
-            <span className="font-semibold uppercase tracking-wide text-ink text-xs">Legal</span>
-            {legalLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className="inline-block w-fit rounded py-1 text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex flex-col gap-2">
-            <span className="font-semibold uppercase tracking-wide text-ink text-xs">Peman</span>
-            <div className="flex flex-wrap gap-2">
-              {payments.map((p) =>
-                p.kind === "image" ? (
-                  <img
-                    key={p.name}
-                    src={p.src}
-                    alt={p.name}
-                    title={p.name}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="h-10 w-10 rounded-xl object-cover shadow-brand-xs"
-                  />
-                ) : (
-                  <span
-                    key={p.name}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 shadow-brand-xs"
-                    title={p.name}
-                  >
-                    <Banknote className="h-5 w-5 text-brand-deep" />
-                    <span className="text-sm font-bold text-ink">{p.name}</span>
-                  </span>
-                ),
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Seksyon "Patnè Ofisyèl" la retire nan footer a espre (demand
           itilizatè) — li rete SÈLMAN sou paj akèy la kounye a (apre
           NewsletterSection/scooter, wè partners-section.tsx), pou plis
           vizibilite san repete l sou tout paj sit la. */}
+
+      {/* Ranje segondè — Apwopo/FAQ + Legal + Peman: pa disparèt lè footer
+          la reorganize an 4 kolòn (Navigasyon/Pou patnè/Kontakte nou pi
+          wo a), sèlman ranje nan yon liy pi kanpak anba a. */}
+      <div className="border-t border-white/20 px-5 py-6">
+        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-4">
+          <nav
+            aria-label="Konpayi ak legal"
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/85"
+          >
+            {[...companyLinks, ...legalLinks].map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className="rounded hover:underline hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex flex-wrap gap-2">
+            {payments.map((p) =>
+              p.kind === "image" ? (
+                <img
+                  key={p.name}
+                  src={p.src}
+                  alt={p.name}
+                  title={p.name}
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  className="h-10 w-10 rounded-xl object-cover shadow-brand-xs"
+                />
+              ) : (
+                <span
+                  key={p.name}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3 shadow-brand-xs"
+                  title={p.name}
+                >
+                  <Banknote className="h-5 w-5 text-brand-deep" />
+                  <span className="text-sm font-bold text-ink">{p.name}</span>
+                </span>
+              ),
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="border-t border-white/20 px-5 py-4 text-center text-xs text-ink">
         © {new Date().getFullYear()} NK Deliveri — Tout dwa rezève

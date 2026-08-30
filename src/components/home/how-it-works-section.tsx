@@ -1,25 +1,31 @@
 import { motion } from "framer-motion";
-import { Store, UtensilsCrossed, Wallet, Bike } from "lucide-react";
+import { Store, UtensilsCrossed, Bike } from "lucide-react";
 
 const HOW_STEPS = [
-  { icon: Store, title: "Chwazi restoran", desc: "Dekouvri meyè restoran nan zòn ou." },
+  {
+    icon: Store,
+    title: "Chwazi restoran",
+    desc: "Chwazi nan plizyè restoran patnè nou yo.",
+  },
   {
     icon: UtensilsCrossed,
-    title: "Chwazi sa w vle",
-    desc: "Ajoute plat ou renmen yo nan panyen an.",
+    title: "Fè kòmand ou",
+    desc: "Chwazi plat ou renmen epi ajoute nan panyen.",
   },
-  { icon: Wallet, title: "Peye fasil", desc: "Peye an sekirite ak MonCash oswa NatCash." },
-  { icon: Bike, title: "Resevwa l rapid", desc: "Livrezon cho e rapid jis lakay ou." },
+  { icon: Bike, title: "N ap livre w", desc: "Nou livre kòmand ou rapid nan Gonaïves." },
 ];
 
-/** Home page's "Kijan li travay" 4-step explainer. */
+/** Home page's "Kijan li mache" 3-step explainer. */
 export function HowItWorksSection() {
   return (
     <section className="mx-auto max-w-[1200px] px-5 py-14">
-      <h2 className="mb-10 text-center font-display text-[clamp(1.7rem,3vw,2.4rem)] font-extrabold tracking-tight">
-        Kijan li <span className="text-brand">travay</span> ?
-      </h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-10 text-center">
+        <h2 className="font-display text-[clamp(1.7rem,3vw,2.4rem)] font-extrabold tracking-tight">
+          Kijan li <span className="text-brand">mache</span> ?
+        </h2>
+        <p className="mt-2 text-ink-soft">3 etap senp pou resevwa manje ou.</p>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-3">
         {HOW_STEPS.map((s, i) => (
           <motion.div
             key={s.title}

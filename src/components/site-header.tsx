@@ -71,6 +71,24 @@ export function SiteHeader() {
           >
             Kòmand mwen
           </Link>
+          {/* "Pou patnè" mennen nan menm paj enskripsyon "Vin restoran
+              patnè"/"Vin livrè" a itilize deja (auth.register.tsx kite
+              itilizatè a chwazi restoran oswa livrè) — pa gen nouvo
+              paj/wout kreye, jis yon aksè plis vizib nan nav prensipal la. */}
+          <Link
+            to="/auth/register"
+            activeProps={{ className: "!text-brand after:!scale-x-100" }}
+            className="relative px-4 py-2 text-sm font-semibold text-ink transition hover:text-brand after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-[3px] after:origin-center after:scale-x-0 after:rounded-full after:bg-brand after:transition-transform"
+          >
+            Pou patnè
+          </Link>
+          <Link
+            to="/contact"
+            activeProps={{ className: "!text-brand after:!scale-x-100" }}
+            className="relative px-4 py-2 text-sm font-semibold text-ink transition hover:text-brand after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-[3px] after:origin-center after:scale-x-0 after:rounded-full after:bg-brand after:transition-transform"
+          >
+            Kontak
+          </Link>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
