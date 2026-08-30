@@ -177,6 +177,20 @@ function AdminAds() {
   });
 
   const now = Date.now();
+  const bannerAds = placements.data?.filter((p) => p.placement !== "popup") ?? [];
+  const popupAds = placements.data?.filter((p) => p.placement === "popup") ?? [];
+
+  function handleToggleActive(p: Placement) {
+    // Description is now required by the RPC itself — an ad created before
+    // this pass may still have none. Catch that here with a clear,
+    // actionable message instead of letting the RPC's generic exception
+    // surface through a raw toast.
+    if (!p.description?.trim()) {
+      toast.error(`"${p.title}" bezwen yon deskripsyon anvan — ale nan "Modifye" pou ajoute l.`);
+      return;
+    }
+    toggleActive.mutate(p);
+  }
 
   return (
     <div className="space-y-5">
@@ -184,7 +198,8 @@ function AdminAds() {
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Piblisite</h1>
           <p className="mt-1 text-ink-soft">
-            Jere anons sponsorize yo (bannyè akèy, rezilta rechèch, paj restoran, dashboard).
+            Jere anons sponsorize yo — bannyè (akèy, rezilta rechèch, paj restoran, dashboard) ak
+            popup (modal).
           </p>
         </div>
         <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
@@ -211,80 +226,120 @@ function AdminAds() {
         />
       )}
 
-      <div className="space-y-3">
-        {placements.data?.map((p) => {
-          const expired = new Date(p.ends_at).getTime() < now;
-          return (
-            <div
+      {/* Demand eksplisit Altes: separe an 2 gwoup vizyèl — "Bannyè" (kat 4
+          plasman ki afiche kòm yon zòn nan yon paj/kat, jamè bloke aksyon
+          itilizatè a) kont "Popup" (yon sèl plasman, yon modal ki mande yon
+          aksyon eksplisit pou fèmen) — de eksperyans fondalman diferan,
+          jistifye 2 seksyon separe olye yon sèl lis long melanje. */}
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-ink">Bannyè</h2>
+        <div className="space-y-3">
+          {bannerAds.map((p) => (
+            <PlacementCard
               key={p.id}
-              className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 font-display text-lg font-extrabold">
-                    {p.title}
-                    <StatusBadge tone="neutral">{PLACEMENT_LABEL[p.placement]}</StatusBadge>
-                    <StatusBadge tone={p.is_active && !expired ? "good" : "neutral"}>
-                      {expired ? "Ekspire" : p.is_active ? "Aktif" : "Dezaktive"}
-                    </StatusBadge>
-                  </div>
-                  {p.restaurants?.name && (
-                    <div className="text-sm text-ink-soft">Restoran: {p.restaurants.name}</div>
-                  )}
-                  <div className="mt-1 text-xs text-ink-soft">
-                    {new Date(p.starts_at).toLocaleDateString("fr-HT")}
-                    {" → "}
-                    {new Date(p.ends_at).toLocaleDateString("fr-HT")}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      // Description is now required by the RPC itself — an
-                      // ad created before this pass may still have none.
-                      // Catch that here with a clear, actionable message
-                      // instead of letting the RPC's generic exception
-                      // surface through a raw toast.
-                      if (!p.description?.trim()) {
-                        toast.error(
-                          `"${p.title}" bezwen yon deskripsyon anvan — ale nan "Modifye" pou ajoute l.`,
-                        );
-                        return;
-                      }
-                      toggleActive.mutate(p);
-                    }}
-                    className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
-                  >
-                    {p.is_active ? "Dezaktive" : "Aktive"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditing(p);
-                      setShowForm(true);
-                    }}
-                    className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
-                  >
-                    Modifye
-                  </button>
-                  <button
-                    onClick={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p))}
-                    aria-label={`Efase anons "${p.title}"`}
-                    className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+              p={p}
+              now={now}
+              onToggleActive={handleToggleActive}
+              onEdit={() => {
+                setEditing(p);
+                setShowForm(true);
+              }}
+              onDelete={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p))}
+            />
+          ))}
+          {bannerAds.length === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
+              Pa gen okenn anons bannyè.
             </div>
-          );
-        })}
-        {placements.data?.length === 0 && (
-          <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
-            Pa gen okenn anons.
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-ink">Popup (modal)</h2>
+        <div className="space-y-3">
+          {popupAds.map((p) => (
+            <PlacementCard
+              key={p.id}
+              p={p}
+              now={now}
+              onToggleActive={handleToggleActive}
+              onEdit={() => {
+                setEditing(p);
+                setShowForm(true);
+              }}
+              onDelete={() => requestConfirm(`Efase "${p.title}"?`, () => remove.mutate(p))}
+            />
+          ))}
+          {popupAds.length === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-6 text-center text-ink-soft">
+              Pa gen okenn anons popup.
+            </div>
+          )}
+        </div>
+      </section>
       {ConfirmDialog}
+    </div>
+  );
+}
+
+/** One ad's row in either the "Bannyè" or "Popup" list — factored out so both sections share the exact same card, not two copies that could drift. */
+function PlacementCard({
+  p,
+  now,
+  onToggleActive,
+  onEdit,
+  onDelete,
+}: {
+  p: Placement;
+  now: number;
+  onToggleActive: (p: Placement) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const expired = new Date(p.ends_at).getTime() < now;
+  return (
+    <div className="rounded-2xl border border-brand-soft/60 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 font-display text-lg font-extrabold">
+            {p.title}
+            <StatusBadge tone="neutral">{PLACEMENT_LABEL[p.placement]}</StatusBadge>
+            <StatusBadge tone={p.is_active && !expired ? "good" : "neutral"}>
+              {expired ? "Ekspire" : p.is_active ? "Aktif" : "Dezaktive"}
+            </StatusBadge>
+          </div>
+          {p.restaurants?.name && (
+            <div className="text-sm text-ink-soft">Restoran: {p.restaurants.name}</div>
+          )}
+          <div className="mt-1 text-xs text-ink-soft">
+            {new Date(p.starts_at).toLocaleDateString("fr-HT")}
+            {" → "}
+            {new Date(p.ends_at).toLocaleDateString("fr-HT")}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onToggleActive(p)}
+            className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
+          >
+            {p.is_active ? "Dezaktive" : "Aktive"}
+          </button>
+          <button
+            onClick={onEdit}
+            className="rounded-lg border-2 border-brand-soft px-3 py-1 text-xs font-bold text-brand-deep hover:bg-brand-soft/40"
+          >
+            Modifye
+          </button>
+          <button
+            onClick={onDelete}
+            aria-label={`Efase anons "${p.title}"`}
+            className="rounded-lg border-2 border-red-200 px-2 py-1 text-red-700 transition hover:bg-red-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
