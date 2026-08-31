@@ -439,6 +439,27 @@ Toutes les tables ont RLS activé. Ci-dessous, « admin » signifie
 mention contraire. Le détail complet de chaque RPC référencée est dans
 [API.md](./API.md).
 
+> **⚠️ RÈGLE OBLIGATOIRE — `public.has_role` vs `private.has_role`**
+> (incident 2026-08-30, migrations `20260830170000` et suivante) :
+>
+> - `public.has_role(_user_id, _role)` est un relais `SECURITY INVOKER`
+>   (voir `20260704160000_47e8011e...sql`) — conçu **exprès** ainsi pour
+>   empêcher un client PostgREST de sonder le rôle d'un **autre**
+>   utilisateur. Il convient parfaitement dans une clause `USING`/`WITH
+>   CHECK` de policy RLS (évaluée directement sous le rôle `authenticated`
+>   qui fait la requête).
+> - **Il ne faut JAMAIS l'appeler à l'intérieur du corps d'une fonction
+>   `SECURITY DEFINER`** (un RPC `*_secure`, un trigger `protect_*`, etc.).
+>   Le contexte de rôle actif dans ce cas n'est pas garanti équivalent à
+>   la session de l'appelant, et la vérification peut silencieusement
+>   retourner `false` pour un admin pourtant légitime — c'est exactement
+>   ce qui a bloqué `get_admin_ai_traffic_stats_secure` (500 `Forbidden`)
+>   et affectait au moins 37 autres fonctions découvertes par audit.
+> - **La règle** : à l'intérieur d'une fonction `SECURITY DEFINER`,
+>   toujours appeler `private.has_role(_user_id, _role)` directement (lui
+>   aussi `SECURITY DEFINER`, sans ce piège). `public.has_role` reste
+>   réservé aux clauses de policy RLS uniquement.
+
 | Table                       | Policies (résumé)                                                                                                                                                                                                                     |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `profiles`                  | SELECT : soi-même ou admin · INSERT/UPDATE : soi-même uniquement                                                                                                                                                                      |
