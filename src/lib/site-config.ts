@@ -48,6 +48,21 @@ export const SOCIAL_LINKS: {
 
 export const CONTACT_EMAIL = "support@nkdeliveri.com";
 
+/**
+ * Sèl kote nimewo WhatsApp biznis la ekri (demand itilizatè eksplisit —
+ * "pa kopye l nan plizyè fichye"). Menm konvansyon ak CONTACT_EMAIL anwo a:
+ * yon nimewo biznis pa yon sekrè, kidonk yon konstan senp isit la (pa yon
+ * varyab anviwònman) — chak kote ki bezwen l enpòte l isit la.
+ * `WHATSAPP_LINK` deja gen mesaj prerampli a (encodeURIComponent, pa yon
+ * tèks kole alamen) pou li rete kòrèk si mesaj la chanje pita.
+ */
+export const WHATSAPP_NUMBER_DISPLAY = "+509 47 41 9458";
+// Fòma entènasyonal wa.me: san espas, san "+", san "0" dirijan.
+const WHATSAPP_NUMBER_INTL = "50947419458";
+export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER_INTL}?text=${encodeURIComponent(
+  "Bonjou NK DELIVERI, mwen bezwen yon enfòmasyon",
+)}`;
+
 export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
