@@ -10,6 +10,7 @@ import { translateAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors"
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { getGoogleIdToken } from "@/lib/google-identity";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -59,18 +60,49 @@ function LoginPage() {
     return () => sub.subscription.unsubscribe();
   }, [nav, search.next]);
 
+  // Metòd prensipal: Google Identity Services (One Tap) → ID token →
+  // supabase.auth.signInWithIdToken — pa gen redireksyon paj antye ankò.
+  // Ansyen metòd la (signInGoogleOAuthFallback pi ba) rete kòm SEKOU:
+  // yon echèk GIS (script pa chaje, Client ID pa konfigire, One Tap
+  // sispann/refize) tonbe tounen otomatikman sou redireksyon OAuth la, pou
+  // bouton an pa janm rete san reyaksyon.
   async function signInGoogle() {
     setGoogleLoading(true);
+    try {
+      const idToken = await getGoogleIdToken();
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken,
+      });
+      if (error) throw error;
+      toast.success("Byenveni!");
+      nav({ to: search.next || "/dashboard" });
+      setGoogleLoading(false);
+    } catch (err) {
+      console.warn(
+        "[auth] Google Identity Services echwe, tonbe tounen sou redireksyon OAuth",
+        err,
+      );
+      const redirecting = await signInGoogleOAuthFallback();
+      // Redireksyon an ap kite paj la nan yon ti moman — kenbe bouton an
+      // "Ap redirije…" olye l retounen enabled pandan yon ti eklè anvan sa
+      // (menm konpòtman ak ansyen kòd la). Yon echèk konplè (tou de metòd)
+      // reactive bouton an pou moun nan ka eseye ankò.
+      if (!redirecting) setGoogleLoading(false);
+    }
+  }
+
+  /** @returns true si redireksyon an lanse san erè (bouton an rete "loading" jiskaske paj la chanje). */
+  async function signInGoogleOAuthFallback(): Promise<boolean> {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + "/auth" },
     });
     if (error) {
       toast.error("Erè Google: " + error.message);
-      setGoogleLoading(false);
+      return false;
     }
-    // On success the browser navigates away to Google, so no further state
-    // update is needed here.
+    return true;
   }
 
   async function submit(e: React.FormEvent) {
