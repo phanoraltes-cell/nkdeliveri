@@ -25,6 +25,7 @@ import {
   FileSignature,
   Handshake,
   Radio,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { isOperationalRole } from "@/lib/employee-roles";
@@ -124,6 +125,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/partners", label: "Patnè Ofisyèl", icon: Handshake },
     { to: "/dashboard/admin/security", label: "Sekirite kont", icon: ShieldCheck },
     { to: "/dashboard/admin/notification-log", label: "Jounal Notifikasyon", icon: Radio },
+    { to: "/dashboard/admin/ai", label: "Asistan AI", icon: Sparkles },
   ],
   super_admin: [
     { to: "/dashboard/admin", label: "Akèy", icon: LayoutDashboard },
@@ -164,6 +166,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/partners", label: "Patnè Ofisyèl", icon: Handshake },
     { to: "/dashboard/admin/security", label: "Sekirite kont", icon: ShieldCheck },
     { to: "/dashboard/admin/notification-log", label: "Jounal Notifikasyon", icon: Radio },
+    { to: "/dashboard/admin/ai", label: "Asistan AI", icon: Sparkles },
   ],
 };
 

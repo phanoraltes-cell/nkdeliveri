@@ -207,6 +207,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_usage_log: {
+        Row: {
+          admin_id: string;
+          created_at: string;
+          error: string | null;
+          feature: string;
+          id: number;
+          input_tokens: number;
+          model: string;
+          output_tokens: number;
+          status: string;
+        };
+        Insert: {
+          admin_id: string;
+          created_at?: string;
+          error?: string | null;
+          feature: string;
+          id?: number;
+          input_tokens?: number;
+          model: string;
+          output_tokens?: number;
+          status: string;
+        };
+        Update: {
+          admin_id?: string;
+          created_at?: string;
+          error?: string | null;
+          feature?: string;
+          id?: number;
+          input_tokens?: number;
+          model?: string;
+          output_tokens?: number;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      ai_summary_cache: {
+        Row: {
+          cache_date: string;
+          generated_at: string;
+          generated_by: string | null;
+          id: string;
+          model: string;
+          period: string;
+          stats: Json;
+          summary: string;
+        };
+        Insert: {
+          cache_date?: string;
+          generated_at?: string;
+          generated_by?: string | null;
+          id?: string;
+          model: string;
+          period: string;
+          stats: Json;
+          summary: string;
+        };
+        Update: {
+          cache_date?: string;
+          generated_at?: string;
+          generated_by?: string | null;
+          id?: string;
+          model?: string;
+          period?: string;
+          stats?: Json;
+          summary?: string;
+        };
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -3832,6 +3901,14 @@ export type Database = {
           thumbnail_url: string;
           title: string;
         }[];
+      };
+      get_admin_ai_traffic_stats_secure: {
+        Args: { _period: string };
+        Returns: Json;
+      };
+      get_admin_priorities_secure: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       get_admin_backup_codes_status_secure: {
         Args: Record<PropertyKey, never>;

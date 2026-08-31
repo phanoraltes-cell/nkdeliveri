@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Megaphone, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,15 +74,45 @@ function passthroughExtraFields(p: Placement) {
 
 // Role guard lives on the parent layout (dashboard.admin.tsx) — this used to
 // repeat the same check locally, which was redundant with it.
+// Tach "Asistan AI" — dashboard.admin.ai.tsx la mennen isit la ak
+// ?aiTitle=...&aiDescription=... apre admin nan klike "Itilize sa a" sou
+// yon pwopozisyon piblisite. Pa gen chan `cta_label` ki pa ta gen kote
+// pou l ale — fòm sa a pa gen editè pou li ankò (wè `passthroughExtraFields`
+// pi ba), donk sijesyon bouton AI a rete vizib/kopyab sou paj asistan an
+// sèlman, jamè pèdi men pa oto-ranpli.
+type AdsSearch = { aiTitle?: string; aiDescription?: string };
+
 export const Route = createFileRoute("/_authenticated/dashboard/admin/ads")({
+  validateSearch: (search: Record<string, unknown>): AdsSearch => ({
+    aiTitle: typeof search.aiTitle === "string" ? search.aiTitle : undefined,
+    aiDescription: typeof search.aiDescription === "string" ? search.aiDescription : undefined,
+  }),
   component: AdminAds,
 });
 
 function AdminAds() {
   const qc = useQueryClient();
+  const { aiTitle, aiDescription } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Placement | null>(null);
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
+
+  // Louvri fòm kreyasyon an otomatikman, PRERAMPLI, si nou rive isit la ak
+  // yon pwopozisyon AI. URL la netwaye SÈLMAN lè fòm nan fèmen/anrejistre
+  // (pi ba) — pa isit la, pou `PlacementForm` gen tan resevwa aiTitle/
+  // aiDescription kòm valè initial nan menm premye rann (render) li a.
+  useEffect(() => {
+    if (aiTitle || aiDescription) {
+      setEditing(null);
+      setShowForm(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function clearAiPrefillFromUrl() {
+    if (aiTitle || aiDescription) navigate({ search: {}, replace: true });
+  }
 
   const placements = useQuery({
     queryKey: ["admin-sponsored-placements"],
@@ -221,8 +251,16 @@ function AdminAds() {
       {showForm && (
         <PlacementForm
           placement={editing}
-          onClose={() => setShowForm(false)}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["admin-sponsored-placements"] })}
+          initialTitle={aiTitle}
+          initialDescription={aiDescription}
+          onClose={() => {
+            setShowForm(false);
+            clearAiPrefillFromUrl();
+          }}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["admin-sponsored-placements"] });
+            clearAiPrefillFromUrl();
+          }}
         />
       )}
 
@@ -360,18 +398,23 @@ function mediaFromPlacement(p: Placement | null): MediaUploaderValue {
 
 function PlacementForm({
   placement,
+  initialTitle,
+  initialDescription,
   onClose,
   onSaved,
 }: {
   placement: Placement | null;
+  /** Preranpli soti nan asistan AI la (dashboard.admin.ai.tsx) — jamè pran an kont si `placement` deja bay (yo pa aplikab nan yon modifikasyon). */
+  initialTitle?: string;
+  initialDescription?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [f, setF] = useState({
     placement: placement?.placement ?? "home_banner",
     restaurant_id: placement?.restaurant_id ?? "",
-    title: placement?.title ?? "",
-    description: placement?.description ?? "",
+    title: placement?.title ?? initialTitle ?? "",
+    description: placement?.description ?? initialDescription ?? "",
     link_url: placement?.link_url ?? "",
     starts_at: placement?.starts_at ? placement.starts_at.slice(0, 10) : "",
     ends_at: placement?.ends_at ? placement.ends_at.slice(0, 10) : "",

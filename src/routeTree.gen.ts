@@ -34,6 +34,7 @@ import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authe
 import { Route as ApiWebhooksMoncashRouteImport } from './routes/api.webhooks.moncash'
 import { Route as ApiCronPlopReconcileRouteImport } from './routes/api.cron.plop-reconcile'
 import { Route as ApiCronMoncashReconcileRouteImport } from './routes/api.cron.moncash-reconcile'
+import { Route as ApiAdminAiRouteImport } from './routes/api.admin.ai'
 import { Route as AuthenticatedDashboardRestaurantRouteImport } from './routes/_authenticated/dashboard.restaurant'
 import { Route as AuthenticatedDashboardNotificationsRouteImport } from './routes/_authenticated/dashboard.notifications'
 import { Route as AuthenticatedDashboardDriverRouteImport } from './routes/_authenticated/dashboard.driver'
@@ -90,6 +91,7 @@ import { Route as AuthenticatedDashboardAdminContractsRouteImport } from './rout
 import { Route as AuthenticatedDashboardAdminCommissionsRouteImport } from './routes/_authenticated/dashboard.admin.commissions'
 import { Route as AuthenticatedDashboardAdminCollectRouteImport } from './routes/_authenticated/dashboard.admin.collect'
 import { Route as AuthenticatedDashboardAdminChatRouteImport } from './routes/_authenticated/dashboard.admin.chat'
+import { Route as AuthenticatedDashboardAdminAiRouteImport } from './routes/_authenticated/dashboard.admin.ai'
 import { Route as AuthenticatedDashboardAdminAdsRouteImport } from './routes/_authenticated/dashboard.admin.ads'
 
 const TermsRoute = TermsRouteImport.update({
@@ -215,6 +217,11 @@ const ApiCronPlopReconcileRoute = ApiCronPlopReconcileRouteImport.update({
 const ApiCronMoncashReconcileRoute = ApiCronMoncashReconcileRouteImport.update({
   id: '/api/cron/moncash-reconcile',
   path: '/api/cron/moncash-reconcile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminAiRoute = ApiAdminAiRouteImport.update({
+  id: '/api/admin/ai',
+  path: '/api/admin/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashboardRestaurantRoute =
@@ -553,6 +560,12 @@ const AuthenticatedDashboardAdminChatRoute =
     path: '/chat',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminAiRoute =
+  AuthenticatedDashboardAdminAiRouteImport.update({
+    id: '/ai',
+    path: '/ai',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminAdsRoute =
   AuthenticatedDashboardAdminAdsRouteImport.update({
     id: '/ads',
@@ -587,11 +600,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/admin/ai': typeof ApiAdminAiRoute
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRouteWithChildren
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/dashboard/admin/ai': typeof AuthenticatedDashboardAdminAiRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
@@ -665,11 +680,13 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsIndexRoute
   '/chat/$orderId': typeof AuthenticatedChatOrderIdRoute
   '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
+  '/api/admin/ai': typeof ApiAdminAiRoute
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/dashboard/admin/ai': typeof AuthenticatedDashboardAdminAiRoute
   '/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
@@ -750,11 +767,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/driver': typeof AuthenticatedDashboardDriverRouteWithChildren
   '/_authenticated/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/_authenticated/dashboard/restaurant': typeof AuthenticatedDashboardRestaurantRouteWithChildren
+  '/api/admin/ai': typeof ApiAdminAiRoute
   '/api/cron/moncash-reconcile': typeof ApiCronMoncashReconcileRoute
   '/api/cron/plop-reconcile': typeof ApiCronPlopReconcileRoute
   '/api/webhooks/moncash': typeof ApiWebhooksMoncashRouteWithChildren
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/ads': typeof AuthenticatedDashboardAdminAdsRoute
+  '/_authenticated/dashboard/admin/ai': typeof AuthenticatedDashboardAdminAiRoute
   '/_authenticated/dashboard/admin/chat': typeof AuthenticatedDashboardAdminChatRoute
   '/_authenticated/dashboard/admin/collect': typeof AuthenticatedDashboardAdminCollectRoute
   '/_authenticated/dashboard/admin/commissions': typeof AuthenticatedDashboardAdminCommissionsRoute
@@ -835,11 +854,13 @@ export interface FileRouteTypes {
     | '/dashboard/driver'
     | '/dashboard/notifications'
     | '/dashboard/restaurant'
+    | '/api/admin/ai'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
     | '/api/webhooks/moncash'
     | '/dashboard/'
     | '/dashboard/admin/ads'
+    | '/dashboard/admin/ai'
     | '/dashboard/admin/chat'
     | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
@@ -913,11 +934,13 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/chat/$orderId'
     | '/dashboard/notifications'
+    | '/api/admin/ai'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
     | '/api/webhooks/moncash'
     | '/dashboard'
     | '/dashboard/admin/ads'
+    | '/dashboard/admin/ai'
     | '/dashboard/admin/chat'
     | '/dashboard/admin/collect'
     | '/dashboard/admin/commissions'
@@ -997,11 +1020,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/driver'
     | '/_authenticated/dashboard/notifications'
     | '/_authenticated/dashboard/restaurant'
+    | '/api/admin/ai'
     | '/api/cron/moncash-reconcile'
     | '/api/cron/plop-reconcile'
     | '/api/webhooks/moncash'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/ads'
+    | '/_authenticated/dashboard/admin/ai'
     | '/_authenticated/dashboard/admin/chat'
     | '/_authenticated/dashboard/admin/collect'
     | '/_authenticated/dashboard/admin/commissions'
@@ -1075,6 +1100,7 @@ export interface RootRouteChildren {
   AuthIndexRoute: typeof AuthIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
+  ApiAdminAiRoute: typeof ApiAdminAiRoute
   ApiCronMoncashReconcileRoute: typeof ApiCronMoncashReconcileRoute
   ApiCronPlopReconcileRoute: typeof ApiCronPlopReconcileRoute
   ApiWebhooksMoncashRoute: typeof ApiWebhooksMoncashRouteWithChildren
@@ -1256,6 +1282,13 @@ declare module '@tanstack/react-router' {
       path: '/api/cron/moncash-reconcile'
       fullPath: '/api/cron/moncash-reconcile'
       preLoaderRoute: typeof ApiCronMoncashReconcileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/ai': {
+      id: '/api/admin/ai'
+      path: '/api/admin/ai'
+      fullPath: '/api/admin/ai'
+      preLoaderRoute: typeof ApiAdminAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard/restaurant': {
@@ -1650,6 +1683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminChatRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/ai': {
+      id: '/_authenticated/dashboard/admin/ai'
+      path: '/ai'
+      fullPath: '/dashboard/admin/ai'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminAiRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/ads': {
       id: '/_authenticated/dashboard/admin/ads'
       path: '/ads'
@@ -1662,6 +1702,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminAdsRoute: typeof AuthenticatedDashboardAdminAdsRoute
+  AuthenticatedDashboardAdminAiRoute: typeof AuthenticatedDashboardAdminAiRoute
   AuthenticatedDashboardAdminChatRoute: typeof AuthenticatedDashboardAdminChatRoute
   AuthenticatedDashboardAdminCollectRoute: typeof AuthenticatedDashboardAdminCollectRoute
   AuthenticatedDashboardAdminCommissionsRoute: typeof AuthenticatedDashboardAdminCommissionsRoute
@@ -1692,6 +1733,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
 const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
   {
     AuthenticatedDashboardAdminAdsRoute: AuthenticatedDashboardAdminAdsRoute,
+    AuthenticatedDashboardAdminAiRoute: AuthenticatedDashboardAdminAiRoute,
     AuthenticatedDashboardAdminChatRoute: AuthenticatedDashboardAdminChatRoute,
     AuthenticatedDashboardAdminCollectRoute:
       AuthenticatedDashboardAdminCollectRoute,
@@ -1927,6 +1969,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
+  ApiAdminAiRoute: ApiAdminAiRoute,
   ApiCronMoncashReconcileRoute: ApiCronMoncashReconcileRoute,
   ApiCronPlopReconcileRoute: ApiCronPlopReconcileRoute,
   ApiWebhooksMoncashRoute: ApiWebhooksMoncashRouteWithChildren,
