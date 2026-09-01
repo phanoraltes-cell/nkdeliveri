@@ -22,6 +22,7 @@ import {
   classifyUnconfirmedPayment,
 } from "@/lib/order-status";
 import { Chip } from "@/components/ui/chip";
+import { paymentMethodLabel } from "@/lib/payment-provider-availability";
 
 const PAGE_SIZE = 30;
 
@@ -37,12 +38,6 @@ const NEXT_STATUS: Record<string, { to: string; label: string }[]> = {
   pending: [{ to: "confirmed", label: "Konfime" }],
   confirmed: [{ to: "preparing", label: "Kòmanse prepare" }],
   preparing: [{ to: "ready", label: "Mak kòm prè" }],
-};
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  moncash: "MonCash",
-  natcash: "NatCash",
-  kach: "Kach nan livrezon",
 };
 
 function RestaurantOrders() {
@@ -345,7 +340,7 @@ function RestaurantOrders() {
                         </div>
                         {o.payments?.[0]?.method && (
                           <div className="text-[11px] font-bold text-ink-soft">
-                            {PAYMENT_METHOD_LABEL[o.payments[0].method] ?? o.payments[0].method}
+                            {paymentMethodLabel(o.payments[0].method)}
                           </div>
                         )}
                       </div>

@@ -24,6 +24,35 @@ import type { Database } from "@/integrations/supabase/types";
 export type CheckoutProviderId =
   "kach" | "moncash" | "natcash" | "moncash_auto" | "natcash_auto" | "stripe";
 
+/**
+ * Human-readable label per checkout method — same wording as checkout.tsx's
+ * own METHODS array, single source now that a second consumer needs it.
+ * F-07 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — `stripe` (and, defensively,
+ * `moncash_auto`/`natcash_auto`, though `payments.method` itself only ever
+ * stores their base rail — see paymentMethodLabel() below) was missing from
+ * the restaurant dashboard's own copy of this map, so a card/Stripe order
+ * showed the raw provider key instead of a label.
+ */
+export const PAYMENT_METHOD_LABEL: Record<CheckoutProviderId, string> = {
+  kach: "Kach nan livrezon",
+  moncash: "MonCash",
+  natcash: "NatCash",
+  moncash_auto: "MonCash Otomatik",
+  natcash_auto: "NatCash Otomatik",
+  stripe: "Kat Kredi",
+};
+
+/**
+ * Safe lookup for a `payments.method` value (typed `string` at most call
+ * sites since it flows through a raw Supabase row, not always narrowed to
+ * `CheckoutProviderId`) — falls back to the raw value itself for anything
+ * unrecognized, same behavior as the two inline `?? method` fallbacks this
+ * replaces.
+ */
+export function paymentMethodLabel(method: string): string {
+  return (PAYMENT_METHOD_LABEL as Record<string, string>)[method] ?? method;
+}
+
 export type PaymentProviderSetting = {
   provider: CheckoutProviderId;
   visible: boolean;

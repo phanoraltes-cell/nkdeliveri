@@ -9,12 +9,7 @@ import {
   formatOrderWaitTime,
   classifyUnconfirmedPayment,
 } from "@/lib/order-status";
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  moncash: "MonCash",
-  natcash: "NatCash",
-  kach: "Kach nan livrezon",
-};
+import { paymentMethodLabel } from "@/lib/payment-provider-availability";
 
 export type KanbanOrder = {
   id: string;
@@ -265,7 +260,7 @@ function KanbanCard({
             minute: "2-digit",
           })}{" "}
           · {itemCount} atik
-          {paymentMethod && ` · ${PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}`}
+          {paymentMethod && ` · ${paymentMethodLabel(paymentMethod)}`}
         </span>
         {isUrgent && (
           <span className="rounded-full bg-status-bad-soft px-1.5 py-0.5 font-bold text-status-bad">
