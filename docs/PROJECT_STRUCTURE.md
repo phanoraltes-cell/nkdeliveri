@@ -17,7 +17,8 @@ nkdeliveri/
 │   └── restore-database.sh
 ├── supabase/
 │   ├── config.toml              # project_id uniquement
-│   ├── migrations/               # 55+ fichiers SQL, un par changement de schéma — voir MIGRATIONS.md
+│   ├── migrations/               # 169+ fichiers SQL, un par changement de schéma — voir MIGRATIONS.md
+│   ├── tests/                     # Tests de régression sécurité SQL (ex. c01_user_roles_security.sql)
 │   └── functions/                # Edge Functions Deno, projet à part — voir SUPABASE.md
 ├── src/
 │   ├── routes/                   # Routage TanStack Start basé fichiers — voir ROUTING.md
@@ -34,7 +35,8 @@ nkdeliveri/
 │   ├── server.ts                  # Point d'entrée du serveur Nitro (init Sentry, gestion d'erreur h3)
 │   ├── sw.ts                      # Source du Service Worker (injecté par vite-plugin-pwa) — voir PWA.md
 │   └── routeTree.gen.ts           # Généré automatiquement — NE JAMAIS ÉDITER À LA MAIN
-├── tests/                         # Vide — aucune suite de tests n'existe actuellement (voir DEVELOPMENT.md)
+├── tests/                         # Dossier hérité, vide — voir "Tests" plus bas pour l'emplacement réel
+├── e2e/                           # Suite Playwright réelle (34 specs) — voir "Tests" plus bas
 ├── vite.config.ts                 # Config Vite/Nitro/PWA/Tailwind — voir ARCHITECTURE.md, DEPLOYMENT.md
 ├── vercel.json                    # En-têtes HTTP de sécurité (CSP, HSTS, etc.) — voir SECURITY.md
 ├── eslint.config.js                # Règles ESLint (exclut supabase/functions, .vercel — runtime différent)
@@ -75,10 +77,24 @@ nkdeliveri/
 | `src/sw.ts`            | Source du Service Worker PWA (précache + stratégies d'offline) — voir [PWA.md](./PWA.md)                                                                                                                                                                                |
 | `src/routeTree.gen.ts` | Régénéré à chaque `npm run dev`/`npm run build` par le plugin de routage TanStack — ne jamais l'éditer, il sera écrasé                                                                                                                                                  |
 
-## Dossier `tests/`
+## Tests
 
-Existe mais est **vide** — non suivi par git à ce jour. Il n'y a
-actuellement aucune suite de tests automatisés (pas de script `test` dans
-`package.json`). Voir [DEVELOPMENT.md](./DEVELOPMENT.md) pour la stratégie
-de vérification actuelle (typecheck + lint + build + validation des
-migrations).
+Corrigé (2026-08-31, odit tout baz la) — la phrase précédente ("aucune
+suite de tests automatisés") était fausse et n'a pas été mise à jour depuis
+la création de ce document :
+
+- `tests/` (racine du dépôt) existe toujours et est bien **vide** —
+  c'est un dossier hérité, pas l'emplacement réel des tests.
+- Les tests unitaires vivent **à côté de leur code source**, suffixe
+  `*.test.ts(x)` (23 fichiers dans `src/` à ce jour) — `npm run test`
+  (= `vitest run`).
+- Les tests end-to-end vivent dans **`e2e/`** (34 specs Playwright à ce
+  jour), incluant accessibilité (`@axe-core/playwright`) et performance
+  (`playwright-lighthouse`) — `npm run test:e2e`.
+- `supabase/tests/` contient des tests de régression sécurité SQL
+  (ex. `c01_user_roles_security.sql`), exécutés en CI contre une réplique
+  Postgres locale (`supabase start`).
+
+Voir [DEVELOPMENT.md](./DEVELOPMENT.md) pour la stratégie de vérification
+complète (test + lint + format + typecheck + validation des migrations +
+build + e2e, voir aussi `.github/workflows/ci.yml`).
