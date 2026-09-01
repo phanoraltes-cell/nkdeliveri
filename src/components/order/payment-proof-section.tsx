@@ -82,6 +82,14 @@ export function PaymentProofSection({
     },
     onError: (e) => toast.error(e.message),
   });
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — upload/RPC failures used to
+  // be toast-only (see onError above, kept unchanged) — also surfaced
+  // inline here so it doesn't depend on catching a timed toast.
+  const formError = uploadProof.isError
+    ? uploadProof.error instanceof Error
+      ? uploadProof.error.message
+      : null
+    : null;
 
   function submitProof(e: React.FormEvent) {
     e.preventDefault();
@@ -113,6 +121,14 @@ export function PaymentProofSection({
 
       {needsProof ? (
         <form onSubmit={submitProof} className="mt-4 space-y-3">
+          {formError && (
+            <p
+              role="alert"
+              className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+            >
+              {formError}
+            </p>
+          )}
           <div>
             <label className="mb-1 block text-xs font-bold uppercase text-ink-soft">
               Prèv (foto/kaptè)
@@ -122,6 +138,7 @@ export function PaymentProofSection({
               accept="image/*,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               aria-label="Prèv (foto/kaptè)"
+              aria-invalid={!!formError}
               className={inputClsCompact()}
               required
             />

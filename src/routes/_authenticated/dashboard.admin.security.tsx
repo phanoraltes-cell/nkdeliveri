@@ -182,11 +182,20 @@ function AdminSecurity() {
               required
               placeholder="000000"
               aria-label="Kòd verifikasyon"
+              aria-invalid={!!error}
+              aria-describedby={error ? "totp-enroll-error" : undefined}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => {
+                setCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                if (error) setError(null);
+              }}
               className={inputCls() + " text-center text-lg tracking-[0.5em]"}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p id="totp-enroll-error" role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <div className="flex gap-2">
               <Button
                 type="button"

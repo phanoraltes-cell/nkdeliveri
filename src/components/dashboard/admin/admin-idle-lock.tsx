@@ -210,11 +210,20 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
               required
               placeholder="XXXXX-XXXXX"
               aria-label="Kòd sekou"
+              aria-invalid={!!error}
+              aria-describedby={error ? "idle-lock-error" : undefined}
               value={backupCode}
-              onChange={(e) => setBackupCode(e.target.value)}
+              onChange={(e) => {
+                setBackupCode(e.target.value);
+                if (error) setError(null);
+              }}
               className={inputCls() + " text-center font-mono uppercase tracking-wider"}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p id="idle-lock-error" role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <Button type="submit" disabled={submitting || !backupCode.trim()} className="w-full">
               {submitting ? "Ap verifye…" : "Debloke"}
             </Button>
@@ -243,11 +252,20 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
               required
               placeholder="000000"
               aria-label="Kòd verifikasyon"
+              aria-invalid={!!error}
+              aria-describedby={error ? "idle-lock-error" : undefined}
               value={totpCode}
-              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => {
+                setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                if (error) setError(null);
+              }}
               className={inputCls() + " text-center text-lg tracking-[0.5em]"}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p id="idle-lock-error" role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <Button type="submit" disabled={submitting || totpCode.length !== 6} className="w-full">
               {submitting ? "Ap verifye…" : "Debloke"}
             </Button>
@@ -260,11 +278,20 @@ export function AdminIdleLock({ children }: { children: ReactNode }) {
               required
               placeholder="Modpas ou"
               aria-label="Modpas ou"
+              aria-invalid={!!error}
+              aria-describedby={error ? "idle-lock-error" : undefined}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError(null);
+              }}
               className={inputCls()}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p id="idle-lock-error" role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <Button type="submit" disabled={submitting || !password} className="w-full">
               {submitting ? "Ap verifye…" : "Debloke"}
             </Button>

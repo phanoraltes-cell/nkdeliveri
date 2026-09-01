@@ -72,11 +72,17 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
               required
               placeholder="000000"
               aria-label="Kòd verifikasyon"
+              aria-invalid={!!state.error}
+              aria-describedby={state.error ? "reauth-error" : undefined}
               value={state.totpCode}
               onChange={(e) => state.setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               className={inputCls() + " text-center text-lg tracking-[0.5em]"}
             />
-            {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+            {state.error && (
+              <p id="reauth-error" role="alert" className="text-sm text-red-600">
+                {state.error}
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => state.setOpen(false)}>
                 Anile
@@ -112,11 +118,17 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
               required
               placeholder="XXXXX-XXXXX"
               aria-label="Kòd sekou"
+              aria-invalid={!!state.error}
+              aria-describedby={state.error ? "reauth-error" : undefined}
               value={state.backupCode}
               onChange={(e) => state.setBackupCode(e.target.value)}
               className={inputCls() + " text-center font-mono uppercase tracking-wider"}
             />
-            {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+            {state.error && (
+              <p id="reauth-error" role="alert" className="text-sm text-red-600">
+                {state.error}
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => state.setOpen(false)}>
                 Anile
@@ -149,11 +161,17 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
               required
               placeholder="Modpas ou"
               aria-label="Modpas ou"
+              aria-invalid={!!state.error}
+              aria-describedby={state.error ? "reauth-error" : undefined}
               value={state.password}
               onChange={(e) => state.setPassword(e.target.value)}
               className={inputCls()}
             />
-            {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+            {state.error && (
+              <p id="reauth-error" role="alert" className="text-sm text-red-600">
+                {state.error}
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => state.setOpen(false)}>
                 Anile

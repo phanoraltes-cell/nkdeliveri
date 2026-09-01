@@ -8,10 +8,13 @@ const scooterImg = "/scooter.png";
 export function NewsletterSection() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — was toast-only.
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function subscribeNewsletter(e: React.FormEvent) {
     e.preventDefault();
     setSubscribing(true);
+    setFormError(null);
     try {
       const { error } = await supabase.rpc("subscribe_newsletter_secure", {
         _email: newsletterEmail.trim().toLowerCase(),
@@ -20,6 +23,7 @@ export function NewsletterSection() {
         if (error.code === "23505") {
           toast.info("Ou deja enskri!");
         } else if (error.code === "42901") {
+          setFormError(error.message);
           toast.error(error.message);
         } else {
           throw error;
@@ -29,7 +33,9 @@ export function NewsletterSection() {
       }
       setNewsletterEmail("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erè pandan enskripsyon an");
+      const message = err instanceof Error ? err.message : "Erè pandan enskripsyon an";
+      setFormError(message);
+      toast.error(message);
     } finally {
       setSubscribing(false);
     }
@@ -45,25 +51,38 @@ export function NewsletterSection() {
           <p className="mb-6 text-white/90">
             Enskri pou resevwa promosyon, nouvote ak avantaj espesyal.
           </p>
-          <form
-            onSubmit={subscribeNewsletter}
-            className="flex max-w-[460px] items-center rounded-full bg-white p-1.5"
-          >
-            <input
-              type="email"
-              required
-              value={newsletterEmail}
-              onChange={(e) => setNewsletterEmail(e.target.value)}
-              placeholder="Antre imèl ou"
-              aria-label="Antre imèl ou"
-              className="min-w-0 flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft focus-visible:ring-2 focus-visible:ring-brand/40"
-            />
-            <button
-              disabled={subscribing}
-              className="shrink-0 rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink disabled:opacity-60"
-            >
-              {subscribing ? "…" : "Enskri"}
-            </button>
+          <form onSubmit={subscribeNewsletter} className="max-w-[460px]">
+            <div className="flex items-center rounded-full bg-white p-1.5">
+              <input
+                type="email"
+                required
+                value={newsletterEmail}
+                onChange={(e) => {
+                  setNewsletterEmail(e.target.value);
+                  if (formError) setFormError(null);
+                }}
+                placeholder="Antre imèl ou"
+                aria-label="Antre imèl ou"
+                aria-invalid={!!formError}
+                aria-describedby={formError ? "newsletter-error" : undefined}
+                className="min-w-0 flex-1 rounded-full bg-transparent px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-soft focus-visible:ring-2 focus-visible:ring-brand/40"
+              />
+              <button
+                disabled={subscribing}
+                className="shrink-0 rounded-full bg-brand-deep px-6 py-2.5 text-sm font-extrabold text-white transition hover:bg-ink disabled:opacity-60"
+              >
+                {subscribing ? "…" : "Enskri"}
+              </button>
+            </div>
+            {formError && (
+              <p
+                id="newsletter-error"
+                role="alert"
+                className="mt-2 rounded-lg bg-black/15 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                {formError}
+              </p>
+            )}
           </form>
         </div>
         <div className="relative">
