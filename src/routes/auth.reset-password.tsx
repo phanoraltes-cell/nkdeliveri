@@ -8,6 +8,7 @@ import { noIndexMeta } from "@/lib/seo";
 import { translateAuthError } from "@/lib/auth-errors";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field-error";
 
 export const Route = createFileRoute("/auth/reset-password")({
   head: () => noIndexMeta("Chwazi nouvo modpas — NK Deliveri"),
@@ -26,6 +27,10 @@ function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — all three were toast-only.
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [passwordLenError, setPasswordLenError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -47,11 +52,16 @@ function ResetPassword() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setConfirmError(null);
+    setPasswordLenError(null);
+    setFormError(null);
     if (password !== confirm) {
+      setConfirmError("Modpas yo pa menm");
       toast.error("Modpas yo pa menm");
       return;
     }
     if (password.length < 6) {
+      setPasswordLenError("Modpas la dwe gen omwen 6 karaktè");
       toast.error("Modpas la dwe gen omwen 6 karaktè");
       return;
     }
@@ -71,7 +81,9 @@ function ResetPassword() {
       toast.success("Modpas ou chanje avèk siksè!");
       setTimeout(() => nav({ to: "/dashboard" }), 1200);
     } catch (e) {
-      toast.error(translateAuthError(e));
+      const message = translateAuthError(e);
+      setFormError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -102,26 +114,50 @@ function ResetPassword() {
 
           {ready === "ready" && !done && (
             <form onSubmit={submit} className="space-y-3">
-              <input
-                required
-                type="password"
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nouvo modpas"
-                aria-label="Nouvo modpas"
-                className={inputCls()}
-              />
-              <input
-                required
-                type="password"
-                minLength={6}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Konfime nouvo modpas"
-                aria-label="Konfime nouvo modpas"
-                className={inputCls()}
-              />
+              {formError && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+                >
+                  {formError}
+                </p>
+              )}
+              <div>
+                <input
+                  required
+                  type="password"
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordLenError) setPasswordLenError(null);
+                  }}
+                  placeholder="Nouvo modpas"
+                  aria-label="Nouvo modpas"
+                  aria-invalid={!!passwordLenError}
+                  aria-describedby={passwordLenError ? "reset-password-len-error" : undefined}
+                  className={inputCls()}
+                />
+                <FieldError id="reset-password-len-error" message={passwordLenError} />
+              </div>
+              <div>
+                <input
+                  required
+                  type="password"
+                  minLength={6}
+                  value={confirm}
+                  onChange={(e) => {
+                    setConfirm(e.target.value);
+                    if (confirmError) setConfirmError(null);
+                  }}
+                  placeholder="Konfime nouvo modpas"
+                  aria-label="Konfime nouvo modpas"
+                  aria-invalid={!!confirmError}
+                  aria-describedby={confirmError ? "reset-confirm-error" : undefined}
+                  className={inputCls()}
+                />
+                <FieldError id="reset-confirm-error" message={confirmError} />
+              </div>
               <Button className="h-auto w-full py-3" disabled={loading}>
                 {loading ? "..." : "Chanje modpas"}
               </Button>

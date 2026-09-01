@@ -13,8 +13,16 @@ import { translateAuthError } from "@/lib/auth-errors";
 export function useSubmit(onDone: () => void) {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
+  // F-04 remediation (docs/FRONTEND_GLOBAL_AUDIT.md §25) — a server-side
+  // rejection (email already used, rate limit, CAPTCHA, ...) used to reach
+  // the user ONLY via a toast. Exposed here too so callers can also render
+  // it inline (role="alert", tied to the form via aria-describedby) for
+  // anyone who'd miss a timed toast — the toast itself is kept, this adds a
+  // second, persistent channel rather than replacing it.
+  const [error, setError] = useState<string | null>(null);
   async function wrap(fn: () => Promise<{ hasSession: boolean }>, successMsg: string) {
     setLoading(true);
+    setError(null);
     try {
       const { hasSession } = await fn();
       onDone();
@@ -26,10 +34,12 @@ export function useSubmit(onDone: () => void) {
         nav({ to: "/auth" });
       }
     } catch (e) {
-      toast.error(translateAuthError(e));
+      const message = translateAuthError(e);
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
-  return { loading, wrap };
+  return { loading, error, wrap };
 }

@@ -5,6 +5,7 @@ import { translateAuthError } from "@/lib/auth-errors";
 import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { inputCls } from "@/lib/utils";
+import { FieldError } from "@/components/ui/field-error";
 
 /**
  * Password change for an already-authenticated user. Supabase's updateUser()
@@ -16,11 +17,24 @@ export function ChangePasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — all three were toast-only.
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [passwordLenError, setPasswordLenError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirm) return toast.error("Modpas yo pa menm");
-    if (password.length < 6) return toast.error("Modpas la dwe gen omwen 6 karaktè");
+    setConfirmError(null);
+    setPasswordLenError(null);
+    setFormError(null);
+    if (password !== confirm) {
+      setConfirmError("Modpas yo pa menm");
+      return toast.error("Modpas yo pa menm");
+    }
+    if (password.length < 6) {
+      setPasswordLenError("Modpas la dwe gen omwen 6 karaktè");
+      return toast.error("Modpas la dwe gen omwen 6 karaktè");
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -38,7 +52,9 @@ export function ChangePasswordForm() {
       setPassword("");
       setConfirm("");
     } catch (e) {
-      toast.error(translateAuthError(e));
+      const message = translateAuthError(e);
+      setFormError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -46,27 +62,51 @@ export function ChangePasswordForm() {
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {formError && (
+        <p
+          role="alert"
+          className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+        >
+          {formError}
+        </p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
-        <input
-          type="password"
-          required
-          minLength={6}
-          placeholder="Nouvo modpas"
-          aria-label="Nouvo modpas"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={inputCls()}
-        />
-        <input
-          type="password"
-          required
-          minLength={6}
-          placeholder="Konfime nouvo modpas"
-          aria-label="Konfime nouvo modpas"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          className={inputCls()}
-        />
+        <div>
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Nouvo modpas"
+            aria-label="Nouvo modpas"
+            aria-invalid={!!passwordLenError}
+            aria-describedby={passwordLenError ? "change-password-len-error" : undefined}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (passwordLenError) setPasswordLenError(null);
+            }}
+            className={inputCls()}
+          />
+          <FieldError id="change-password-len-error" message={passwordLenError} />
+        </div>
+        <div>
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Konfime nouvo modpas"
+            aria-label="Konfime nouvo modpas"
+            aria-invalid={!!confirmError}
+            aria-describedby={confirmError ? "change-confirm-error" : undefined}
+            value={confirm}
+            onChange={(e) => {
+              setConfirm(e.target.value);
+              if (confirmError) setConfirmError(null);
+            }}
+            className={inputCls()}
+          />
+          <FieldError id="change-confirm-error" message={confirmError} />
+        </div>
       </div>
       <Button disabled={loading}>
         <KeyRound className="h-4 w-4" /> {loading ? "Ap chanje…" : "Chanje modpas"}

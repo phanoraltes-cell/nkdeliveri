@@ -11,6 +11,7 @@ import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { getGoogleIdToken } from "@/lib/google-identity";
+import { FieldError } from "@/components/ui/field-error";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -29,6 +30,11 @@ function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending] = useState(false);
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — sign-in failures used to
+  // reach the user through a toast only. Kept, but also rendered inline
+  // (role="alert") so a screen-reader user who misses the timed toast still
+  // sees why the form didn't submit.
+  const [loginError, setLoginError] = useState<string | null>(null);
   const captcha = useTurnstile();
 
   useEffect(() => {
@@ -109,6 +115,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setNeedsConfirmation(false);
+    setLoginError(null);
     try {
       const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
         _email: email.trim(),
@@ -128,7 +135,9 @@ function LoginPage() {
       toast.success("Byenveni!");
       nav({ to: search.next || "/dashboard" });
     } catch (e) {
-      toast.error(translateAuthError(e));
+      const message = translateAuthError(e);
+      setLoginError(message);
+      toast.error(message);
       if (isEmailNotConfirmedError(e)) setNeedsConfirmation(true);
     } finally {
       setLoading(false);
@@ -204,6 +213,14 @@ function LoginPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-3">
+            {loginError && (
+              <p
+                role="alert"
+                className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+              >
+                {loginError}
+              </p>
+            )}
             <input
               required
               type="email"
@@ -211,6 +228,7 @@ function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               aria-label="Email"
+              aria-invalid={!!loginError}
               className={inputCls()}
             />
             <div>
@@ -222,6 +240,7 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Modpas"
                 aria-label="Modpas"
+                aria-invalid={!!loginError}
                 className={inputCls()}
               />
               <div className="mt-1.5 text-right">

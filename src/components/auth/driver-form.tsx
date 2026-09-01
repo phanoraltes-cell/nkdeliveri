@@ -10,6 +10,7 @@ import { FormCard, FileField } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legal";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { FieldError } from "@/components/ui/field-error";
 
 export function DriverForm() {
   const [f, setF] = useState({
@@ -27,15 +28,33 @@ export function DriverForm() {
   const [idDoc, setIdDoc] = useState<File | null>(null);
   const [license, setLicense] = useState<File | null>(null);
   const [vehiclePhoto, setVehiclePhoto] = useState<File | null>(null);
-  const { loading, wrap } = useSubmit(() => {});
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — these three checks used to be
+  // toast-only. Kept as toasts (unchanged UX) but now also tracked here so
+  // the offending field gets a visible inline message.
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const [idDocError, setIdDocError] = useState<string | null>(null);
+  const { loading, error, wrap } = useSubmit(() => {});
   const captcha = useTurnstile();
   const finalizeDocs = useServerFn(finalizeRegistrationDocuments);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (f.password !== f.confirm) return toast.error("Modpas yo pa menm");
-    if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
-    if (!idDoc) return toast.error("Foto pyès idantite w obligatwa");
+    setConfirmError(null);
+    setTermsError(null);
+    setIdDocError(null);
+    if (f.password !== f.confirm) {
+      setConfirmError("Modpas yo pa menm");
+      return toast.error("Modpas yo pa menm");
+    }
+    if (!f.terms) {
+      setTermsError("Ou dwe aksepte kondisyon yo");
+      return toast.error("Ou dwe aksepte kondisyon yo");
+    }
+    if (!idDoc) {
+      setIdDocError("Foto pyès idantite w obligatwa");
+      return toast.error("Foto pyès idantite w obligatwa");
+    }
     wrap(async () => {
       const { userId, hasSession } = await baseSignUp(
         f.email,
@@ -91,6 +110,14 @@ export function DriverForm() {
   return (
     <FormCard>
       <form onSubmit={submit} className="space-y-3">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+          >
+            {error}
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             required
@@ -161,7 +188,17 @@ export function DriverForm() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <FileField label="Pyès idantite *" accept="image/*,application/pdf" onChange={setIdDoc} />
+          <div>
+            <FileField
+              label="Pyès idantite *"
+              accept="image/*,application/pdf"
+              onChange={(f) => {
+                setIdDoc(f);
+                if (idDocError) setIdDocError(null);
+              }}
+            />
+            <FieldError id="driver-iddoc-error" message={idDocError} />
+          </div>
           <FileField
             label="Pèmi (opsyonèl)"
             accept="image/*,application/pdf"
@@ -181,46 +218,62 @@ export function DriverForm() {
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
           />
-          <input
-            required
-            type="password"
-            minLength={6}
-            placeholder="Konfime modpas"
-            aria-label="Konfime modpas"
-            className={inputCls()}
-            value={f.confirm}
-            onChange={(e) => setF({ ...f, confirm: e.target.value })}
-          />
+          <div>
+            <input
+              required
+              type="password"
+              minLength={6}
+              placeholder="Konfime modpas"
+              aria-label="Konfime modpas"
+              aria-invalid={!!confirmError}
+              aria-describedby={confirmError ? "driver-confirm-error" : undefined}
+              className={inputCls()}
+              value={f.confirm}
+              onChange={(e) => {
+                setF({ ...f, confirm: e.target.value });
+                if (confirmError) setConfirmError(null);
+              }}
+            />
+            <FieldError id="driver-confirm-error" message={confirmError} />
+          </div>
         </div>
-        <label className="flex items-start gap-2 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={f.terms}
-            onChange={(e) => setF({ ...f, terms: e.target.checked })}
-            className="mt-1"
-          />
-          <span>
-            Mwen aksepte{" "}
-            <Link
-              to="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-deep underline"
-            >
-              Kondisyon Itilizasyon
-            </Link>{" "}
-            ak{" "}
-            <Link
-              to="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-deep underline"
-            >
-              Politik Konfidansyalite
-            </Link>{" "}
-            NK Deliveri kòm livrè.
-          </span>
-        </label>
+        <div>
+          <label className="flex items-start gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={f.terms}
+              aria-invalid={!!termsError}
+              aria-describedby={termsError ? "driver-terms-error" : undefined}
+              onChange={(e) => {
+                setF({ ...f, terms: e.target.checked });
+                if (termsError) setTermsError(null);
+              }}
+              className="mt-1"
+            />
+            <span>
+              Mwen aksepte{" "}
+              <Link
+                to="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-deep underline"
+              >
+                Kondisyon Itilizasyon
+              </Link>{" "}
+              ak{" "}
+              <Link
+                to="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-deep underline"
+              >
+                Politik Konfidansyalite
+              </Link>{" "}
+              NK Deliveri kòm livrè.
+            </span>
+          </label>
+          <FieldError id="driver-terms-error" message={termsError} />
+        </div>
         <div ref={captcha.containerRef} className="flex justify-center" />
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont livrè"}

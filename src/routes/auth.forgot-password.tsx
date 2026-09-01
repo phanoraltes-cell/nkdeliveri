@@ -10,6 +10,7 @@ import { Mail } from "lucide-react";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { FieldError } from "@/components/ui/field-error";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => noIndexMeta("Reyinisyalize modpas — NK Deliveri"),
@@ -20,11 +21,19 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — both were toast-only before.
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const captcha = useTurnstile();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return toast.error("Antre imèl ou");
+    setEmailError(null);
+    setFormError(null);
+    if (!email.trim()) {
+      setEmailError("Antre imèl ou");
+      return toast.error("Antre imèl ou");
+    }
     setLoading(true);
     try {
       const { data: allowed, error: rlErr } = await supabase.rpc("check_auth_rate_limit_secure", {
@@ -43,7 +52,9 @@ function ForgotPassword() {
       if (error) throw error;
       setSent(true);
     } catch (e) {
-      toast.error(translateAuthError(e));
+      const message = translateAuthError(e);
+      setFormError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
       captcha.reset();
@@ -69,15 +80,31 @@ function ForgotPassword() {
                 Antre imèl kont ou. Nou ap voye yon lyen pou reyinisyalize modpas ou.
               </p>
               <form onSubmit={submit} className="space-y-3">
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  aria-label="Email"
-                  className={inputCls()}
-                />
+                {formError && (
+                  <p
+                    role="alert"
+                    className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+                  >
+                    {formError}
+                  </p>
+                )}
+                <div>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError(null);
+                    }}
+                    placeholder="Email"
+                    aria-label="Email"
+                    aria-invalid={!!emailError}
+                    aria-describedby={emailError ? "forgot-email-error" : undefined}
+                    className={inputCls()}
+                  />
+                  <FieldError id="forgot-email-error" message={emailError} />
+                </div>
                 <div ref={captcha.containerRef} className="flex justify-center" />
                 <Button className="h-auto w-full py-3" disabled={loading}>
                   {loading ? "Ap voye…" : "Voye lyen an"}

@@ -8,6 +8,7 @@ import { FormCard } from "./register-shared";
 import { Button } from "@/components/ui/button";
 import { CURRENT_TERMS_VERSION } from "@/lib/legal";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { FieldError } from "@/components/ui/field-error";
 
 export function CustomerForm() {
   const [f, setF] = useState({
@@ -20,12 +21,25 @@ export function CustomerForm() {
     address: "",
     terms: false,
   });
-  const { loading, wrap } = useSubmit(() => {});
+  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — these two checks used to be
+  // toast-only. Kept as toasts (unchanged UX) but now also tracked here so
+  // the offending field gets aria-invalid + a visible inline message.
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const { loading, error, wrap } = useSubmit(() => {});
   const captcha = useTurnstile();
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (f.password !== f.confirm) return toast.error("Modpas yo pa menm");
-    if (!f.terms) return toast.error("Ou dwe aksepte kondisyon yo");
+    setConfirmError(null);
+    setTermsError(null);
+    if (f.password !== f.confirm) {
+      setConfirmError("Modpas yo pa menm");
+      return toast.error("Modpas yo pa menm");
+    }
+    if (!f.terms) {
+      setTermsError("Ou dwe aksepte kondisyon yo");
+      return toast.error("Ou dwe aksepte kondisyon yo");
+    }
     wrap(
       () =>
         baseSignUp(
@@ -50,6 +64,14 @@ export function CustomerForm() {
   return (
     <FormCard>
       <form onSubmit={submit} className="space-y-3">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+          >
+            {error}
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             required
@@ -104,46 +126,62 @@ export function CustomerForm() {
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
           />
-          <input
-            required
-            type="password"
-            minLength={6}
-            placeholder="Konfime modpas"
-            aria-label="Konfime modpas"
-            className={inputCls()}
-            value={f.confirm}
-            onChange={(e) => setF({ ...f, confirm: e.target.value })}
-          />
+          <div>
+            <input
+              required
+              type="password"
+              minLength={6}
+              placeholder="Konfime modpas"
+              aria-label="Konfime modpas"
+              aria-invalid={!!confirmError}
+              aria-describedby={confirmError ? "customer-confirm-error" : undefined}
+              className={inputCls()}
+              value={f.confirm}
+              onChange={(e) => {
+                setF({ ...f, confirm: e.target.value });
+                if (confirmError) setConfirmError(null);
+              }}
+            />
+            <FieldError id="customer-confirm-error" message={confirmError} />
+          </div>
         </div>
-        <label className="flex items-start gap-2 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={f.terms}
-            onChange={(e) => setF({ ...f, terms: e.target.checked })}
-            className="mt-1"
-          />
-          <span>
-            Mwen aksepte{" "}
-            <Link
-              to="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-deep underline"
-            >
-              Kondisyon Itilizasyon
-            </Link>{" "}
-            ak{" "}
-            <Link
-              to="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-deep underline"
-            >
-              Politik Konfidansyalite
-            </Link>{" "}
-            NK Deliveri.
-          </span>
-        </label>
+        <div>
+          <label className="flex items-start gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={f.terms}
+              aria-invalid={!!termsError}
+              aria-describedby={termsError ? "customer-terms-error" : undefined}
+              onChange={(e) => {
+                setF({ ...f, terms: e.target.checked });
+                if (termsError) setTermsError(null);
+              }}
+              className="mt-1"
+            />
+            <span>
+              Mwen aksepte{" "}
+              <Link
+                to="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-deep underline"
+              >
+                Kondisyon Itilizasyon
+              </Link>{" "}
+              ak{" "}
+              <Link
+                to="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-deep underline"
+              >
+                Politik Konfidansyalite
+              </Link>{" "}
+              NK Deliveri.
+            </span>
+          </label>
+          <FieldError id="customer-terms-error" message={termsError} />
+        </div>
         <div ref={captcha.containerRef} className="flex justify-center" />
         <Button className="h-auto w-full py-3" disabled={loading}>
           {loading ? "..." : "Kreye kont kliyan"}
