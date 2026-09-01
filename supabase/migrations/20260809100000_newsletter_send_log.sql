@@ -1,4 +1,4 @@
--- Newsletter remediation, Phase 1 (docs/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md
+-- Newsletter remediation, Phase 1 (docs/archive/audits/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md
 -- § 5, Phase 1): the admin "Voye imèl an mas" broadcast collapses every
 -- per-recipient failure (network error, Resend 4xx/5xx, rate limit...) into
 -- a bare `failed++` with zero detail kept anywhere -- making the reported

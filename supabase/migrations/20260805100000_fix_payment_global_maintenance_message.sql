@@ -1,5 +1,5 @@
--- Post-incident audit remediation, Correction 1 (docs/PAYMENT_POST_INCIDENT_AUDIT.md
--- "Bug confirmé n°1" / docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md).
+-- Post-incident audit remediation, Correction 1 (docs/archive/payments/PAYMENT_POST_INCIDENT_AUDIT.md
+-- "Bug confirmé n°1" / docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md).
 --
 -- Pure data fix — no schema, no function, no permission touched. The
 -- "Peman Otomatik" -> "Payment Global" rebrand (commit b11a433 onward)

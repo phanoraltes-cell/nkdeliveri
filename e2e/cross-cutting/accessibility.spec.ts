@@ -125,7 +125,7 @@ test.describe("Accessibility — WCAG2A/AA (zero critical/serious violations)", 
   // OrderStatusTimeline, not just a different label).
   //
   // KNOWN LIMITATION (pre-existing, not introduced here — see
-  // docs/E2E_TEST_REPORT.md's SSR/browser mock-split note and this
+  // docs/archive/audits/E2E_TEST_REPORT.md's SSR/browser mock-split note and this
   // module's own top-of-file comment): mockSupabaseAuth only seeds
   // *browser* localStorage; it has no way to authenticate the *SSR*
   // pass a bare page.goto() triggers, so a fresh full-page load of any

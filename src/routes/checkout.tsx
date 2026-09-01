@@ -310,7 +310,7 @@ function Checkout() {
 
   // "MonCash Otomatik"/"NatCash Otomatik" (checkout ids `moncash_auto`/
   // `natcash_auto`, both backed by the same PLOP gateway —
-  // docs/PLOP_NATCASH_INTEGRATION_PLAN.md) move money through the same
+  // docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md) move money through the same
   // rail as their manual counterpart — create_order_secure only knows the
   // rail (payment_method enum: moncash/natcash/kach/stripe), never *how*
   // it gets confirmed. The distinction is a checkout-flow choice, not a
@@ -417,7 +417,7 @@ function Checkout() {
         const result = await initiateCollect({ data: { paymentId: paymentRow.id } });
         if (result.outcome === "failed") {
           // Best-effort admin push (post-incident audit remediation,
-          // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md, Correction
+          // docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md, Correction
           // 5) — create_collect_payment_secure already recorded this via
           // create_collect_payment_secure -> notify_secure (in-app bell,
           // always fired); this is the missing real push notification
@@ -436,7 +436,7 @@ function Checkout() {
           return;
         }
         if (result.outcome === "already_confirmed") {
-          // Rare reconciliation-on-error path (docs/PLOP_PHASE2_AUDIT.md §
+          // Rare reconciliation-on-error path (docs/archive/plop/PLOP_PHASE2_AUDIT.md §
           // A1) — the provider already confirmed this payment before this
           // call even returned. Nothing to redirect to; the order page's
           // own poll/Realtime picks up the "paid" status within moments.

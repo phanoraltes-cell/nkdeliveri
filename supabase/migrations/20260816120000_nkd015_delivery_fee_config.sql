@@ -1,6 +1,6 @@
--- NKD-015: platform-controlled delivery fee (docs/PHASE10_BUSINESS_LOGIC_AUDIT.md §6).
+-- NKD-015: platform-controlled delivery fee (docs/archive/phases/PHASE10_BUSINESS_LOGIC_AUDIT.md §6).
 -- Business decision, explicitly specified by the project owner (see
--- docs/NKD-015_DELIVERY_FEE_REPORT.md for the full spec + D-question
+-- docs/archive/phases/NKD-015_DELIVERY_FEE_REPORT.md for the full spec + D-question
 -- answers). Règ A5 raised for this scope only.
 --
 -- Decisions confirmed:
@@ -101,7 +101,7 @@ USING (true);
 -- a real financial-impact action (changes what every future order
 -- charges), but not "moves money out of the platform" or "changes
 -- payment-provider security config" (the two STRICT-tier categories,
--- docs/ADMIN_ACCESS_SECURITY_AUDIT.md), so treated like the other
+-- docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md), so treated like the other
 -- STANDARD-tier financial actions (review_refund_secure/
 -- complete_refund_secure) rather than left at Tier 0 or escalated to
 -- STRICT.

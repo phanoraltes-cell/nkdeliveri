@@ -27,7 +27,7 @@ function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — all three were toast-only.
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — all three were toast-only.
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [passwordLenError, setPasswordLenError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);

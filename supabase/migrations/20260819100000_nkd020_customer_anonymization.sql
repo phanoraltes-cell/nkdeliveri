@@ -1,4 +1,4 @@
--- NKD-020 — chemen efasman done pou kliyan (Faz 11, docs/PHASE11_COMPLIANCE_AUDIT.md).
+-- NKD-020 — chemen efasman done pou kliyan (Faz 11, docs/archive/phases/PHASE11_COMPLIANCE_AUDIT.md).
 -- Règ A4 leve (seri odit Faz 3-11 fèmen). A5: touche done kliyan reyèl —
 -- prezante anvan aplikasyon, pa aplike san otorizasyon eksplisit.
 --

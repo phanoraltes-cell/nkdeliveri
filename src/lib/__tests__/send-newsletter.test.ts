@@ -4,7 +4,7 @@
  * handlers aren't practically unit-testable in this project's Node-only
  * Vitest setup, so the pure fetch/parse logic is pulled out (same pattern
  * as `createPollController` in useCollectPaymentPoll.ts). See
- * docs/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md § 4 Pwen A / § 5 Phase 1 —
+ * docs/archive/audits/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md § 4 Pwen A / § 5 Phase 1 —
  * before this, every failure reason (HTTP error, network error) was
  * thrown away at a bare `else failed++`; these tests prove `sendOne` now
  * captures a usable reason for every outcome and never throws.

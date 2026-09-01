@@ -7,8 +7,8 @@ import { createFileRoute } from "@tanstack/react-router";
  * comment for why), same dynamic-import-only rule (a static import here
  * would pull the service-role client into the client bundle).
  *
- * See docs/MONCASH_COLLECT_PHASE1_REPORT.md and
- * docs/MONCASH_COLLECT_PHASE2_VALIDATION_REPORT.md for the full design
+ * See docs/archive/moncash/MONCASH_COLLECT_PHASE1_REPORT.md and
+ * docs/archive/moncash/MONCASH_COLLECT_PHASE2_VALIDATION_REPORT.md for the full design
  * and validation reports.
  */
 export const Route = createFileRoute("/api/webhooks/moncash/collect")({

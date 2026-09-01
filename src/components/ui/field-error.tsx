@@ -1,5 +1,5 @@
 /**
- * F-04 remediation (docs/FRONTEND_GLOBAL_AUDIT.md §25) — every form in this
+ * F-04 remediation (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — every form in this
  * project surfaced validation failures exclusively via a `sonner` toast
  * (see grep in the audit: 0 `aria-invalid` in src/routes, src/components/auth).
  * A toast is timed and not tied to the offending field, so a screen-reader

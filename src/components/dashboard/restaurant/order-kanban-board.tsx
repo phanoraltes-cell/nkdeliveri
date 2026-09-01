@@ -50,7 +50,7 @@ const NEXT_COLUMN: Record<string, string> = {
 };
 const CANCELLABLE_FROM = new Set(["pending", "confirmed", "preparing", "ready"]);
 
-// F-01 (docs/FULL_PLATFORM_AUDIT_2026-08-13.md): dragging a card is a
+// F-01 (docs/archive/audits/FULL_PLATFORM_AUDIT_2026-08-13.md): dragging a card is a
 // second path to the exact same "pending -> confirmed" transition the
 // "Konfime" button guards below -- without this check here too, a
 // restaurant could drag around the button's disabled state and reach the
@@ -212,7 +212,7 @@ function KanbanCard({
   const nextCol = NEXT_COLUMN[o.status];
   // Same guard as the "Lis" view (dashboard.restaurant.orders.tsx) via the
   // shared classifyUnconfirmedPayment source of truth — see F-01
-  // (docs/FULL_PLATFORM_AUDIT_2026-08-13.md): before this fix, this button
+  // (docs/archive/audits/FULL_PLATFORM_AUDIT_2026-08-13.md): before this fix, this button
   // had no payment-state guard at all, so a restaurant could confirm an
   // order whose moncash/natcash payment was still unconfirmed (manual
   // proof pending admin review, or automatic PLOP/Collect still in

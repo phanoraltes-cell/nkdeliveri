@@ -34,12 +34,12 @@ type Wallet = "moncash" | "natcash" | "stripe";
 const CONSECUTIVE_ERROR_THRESHOLD = 5;
 const FAILURE_RATE_ALERT_THRESHOLD = 0.5;
 // PLOP's only safety net beyond the client-side poll is a cron that runs
-// once a day (Vercel Hobby plan cap — docs/PLOP_PHASE1_ARCHITECTURE.md §
+// once a day (Vercel Hobby plan cap — docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md §
 // "rôle du cron") — a short threshold here would fire constant false
 // alarms for perfectly normal in-flight payments. Stripe has no
 // equivalent reconciliation cron at all (only its own webhook + the same
 // client poll), so a stuck row genuinely has no automatic self-healer and
-// deserves a shorter warning window (docs/STRIPE_INTEGRATION_REPORT.md).
+// deserves a shorter warning window (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
 const STUCK_PENDING_MINUTES: Record<Wallet, number> = { moncash: 1440, natcash: 1440, stripe: 120 };
 
 const TAB_LABEL: Record<Wallet, string> = {
@@ -107,8 +107,8 @@ function tabButtonClass(active: boolean): string {
 /**
  * Admin monitoring page for the 3 automatic Collect checkout methods —
  * "MonCash Otomatik"/"NatCash Otomatik" (both backed by PLOP,
- * docs/PLOP_NATCASH_INTEGRATION_PLAN.md) and "Kat Kredi" (Stripe,
- * docs/STRIPE_INTEGRATION_REPORT.md). Distinct from
+ * docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md) and "Kat Kredi" (Stripe,
+ * docs/archive/audits/STRIPE_INTEGRATION_REPORT.md). Distinct from
  * dashboard.admin.payments.tsx (manual proof-review flow,
  * review_manual_payment_secure — no PLOP/Stripe data at all). This is
  * the first admin surface ever built for the Collect flow — read-only,
@@ -511,8 +511,8 @@ function AdminCollect() {
           icon={configuredStatus?.configured ? ShieldCheck : ShieldAlert}
           hint={
             tab === "stripe"
-              ? "Prezans STRIPE_* — gade docs/STRIPE_INTEGRATION_REPORT.md"
-              : "Prezans PLOP_* — gade docs/PLOP_PHASE1_ARCHITECTURE.md"
+              ? "Prezans STRIPE_* — gade docs/archive/audits/STRIPE_INTEGRATION_REPORT.md"
+              : "Prezans PLOP_* — gade docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md"
           }
         />
         <KpiCard label="Peman total nan istwa a" value={tx.length} icon={Zap} />

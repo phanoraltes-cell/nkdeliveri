@@ -1,5 +1,5 @@
--- C-01 regression suite (docs/GLOBAL_AUDIT_360_2026-08-13.md, Finding
--- C-01; docs/PHASE0_C01_C02_REMEDIATION_REPORT.md). Persisted version of
+-- C-01 regression suite (docs/archive/audits/GLOBAL_AUDIT_360_2026-08-13.md, Finding
+-- C-01; docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md). Persisted version of
 -- the BEGIN/ROLLBACK proof run manually against production before
 -- migration 20260813110000_fix_user_roles_rls_bypass.sql was applied —
 -- kept here so the same guarantee is checked on every CI run instead of

@@ -1,7 +1,7 @@
 /**
  * Daily safety-net reconciliation for PLOP Collect payments stuck in
  * `pending` — see the "rôle du cron" callout in
- * docs/PLOP_PHASE1_ARCHITECTURE.md § 3: this is explicitly NOT the
+ * docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 3: this is explicitly NOT the
  * primary confirmation mechanism (that's the client-side adaptive poll on
  * orders.$id.tsx). This job only:
  *   1. Recovers abandoned payments — the user closed the tab before the
@@ -14,7 +14,7 @@
  *
  * Runs once a day (Vercel Cron — see src/routes/api.cron.plop-reconcile.ts
  * and vercel.json), a hard ceiling imposed by the project's Vercel Hobby
- * plan (docs/MONCASH_CRON_SECRET_CONFIGURATION_REPORT.md § 2, already hit
+ * plan (docs/archive/moncash/MONCASH_CRON_SECRET_CONFIGURATION_REPORT.md § 2, already hit
  * by moncash-reconcile.server.ts). No progressive backoff schedule is
  * needed at this cadence, unlike moncash-reconcile.server.ts's
  * 30s/2min/10min tiers — every still-pending candidate old enough is
@@ -23,7 +23,7 @@
  * Goes through `plopProvider.checkStatus()` (the provider layer) rather
  * than calling `verifyPayment()` (the low-level client) directly — same
  * pattern as moncash-reconcile.server.ts's own `moncashProvider
- * .checkStatus()` call. Audit finding A6 (docs/PLOP_PHASE2_AUDIT.md §
+ * .checkStatus()` call. Audit finding A6 (docs/archive/plop/PLOP_PHASE2_AUDIT.md §
  * Dette technique): calling the raw client here would duplicate
  * `trans_status` interpretation outside the one place meant to own it,
  * and silently drift out of sync with it over time.
@@ -40,7 +40,7 @@ export type ReconcileOutcome =
   | "confirmed"
   | "still_pending"
   | "needs_manual_review"
-  /** trans_status was confirmed "ok" by PLOP but the RPC that records it failed — a more urgent case than ordinary waiting (audit finding A3, docs/PLOP_PHASE2_AUDIT.md § Anomalies): the customer's money is accounted for on PLOP's side but not yet reflected here, and needs to be retried, not merely watched. */
+  /** trans_status was confirmed "ok" by PLOP but the RPC that records it failed — a more urgent case than ordinary waiting (audit finding A3, docs/archive/plop/PLOP_PHASE2_AUDIT.md § Anomalies): the customer's money is accounted for on PLOP's side but not yet reflected here, and needs to be retried, not merely watched. */
   | "rpc_error";
 
 export type ReconcileResult = {
@@ -75,7 +75,7 @@ async function finalizeAsPaid(
 
 /**
  * Escalates a transaction stuck past `STALE_REVIEW_AFTER_MS` — the real
- * gap found during docs/BACKEND_PAYMENT_REMEDIATION.md: this cron already
+ * gap found during docs/archive/misc/BACKEND_PAYMENT_REMEDIATION.md: this cron already
  * detected staleness correctly, but the only signal was a console.error,
  * invisible without direct Vercel log access. `flag_stale_collect_payment_secure`
  * (SQL, idempotent via `payment_transactions.stale_flagged_at`) fires the
@@ -178,12 +178,12 @@ export async function reconcilePendingPlopPayments(): Promise<ReconcileSummary> 
     }
 
     // status is "pending" or "unknown" here — both treated the same way
-    // for staleness purposes (docs/PLOP_PHASE2_AUDIT.md § Anomalie A2:
+    // for staleness purposes (docs/archive/plop/PLOP_PHASE2_AUDIT.md § Anomalie A2:
     // "unknown" must never be treated as a failure, only ever as "we
     // still don't have a definitive answer").
     const isStale = Date.now() - new Date(row.created_at).getTime() > STALE_REVIEW_AFTER_MS;
     if (isStale) {
-      // Escalates once, not merely logging — docs/BACKEND_PAYMENT_REMEDIATION.md:
+      // Escalates once, not merely logging — docs/archive/misc/BACKEND_PAYMENT_REMEDIATION.md:
       // a console.error alone was found to be genuinely invisible in
       // production (16 real stuck transactions, zero admin notifications,
       // zero pushes, confirmed by direct data audit). flag_stale_collect_payment_secure

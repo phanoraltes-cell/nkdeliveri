@@ -1,4 +1,4 @@
--- Hardening finding R1 (docs/MONCASH_PRODUCTION_READINESS_AUDIT.md § 2):
+-- Hardening finding R1 (docs/archive/moncash/MONCASH_PRODUCTION_READINESS_AUDIT.md § 2):
 -- create_pending_payout_secure has EXECUTE granted to `anon` in
 -- production — unlike complete_pending_payout_secure/
 -- fail_pending_payout_secure, which are correctly service_role-only.

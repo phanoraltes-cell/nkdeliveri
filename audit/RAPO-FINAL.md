@@ -53,7 +53,7 @@ Chif sa a **pa** rezilta prensipal rapò a (gade §1) — li disponib isit la po
 | ------- | ----------- | ---------------------- | --------- | -------------------------------------------------- | ----------------------------------------------- | --------------------------------- |
 | SEC-001 | 🔴 CRITICAL | CONFIRMED              | Sekirite  | Token Supabase Management API nan git history      | `.claude/settings.json`, commit f4f6596→7b1e409 | Kontwòl total SQL sou DB si valab |
 | OPS-003 | 🟠 HIGH     | CONFIRMED              | DevOps    | 4/4 travay CI wouj, deja wouj anvan remediation    | `gh api .../check-runs` sou 91dc83a ak 2d8a037  | Pipeline pa yon gate kalite reyèl |
-| OPS-001 | 🟠 HIGH     | SUSPECTED              | DevOps    | Preview Vercel ka pataje DB ak production          | `docs/ENVIRONMENTS.md:14-22`                    | Done tès melanje ak done reyèl    |
+| OPS-001 | 🟠 HIGH     | SUSPECTED              | DevOps    | Preview Vercel ka pataje DB ak production          | `docs/reference/ENVIRONMENTS.md:14-22`                    | Done tès melanje ak done reyèl    |
 | SEC-003 | 🟡 MEDIUM   | LIKELY                 | Sekirite  | Rate-limit login kontounab via API dirèk           | `src/routes/auth.index.tsx:79-88`               | Brute-force san limit aplikasyon  |
 | FIN-001 | 🟡 MEDIUM   | LIKELY→NOT VERIFIED*   | Finans    | Pa gen rekonsilyasyon wallet vs ledger             | `commission_engine.sql:75-90`                   | Drift balans san deteksyon        |
 | OPS-002 | 🟡 MEDIUM   | CONFIRMED (anrejistre) | DevOps    | Backup/restore manyèl san CI/cron                  | `package.json:20-22`                            | Backup pa janm teste an pratik    |

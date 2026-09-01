@@ -27,7 +27,7 @@ export type CheckoutProviderId =
 /**
  * Human-readable label per checkout method — same wording as checkout.tsx's
  * own METHODS array, single source now that a second consumer needs it.
- * F-07 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — `stripe` (and, defensively,
+ * F-07 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — `stripe` (and, defensively,
  * `moncash_auto`/`natcash_auto`, though `payments.method` itself only ever
  * stores their base rail — see paymentMethodLabel() below) was missing from
  * the restaurant dashboard's own copy of this map, so a card/Stripe order

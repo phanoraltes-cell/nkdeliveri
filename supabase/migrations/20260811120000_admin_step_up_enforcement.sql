@@ -1,5 +1,5 @@
 -- Admin dashboard step-up/MFA enforcement (Phase 2 of
--- docs/ADMIN_ACCESS_SECURITY_AUDIT.md). Fixes the exact gap the audit
+-- docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md). Fixes the exact gap the audit
 -- found: src/hooks/useReauth.ts already asks an admin to re-enter their
 -- password/OAuth before a sensitive action, but NONE of the RPC it wraps
 -- (add_user_role_secure, remove_user_role_secure, initiate_payout_secure,
@@ -28,7 +28,7 @@
 --      zero new tables.
 --
 -- Two tiers, scoped by actually reading every admin-role-checking RPC in
--- this project (47 found, see docs/ADMIN_ACCESS_SECURITY_AUDIT.md's
+-- this project (47 found, see docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md's
 -- companion remediation report for the full inventory) rather than
 -- guessing which ones "feel" sensitive:
 --

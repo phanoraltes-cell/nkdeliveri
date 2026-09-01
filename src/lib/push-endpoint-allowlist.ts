@@ -1,4 +1,4 @@
-// NKD-006 SSRF fix (docs/NKD_FAZ2_SECURITY_AUDIT.md §4). Single source of
+// NKD-006 SSRF fix (docs/archive/phases/NKD_FAZ2_SECURITY_AUDIT.md §4). Single source of
 // truth, on the TypeScript side, for which push-service hosts
 // push-dispatch.server.ts is allowed to POST a push payload to.
 //

@@ -30,7 +30,7 @@ REVOKE ALL ON public.payout_commissions FROM PUBLIC, anon;
 GRANT SELECT ON public.payout_commissions TO authenticated;
 
 -- Re-created with the same signature (no DROP FUNCTION needed — args are
--- unchanged, see docs/MIGRATIONS.md) — identical body to
+-- unchanged, see docs/reference/MIGRATIONS.md) — identical body to
 -- 20260722100200_payout_rpcs.sql's version, with one addition at the end:
 -- after the existing wallet/payout/notification logic (all unchanged),
 -- link whichever outstanding commissions fit within the paid amount.

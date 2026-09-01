@@ -4,8 +4,8 @@
  * moncash-provider.test.ts's structure; the equivalent central invariant
  * here is that `direction:"disburse"` must NEVER succeed (this
  * replacement is Collect-only by explicit mission scope — see
- * docs/PLOP_PHASE0_AUDIT.md § 8), and `verifyWebhook()` must ALWAYS
- * refuse (PLOP documents no webhook — docs/PLOP_PHASE0_AUDIT.md § 9).
+ * docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8), and `verifyWebhook()` must ALWAYS
+ * refuse (PLOP documents no webhook — docs/archive/plop/PLOP_PHASE0_AUDIT.md § 9).
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -172,7 +172,7 @@ describe("plopProvider.initiatePayment — direction:'collect'", () => {
     if (result.status === "success") expect(result.providerReference).toBe("TX-RECONCILED");
   });
 
-  it("dynamic wallet selection — passes input.paymentMethod through to createPayment (bug fix, docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
+  it("dynamic wallet selection — passes input.paymentMethod through to createPayment (bug fix, docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
     const createPaymentMock = vi.fn(async () => ({
       redirectUrl: "https://redirect-paiement.example/natcash",
       providerTransactionId: "TX-NC",

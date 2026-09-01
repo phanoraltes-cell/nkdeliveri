@@ -10,7 +10,7 @@
  * directly, which is what keeps every value below out of the browser by
  * construction rather than by convention.
  *
- * See docs/PAYMENT_PROVIDERS.md for where each variable comes from and
+ * See docs/reference/PAYMENT_PROVIDERS.md for where each variable comes from and
  * how to set it.
  */
 export type MonCashConfig = {
@@ -58,7 +58,7 @@ export function getMonCashConfig(): MonCashConfig {
   if (!config) {
     const missing = REQUIRED_VARS.filter((name) => !process.env[name]);
     throw new Error(
-      `Konfigirasyon MonCash pa konplè — varyab sa yo manke: ${missing.join(", ")}. Gade docs/PAYMENT_PROVIDERS.md.`,
+      `Konfigirasyon MonCash pa konplè — varyab sa yo manke: ${missing.join(", ")}. Gade docs/reference/PAYMENT_PROVIDERS.md.`,
     );
   }
   return config;

@@ -337,7 +337,7 @@ BEGIN
   SELECT id, name, status INTO v_restaurant
     FROM public.restaurants WHERE id = _restaurant_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Restaurant not found'; END IF;
-  -- Mesaj sa a te an anglè depi orijin li (docs/NKD-004_RAISE_MESSAGES_BACKLOG.md
+  -- Mesaj sa a te an anglè depi orijin li (docs/archive/phases/NKD-004_RAISE_MESSAGES_BACKLOG.md
   -- #56) — tradwi isit la paske nou deja nan fonksyon an pou lòt rezon, pa
   -- yon nouvo travay sou backlog la an antye.
   IF v_restaurant.status <> 'approved' THEN RAISE EXCEPTION 'Restoran an pa disponib kounye a.'; END IF;

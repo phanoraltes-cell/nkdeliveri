@@ -1,5 +1,5 @@
--- F-03 remediation (docs/FULL_PLATFORM_AUDIT_2026-08-13.md, carried from
--- docs/GLOBAL_AUDIT_360_2026-08-13.md's H-01). The "payments admin
+-- F-03 remediation (docs/archive/audits/FULL_PLATFORM_AUDIT_2026-08-13.md, carried from
+-- docs/archive/audits/GLOBAL_AUDIT_360_2026-08-13.md's H-01). The "payments admin
 -- update" RLS policy let any admin/super_admin session write directly to
 -- public.payments via PostgREST (supabase.from('payments').update(...))
 -- with NO transition validation at all -- no OLD.status guard, meaning an

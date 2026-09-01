@@ -135,7 +135,7 @@ function AdminUsers() {
 
   // Modifying admin/super_admin privileges — STRICT tier (fresh MFA
   // required, no password/OAuth fallback substitute; see
-  // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). On a STEP_UP_REQUIRED*
+  // docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). On a STEP_UP_REQUIRED*
   // rejection, invalidate the locally-cached verification so the very
   // next click re-prompts instead of failing the same way silently.
   const addRole = useMutation({

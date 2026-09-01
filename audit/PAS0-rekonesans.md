@@ -145,7 +145,7 @@ Kwaze:
 ## BLOKAJ
 
 1. **Pa gen aksè database (dev ni prod).** Tout finding PAS 2 ap CONFIRMED sèlman pou sa ki li dirèkteman nan fichye migration; konpòtman runtime rete LIKELY/SUSPECTED. Aksè ki ta debloke sa: yon konesyon SELECT-sèlman (Supabase MCP oswa idantifyan read-only).
-2. **Pa gen anviwònman staging.** Konfime: `staging.nkdeliveri.com` retounen 404 (docs/SECURITY_PERIMETER_AUDIT_2026-08-13.md), pa gen PR/preview aktif kounye a (`gh pr list` — 0 louvri). Otorizasyon "pwòb aktif sou staging" itilizatè a bay la pa ka aplike jodi a. Aksè ki ta debloke sa: yon deplwaman preview Vercel oswa yon anviwònman staging dedye.
+2. **Pa gen anviwònman staging.** Konfime: `staging.nkdeliveri.com` retounen 404 (docs/archive/audits/SECURITY_PERIMETER_AUDIT_2026-08-13.md), pa gen PR/preview aktif kounye a (`gh pr list` — 0 louvri). Otorizasyon "pwòb aktif sou staging" itilizatè a bay la pa ka aplike jodi a. Aksè ki ta debloke sa: yon deplwaman preview Vercel oswa yon anviwònman staging dedye.
 3. **Pa gen aksè logs production ni dashboard Vercel konplè.** Konektè Vercel MCM disponib la lye ak yon lòt kont ki pa gen aksè a pwojè "nkdeliveri" a (verifye — `list_projects` retounen vid).
 4. **Itilizatè_prod ak done_ki_pi_sansib/aksyon_ki_pi_danjere pa t konfime eksplisitman pa itilizatè a** — mwen dedwi yo nan kòd la (gade BLÒK 1 pi wo, make "dedwi, pa konfime"). Si gen yon lòt aksyon/done pi sansib itilizatè a konnen ki pa parèt nan kòd la (ex: yon operasyon manyèl deyò sistèm nan), li pa nan pòte odit sa a.
 

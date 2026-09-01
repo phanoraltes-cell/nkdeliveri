@@ -17,7 +17,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * server-side, so it never gets bundled for the browser — the same
  * pattern already used by every `*.functions.ts` file in this codebase.
  *
- * See docs/MONCASH_WEBHOOK_SECURITY.md for the full security report.
+ * See docs/archive/moncash/MONCASH_WEBHOOK_SECURITY.md for the full security report.
  */
 export const Route = createFileRoute("/api/webhooks/moncash")({
   server: {

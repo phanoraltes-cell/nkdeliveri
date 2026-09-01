@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/delivery-f
 });
 
 // NKD-015: only the default zone is editable here — no zone matching
-// exists yet (confirmed decision, docs/NKD-015_DELIVERY_FEE_REPORT.md),
+// exists yet (confirmed decision, docs/archive/phases/NKD-015_DELIVERY_FEE_REPORT.md),
 // so there is exactly one zone in practice today even though the schema
 // supports more.
 function AdminDeliveryFee() {

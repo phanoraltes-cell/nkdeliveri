@@ -4,7 +4,7 @@
 // restaurant/order/etc. looks identical whichever process answers the
 // request. Column names match exactly what the app's queries/RPCs select
 // (verified against the real schema throughout prior sessions on this
-// project — see docs/DATABASE.md for the authoritative schema reference).
+// project — see docs/reference/DATABASE.md for the authoritative schema reference).
 
 import { CUSTOMER_USER_ID, DRIVER_USER_ID, RESTAURANT_OWNER_USER_ID } from "./users";
 

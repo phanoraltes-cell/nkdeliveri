@@ -44,7 +44,7 @@ function AdminPaymentProviders() {
 
   // update_payment_provider_setting_secure is STRICT tier regardless of
   // which fields change — global payment-security configuration (see
-  // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+  // docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
   function onStepUpAwareError(e: Error) {
     if (isStepUpError(e)) {
       invalidateStepUp("strict");
@@ -82,11 +82,11 @@ function AdminPaymentProviders() {
 
   // `visible` itself is still wired end-to-end (RPC, RLS, this mutation) —
   // only the checkout page's own rendering never reads it yet (audit
-  // finding, docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°3":
+  // finding, docs/archive/payments/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°3":
   // checkout.tsx only ever gates on `.enabled`). Toggling this control
   // today silently has zero effect on what a customer can see or select,
   // so the control itself is disabled here (post-incident remediation,
-  // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md) rather than left to
+  // docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md) rather than left to
   // imply a working "hide from customers" feature that doesn't exist yet
   // — least-risk fix (no checkout/business-logic change) until a future
   // chantier actually wires checkout.tsx to respect it.

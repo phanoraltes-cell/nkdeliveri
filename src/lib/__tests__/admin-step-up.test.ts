@@ -1,6 +1,6 @@
 /**
  * Unit tests for the pure logic in admin-step-up.ts
- * (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). The actual security
+ * (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). The actual security
  * decision (private.admin_step_up_status/require_admin_step_up[_strict]())
  * lives in SQL and is verified there via BEGIN/ROLLBACK transactional
  * tests against the real schema (auth.mfa_factors/auth.sessions) — this

@@ -36,7 +36,7 @@ const PROVIDERS: Record<PaymentProviderCode, PaymentProvider> = {
   // code to have a registry entry (TypeScript completeness) — Collect
   // never reaches stripeProvider through this registry (it's imported
   // directly by initiate-collect-payment.logic.ts, same as plopProvider,
-  // docs/STRIPE_INTEGRATION_REPORT.md), and this app has no card-based
+  // docs/archive/audits/STRIPE_INTEGRATION_REPORT.md), and this app has no card-based
   // payout to route here either. Kept safe regardless: stripeProvider's
   // own initiatePayment() refuses `direction: "disburse"` defensively,
   // exactly like every other provider in this registry.

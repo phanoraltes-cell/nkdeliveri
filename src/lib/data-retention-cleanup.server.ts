@@ -1,6 +1,6 @@
 /**
- * NKD-021 — daily retention cleanup (Faz 11, docs/PHASE11_COMPLIANCE_AUDIT.md;
- * docs/NKD-021_DATA_RETENTION_REPORT.md). Runs once a day (Vercel Cron —
+ * NKD-021 — daily retention cleanup (Faz 11, docs/archive/phases/PHASE11_COMPLIANCE_AUDIT.md;
+ * docs/archive/phases/NKD-021_DATA_RETENTION_REPORT.md). Runs once a day (Vercel Cron —
  * src/routes/api.cron.data-retention.ts and vercel.json), same cadence as
  * moncash-reconcile.server.ts/plop-reconcile.server.ts and the same reason:
  * the Vercel Hobby plan's ceiling on Cron Job frequency.

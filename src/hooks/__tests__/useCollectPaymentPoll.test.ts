@@ -1,6 +1,6 @@
 /**
  * Unit tests for the Collect-payment client-side poll's scheduling state
- * machine (`docs/POLLING_REMEDIATION_REPORT.md`). Tests `createPollController`
+ * machine (`docs/archive/audits/POLLING_REMEDIATION_REPORT.md`). Tests `createPollController`
  * and its two pure helpers directly, with injected doc/clock/timer seams —
  * this project has no jsdom/React-Testing-Library dependency (Vitest runs
  * in a Node-only environment, see vitest.config.ts), so a real DOM/React

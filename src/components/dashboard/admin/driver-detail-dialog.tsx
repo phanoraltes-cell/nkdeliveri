@@ -94,7 +94,7 @@ export function DriverDetailDialog({
 
   const name = [driver.first_name, driver.last_name].filter(Boolean).join(" ") || "—";
   // Mirror only — the real, authoritative gate is in update_driver_status_secure
-  // (docs/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md); this just
+  // (docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md); this just
   // avoids a round-trip error for the common case instead of being the only
   // guard (a direct RPC call bypassing this dialog is still blocked server-side).
   const hasIdDoc = Boolean(driver.id_doc_url);

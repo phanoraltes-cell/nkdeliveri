@@ -114,7 +114,7 @@ Itilizatè a rapòte li fè konfigirasyon manyèl pou 3 finding sa yo. Detay pa 
 
 ### 9.7-bis — OPS-001: 2 aksyon ki rete
 
-1. **Retire "Preview" sou 6 sekrè yo** (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PLOP_CLIENT_ID`, `PLOP_CLIENT_SECRET`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) nan Vercel Environment Variables — kite yo "Production" sèlman. Sa pa mande okenn kòd chanje, sèlman yon aksyon Dashboard, e E2E tès yo pa depann de yo (mock konplè, `docs/E2E_TEST_REPORT.md`).
+1. **Retire "Preview" sou 6 sekrè yo** (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PLOP_CLIENT_ID`, `PLOP_CLIENT_SECRET`, `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) nan Vercel Environment Variables — kite yo "Production" sèlman. Sa pa mande okenn kòd chanje, sèlman yon aksyon Dashboard, e E2E tès yo pa depann de yo (mock konplè, `docs/archive/audits/E2E_TEST_REPORT.md`).
 2. **Tès Network tab reyèl** (konfimasyon final, opsyonèl men rekòmande): louvri nenpòt Pull Request pandan w konekte nan navigatè w — Vercel poste yon lyen Preview kòm kòmantè PR a otomatikman. Louvri lyen an (SSO a pase paske se ou k konekte), F12 → Network → filtre "supabase" → konfime pa gen okenn apèl ki reyisi (sa ta konfime Preview pa gen okenn aksè Supabase ditou, jan lis Environment Variables la sigjere).
 
 Kole rezilta tès #2 la (si w fè l) pou m ka fèmen OPS-001 nèt kòm "Supabase URL pa pataje, konfime pa konpòtman reyèl".

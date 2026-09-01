@@ -21,7 +21,7 @@ export function CustomerForm() {
     address: "",
     terms: false,
   });
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — these two checks used to be
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — these two checks used to be
   // toast-only. Kept as toasts (unchanged UX) but now also tracked here so
   // the offending field gets aria-invalid + a visible inline message.
   const [confirmError, setConfirmError] = useState<string | null>(null);

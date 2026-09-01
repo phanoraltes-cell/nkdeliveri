@@ -4,7 +4,7 @@
  * never arrives. Database and moncashProvider.checkStatus() are both
  * mocked; the RPC-level idempotence/rollback behavior these calls rely
  * on is verified separately against the live schema — see
- * docs/MONCASH_TEST_REPORT.md.
+ * docs/archive/moncash/MONCASH_TEST_REPORT.md.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PaymentStatusResult } from "../types";

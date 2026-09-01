@@ -1,5 +1,5 @@
 -- NKD-011 — idempotency key on order creation. Règ A5 raised for this
--- scope only (docs/PROTOKOL_FAZ3_A_FAZ11.md). Fixes the "connection drops
+-- scope only (docs/archive/misc/PROTOKOL_FAZ3_A_FAZ11.md). Fixes the "connection drops
 -- after the request is sent but before the response arrives" scenario
 -- (Senaryo A): customer retries, create_order_secure runs a second time,
 -- producing a duplicate order + payment + double stock decrement + double

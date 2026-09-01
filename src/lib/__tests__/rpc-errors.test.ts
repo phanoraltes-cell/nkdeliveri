@@ -5,7 +5,7 @@
  * (which can name real tables/columns/constraints) — except the one
  * deliberate exception, a custom RPC `RAISE EXCEPTION` (SQLSTATE "P0001"),
  * which this project already curates per-RPC in SQL
- * (docs/PHASE_1_REMEDIATION_REPORT.md, F-02) and which must keep reaching
+ * (docs/archive/phases/PHASE_1_REMEDIATION_REPORT.md, F-02) and which must keep reaching
  * the user unchanged.
  */
 import { describe, expect, it } from "vitest";

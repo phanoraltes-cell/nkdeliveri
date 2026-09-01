@@ -206,7 +206,7 @@ export function PayoutPayModal({
     },
     onError: (e) => {
       // initiate_payout_secure (the manual path) is STRICT tier — real
-      // money leaving the platform (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+      // money leaving the platform (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
       if (isStepUpError(e)) {
         invalidateStepUp("strict");
         toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");

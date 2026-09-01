@@ -1,7 +1,7 @@
 -- FIX (siyale pa Altes, odit sou tout baz la) — swit 2 nan koreksyon
 -- 20260830170000: 30 lòt fonksyon `SECURITY DEFINER` nan `public` rele
 -- `public.has_role(...)` ANNDAN pwòp kò yo, menm bug la egzakteman (wè nòt
--- konplè + REGLE OBLIGATWA nan docs/DATABASE.md § 3, ajoute nan menm
+-- konplè + REGLE OBLIGATWA nan docs/reference/DATABASE.md § 3, ajoute nan menm
 -- travay sa a).
 --
 -- METÒD ODIT : pou chak non fonksyon Altes bay, chèche DÈNYE migrasyon ki

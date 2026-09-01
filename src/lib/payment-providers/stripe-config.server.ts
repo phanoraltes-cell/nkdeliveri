@@ -34,7 +34,7 @@ export type StripeConfig = {
    * Whoever configures real Stripe credentials must also pick a real
    * presentment currency Stripe actually supports for their account
    * (almost certainly USD, via a foreign entity — see
-   * docs/STRIPE_INTEGRATION_REPORT.md). Defaults to "usd" only as a
+   * docs/archive/audits/STRIPE_INTEGRATION_REPORT.md). Defaults to "usd" only as a
    * placeholder default value, never silently assumed correct without
    * this file's own doc comment being read first.
    */
@@ -46,7 +46,7 @@ export type StripeConfig = {
    * overcharge or undercharge every single customer, so this must be set
    * explicitly by whoever configures real credentials, and reviewed
    * periodically by hand (this is a manual rate, not a live feed — a
-   * known limitation, see docs/STRIPE_INTEGRATION_REPORT.md).
+   * known limitation, see docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
    */
   htgConversionRate: number;
 };

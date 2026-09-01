@@ -6,7 +6,7 @@
 -- (inbound side, already append-only in practice, now enforced the same
 -- way here), this is the full request+response+webhook audit trail for
 -- every MonCash interaction this app makes. See
--- docs/MONCASH_FINANCIAL_AUDIT.md.
+-- docs/archive/moncash/MONCASH_FINANCIAL_AUDIT.md.
 
 -- ---------------------------------------------------------------------------
 -- 1) moncash_api_logs — one row per HTTP attempt (including retries) made

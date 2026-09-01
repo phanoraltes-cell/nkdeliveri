@@ -82,7 +82,7 @@ export function PaymentProofSection({
     },
     onError: (e) => toast.error(e.message),
   });
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — upload/RPC failures used to
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — upload/RPC failures used to
   // be toast-only (see onError above, kept unchanged) — also surfaced
   // inline here so it doesn't depend on catching a timed toast.
   const formError = uploadProof.isError

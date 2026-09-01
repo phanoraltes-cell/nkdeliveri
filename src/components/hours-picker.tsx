@@ -4,7 +4,7 @@ import { HOURS_DAYS } from "./hours-picker.data";
 /**
  * Shared day-by-day opening-hours editor — extracted from
  * dashboard.restaurant.profile.tsx (2026-08-09 remediation,
- * docs/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md) so the
+ * docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md) so the
  * restaurant signup form can collect `opening_hours` in the *exact* shape
  * `restaurants.opening_hours`/`update_restaurant_hours_secure` actually
  * expect, instead of duplicating this UI or inventing a new format. Byte-

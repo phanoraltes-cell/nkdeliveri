@@ -1,5 +1,5 @@
 -- PLOP dynamic wallet selection — traceability (Phase 1 remediation,
--- docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option A + this phase's
+-- docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option A + this phase's
 -- mission). The actual bug fixed by this chantier —
 -- plop-client.server.ts's createPayment() reading `payment_method` from a
 -- single global env var (PLOP_PAYMENT_METHOD) instead of accepting it per
@@ -24,10 +24,10 @@ ALTER TABLE public.payment_transactions
 -- parameter). DROP FUNCTION IF EXISTS before CREATE OR REPLACE is
 -- mandatory here, never optional: a CREATE OR REPLACE with a different
 -- argument list creates a silent second overload instead of replacing the
--- function — the exact hazard docs/MIGRATIONS.md documents and
+-- function — the exact hazard docs/reference/MIGRATIONS.md documents and
 -- scripts/check-migration-hazards.mjs guards against.
 --
--- SECURITY REMEDIATION (docs/PLOP_DYNAMIC_WALLET_PHASE1_VALIDATION_REPORT.md):
+-- SECURITY REMEDIATION (docs/archive/plop/PLOP_DYNAMIC_WALLET_PHASE1_VALIDATION_REPORT.md):
 -- this function has TWO prior definitions, not one —
 -- 20260731130000_moncash_collect_payments.sql (original) AND
 -- 20260803130000_harden_create_collect_payment_provider_check.sql (adds the

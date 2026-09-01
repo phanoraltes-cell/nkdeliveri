@@ -1,4 +1,4 @@
--- Backend chain-coherence remediation (docs/BACKEND_PAYMENT_REMEDIATION.md).
+-- Backend chain-coherence remediation (docs/archive/misc/BACKEND_PAYMENT_REMEDIATION.md).
 --
 -- Confirmed against real production data, not assumed: every automatic
 -- collect payment attempt ever made in this project (18/18 as of this

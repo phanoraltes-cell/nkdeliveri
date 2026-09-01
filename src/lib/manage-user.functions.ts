@@ -52,7 +52,7 @@ const AnonymizeInputSchema = z.object({
 
 /**
  * NKD-020 — admin-triggered customer anonymization (docs/PHASE11_COMPLIANCE_
- * AUDIT.md, docs/NKD-020_CUSTOMER_ANONYMIZATION_REPORT.md). Two independent
+ * AUDIT.md, docs/archive/phases/NKD-020_CUSTOMER_ANONYMIZATION_REPORT.md). Two independent
  * steps, both required for a real "efasman":
  *   1. anonymize_customer_secure() (public schema, RLS/step-up enforced
  *      server-side) scrubs profiles/addresses/favorites/push_subscriptions —

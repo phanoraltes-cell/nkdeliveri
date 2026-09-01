@@ -18,11 +18,11 @@ type PaymentTransactionRow = Database["public"]["Tables"]["payment_transactions"
  * wraps this for real use — same behavior either way, this file is pure
  * refactor-for-testability, not a design change.
  *
- * Phase 3 (PLOP wiring, docs/PLOP_PHASE3_WIRING_REPORT.md): the provider
+ * Phase 3 (PLOP wiring, docs/archive/plop/PLOP_PHASE3_WIRING_REPORT.md): the provider
  * behind "MonCash Otomatik" (`moncash_auto`) and "NatCash Otomatik"
  * (`natcash_auto`) is `plopProvider`
- * (payment-providers/plop-provider.server.ts, docs/PLOP_NATCASH_INTEGRATION_PLAN.md).
- * "Kat Kredi" (`stripe`, docs/STRIPE_INTEGRATION_REPORT.md) is
+ * (payment-providers/plop-provider.server.ts, docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md).
+ * "Kat Kredi" (`stripe`, docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) is
  * `stripeProvider` instead. This function only ever talks to the generic
  * `PaymentProvider` interface and knows no provider-specific detail — see
  * the `provider` dispatch below for the only place that decides which
@@ -37,7 +37,7 @@ export async function runInitiateCollectPayment(
   /**
    * `plopProvider.initiatePayment()` can — rarely — resolve to
    * `status:"success"` immediately (its own reconciliation-on-error path,
-   * docs/PLOP_PHASE2_AUDIT.md § A1: a create call that errored on our
+   * docs/archive/plop/PLOP_PHASE2_AUDIT.md § A1: a create call that errored on our
    * side but PLOP already has confirmed on theirs). There is no redirect
    * URL to send the customer to in that case — they have nothing left to
    * do — so this is a distinct outcome from "pending", never forced into
@@ -74,11 +74,11 @@ export async function runInitiateCollectPayment(
   // used at all — checked *before* isConfigured() and before importing
   // the provider module, so a disabled method never even reaches a point
   // where it could call the provider's API, regardless of what the
-  // frontend shows. See docs/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md.
+  // frontend shows. See docs/archive/payments/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md.
   //
   // MonCash Otomatik, NatCash Otomatik, and Kat Kredi (Stripe) are three
-  // *independent* checkout buttons (docs/PLOP_NATCASH_INTEGRATION_PLAN.md,
-  // docs/STRIPE_INTEGRATION_REPORT.md) — each has its own row in
+  // *independent* checkout buttons (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md,
+  // docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) — each has its own row in
   // payment_provider_settings, and each must only ever be gated by its own
   // row. Deriving `providerKey` from `payment.method` here (rather than
   // hardcoding one) is the fix for the exact bug the NatCash plan flagged:
@@ -117,8 +117,8 @@ export async function runInitiateCollectPayment(
   }
 
   // Dispatch to the real fournisseur behind this checkout method — PLOP
-  // for moncash/natcash (docs/PLOP_NATCASH_INTEGRATION_PLAN.md), Stripe
-  // for card payments (docs/STRIPE_INTEGRATION_REPORT.md). Never a static
+  // for moncash/natcash (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md), Stripe
+  // for card payments (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md). Never a static
   // top-level import of either — same reasoning both already followed
   // (keeps a route/component from ever accidentally importing a
   // `.server.ts` provider module directly).
@@ -144,14 +144,14 @@ export async function runInitiateCollectPayment(
   // `payment.method` is the order's rail (already narrowed to `"moncash"`,
   // `"natcash"`, or `"stripe"` by the gate above) — passed through as the
   // provider's own `payment_method` rather than relying on a global config
-  // default. The bug this fixes for PLOP (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md
+  // default. The bug this fixes for PLOP (docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md
   // § 2): `plop-client.server.ts` previously always used
   // `PLOP_PAYMENT_METHOD`, making it structurally impossible for any
   // caller to select a wallet per transaction — resolved per
-  // docs/PLOP_NATCASH_INTEGRATION_PLAN.md. `returnUrl` is only meaningful
+  // docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md. `returnUrl` is only meaningful
   // to Stripe (Checkout Sessions require a real `success_url`/`cancel_url`
-  // at creation time, docs/STRIPE_INTEGRATION_REPORT.md) — PLOP documents
-  // no such parameter and simply ignores it (docs/PLOP_PHASE0_AUDIT.md § 9),
+  // at creation time, docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) — PLOP documents
+  // no such parameter and simply ignores it (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 9),
   // so it's always safe to pass regardless of which provider this is.
   const result = await provider.initiatePayment({
     direction: "collect",
@@ -192,7 +192,7 @@ export async function runInitiateCollectPayment(
   // exists on Stripe's side and must be persisted now — it's the only way
   // checkStatus()/the poll can look this transaction up later, since
   // Stripe's API has no lookup-by-arbitrary-reference endpoint
-  // (docs/STRIPE_INTEGRATION_REPORT.md, stripe-provider.server.ts's own
+  // (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md, stripe-provider.server.ts's own
   // header comment). Passed unconditionally; harmless for PLOP.
   const { data: transaction, error: rpcError } = await supabase.rpc(
     "create_collect_payment_secure",
@@ -208,7 +208,7 @@ export async function runInitiateCollectPayment(
 
   if (result.status === "success") {
     // Nothing left for the customer to do on a provider page — they've
-    // already paid (docs/PLOP_PHASE2_AUDIT.md § A1's reconciliation
+    // already paid (docs/archive/plop/PLOP_PHASE2_AUDIT.md § A1's reconciliation
     // path). Send them straight to the order page instead of a redirect
     // that would make an already-completed payment look unfinished.
     return { outcome: "already_confirmed", transaction };

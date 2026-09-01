@@ -1,4 +1,4 @@
--- Komand — admin order supervision module (docs/KOMAND_ADMIN_AUDIT.md Phase 1,
+-- Komand — admin order supervision module (docs/archive/audits/KOMAND_ADMIN_AUDIT.md Phase 1,
 -- validated; this migration implements the Phase 2 decisions). Pure
 -- supervision layer: never writes to orders.status, never a second order
 -- workflow. Two new tables (the only new state Komand actually needs),
@@ -80,7 +80,7 @@ ALTER TABLE public.notifications ADD CONSTRAINT notifications_category_check
 -- ---------------------------------------------------------------------------
 -- 3) Notification hook — "nouveau Client inscrit". Added to the EXISTING
 --    handle_new_user() trigger's customer branch (confirmed in
---    docs/KOMAND_ADMIN_AUDIT.md §10 as the correct provisioning-complete
+--    docs/archive/audits/KOMAND_ADMIN_AUDIT.md §10 as the correct provisioning-complete
 --    anchor — same trigger already deeply audited during the 2026-08-11
 --    SMTP incident). Full body reproduced unchanged except for the one
 --    added PERFORM (diffed against pg_get_functiondef() before writing
@@ -176,7 +176,7 @@ BEGIN
     INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'customer')
       ON CONFLICT DO NOTHING;
 
-    -- Komand — "nouveau Client inscrit" (docs/KOMAND_ADMIN_AUDIT.md §10).
+    -- Komand — "nouveau Client inscrit" (docs/archive/audits/KOMAND_ADMIN_AUDIT.md §10).
     -- Reuses the exact recipient pattern already used 8 times in this
     -- project (dispute/cancellation/payment-error notifications):
     -- every admin + super_admin, nothing else. New category 'admin' —
@@ -202,7 +202,7 @@ $function$;
 --    exactly the established get_*_admin pattern (get_drivers_admin,
 --    get_disputes_admin, get_customers_admin: _search/_limit/_offset,
 --    returns total_count on every row for pagination). Computes "Komand
---    Health" (docs/KOMAND_ADMIN_AUDIT.md §5, refined per Phase 2
+--    Health" (docs/archive/audits/KOMAND_ADMIN_AUDIT.md §5, refined per Phase 2
 --    validation into 7 distinct buckets, never written back to
 --    orders.status) directly in SQL from already-existing columns —
 --    nothing new stored, only derived at read time.
@@ -224,7 +224,7 @@ $function$;
 --        assignment, delivery, manual proof upload, cash double-
 --        confirmation) has **no existing precedent anywhere in this
 --        codebase** — these are explicitly flagged in
---        docs/KOMAND_ADMIN_IMPLEMENTATION_REPORT.md as provisional
+--        docs/archive/audits/KOMAND_ADMIN_IMPLEMENTATION_REPORT.md as provisional
 --        starting values to validate operationally, not derived business
 --        rules, per the explicit instruction not to fabricate them as
 --        certainties. All of them are simple literal minute counts
@@ -568,7 +568,7 @@ GRANT EXECUTE ON FUNCTION public.set_komand_assistance_secure(uuid, text, uuid, 
 --    (Règle §4 of the Komand brief) — "contacter" reuses the EXISTING
 --    order-chat system (dashboard.admin.chat.tsx already deep-links via
 --    ?order=<id>, order_chat_messages already lets an admin post into any
---    order's thread — confirmed live in docs/KOMAND_ADMIN_AUDIT.md §8).
+--    order's thread — confirmed live in docs/archive/audits/KOMAND_ADMIN_AUDIT.md §8).
 --    No new RPC needed for the contact action itself; only a thin logging
 --    call so it's traceable per Règle §16. Allowlisted _action, mirrors
 --    log_admin_step_up_event_secure's own shape from the previous

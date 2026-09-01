@@ -3,7 +3,7 @@
  * to MonCash. Every test mocks `fetch` and the service-role Supabase
  * client (never a real network call, never a real database write); real
  * MonCash credentials don't exist anywhere in this project (see
- * docs/PAYMENT_PROVIDERS.md), so this is the only way any of this code
+ * docs/reference/PAYMENT_PROVIDERS.md), so this is the only way any of this code
  * has ever been exercised.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

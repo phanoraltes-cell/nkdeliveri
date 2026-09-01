@@ -5,7 +5,7 @@
  * here without dragging in TanStack Start's createServerFn runtime,
  * which hangs when imported outside a real request context).
  * plopProvider is mocked (Phase 3 wiring — see
- * docs/PLOP_PHASE3_WIRING_REPORT.md; previously moncashProvider); no
+ * docs/archive/plop/PLOP_PHASE3_WIRING_REPORT.md; previously moncashProvider); no
  * real network call, no real database write.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,7 +22,7 @@ vi.mock("../payment-providers/plop-provider.server", () => ({
 
 // Separate mock fns from PLOP's own — a test disabling/misconfiguring one
 // provider must never accidentally affect the other's mock state
-// (docs/STRIPE_INTEGRATION_REPORT.md).
+// (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
 const stripeInitiatePaymentMock = vi.fn<(input: unknown) => Promise<InitiatePaymentResult>>();
 const stripeIsConfiguredMock = vi.fn(() => true);
 vi.mock("../payment-providers/stripe-provider.server", () => ({
@@ -161,7 +161,7 @@ describe("runInitiateCollectPayment", () => {
     expect(initiatePaymentMock).toHaveBeenCalledWith(
       expect.objectContaining({ direction: "collect", amount: 500, paymentMethod: "moncash" }),
     );
-    // Dynamic wallet selection (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)
+    // Dynamic wallet selection (docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)
     // — the order's own rail is recorded as payment_method_requested,
     // never left to plop-client.server.ts's global config default.
     expect(supabase.rpc).toHaveBeenCalledWith(
@@ -288,7 +288,7 @@ describe("runInitiateCollectPayment", () => {
     expect(initiatePaymentMock).not.toHaveBeenCalled();
   });
 
-  it("accepts a NatCash payment (docs/PLOP_NATCASH_INTEGRATION_PLAN.md) — passes paymentMethod:'natcash' through and records it", async () => {
+  it("accepts a NatCash payment (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md) — passes paymentMethod:'natcash' through and records it", async () => {
     initiatePaymentMock.mockResolvedValue({
       status: "pending",
       providerReference: "REF-NATCASH-1",
@@ -311,7 +311,7 @@ describe("runInitiateCollectPayment", () => {
     );
   });
 
-  it("accepts a Kat Kredi (Stripe) payment (docs/STRIPE_INTEGRATION_REPORT.md) — dispatches to stripeProvider, not plopProvider, passes a real returnUrl, and stores providerReference as _provider_transaction_id", async () => {
+  it("accepts a Kat Kredi (Stripe) payment (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) — dispatches to stripeProvider, not plopProvider, passes a real returnUrl, and stores providerReference as _provider_transaction_id", async () => {
     stripeInitiatePaymentMock.mockResolvedValue({
       status: "pending",
       providerReference: "cs_test_ABC123",
@@ -585,7 +585,7 @@ describe("runInitiateCollectPayment", () => {
       expect(initiatePaymentMock).not.toHaveBeenCalled();
     });
 
-    it("disabling moncash_auto never blocks a NatCash payment, and disabling natcash_auto never blocks a MonCash payment — the two checkout methods are independently gated (docs/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5, the bug this migration fixes)", async () => {
+    it("disabling moncash_auto never blocks a NatCash payment, and disabling natcash_auto never blocks a MonCash payment — the two checkout methods are independently gated (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5, the bug this migration fixes)", async () => {
       initiatePaymentMock.mockResolvedValue({
         status: "pending",
         providerReference: "REF-INDEPENDENT",

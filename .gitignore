@@ -28,7 +28,7 @@ dist-ssr
 # local placeholder (e2e-fake-*, http://127.0.0.1:54321) consumed only by
 # e2e/mocks/*.ts — never a real credential. It has to be tracked for
 # `npm run build:e2e` to work in CI, the same way .env.example is tracked
-# for onboarding. See docs/E2E_TEST_REPORT.md § 1 for the full rationale.
+# for onboarding. See docs/archive/audits/E2E_TEST_REPORT.md § 1 for the full rationale.
 !.env.e2e
 
 # Editor directories and files

@@ -2,7 +2,7 @@
  * Stripe implementation of `PaymentProvider` (`./types.ts`) — the
  * fournisseur behind the "Kat Kredi" (credit card) checkout method
  * (`payment_provider_settings.provider = 'stripe'`,
- * docs/STRIPE_INTEGRATION_REPORT.md). Collect only, same scope
+ * docs/archive/audits/STRIPE_INTEGRATION_REPORT.md). Collect only, same scope
  * discipline as plopProvider — this app has no card-based payout/
  * disbursement need, so `direction: "disburse"` is refused here exactly
  * like every other collect-only provider in this codebase.
@@ -19,7 +19,7 @@
  * takes OUR OWN `external_reference` as `checkStatus`'s argument, because
  * their own APIs accept that reference directly. Stripe's Checkout
  * Session API has no way to look up a session by an arbitrary caller
- * reference after the fact (docs/STRIPE_INTEGRATION_REPORT.md) — only by
+ * reference after the fact (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) — only by
  * Stripe's own session id. So for THIS provider, `checkStatus`'s argument
  * must be the Stripe session id (stored as `provider_transaction_id` on
  * the `payment_transactions` row at creation time), not the external

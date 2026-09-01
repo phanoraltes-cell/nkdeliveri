@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
     const allowed = ["admin", "super_admin"];
     if (!allowed.some((r) => context.allRoles.includes(r))) {
-      // Explicit reason (R4, docs/ADMIN_ACCESS_SECURITY_AUDIT.md) instead
+      // Explicit reason (R4, docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md) instead
       // of a silent bounce — and a real, server-recorded signal (§11 of
       // the remediation report) distinguishing "someone probed an admin
       // URL without the role" from ordinary navigation, before the

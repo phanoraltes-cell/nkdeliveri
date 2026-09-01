@@ -106,7 +106,7 @@ function OrderDetail() {
   // Rules-of-Hooks reason as `delivery` above.
   const trackingRoute = useRoute(driverPoint, nextStopPoint);
 
-  // Phase 2.1 remediation (docs/PHASE2_PUSH_DECISION_REPORT.md, anomaly 2):
+  // Phase 2.1 remediation (docs/archive/phases/PHASE2_PUSH_DECISION_REPORT.md, anomaly 2):
   // mirrors DisputeSection's own query (identical queryKey and select) so
   // React Query dedupes the two into a single request — no new backend
   // call. Needed here, one level up, only so the page can surface an
@@ -293,8 +293,8 @@ function OrderDetail() {
         )}
         {isCollect && collectTransaction?.status === "pending" && (
           // Wallet-agnostic on purpose (post-incident audit remediation,
-          // docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
-          // docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md): the
+          // docs/archive/payments/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°4" /
+          // docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md): the
           // previous text hardcoded "MonCash", which the business gate
           // in initiate-collect-payment.logic.ts happens to make true
           // today but won't stay true once another PLOP wallet (e.g.

@@ -15,7 +15,7 @@
 -- (paid/confirmed/disputed/resolved) take over, exactly as before.
 --
 -- Return shape changes (new covered_amount column) -- CREATE OR REPLACE
--- cannot do this, DROP FUNCTION IF EXISTS required first (docs/MIGRATIONS.md).
+-- cannot do this, DROP FUNCTION IF EXISTS required first (docs/reference/MIGRATIONS.md).
 
 DROP FUNCTION IF EXISTS public.get_restaurant_commissions_secure(uuid, text, date, date, text, text, int, int);
 

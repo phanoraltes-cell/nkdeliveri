@@ -10,14 +10,14 @@
  * keeps `PLOP_CLIENT_SECRET` out of the browser by construction.
  *
  * PLOP's base URL is a constant, not an environment variable — the
- * documentation (see docs/PLOP_PHASE0_AUDIT.md) describes exactly one
+ * documentation (see docs/archive/plop/PLOP_PHASE0_AUDIT.md) describes exactly one
  * endpoint, no sandbox, so an env var here would only be one more place a
  * typo could silently break the integration for zero real benefit.
  */
 export type PlopConfig = {
   clientId: string;
   clientSecret: string;
-  /** `moncash` | `kashpaw` | `natcash` | `all` per PLOP's documented `payment_method` field — see docs/PLOP_PHASE0_AUDIT.md § 7. Defaults to `moncash`: the only rail this replacement covers (Kashpaw/NatCash via PLOP are out of scope). */
+  /** `moncash` | `kashpaw` | `natcash` | `all` per PLOP's documented `payment_method` field — see docs/archive/plop/PLOP_PHASE0_AUDIT.md § 7. Defaults to `moncash`: the only rail this replacement covers (Kashpaw/NatCash via PLOP are out of scope). */
   paymentMethod: string;
 };
 
@@ -57,7 +57,7 @@ export function getPlopConfig(): PlopConfig {
   if (!config) {
     const missing = REQUIRED_VARS.filter((name) => !process.env[name]);
     throw new Error(
-      `Konfigirasyon PLOP pa konplè — varyab sa yo manke: ${missing.join(", ")}. Gade docs/PLOP_PHASE1_ARCHITECTURE.md.`,
+      `Konfigirasyon PLOP pa konplè — varyab sa yo manke: ${missing.join(", ")}. Gade docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md.`,
     );
   }
   return config;

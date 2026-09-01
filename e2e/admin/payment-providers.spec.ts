@@ -71,7 +71,7 @@ test.describe("Admin — Fournisseurs (payment provider availability)", () => {
 
     // Both moncash_auto and natcash_auto are seeded disabled, so each has
     // its own "Aktive" button — scope to the MonCash Otomatik card
-    // specifically (docs/PLOP_NATCASH_INTEGRATION_PLAN.md: the two
+    // specifically (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md: the two
     // methods are independently gated, so this test must click the right
     // one, not just "the first Aktive button it finds").
     const moncashAutoCard = page.locator(".rounded-2xl", {

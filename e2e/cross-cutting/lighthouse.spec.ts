@@ -11,7 +11,7 @@ import { restaurant, order, product, paymentProviderSettings } from "../fixtures
 const LIGHTHOUSE_PORT = 9222;
 
 // Real baseline recorded from a first run against this local harness
-// (docs/E2E_TEST_REPORT.md has the full numbers) — thresholds below are
+// (docs/archive/audits/E2E_TEST_REPORT.md has the full numbers) — thresholds below are
 // set from that baseline, not guessed. "pwa" omitted: Lighthouse 12+
 // dropped it from onlyCategories (confirmed live — "unrecognized
 // category in 'onlyCategories': pwa").

@@ -1,5 +1,5 @@
 -- Stripe Collect integration (credit card checkout method,
--- docs/STRIPE_INTEGRATION_REPORT.md). Collect only — no card-based
+-- docs/archive/audits/STRIPE_INTEGRATION_REPORT.md). Collect only — no card-based
 -- decaissement/payout exists in this app, and this migration touches
 -- nothing on that side. Real Stripe credentials are added later
 -- (STRIPE_SECRET_KEY/STRIPE_PUBLISHABLE_KEY/STRIPE_WEBHOOK_SECRET/
@@ -60,7 +60,7 @@ INSERT INTO public.payment_provider_settings (provider, visible, enabled, defaul
 -- `_provider_transaction_id` param, needed because Stripe's Checkout
 -- Session id only exists after Stripe creates it and must be persisted
 -- immediately for later lookup — Stripe has no "find my session by my
--- own reference" endpoint, docs/STRIPE_INTEGRATION_REPORT.md,
+-- own reference" endpoint, docs/archive/audits/STRIPE_INTEGRATION_REPORT.md,
 -- stripe-provider.server.ts's own header comment). DROP-before-CREATE is
 -- mandatory here (signature changed), per this project's own convention
 -- and scripts/check-migration-hazards.mjs.
@@ -128,7 +128,7 @@ BEGIN
   -- MonCash Otomatik, NatCash Otomatik, and Kat Kredi are three
   -- independent checkout buttons — each gated by its OWN
   -- payment_provider_settings row, never a single shared one
-  -- (docs/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5, the same class of bug
+  -- (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5, the same class of bug
   -- fixed there, extended here to cover the third method).
   v_provider_key := CASE
     WHEN v_payment.method = 'natcash' THEN 'natcash_auto'

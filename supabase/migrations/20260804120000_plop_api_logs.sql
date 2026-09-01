@@ -1,8 +1,8 @@
 -- PLOP payment provider — API call audit log (Phase 2 of the PLOP Collect
--- replacement, see docs/PLOP_PHASE1_ARCHITECTURE.md § 10 and
--- docs/PLOP_REMEDIATION_REPORT.md § "Objectif 5"). A NEW table, not a
+-- replacement, see docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 10 and
+-- docs/archive/plop/PLOP_REMEDIATION_REPORT.md § "Objectif 5"). A NEW table, not a
 -- reuse of moncash_api_logs — PLOP is a distinct fournisseur with its own
--- contract (docs/PLOP_PHASE0_AUDIT.md) — but its schema is matrix-matched
+-- contract (docs/archive/plop/PLOP_PHASE0_AUDIT.md) — but its schema is matrix-matched
 -- field-for-field to moncash_api_logs
 -- (supabase/migrations/20260730130000_moncash_financial_audit_log.sql) so
 -- Dashboard/Monitoring/KPI/Alertes queries written against one work

@@ -2,8 +2,8 @@
 # Dumps the Supabase Postgres database (schema + data) to a timestamped
 # file under backups/ (gitignored — these are local artifacts, never
 # committed). Wraps the Supabase CLI's own `db dump` — see
-# docs/BACKUP_RESTORE.md for the full backup/restore procedure and
-# docs/BACKUP_SYSTEM_AUDIT_REPORT.md for why this script looks the way it
+# docs/runbooks/BACKUP_RESTORE.md for the full backup/restore procedure and
+# docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md for why this script looks the way it
 # does (root-cause audit of the previous version, 2026-08-05).
 #
 # Root causes fixed here, not present in the previous version of this file:
@@ -33,7 +33,7 @@
 #   ./scripts/backup-database.sh --schema-only # schema only, no rows
 #
 # Threshold overrides (optional env vars, defaults are conservative — see
-# docs/BACKUP_SYSTEM_AUDIT_REPORT.md for how these defaults were chosen):
+# docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md for how these defaults were chosen):
 #   BACKUP_MIN_SIZE_BYTES   (default 200000)
 #   BACKUP_MIN_TABLES       (default 35)
 #   BACKUP_MIN_FUNCTIONS    (default 90)
@@ -66,7 +66,7 @@ MIN_POLICIES="${BACKUP_MIN_POLICIES:-50}"
 #     string resolves when passed as a `-f` argument to `supabase db dump`
 #     — a native (non-MSYS) Windows binary launched via node.exe — landing
 #     the real dump in one location while bash keeps looking at an empty
-#     placeholder file in another (docs/BACKUP_EMPTY_DUMP_ROOT_CAUSE_REPORT.md).
+#     placeholder file in another (docs/archive/audits/BACKUP_EMPTY_DUMP_ROOT_CAUSE_REPORT.md).
 #     `-p "$OUT_DIR"` sidesteps this entirely: a relative path under the
 #     project's own backups/ dir resolves identically for bash and for any
 #     native subprocess, no `/tmp` translation involved either way.
@@ -134,7 +134,7 @@ else
     echo "-- NK Deliveri combined backup (schema + data)"
     echo "-- Generated $START_ISO by scripts/backup-database.sh"
     echo "-- Schema pass + data pass, concatenated in dependency-safe order"
-    echo "-- (see docs/BACKUP_SYSTEM_AUDIT_REPORT.md for why this is two passes, not one)"
+    echo "-- (see docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md for why this is two passes, not one)"
     echo ""
     cat "$SCHEMA_TMP"
     echo ""
@@ -170,10 +170,10 @@ echo "[backup] Content check: tables=$TABLES functions=$FUNCTIONS triggers=$TRIG
 
 if [ "$TABLES" -eq 0 ]; then fail "0 CREATE TABLE found — schema dump did not run correctly."; fi
 if [ "$FUNCTIONS" -eq 0 ]; then fail "0 CREATE FUNCTION found — schema dump did not run correctly."; fi
-if [ "$TRIGGERS" -eq 0 ]; then fail "0 CREATE TRIGGER found — this is exactly the defect that made the 2026-07-31 backup unusable (docs/BACKUP_SYSTEM_AUDIT_REPORT.md). Refusing to keep this file."; fi
+if [ "$TRIGGERS" -eq 0 ]; then fail "0 CREATE TRIGGER found — this is exactly the defect that made the 2026-07-31 backup unusable (docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md). Refusing to keep this file."; fi
 if [ "$POLICIES" -eq 0 ]; then fail "0 CREATE POLICY found — schema dump did not run correctly."; fi
 if [ "$MODE" != "--schema-only" ] && [ "$DATA_ROWS" -eq 0 ]; then
-  fail "0 data rows (INSERT) found in the data pass — this is exactly the defect that made every prior 'full' backup schema-only (docs/BACKUP_SYSTEM_AUDIT_REPORT.md). Refusing to keep this file. (If every table is genuinely empty, e.g. a brand-new environment, use --schema-only instead so this isn't mistaken for a failure.)"
+  fail "0 data rows (INSERT) found in the data pass — this is exactly the defect that made every prior 'full' backup schema-only (docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md). Refusing to keep this file. (If every table is genuinely empty, e.g. a brand-new environment, use --schema-only instead so this isn't mistaken for a failure.)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -226,4 +226,4 @@ EOF
 SUCCESS=1
 echo "[backup] OK — valid backup written: $OUT_FILE ($(du -h "$OUT_FILE" | cut -f1))"
 echo "[backup] Integrity report: $REPORT_FILE"
-echo "[backup] Reminder: this file stays local and gitignored — copy it to durable storage (see docs/BACKUP_RESTORE.md)."
+echo "[backup] Reminder: this file stays local and gitignored — copy it to durable storage (see docs/runbooks/BACKUP_RESTORE.md)."

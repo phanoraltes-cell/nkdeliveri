@@ -1,7 +1,7 @@
 /**
  * Unit tests for `buildRestaurantHoursMetadata` — the pure piece of the
  * restaurant signup form's opening_hours fix
- * (docs/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md, Root Cause
+ * (docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md, Root Cause
  * R1). This project's Vitest setup has no DOM/RTL, so the pure logic is
  * exported from its own file and tested directly instead — same pattern
  * as createPollController in useCollectPaymentPoll.ts.

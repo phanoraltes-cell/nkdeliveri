@@ -1,6 +1,6 @@
 /**
  * Unit tests for translateAuthError()'s fallback handling
- * (docs/REGISTRATION_AUTH_REMEDIATION_REPORT.md, Phase 11) — the rule this
+ * (docs/archive/audits/REGISTRATION_AUTH_REMEDIATION_REPORT.md, Phase 11) — the rule this
  * enforces is that a user must never see a raw `{}`, `[object Object]`,
  * `null`, `undefined`, or empty string as their error message, while every
  * already-translated case keeps working exactly as before.
@@ -59,7 +59,7 @@ describe("translateAuthError: known errors keep their existing specific translat
 });
 
 describe("translateAuthError: infra/network 5xx errors never leak {} or raw JSON", () => {
-  it("real root-cause shape: AuthRetryableFetchError with message '{}' (docs/REGISTRATION_DRIVER_RESTAURANT_AUDIT.md)", () => {
+  it("real root-cause shape: AuthRetryableFetchError with message '{}' (docs/archive/audits/REGISTRATION_DRIVER_RESTAURANT_AUDIT.md)", () => {
     const err = new FakeAuthRetryableFetchError("{}", 500);
     expect(translateAuthError(err)).toBe(GENERIC_FALLBACK);
   });

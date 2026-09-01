@@ -1,4 +1,4 @@
--- Remediation of docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5/14 (Root
+-- Remediation of docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5/14 (Root
 -- Cause R4): register-documents.functions.ts's stampOwner() calls
 -- `supabaseAdmin.schema("storage").from("objects").update(...)` after every
 -- service-role upload -- confirmed live to have zero effect (both real

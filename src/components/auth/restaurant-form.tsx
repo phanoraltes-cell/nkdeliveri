@@ -34,11 +34,11 @@ export function RestaurantForm() {
   // never as free text. Starts empty and stays empty unless the owner
   // actually touches a day row (HoursPicker only ever writes the days it's
   // told to) — an untouched picker sends nothing, same as before this fix
-  // (docs/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md).
+  // (docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_REMEDIATION_REPORT.md).
   const [hours, setHours] = useState<WeeklyHours>({});
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — these two checks used to be
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — these two checks used to be
   // toast-only. Kept as toasts (unchanged UX) but now also tracked here so
   // the offending field gets aria-invalid + a visible inline message.
   const [confirmError, setConfirmError] = useState<string | null>(null);

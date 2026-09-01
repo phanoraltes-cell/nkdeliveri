@@ -6,7 +6,7 @@
  * reaches the client bundle; see that route file's own comment for why a
  * static import isn't safe here).
  *
- * See docs/MONCASH_WEBHOOK_SECURITY.md for the full security report on
+ * See docs/archive/moncash/MONCASH_WEBHOOK_SECURITY.md for the full security report on
  * this flow.
  */
 import { createHash, randomUUID } from "node:crypto";

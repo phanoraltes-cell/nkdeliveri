@@ -25,7 +25,7 @@ test.describe("PWA — manifest and service worker", () => {
     const registration = await page.evaluate(async () => {
       if (!("serviceWorker" in navigator)) return null;
       // Give the browser a moment to finish registering (registerPWA()
-      // runs once on load, only in a PROD build — see docs/PWA.md).
+      // runs once on load, only in a PROD build — see docs/reference/PWA.md).
       await new Promise((resolve) => setTimeout(resolve, 1500));
       const reg = await navigator.serviceWorker.getRegistration();
       return reg ? { scope: reg.scope, active: !!reg.active } : null;

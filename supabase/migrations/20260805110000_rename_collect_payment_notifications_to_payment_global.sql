@@ -1,5 +1,5 @@
--- Post-incident audit remediation, Correction 2 (docs/PAYMENT_POST_INCIDENT_AUDIT.md
--- "Bug confirmé n°2" / docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md).
+-- Post-incident audit remediation, Correction 2 (docs/archive/payments/PAYMENT_POST_INCIDENT_AUDIT.md
+-- "Bug confirmé n°2" / docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md).
 --
 -- Label-only change to the two admin-facing `notify_secure` message bodies
 -- that still said "MonCash Automatik" after the "Peman Otomatik" ->

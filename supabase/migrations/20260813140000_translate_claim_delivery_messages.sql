@@ -1,4 +1,4 @@
--- F-02 remediation (docs/FULL_PLATFORM_AUDIT_2026-08-13.md). Root cause,
+-- F-02 remediation (docs/archive/audits/FULL_PLATFORM_AUDIT_2026-08-13.md). Root cause,
 -- traced end-to-end (frontend -> hook -> RPC -> database -> constraint ->
 -- error -> frontend -> user message) before writing this:
 --

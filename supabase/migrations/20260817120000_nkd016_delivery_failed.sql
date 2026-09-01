@@ -1,11 +1,11 @@
 -- NKD-016 (part 2/2) — "failed delivery" business rule. Règ A5 raised for
--- this scope only (docs/PROTOKOL_FAZ3_A_FAZ11.md). Requires
+-- this scope only (docs/archive/misc/PROTOKOL_FAZ3_A_FAZ11.md). Requires
 -- 20260817110000_nkd016_delivery_failed_enum_values.sql already committed
 -- (adds 'delivery_failed' to order_status/delivery_status and
 -- 'driver_commission_delivery_failed' to commission_entry_type — this file
 -- uses all three).
 --
--- Business decisions (owner-confirmed, docs/NKD-016_FAILED_DELIVERY_REPORT.md):
+-- Business decisions (owner-confirmed, docs/archive/phases/NKD-016_FAILED_DELIVERY_REPORT.md):
 --   - Address + phone mandatory for every order.
 --   - Platform admin bears the loss; driver keeps their commission anyway
 --     (they picked up and tried); restaurant is NOT credited (never delivered).

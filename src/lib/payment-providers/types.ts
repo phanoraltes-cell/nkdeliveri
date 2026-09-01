@@ -32,20 +32,20 @@ export type InitiatePaymentInput = {
   description?: string;
   /**
    * Optional per-call payment-method/wallet hint (e.g. PLOP's own
-   * `moncash`|`kashpaw`|`natcash`|`all` — docs/PLOP_PHASE0_AUDIT.md § 7).
+   * `moncash`|`kashpaw`|`natcash`|`all` — docs/archive/plop/PLOP_PHASE0_AUDIT.md § 7).
    * Providers that route through a single fixed rail (MonCash Digicel,
    * NatCash) simply ignore this. Added specifically so a multi-wallet
    * gateway (PLOP) is never forced to rely on one global config value for
-   * every transaction — docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md §§ 2, 6.
+   * every transaction — docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md §§ 2, 6.
    */
   paymentMethod?: string;
   /**
    * Absolute URL to send the customer back to once they're done on the
    * provider's own page — required by providers whose API mandates a
    * real return URL at creation time (Stripe Checkout Sessions'
-   * `success_url`/`cancel_url`, docs/STRIPE_INTEGRATION_REPORT.md).
+   * `success_url`/`cancel_url`, docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
    * Ignored by providers that don't need one (PLOP documents no
-   * `return_url` parameter at all — docs/PLOP_PHASE0_AUDIT.md § 9).
+   * `return_url` parameter at all — docs/archive/plop/PLOP_PHASE0_AUDIT.md § 9).
    * Always the order page (`/orders/:id`), never the payment reference —
    * a provider must never assume `reference` and the order id are
    * interchangeable.

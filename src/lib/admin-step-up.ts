@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
  * Shared by useReauth.ts and admin-idle-lock.tsx — kept in one place so
  * the two step-up surfaces (action-level and dashboard-entry-level) never
  * drift on what counts as a step-up error or how telemetry gets logged
- * (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+ * (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
  */
 
 /** True for the error an RPC raises when private.require_admin_step_up[_strict]() rejects the call. */

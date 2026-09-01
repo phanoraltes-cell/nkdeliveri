@@ -14,7 +14,7 @@
  *
  * Inert today by construction, same as the rest of this integration:
  * create_pending_payout_secure has no live caller (MonCash disbursement
- * isn't supported — see docs/PAYMENT_PROVIDERS.md), so no
+ * isn't supported — see docs/reference/PAYMENT_PROVIDERS.md), so no
  * provider_code='moncash_api' payout can ever be 'pending' in
  * production yet. This module is real, tested code that activates the
  * moment that changes, not a placeholder.

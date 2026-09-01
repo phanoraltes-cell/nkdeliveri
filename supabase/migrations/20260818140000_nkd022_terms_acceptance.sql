@@ -1,6 +1,6 @@
 -- NKD-022 — CGU/Politik Konfidansyalite: track acceptance instead of just
 -- gating submit client-side. Règ A4 leve pou tout seri NKD-022 (odit Faz
--- 3-11 fèmen — docs/PROTOKOL_FAZ3_A_FAZ11.md). A5 pa aplike: pa gen okenn
+-- 3-11 fèmen — docs/archive/misc/PROTOKOL_FAZ3_A_FAZ11.md). A5 pa aplike: pa gen okenn
 -- chanjman sou logic peman/estati kòmand isit la.
 --
 -- Before this: every registration form (customer-form.tsx, driver-form.tsx,
@@ -208,7 +208,7 @@ REVOKE ALL ON FUNCTION public.accept_terms_secure(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.accept_terms_secure(text) TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 4) Règ A11 (docs/PROTOKOL_FAZ3_A_FAZ11.md) — this migration is applied
+-- 4) Règ A11 (docs/archive/misc/PROTOKOL_FAZ3_A_FAZ11.md) — this migration is applied
 --    manually (SQL Editor, not `supabase db push`), so the schema_migrations
 --    bookkeeping INSERT must be the LAST statement of this same script/
 --    transaction, before COMMIT — never a separate later step.

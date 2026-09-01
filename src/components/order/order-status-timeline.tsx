@@ -30,7 +30,7 @@ function stepIndexForStatus(status: string): number {
  * Order-detail page's single progress indicator. Refonte Frontend Premium,
  * Phase 2 (P2) — replaces the previous "Estati kòmand" + "Estati peman"
  * two-card grid with one horizontal timeline (see
- * docs/PHASE0_PREPARATION_REPORT.md and the Refonte spec's P2 wireframe).
+ * docs/archive/phases/PHASE0_PREPARATION_REPORT.md and the Refonte spec's P2 wireframe).
  *
  * Deliberately does NOT show payment nuance (awaiting proof, automatic
  * rail pending/failed) — that's the contextual banner's job in

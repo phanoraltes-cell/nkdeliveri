@@ -11,7 +11,7 @@
 --
 -- Still true today, unchanged by this migration: MonCash's public API
 -- has no confirmed B2C disbursement endpoint (see
--- docs/PAYMENT_PROVIDERS.md), so create_pending_payout_secure has no
+-- docs/reference/PAYMENT_PROVIDERS.md), so create_pending_payout_secure has no
 -- live caller yet -- this is schema/RPC work that stays unreachable
 -- until that external gap closes, same posture as the rest of the
 -- payment-providers work this session.
@@ -212,7 +212,7 @@ GRANT EXECUTE ON FUNCTION public.create_pending_payout_secure(uuid, uuid, numeri
 -- from authenticated/anon/PUBLIC) plus the signature verification the
 -- webhook route performs before ever calling these -- see
 -- src/lib/payment-providers/moncash-webhook-handler.server.ts and
--- docs/MONCASH_WEBHOOK_SECURITY.md.
+-- docs/archive/moncash/MONCASH_WEBHOOK_SECURITY.md.
 --
 -- Both look up the payout by (transaction_reference, provider_code) --
 -- our own idempotency reference, known since create_pending_payout_secure

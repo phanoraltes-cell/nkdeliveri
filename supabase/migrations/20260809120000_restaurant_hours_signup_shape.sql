@@ -1,4 +1,4 @@
--- Remediation of docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 8 (Root
+-- Remediation of docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 8 (Root
 -- Cause R1): restaurants.opening_hours was always '{}' at signup because
 -- the signup form never sent a `restaurant_hours` key at all -- fixed on
 -- the frontend (restaurant-form.tsx now uses the same day-by-day

@@ -1,4 +1,4 @@
--- NKD-006 remediation (docs/NKD_FAZ2_SECURITY_AUDIT.md §4 -> P1 SSRF).
+-- NKD-006 remediation (docs/archive/phases/NKD_FAZ2_SECURITY_AUDIT.md §4 -> P1 SSRF).
 --
 -- Before this migration: public.push_subscriptions.endpoint had no CHECK
 -- at all beyond NOT NULL UNIQUE (20260703071050_...:4). RLS "Users manage
@@ -40,8 +40,8 @@
 -- APPLIED to production 2026-08-14, via the Management API
 -- (database/query -- the SQL Editor equivalent, HTTPS + Bearer token, NOT
 -- a CLI command that opens a direct Postgres connection -- see rule A1 in
--- the Phase 3-11 protocol, docs/INCIDENT_2026-08-14_CLI_CREDENTIAL.md).
--- docs/NKD006_CHECK_CONSTRAINT_TEST.sql was run first (BEGIN...ROLLBACK,
+-- the Phase 3-11 protocol, docs/archive/misc/INCIDENT_2026-08-14_CLI_CREDENTIAL.md).
+-- docs/archive/sql-tests/NKD006_CHECK_CONSTRAINT_TEST.sql was run first (BEGIN...ROLLBACK,
 -- all 6 assertions passed), then this statement was applied for real in
 -- its own transaction, together with the matching
 -- supabase_migrations.schema_migrations tracking row so `supabase

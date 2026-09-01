@@ -27,7 +27,7 @@ const OAUTH_REAUTH_FLAG = "nk_reauth_pending";
 /**
  * Step-up re-authentication for sensitive admin/financial actions (Phase 4
  * of the original session-hardening request; hardened in Phase 2 of
- * docs/ADMIN_ACCESS_SECURITY_AUDIT.md). Until 2026-08-11 this dialog was
+ * docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md). Until 2026-08-11 this dialog was
  * the *entire* protection — the RPC it guarded never verified anything
  * server-side, so a stolen session's JWT could call e.g.
  * add_user_role_secure directly and skip this dialog completely. That's

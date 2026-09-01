@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * Vercel Cron target — see vercel.json's `crons` entry. Reconciles PLOP
  * Collect payments stuck in `pending` — the safety-net role only, never
  * the primary confirmation path (see the callout in
- * docs/PLOP_PHASE1_ARCHITECTURE.md § 3 and the module comment on
+ * docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 3 and the module comment on
  * plop-reconcile.server.ts). Runs once a day — the Vercel Hobby plan's
  * ceiling on Cron Job frequency, already the case for
  * api.cron.moncash-reconcile.ts.

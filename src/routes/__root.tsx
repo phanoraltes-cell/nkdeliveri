@@ -199,7 +199,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         // No `sameAs` — deliberately omitted rather than populated with
         // invented URLs. site-config.ts's SOCIAL_LINKS is empty because
         // no official NK Deliveri social profile exists yet; add both
-        // together the day one does (see docs/SEO_BRAND_AUTHORITY_NK_DELIVERI.md).
+        // together the day one does (see docs/archive/misc/SEO_BRAND_AUTHORITY_NK_DELIVERI.md).
       }),
       jsonLdScript({
         "@context": "https://schema.org",

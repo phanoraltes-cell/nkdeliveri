@@ -4,17 +4,17 @@ import { pollCollectPayment } from "@/lib/poll-collect-payment.functions";
 
 /**
  * Adaptive client-side poll for a `pending` PLOP Collect payment — the
- * PRIMARY confirmation mechanism (docs/PLOP_PHASE1_ARCHITECTURE.md § 3
+ * PRIMARY confirmation mechanism (docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 3
  * /§ 3bis), never the daily reconciliation cron (a safety net only, see
  * that same doc's callout). 4 tapering phases over 15 minutes, ≤31
- * requests/session — see docs/PLOP_REMEDIATION_REPORT.md § 3 for the
+ * requests/session — see docs/archive/plop/PLOP_REMEDIATION_REPORT.md § 3 for the
  * per-phase justification of these exact numbers.
  *
  * Paced off `createdAt` (the `payment_transactions` row's own creation
  * time), never "time since this hook mounted" — a page refresh recomputes
  * the same elapsed time and resumes at the correct phase instead of
  * restarting the fast/frequent phase every time (audit recommendation,
- * docs/PLOP_PHASE2_AUDIT.md § 6). This is also what makes "resume after
+ * docs/archive/plop/PLOP_PHASE2_AUDIT.md § 6). This is also what makes "resume after
  * refresh" and "resume after the browser was closed and reopened" work
  * for free: whatever elapsed time has really passed is recomputed fresh
  * on every mount, no client-side state to restore.
@@ -24,7 +24,7 @@ import { pollCollectPayment } from "@/lib/poll-collect-payment.functions";
  * network seams — this project has no jsdom/React-Testing-Library
  * dependency (Node-only Vitest environment), so this is what makes the
  * timing/visibility/reentrancy behavior below actually testable at all
- * (docs/POLLING_REMEDIATION_REPORT.md) without adding one. The hook
+ * (docs/archive/audits/POLLING_REMEDIATION_REPORT.md) without adding one. The hook
  * itself stays a thin wire-up: identical public API, identical behavior.
  */
 
@@ -37,7 +37,7 @@ const PHASES: Phase[] = [
   { untilMs: 15 * 60_000, intervalMs: 60_000 }, // 5–15min: filet avant relais au cron
 ];
 
-/** Exported for direct unit testing of the phase boundaries (docs/POLLING_REMEDIATION_REPORT.md). */
+/** Exported for direct unit testing of the phase boundaries (docs/archive/audits/POLLING_REMEDIATION_REPORT.md). */
 export function intervalForElapsed(elapsedMs: number): number | null {
   for (const phase of PHASES) {
     if (elapsedMs < phase.untilMs) return phase.intervalMs;
@@ -78,7 +78,7 @@ export type PollController = {
  * The actual schedule/tick/visibility state machine, DOM- and
  * timer-agnostic. Behavior preserved exactly from the pre-refactor
  * version, plus one real fix found during audit
- * (docs/POLLING_REMEDIATION_REPORT.md): `tick()` now guards against
+ * (docs/archive/audits/POLLING_REMEDIATION_REPORT.md): `tick()` now guards against
  * re-entrant/overlapping invocations (`inFlight`) — previously, a rapid
  * hidden→visible→hidden→visible flip could start a second `tick()` while
  * the first was still awaiting its network call, and each would

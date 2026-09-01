@@ -1,4 +1,4 @@
--- C-01 remediation (docs/GLOBAL_AUDIT_360_2026-08-13.md, Finding C-01,
+-- C-01 remediation (docs/archive/audits/GLOBAL_AUDIT_360_2026-08-13.md, Finding C-01,
 -- CRITICAL). The "Admins manage roles" RLS policy on public.user_roles
 -- let any super_admin session write directly via PostgREST
 -- (supabase.from('user_roles').insert/update/delete) -- completely

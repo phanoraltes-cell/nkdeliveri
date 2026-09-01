@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { isAllowedPushEndpoint } from "@/lib/push-endpoint-allowlist";
 
-// NKD-006 SSRF fix (docs/NKD_FAZ2_SECURITY_AUDIT.md §4) — matches the
+// NKD-006 SSRF fix (docs/archive/phases/NKD_FAZ2_SECURITY_AUDIT.md §4) — matches the
 // AbortController + timeout convention already used by
 // moncash-client.server.ts / plop-client.server.ts, not the newer
 // AbortSignal.timeout() API, for consistency with the rest of this

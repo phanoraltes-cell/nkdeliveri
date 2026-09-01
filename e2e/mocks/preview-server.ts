@@ -5,9 +5,9 @@
 // `{fetch(Request): Response}` handler) rather than the generic
 // dist/server/server.js layout TanStack Start's own preview plugin
 // expects — confirmed by running `npm run preview` directly and getting
-// `ERR_MODULE_NOT_FOUND: dist/server/server.js`. `docs/DEVELOPMENT.md`'s
+// `ERR_MODULE_NOT_FOUND: dist/server/server.js`. `docs/reference/DEVELOPMENT.md`'s
 // claim that `npm run preview` serves the production build is stale
-// relative to that preset being pinned; flagged in docs/E2E_TEST_REPORT.md
+// relative to that preset being pinned; flagged in docs/archive/audits/E2E_TEST_REPORT.md
 // rather than silently worked around.
 //
 // This server reproduces just enough of .vercel/output/config.json's

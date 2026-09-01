@@ -1,5 +1,5 @@
 -- NKD-021 — otomatizasyon retansyon pou premye 2 kategori done ki san
--- danje (Faz 11, docs/PHASE11_COMPLIANCE_AUDIT.md). Règ A4 leve. A5 pa
+-- danje (Faz 11, docs/archive/phases/PHASE11_COMPLIANCE_AUDIT.md). Règ A4 leve. A5 pa
 -- aplike: pa gen chanjman sou peman/estati kòmand.
 --
 -- Konfime deja (Faz 11): 0 otomatizasyon retansyon egziste, e pg_cron pa

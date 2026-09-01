@@ -1,7 +1,7 @@
 /**
  * Unit tests for `stampOwner` — the helper that used to call
  * `.schema("storage").from("objects").update(...)` directly, confirmed
- * (docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5) to have zero effect
+ * (docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5) to have zero effect
  * in production (both real sampled objects had owner=NULL). Now goes
  * through the `stamp_storage_object_owner_secure` RPC instead
  * (20260809140000_fix_storage_document_owner.sql) — these tests prove the

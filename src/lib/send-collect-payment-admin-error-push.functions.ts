@@ -7,8 +7,8 @@ const InputSchema = z.object({ paymentId: z.string().uuid() });
 
 /**
  * Post-incident audit remediation, Correction 5
- * (docs/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°5" /
- * docs/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md). Closes the gap
+ * (docs/archive/payments/PAYMENT_POST_INCIDENT_AUDIT.md "Bug confirmé n°5" /
+ * docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md). Closes the gap
  * documented in [[project_notification_push_convention]]: every
  * `private.notify_secure` call needs a matching `send-*-push.functions.ts`
  * sibling, and `create_collect_payment_secure`'s own

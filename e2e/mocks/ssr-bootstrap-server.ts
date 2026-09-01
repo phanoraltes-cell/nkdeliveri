@@ -6,7 +6,7 @@
 //    loaders issue for the public pages (/, /restaurants,
 //    /restaurants/$slug, /sitemap.xml) — these run in the Node process
 //    handling the request, never inside the browser Playwright controls,
-//    so page.route() cannot intercept them (see docs/E2E_TEST_REPORT.md
+//    so page.route() cannot intercept them (see docs/archive/audits/E2E_TEST_REPORT.md
 //    § Known limitations for the full explanation). VITE_SUPABASE_URL is
 //    rebuilt to point here for the whole --mode e2e build, so this is
 //    genuinely the only backend either process can reach.

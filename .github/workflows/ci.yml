@@ -1,6 +1,6 @@
 name: CI
 
-# Runs on every PR into main (the merge gate — see docs/DEVOPS.md for the
+# Runs on every PR into main (the merge gate — see docs/reference/DEVOPS.md for the
 # exact branch protection settings this is meant to back) and again on
 # every push to main (so a bad merge or a direct push is caught the same
 # way, and the badge on main always reflects the real state of HEAD).
@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # C-02 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
+      # C-02 remediation (docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
       # 173-test unit suite existed but was never actually run by CI.
       # Reuses this job's existing `npm ci` — no new job, no new install.
       # Deliberately placed FIRST, ahead of lint/format/typecheck: found
@@ -151,7 +151,7 @@ jobs:
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
 
-      # C-01 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) —
+      # C-01 remediation (docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md) —
       # persisted regression proof that direct writes to public.user_roles
       # stay blocked for every role (the RLS bypass this migration fixed)
       # and that add_user_role_secure/remove_user_role_secure keep working
@@ -169,10 +169,10 @@ jobs:
         if: always()
         run: supabase stop --no-backup
 
-  # C-02 remediation (docs/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
+  # C-02 remediation (docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
   # 31-spec/77-test Playwright suite existed but was never run by CI.
   # Split into two jobs, not one, per this project's own documented
-  # finding (docs/E2E_TEST_REPORT.md §5): running all 9 projects together
+  # finding (docs/archive/audits/E2E_TEST_REPORT.md §5): running all 9 projects together
   # causes real, reproducible resource contention (several Chromium/WebKit
   # instances plus a Lighthouse audit competing for one machine) that
   # produces intermittent, non-deterministic failures unrelated to actual
@@ -181,7 +181,7 @@ jobs:
   # the fully-mocked E2E harness (e2e/mocks/*, `.env.e2e` — intentionally
   # tracked in git, see its own .gitignore comment) — no live Supabase
   # project, no secrets, by the same design decision documented in
-  # docs/E2E_TEST_REPORT.md §1 (validated with the user before that work
+  # docs/archive/audits/E2E_TEST_REPORT.md §1 (validated with the user before that work
   # began: never run E2E against the real backend).
   e2e-functional:
     name: E2E — client/restaurant/driver/admin/auth

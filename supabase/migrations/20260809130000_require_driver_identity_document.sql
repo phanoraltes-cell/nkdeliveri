@@ -1,4 +1,4 @@
--- Remediation of docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 9/13 (Root
+-- Remediation of docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 9/13 (Root
 -- Cause R2): update_driver_status_secure had no check at all before
 -- allowing a transition to 'approved' -- confirmed live via the only real
 -- driver in production (id_doc_url IS NULL, status = 'online'). Per the

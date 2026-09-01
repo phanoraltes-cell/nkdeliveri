@@ -1,5 +1,5 @@
 -- Admin backup/recovery codes — second, independent 2FA option alongside
--- TOTP (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). User request:
+-- TOTP (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md). User request:
 -- "add another possibility for admin to log in with a secret code besides
 -- the scanned [TOTP] code." Confirmed live before writing this: pgcrypto
 -- is already installed (SELECT extname FROM pg_extension -> present,

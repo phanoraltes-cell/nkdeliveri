@@ -1,7 +1,7 @@
 /**
  * Unit tests for classifyUnconfirmedPayment — the pure logic behind the
  * manual-vs-automatic payment fix
- * (docs/PAYMENT_FLOW_CLASSIFICATION_REPORT.md, migration
+ * (docs/archive/payments/PAYMENT_FLOW_CLASSIFICATION_REPORT.md, migration
  * 20260813120000_fix_manual_vs_automatic_payment_classification.sql). The
  * SQL-side gate (private.update_order_status_secure) is verified
  * separately via a real BEGIN/ROLLBACK transaction against production —

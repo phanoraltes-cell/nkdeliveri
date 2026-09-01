@@ -1,7 +1,7 @@
 /**
  * Unit tests for isAllowedPushEndpoint — the pure host-validation logic
- * behind the NKD-006 SSRF fix (docs/NKD_FAZ2_SECURITY_AUDIT.md §4,
- * docs/PHASE_FAZ2_FINALIZATION_REPORT.md §1). Covers the exact "before"
+ * behind the NKD-006 SSRF fix (docs/archive/phases/NKD_FAZ2_SECURITY_AUDIT.md §4,
+ * docs/archive/phases/PHASE_FAZ2_FINALIZATION_REPORT.md §1). Covers the exact "before"
  * scenario the audit traced (a cloud-metadata URL reaching push-dispatch
  * with zero host validation) and the allowlist/redirect-adjacent edge
  * cases the DB CHECK constraint alone can't express test coverage for.

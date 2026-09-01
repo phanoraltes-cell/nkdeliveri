@@ -1,4 +1,4 @@
--- Payment security remediation (docs/PAYMENT_SECURITY_REMEDIATION.md).
+-- Payment security remediation (docs/archive/payments/PAYMENT_SECURITY_REMEDIATION.md).
 --
 -- GRANT/REVOKE-only migration — no function body, signature, RLS policy,
 -- or table structure changes. Every finding here was empirically verified

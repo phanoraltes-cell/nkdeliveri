@@ -7,12 +7,12 @@
  * constraint "addresses_pkey"`). Left unmapped, that text reaches the user
  * verbatim through the `toast.error(e.message)` pattern used at 70+ call
  * sites across src/routes and src/components (see
- * docs/NKD-003_MIGRATION_BACKLOG.md) — an information-disclosure risk
+ * docs/archive/phases/NKD-003_MIGRATION_BACKLOG.md) — an information-disclosure risk
  * flagged in the Faz 1 architecture audit (NKD-003).
  *
  * This project's established convention for RPC-specific *business* errors
  * is to translate the `RAISE EXCEPTION` text itself, in SQL, at the source
- * (docs/PHASE_1_REMEDIATION_REPORT.md, F-02 — `claim_delivery_secure`'s
+ * (docs/archive/phases/PHASE_1_REMEDIATION_REPORT.md, F-02 — `claim_delivery_secure`'s
  * messages were fixed there, not intercepted here). A custom
  * `RAISE EXCEPTION` without an explicit SQLSTATE always surfaces as
  * Postgres code "P0001", so this function trusts and passes through any
@@ -42,7 +42,7 @@ const CUSTOM_RPC_EXCEPTION_CODE = "P0001";
 
 // Postgres SQLSTATE codes a client-facing Supabase insert/update/delete/rpc
 // call can realistically hit. Extend deliberately (with a real call site as
-// justification — see docs/NKD-003_MIGRATION_BACKLOG.md), not defensively:
+// justification — see docs/archive/phases/NKD-003_MIGRATION_BACKLOG.md), not defensively:
 // an entry here is a promise that the category-level message never leaks a
 // table/column/constraint name.
 const KNOWN_PG_CODE_MESSAGES: Record<string, string> = {

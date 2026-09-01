@@ -2,7 +2,7 @@ import type { StatusTone } from "@/components/dashboard/status-badge";
 
 /**
  * "Komand Health" — a value computed live by get_orders_admin (never stored
- * on orders.status, see docs/KOMAND_ADMIN_AUDIT.md §5/§7). Kreyòl labels +
+ * on orders.status, see docs/archive/audits/KOMAND_ADMIN_AUDIT.md §5/§7). Kreyòl labels +
  * badge tones shared between the list table and the detail dialog so the
  * two never drift.
  */

@@ -7,7 +7,7 @@ function overlaps(a: NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>, b
 }
 
 // P12 (F header P2) — guards the actual regression found by the P11-style
-// audit (docs/NOTIFICATIONS_PAGE_AUDIT.md): the header row used to have no
+// audit (docs/archive/audits/NOTIFICATIONS_PAGE_AUDIT.md): the header row used to have no
 // flex-wrap, so PushToggle's wider states (the "permission denied" help
 // card, or the "unsupported browser" message — both much wider than its
 // usual compact button) overlapped the "Notifikasyon" title on every

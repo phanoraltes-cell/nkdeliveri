@@ -3,7 +3,7 @@
  * PLOP's Collect API. Every test mocks `fetch` and the service-role
  * Supabase client (never a real network call, never a real database
  * write); real PLOP credentials don't exist anywhere in this project
- * (see docs/PLOP_PHASE0_AUDIT.md), so this is the only way any of this
+ * (see docs/archive/plop/PLOP_PHASE0_AUDIT.md), so this is the only way any of this
  * code has ever been exercised. Mirrors moncash-client.test.ts's
  * structure — see that file's own header for why.
  */
@@ -83,7 +83,7 @@ describe("plop-client.server.ts", () => {
     await createPayment("CMD-2", 500);
   });
 
-  it("createPayment: dynamic wallet selection — an explicit 'natcash' overrides the global config default (bug fix, docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
+  it("createPayment: dynamic wallet selection — an explicit 'natcash' overrides the global config default (bug fix, docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 2)", async () => {
     const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
       const body = JSON.parse(String(init.body));
       expect(body.payment_method).toBe("natcash");
@@ -254,7 +254,7 @@ describe("plop-client.server.ts", () => {
 
     expect(error).toBeInstanceOf(PlopApiError);
     expect((error as Error).message).not.toMatch(/^Unexpected token|is not valid JSON/i);
-    // Regression test for a real bug found during docs/PLOP_CLIENT_REMEDIATION_REPORT.md:
+    // Regression test for a real bug found during docs/archive/plop/PLOP_CLIENT_REMEDIATION_REPORT.md:
     // parseJsonOrThrow used to read the body via `response.json()` directly, then try to
     // recover it via `safeReadBody(response)` on failure — but a Response's body can only
     // ever be read once (the Fetch spec marks it "disturbed" even when the read throws), so

@@ -1,18 +1,18 @@
 /**
  * Low-level HTTP client for PLOP's "Paiement Marchand" (Collect) API
  * (https://plopplop.solutionip.app/paiement-doc) — see
- * docs/PLOP_PHASE0_AUDIT.md for the full endpoint audit this file is
+ * docs/archive/plop/PLOP_PHASE0_AUDIT.md for the full endpoint audit this file is
  * built strictly against. Only the two Collect endpoints are implemented
  * here: `POST /api/paiement-marchand` (create) and `POST
  * /api/paiement-verify` (verify). PLOP's Withdrawal API (3-step
  * HMAC-signed flow) is a real, documented capability but explicitly out
  * of scope for this replacement (Collect only) — see
- * docs/PLOP_PHASE0_AUDIT.md § 8 — and has no client here.
+ * docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8 — and has no client here.
  *
  * IMPORTANT — unlike MonCash's Business API (moncash-client.server.ts),
  * PLOP's Collect endpoints require no OAuth token, no signature, no
  * Authorization header at all: `client_id` in the JSON body is the only
- * credential (see docs/PLOP_PHASE0_AUDIT.md § 6/§ 11, flagged there as a
+ * credential (see docs/archive/plop/PLOP_PHASE0_AUDIT.md § 6/§ 11, flagged there as a
  * real security gap on PLOP's side, not something this client can
  * compensate for). There is therefore no token cache/refresh logic here,
  * unlike moncash-client.server.ts's `getAccessToken()`.
@@ -25,7 +25,7 @@
  *
  * Every attempt (including retries) is journaled to `plop_api_logs` —
  * schema matrix-matched field-for-field to `moncash_api_logs` (see
- * docs/PLOP_PHASE1_ARCHITECTURE.md § 10), append-only at the database
+ * docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 10), append-only at the database
  * level. Logging is always best-effort: a logging failure must never
  * break a real payment flow, so it only ever warns, never throws.
  */
@@ -57,7 +57,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * PLOP documents 429 ("Too many requests") and 503 ("Erreur interne") as
- * the only server-side codes for the Payment API (docs/PLOP_PHASE0_AUDIT.md
+ * the only server-side codes for the Payment API (docs/archive/plop/PLOP_PHASE0_AUDIT.md
  * § 5) — 400/404/405 are all client-error rejections that resending
  * unchanged would only repeat. The general 5xx range is kept as a safety
  * net (same convention as moncash-client.server.ts) since no exhaustive
@@ -216,13 +216,13 @@ async function safeReadBody(response: Response): Promise<unknown> {
  * A 2xx response with a body that isn't valid JSON (or is empty) must
  * still surface as a clean PlopApiError, never a raw SyntaxError escaping
  * this module — same gap MonCash's client was hardened against once
- * already (see docs/MONCASH_RESILIENCE_REPORT.md); guarded against here
+ * already (see docs/archive/moncash/MONCASH_RESILIENCE_REPORT.md); guarded against here
  * from the start rather than reproducing it.
  *
  * Reads the body as text exactly once, then attempts `JSON.parse` on the
  * captured text — deliberately NOT `response.json()` followed by
  * `safeReadBody(response)` on failure (the bug this replaces, found by
- * direct testing during docs/PLOP_CLIENT_REMEDIATION_REPORT.md): once a
+ * direct testing during docs/archive/plop/PLOP_CLIENT_REMEDIATION_REPORT.md): once a
  * Response's body has been read (even by a call that throws, like an
  * invalid-JSON parse), the Fetch spec marks it "disturbed" and any later
  * read of that same Response — including `.clone()` — silently produces
@@ -256,13 +256,13 @@ function redactId(value: string | undefined): string | null {
 export type PlopCreatePaymentResult = {
   redirectUrl: string;
   providerTransactionId: string | null;
-  /** Echoes back exactly what was sent to PLOP for this call — `payment_method_requested` traceability (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option A), not PLOP's own response (it doesn't echo this field). */
+  /** Echoes back exactly what was sent to PLOP for this call — `payment_method_requested` traceability (docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 7 Option A), not PLOP's own response (it doesn't echo this field). */
   paymentMethodRequested: PlopPaymentMethod;
 };
 
 /**
  * The 4 values PLOP documents for `payment_method` on `paiement-marchand`
- * (docs/PLOP_PHASE0_AUDIT.md § 7) — `"all"` lets the customer choose on
+ * (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 7) — `"all"` lets the customer choose on
  * PLOP's own hosted page rather than pre-selecting a wallet. Never
  * expanded on guesswork; if PLOP ever documents a 5th value, add it here
  * explicitly, never accept an unrecognized string silently.
@@ -279,7 +279,7 @@ export function isValidPaymentMethod(value: string): value is PlopPaymentMethod 
  * Creates a PLOP Collect payment for `reference` (our own
  * `refference_id` — see InitiatePaymentInput.reference). PLOP requires
  * this value to be new; unlike MonCash's `orderId`, PLOP does not
- * document what happens on reuse (docs/PLOP_PHASE0_AUDIT.md § 14.7) — no
+ * document what happens on reuse (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 14.7) — no
  * idempotent-reconciliation-on-error is attempted here (there is nothing
  * confirmed to reconcile against), a failure is reported honestly and the
  * reconciliation cron (plop-reconcile.server.ts) is the only thing that
@@ -287,7 +287,7 @@ export function isValidPaymentMethod(value: string): value is PlopPaymentMethod 
  *
  * `paymentMethod` is optional and per-call — falls back to
  * `PLOP_PAYMENT_METHOD`'s configured default only when the caller doesn't
- * specify one, never the other way around (docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md
+ * specify one, never the other way around (docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md
  * § 2/§ 6: the previous version read the config value unconditionally,
  * making per-transaction wallet selection structurally impossible — this
  * is the fix). Validated against PLOP's documented value set *before* any
@@ -383,7 +383,7 @@ export async function createPayment(
 /**
  * PLOP only documents two `trans_status` values ("no"/"ok") — anything
  * else must be reported honestly as `"unknown"`, never guessed as either
- * outcome (docs/PLOP_PHASE0_AUDIT.md § 14.6).
+ * outcome (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 14.6).
  */
 export type PlopTransStatus = "no" | "ok" | "unknown";
 
@@ -395,7 +395,7 @@ export type PlopVerifyResult = {
    * PLOP's own `method` field on `paiement-verify` — which wallet the
    * customer actually used, as opposed to what we requested at creation
    * (relevant when `payment_method:"all"` was sent, letting the customer
-   * pick on PLOP's page — docs/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 4.3,
+   * pick on PLOP's page — docs/archive/plop/PLOP_MULTIWALLET_PHASE0_AUDIT.md § 4.3,
    * a gap this fixes: previously present only inside `raw`, never
    * surfaced as a typed field).
    */

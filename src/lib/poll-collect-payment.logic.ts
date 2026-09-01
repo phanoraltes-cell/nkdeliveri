@@ -1,9 +1,9 @@
 /**
  * Orchestration logic behind the client-side adaptive poll
  * (useCollectPaymentPoll, orders.$id.tsx) — the PRIMARY confirmation
- * mechanism for a PLOP Collect payment (docs/PLOP_PHASE1_ARCHITECTURE.md
+ * mechanism for a PLOP Collect payment (docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md
  * § 3/§ 3bis), and a secondary/backup confirmation path for Stripe (which
- * primarily confirms via its own webhook — docs/STRIPE_INTEGRATION_REPORT.md
+ * primarily confirms via its own webhook — docs/archive/audits/STRIPE_INTEGRATION_REPORT.md
  * — but this poll still runs regardless, in case the webhook delivery is
  * ever delayed or missed). Kept in its own plain module for the same
  * testability reason as initiate-collect-payment.logic.ts: importable
@@ -72,7 +72,7 @@ export async function runPollCollectPayment(
 
   // Step 2 — ask the real fournisseur directly. Never throws (both
   // providers' checkStatus() fold every failure into status:"unknown" —
-  // docs/PLOP_PHASE2_AUDIT.md § A7); "unknown" and "pending" are both
+  // docs/archive/plop/PLOP_PHASE2_AUDIT.md § A7); "unknown" and "pending" are both
   // reported to the client as "pending" here, same principle as
   // plop-reconcile.server.ts (§ A2: never treat an ambiguous answer as a
   // failure).
@@ -81,9 +81,9 @@ export async function runPollCollectPayment(
   // own Checkout Session id (`provider_transaction_id`, stored at
   // creation time), never `external_reference`, since Stripe has no way
   // to look a session up by an arbitrary caller reference
-  // (docs/STRIPE_INTEGRATION_REPORT.md, stripe-provider.server.ts's own
+  // (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md, stripe-provider.server.ts's own
   // header comment). `row.provider` (set by create_collect_payment_secure,
-  // docs/STRIPE_INTEGRATION_REPORT.md) is what tells this dispatch which
+  // docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) is what tells this dispatch which
   // value to pass to which provider — never assumed silently.
   const isStripe = row.provider === "stripe_api";
   const status = isStripe

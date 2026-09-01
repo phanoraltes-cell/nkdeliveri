@@ -6,7 +6,7 @@ import { MonCashApiError, createPayment, retrieveOrderPayment } from "./moncash-
 // Real MonCash Business API integration (moncash-client.server.ts) —
 // OAuth2 client_credentials auth, CreatePayment, RetrieveOrderPayment,
 // with timeout + retry + idempotent reconciliation built in. See that
-// file and docs/PAYMENT_PROVIDERS.md for the full picture.
+// file and docs/reference/PAYMENT_PROVIDERS.md for the full picture.
 //
 // IMPORTANT — MonCash's public API is a *collection* gateway (a customer
 // pays a merchant through a redirect flow), not a B2C disbursement API:
@@ -14,7 +14,7 @@ import { MonCashApiError, createPayment, retrieveOrderPayment } from "./moncash-
 // number, which is what this app's payout flow needs. `initiatePayment`
 // therefore explicitly refuses `direction: "disburse"` below rather than
 // silently doing nothing or pretending to succeed — see the "Audit
-// intégration MonCash" report and docs/PAYMENT_PROVIDERS.md § Ce qui
+// intégration MonCash" report and docs/reference/PAYMENT_PROVIDERS.md § Ce qui
 // n'est PAS fait. `direction: "collect"` (a future checkout gateway) is
 // genuinely implemented.
 //
@@ -42,7 +42,7 @@ function describeError(err: unknown): string {
 // so a real webhook is genuinely verifiable and processable the moment
 // Digicel confirms the actual scheme — until then, treat the header name
 // below as a placeholder to double-check, not a documented fact. See
-// docs/MONCASH_WEBHOOK_SECURITY.md.
+// docs/archive/moncash/MONCASH_WEBHOOK_SECURITY.md.
 const SIGNATURE_HEADER = "x-moncash-signature";
 
 function verifySignature(

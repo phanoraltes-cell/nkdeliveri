@@ -30,7 +30,7 @@ function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending] = useState(false);
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — sign-in failures used to
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — sign-in failures used to
   // reach the user through a toast only. Kept, but also rendered inline
   // (role="alert") so a screen-reader user who misses the timed toast still
   // sees why the form didn't submit.

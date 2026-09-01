@@ -34,7 +34,7 @@ function elapsedLabel(failedAt: string, now: number): { text: string; over2h: bo
 
 // NKD-016: admin resolves a 'delivery_failed' order manually — no scheduled
 // job exists in this project to do it automatically (owner's decision,
-// docs/NKD-016_FAILED_DELIVERY_REPORT.md). Reuses update_order_status_secure
+// docs/archive/phases/NKD-016_FAILED_DELIVERY_REPORT.md). Reuses update_order_status_secure
 // (already admin-unconditional for any transition) rather than a new RPC —
 // nothing here needs validation beyond "is this caller an admin", which
 // that function already does.

@@ -67,7 +67,7 @@ function AdminPayoutSettings() {
     },
     onError: (e) => {
       // Global payout configuration — STRICT tier (fresh MFA), see
-      // docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md.
+      // docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md.
       if (isStepUpError(e)) {
         invalidateStepUp("strict");
         toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");

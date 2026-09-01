@@ -8,7 +8,7 @@ import {
 /**
  * Server-function wrapper for the client-side adaptive poll
  * (useCollectPaymentPoll, orders.$id.tsx) — the primary PLOP Collect
- * confirmation mechanism (docs/PLOP_PHASE1_ARCHITECTURE.md § 3bis). The
+ * confirmation mechanism (docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 3bis). The
  * actual logic lives in poll-collect-payment.logic.ts — this file only
  * wires it to createServerFn, mirroring
  * initiate-collect-payment.functions.ts's own split (see that file's

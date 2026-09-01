@@ -33,7 +33,7 @@ Exemples de comportements inacceptables :
 - La publication d'informations privées d'autrui (adresse physique ou
   électronique) sans permission explicite — un standard particulièrement
   important pour un projet qui manipule des données clients réelles (voir
-  `docs/SECURITY.md`).
+  `docs/reference/SECURITY.md`).
 - Toute autre conduite qui pourrait raisonnablement être considérée comme
   inappropriée dans un cadre professionnel.
 

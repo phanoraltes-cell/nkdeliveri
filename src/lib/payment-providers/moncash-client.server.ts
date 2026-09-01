@@ -11,7 +11,7 @@
  * no publicly documented MonCash endpoint that sends money to an
  * arbitrary phone number, which is what this app's payout flow needs.
  * `moncash-provider.server.ts` refuses `direction: "disburse"` for
- * exactly this reason — see docs/PAYMENT_PROVIDERS.md.
+ * exactly this reason — see docs/reference/PAYMENT_PROVIDERS.md.
  *
  * `.server.ts` is load-bearing: the build fails if a route file or
  * component imports this module, which is what keeps the access token —
@@ -23,7 +23,7 @@
  * error, timeout flag, and the MonCash reference when known. That table
  * is append-only at the database level (triggers reject UPDATE/DELETE/
  * TRUNCATE for every role, including service_role) — see
- * docs/MONCASH_FINANCIAL_AUDIT.md and
+ * docs/archive/moncash/MONCASH_FINANCIAL_AUDIT.md and
  * supabase/migrations/20260730130000_moncash_financial_audit_log.sql.
  * Logging is always best-effort: a logging failure must never break a
  * real payment flow, so it only ever warns, never throws.
@@ -217,7 +217,7 @@ async function safeReadBody(response: Response): Promise<unknown> {
  * unexpected) must still surface as a clean MonCashApiError — not a raw
  * SyntaxError from `.json()` propagating past every other error-handling
  * path in this file. Resilience gap closed in the hardening pass (see
- * docs/MONCASH_RESILIENCE_REPORT.md) — response.ok being true is not the
+ * docs/archive/moncash/MONCASH_RESILIENCE_REPORT.md) — response.ok being true is not the
  * same guarantee as "the body is well-formed JSON".
  */
 async function parseJsonOrThrow(response: Response, context: string): Promise<unknown> {

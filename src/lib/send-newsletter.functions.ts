@@ -25,7 +25,7 @@ export type SendResult = {
  * One Resend API call, never throws -- every outcome (HTTP error, network
  * failure, timeout) is captured as data instead of propagating, so the
  * caller can always log + tally it. This is the fix for the audit's Pwen A
- * (docs/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md): before this, any failure
+ * (docs/archive/audits/NEWSLETTER_EMAIL_REMEDIATION_AUDIT.md): before this, any failure
  * reason (rate limit, invalid key, network blip...) was thrown away at the
  * `else failed++` line with nothing recorded anywhere.
  */
@@ -49,7 +49,7 @@ export async function sendOne(
     // Read the body exactly once via .text() regardless of outcome -- a
     // second read attempt after a failed .json() would find the body
     // already disturbed (the same Fetch-spec pitfall fixed in
-    // plop-client.server.ts's parseJsonOrThrow, docs/PLOP_CLIENT_REMEDIATION_REPORT.md).
+    // plop-client.server.ts's parseJsonOrThrow, docs/archive/plop/PLOP_CLIENT_REMEDIATION_REPORT.md).
     const rawText = await response.text();
     if (response.ok) {
       return { email, success: true, httpStatus: response.status, error: null, durationMs };

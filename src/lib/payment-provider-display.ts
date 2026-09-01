@@ -1,7 +1,7 @@
 /**
  * Pure presentation layer for `PaymentProviderCode` — never a data
  * change. `payment_transactions.provider`/`payment_providers.code` stay
- * `moncash_api` (docs/PLOP_PHASE1_ARCHITECTURE.md § 1); this module only
+ * `moncash_api` (docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 1); this module only
  * decides what an admin *sees* for that code, so the underlying rail can
  * be swapped (Digicel → PLOP, or any future replacement) without a
  * migration or a data rewrite every time.
@@ -11,7 +11,7 @@
  * (`payout-pay-modal.tsx`) consumes this
  * today, and none should be retrofitted to as part of this chantier: on
  * the payout side, `moncash_api` still genuinely means the dormant
- * Digicel-direct integration, never PLOP (docs/PLOP_REMEDIATION_REPORT.md
+ * Digicel-direct integration, never PLOP (docs/archive/plop/PLOP_REMEDIATION_REPORT.md
  * § "Objectif 4"). This module exists ahead of its first real consumer —
  * the first Collect-facing admin view (Phase 6) — precisely so that view
  * never has a reason to hardcode "MonCash API" for what is actually PLOP.

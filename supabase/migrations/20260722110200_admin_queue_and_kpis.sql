@@ -3,7 +3,7 @@
 -- admin never has to manually search for who's owed money, plus two
 -- single-criterion sort options for manual override. Same signatures as
 -- the v2 versions (only the _sort DEFAULT value and the ORDER BY logic
--- change) — no DROP FUNCTION needed, see docs/MIGRATIONS.md.
+-- change) — no DROP FUNCTION needed, see docs/reference/MIGRATIONS.md.
 
 CREATE OR REPLACE FUNCTION public.get_restaurant_wallets_admin(
   _search text DEFAULT NULL, _status text DEFAULT NULL, _sort text DEFAULT 'priority',
@@ -184,7 +184,7 @@ $$;
 -- get_admin_payout_kpis: return shape is changing (new columns), which
 -- CREATE OR REPLACE cannot do even with an identical (empty) argument list
 -- — Postgres errors on a return-type change rather than silently
--- overloading. DROP FUNCTION IF EXISTS first, per docs/MIGRATIONS.md.
+-- overloading. DROP FUNCTION IF EXISTS first, per docs/reference/MIGRATIONS.md.
 DROP FUNCTION IF EXISTS public.get_admin_payout_kpis();
 
 CREATE FUNCTION public.get_admin_payout_kpis()

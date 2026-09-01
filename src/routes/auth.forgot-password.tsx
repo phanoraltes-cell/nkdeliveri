@@ -21,7 +21,7 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — both were toast-only before.
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — both were toast-only before.
   const [emailError, setEmailError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const captcha = useTurnstile();

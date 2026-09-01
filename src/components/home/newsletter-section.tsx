@@ -8,7 +8,7 @@ const scooterImg = "/scooter.png";
 export function NewsletterSection() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
-  // F-04 (docs/FRONTEND_GLOBAL_AUDIT.md §25) — was toast-only.
+  // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — was toast-only.
   const [formError, setFormError] = useState<string | null>(null);
 
   async function subscribeNewsletter(e: React.FormEvent) {

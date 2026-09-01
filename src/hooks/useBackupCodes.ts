@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Admin backup/recovery codes — a second, independent step-up option
- * alongside TOTP (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md's
+ * alongside TOTP (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md's
  * companion module, supabase/migrations/20260813100000_admin_backup_codes.sql).
  * Unlike TOTP, this is entirely custom (Supabase Auth has no native
  * "recovery code" factor type) — codes are generated/verified via our own

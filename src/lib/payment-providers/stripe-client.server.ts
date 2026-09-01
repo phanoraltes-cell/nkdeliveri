@@ -6,7 +6,7 @@
  * typed responses, webhook signature verification), so re-implementing
  * any of that by hand here would only be a worse, unmaintained copy of
  * something already done correctly upstream — a different tradeoff than
- * PLOP, which has no SDK at all (docs/PLOP_PHASE0_AUDIT.md).
+ * PLOP, which has no SDK at all (docs/archive/plop/PLOP_PHASE0_AUDIT.md).
  *
  * `.server.ts` is load-bearing: the build fails if a route file or
  * component imports this module, keeping `STRIPE_SECRET_KEY` out of the
@@ -23,7 +23,7 @@
  * supported account countries at all. This client charges in
  * `presentmentCurrency` (from config, e.g. "usd"), converting from HTG
  * via `htgConversionRate` — a manually-configured rate, never invented
- * here. See docs/STRIPE_INTEGRATION_REPORT.md.
+ * here. See docs/archive/audits/STRIPE_INTEGRATION_REPORT.md.
  */
 import type { Json } from "@/integrations/supabase/types";
 import { getStripeConfig } from "./stripe-config.server";
@@ -179,7 +179,7 @@ export type StripeSessionStatus = {
  * no reliable way to "find my session by my own reference" after the
  * fact. This is why `create_collect_payment_secure` was extended with an
  * optional `_provider_transaction_id` param
- * (docs/STRIPE_INTEGRATION_REPORT.md) — the session id returned by
+ * (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md) — the session id returned by
  * `createCheckoutSession` above is stored on the `payment_transactions`
  * row immediately, specifically so every later lookup (polling,
  * checkStatus) always has it on hand and never needs to search for it.
@@ -225,7 +225,7 @@ export async function retrieveCheckoutSessionById(sessionId: string): Promise<St
  * Verifies an inbound webhook's signature via Stripe's own SDK helper —
  * never hand-rolled HMAC comparison here, exactly the kind of
  * security-critical primitive that belongs to the maintained SDK, not a
- * reimplementation (docs/STRIPE_INTEGRATION_REPORT.md).
+ * reimplementation (docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
  */
 export async function constructWebhookEvent(
   rawBody: string,

@@ -13,7 +13,7 @@ import { translateAuthError } from "@/lib/auth-errors";
 export function useSubmit(onDone: () => void) {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
-  // F-04 remediation (docs/FRONTEND_GLOBAL_AUDIT.md §25) — a server-side
+  // F-04 remediation (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — a server-side
   // rejection (email already used, rate limit, CAPTCHA, ...) used to reach
   // the user ONLY via a toast. Exposed here too so callers can also render
   // it inline (role="alert", tied to the form via aria-describedby) for

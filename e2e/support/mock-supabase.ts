@@ -2,7 +2,7 @@
 // than hand-rolling page.route() calls, so the "never hit real
 // production Supabase" guarantee lives in exactly one place.
 //
-// Architecture recap (see docs/E2E_TEST_REPORT.md § Known limitations
+// Architecture recap (see docs/archive/audits/E2E_TEST_REPORT.md § Known limitations
 // for the full picture): VITE_SUPABASE_URL is rebuilt to point at a
 // local mock server (e2e/mocks/ssr-bootstrap-server.ts) for the whole
 // `--mode e2e` build, so both the TanStack Start SSR loaders (Node

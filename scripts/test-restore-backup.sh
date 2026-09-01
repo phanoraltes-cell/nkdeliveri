@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Restores a backup dump into a TEMPORARY database and verifies it landed
 # intact — never touches production. This is the automated version of the
-# manual restore-test procedure described in docs/BACKUP_RESTORE.md — see
-# docs/BACKUP_SYSTEM_AUDIT_REPORT.md for why this exists (Phase 6 of the
+# manual restore-test procedure described in docs/runbooks/BACKUP_RESTORE.md — see
+# docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md for why this exists (Phase 6 of the
 # 2026-08-05 backup-system remediation).
 #
 # Usage:
@@ -26,7 +26,7 @@
 #
 # Requires: `psql` on PATH, reachable at TEST_DB_URL. This script does NOT
 # spin up a database for you — Docker is not available in every
-# environment this repo is worked in (see docs/BACKUP_SYSTEM_AUDIT_REPORT.md
+# environment this repo is worked in (see docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md
 # § "environnement d'exécution"), so provisioning the target is left
 # explicit rather than silently assumed.
 #
@@ -75,7 +75,7 @@ if [ -f .env.local ]; then
 fi
 
 if ! command -v psql >/dev/null 2>&1; then
-  fail "psql is not available on PATH in this environment. This procedure cannot run without it — see docs/BACKUP_SYSTEM_AUDIT_REPORT.md § environnement d'exécution for the known limitation in the sandboxed session this repo was worked in, and run this script from a machine/CI job where psql (and, if provisioning a fresh instance, Docker) is available instead."
+  fail "psql is not available on PATH in this environment. This procedure cannot run without it — see docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md § environnement d'exécution for the known limitation in the sandboxed session this repo was worked in, and run this script from a machine/CI job where psql (and, if provisioning a fresh instance, Docker) is available instead."
 fi
 
 echo "[test-restore] Target (temporary) host: $TARGET_HOST"

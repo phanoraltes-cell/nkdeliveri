@@ -1,7 +1,7 @@
 /**
  * Orchestrates an inbound Stripe webhook for the Collect flow —
  * signature verification, finalizing the payment, notifications. Unlike
- * PLOP (no webhook exists at all — docs/PLOP_PHASE0_AUDIT.md § 9), Stripe
+ * PLOP (no webhook exists at all — docs/archive/plop/PLOP_PHASE0_AUDIT.md § 9), Stripe
  * both supports and recommends webhooks as the primary confirmation path
  * — this handler mirrors moncash-collect-webhook-handler.server.ts's own
  * shape closely (same idempotency reasoning, same RPC), adapted for
@@ -73,7 +73,7 @@ async function applyEvent(
     // to finalize yet, wait for a later delivery
     // ("checkout.session.async_payment_succeeded"/"_failed", not
     // currently subscribed to in the Stripe dashboard — a known
-    // limitation, see docs/STRIPE_INTEGRATION_REPORT.md).
+    // limitation, see docs/archive/audits/STRIPE_INTEGRATION_REPORT.md).
     return "ignored";
   }
 

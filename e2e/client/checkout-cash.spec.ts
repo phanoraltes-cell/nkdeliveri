@@ -5,7 +5,7 @@ import { rpcResponses } from "../fixtures/rpc-responses";
 
 // "Kach nan livrezon" is the simplest full order+pay flow to mock (no
 // redirect, no proof upload) — see the plan's rationale in
-// docs/E2E_TEST_REPORT.md.
+// docs/archive/audits/E2E_TEST_REPORT.md.
 test.describe("Client — Commander / Payer (Kach)", () => {
   test("places a cash order end to end", async ({ page }) => {
     await mockSupabaseAuth(page, "customer");

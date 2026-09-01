@@ -1,7 +1,7 @@
 /**
  * Home page's "Kategori Pla" discovery rail content — added post-P10,
  * sourced from the `Kategori/` asset drop (10 dish photos, see
- * docs/HOME_KATEGORI_PLA_VIDEO_REPORT.md for the full asset audit). Names
+ * docs/archive/audits/HOME_KATEGORI_PLA_VIDEO_REPORT.md for the full asset audit). Names
  * and taglines below are taken directly from the source filenames (each
  * one already carried a real Haitian dish name and a short French
  * description, e.g. `haiti-1-soup-joumou-symbole-de-liberte-*.webp`) —

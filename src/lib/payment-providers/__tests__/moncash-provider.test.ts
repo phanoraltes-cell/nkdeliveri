@@ -3,7 +3,7 @@
  * what MonCash's connector is and isn't allowed to do. The single most
  * important invariant in this whole integration lives here:
  * direction:"disburse" must NEVER succeed, because MonCash's public API
- * has no B2C disbursement endpoint (see docs/PAYMENT_PROVIDERS.md).
+ * has no B2C disbursement endpoint (see docs/reference/PAYMENT_PROVIDERS.md).
  */
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

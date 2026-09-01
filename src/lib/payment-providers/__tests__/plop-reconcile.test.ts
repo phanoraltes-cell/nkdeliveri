@@ -1,12 +1,12 @@
 /**
  * Unit tests for the daily PLOP Collect reconciliation job — the
- * safety-net path only (docs/PLOP_PHASE1_ARCHITECTURE.md § 3), never the
+ * safety-net path only (docs/archive/plop/PLOP_PHASE1_ARCHITECTURE.md § 3), never the
  * primary confirmation mechanism. Database and `plopProvider.checkStatus()`
  * are both mocked; the RPC-level idempotence this relies on
  * (`complete_collect_payment_secure`'s own `WHERE status='pending'`
  * guard) is verified separately against the live schema. Mirrors
  * moncash-reconcile.test.ts's structure — including, since the Phase 2
- * audit (docs/PLOP_PHASE2_AUDIT.md § A6), mocking the provider layer
+ * audit (docs/archive/plop/PLOP_PHASE2_AUDIT.md § A6), mocking the provider layer
  * (`plopProvider`) rather than the low-level client, matching what
  * plop-reconcile.server.ts now actually calls.
  */
@@ -54,7 +54,7 @@ function buildUserRolesChain(userIds: string[]) {
 /**
  * Default `rpc` mock dispatches by function name so a single helper covers
  * both `complete_collect_payment_secure` (existing behavior) and
- * `flag_stale_collect_payment_secure` (docs/BACKEND_PAYMENT_REMEDIATION.md)
+ * `flag_stale_collect_payment_secure` (docs/archive/misc/BACKEND_PAYMENT_REMEDIATION.md)
  * without every pre-existing test needing to know about the new one.
  */
 function buildSupabaseAdminMock(
@@ -216,7 +216,7 @@ describe("reconcilePendingPlopPayments", () => {
     expect(supabaseAdmin.rpc).not.toHaveBeenCalled();
   });
 
-  it("flags for manual review once stale (>3 days), never guessing a 'failed' decision — calls flag_stale_collect_payment_secure and sends exactly one admin push (docs/BACKEND_PAYMENT_REMEDIATION.md)", async () => {
+  it("flags for manual review once stale (>3 days), never guessing a 'failed' decision — calls flag_stale_collect_payment_secure and sends exactly one admin push (docs/archive/misc/BACKEND_PAYMENT_REMEDIATION.md)", async () => {
     checkStatusMock.mockResolvedValue({ status: "pending", raw: {} });
     const { supabaseAdmin } = buildSupabaseAdminMock(
       [{ external_reference: "REF-5", created_at: recentIso(FOUR_DAYS_MS) }],

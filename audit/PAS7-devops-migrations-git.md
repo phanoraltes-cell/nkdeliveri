@@ -25,13 +25,13 @@
 
 ## DevOps — Anviwònman
 
-- **⚠️ OPS-001 (HIGH, SUSPECTED)**: dokiman pwòp pwojè a (`docs/ENVIRONMENTS.md`) deklare eksplisitman kòm yon risk **pa konfime**: deplwaman Preview Vercel (chak Pull Request) ka pataje MENM baz done Supabase ak production, si varyab anviwònman yo pa gen yon "scope" separe nan Vercel. Si vre, yon tès nan yon PR ka kreye vrè kòmand/peman/notifikasyon vizib pa vrè itilizatè. **Pa verifyab san Vercel Dashboard.**
-- Varyab anviwònman byen dokimante (`.env.example`, `docs/ENVIRONMENTS.md`) ak règ klè (`VITE_` = piblik, san prefiks = sèvè sèlman).
+- **⚠️ OPS-001 (HIGH, SUSPECTED)**: dokiman pwòp pwojè a (`docs/reference/ENVIRONMENTS.md`) deklare eksplisitman kòm yon risk **pa konfime**: deplwaman Preview Vercel (chak Pull Request) ka pataje MENM baz done Supabase ak production, si varyab anviwònman yo pa gen yon "scope" separe nan Vercel. Si vre, yon tès nan yon PR ka kreye vrè kòmand/peman/notifikasyon vizib pa vrè itilizatè. **Pa verifyab san Vercel Dashboard.**
+- Varyab anviwònman byen dokimante (`.env.example`, `docs/reference/ENVIRONMENTS.md`) ak règ klè (`VITE_` = piblik, san prefiks = sèvè sèlman).
 
 ## Backup/Restore
 
 - **⚠️ OPS-002 (MEDIUM, CONFIRMED)**: zouti backup/restore/test-restore byen bati (verifikasyon kontni, seuils, refi sou sib ki sanble ak production) — **men antyèman manyèl**. 0 match nan CI/cron pou okenn nan yo. Backup otomatik Supabase (chak jou) rete "liy defans prensipal" dapre dokiman pwòp ekip la, men estati aktivasyon/retansyon li **pa verifyab san Dashboard**.
-- Istwa pwòp dokiman an montre yon bug REYÈL deja jwenn e korije: yon ansyen vèsyon script backup la te pwodwi silansye yon dump SCHEMA SÈLMAN (san done) depi kòmansman — deja rezoud, `docs/BACKUP_SYSTEM_AUDIT_REPORT.md`.
+- Istwa pwòp dokiman an montre yon bug REYÈL deja jwenn e korije: yon ansyen vèsyon script backup la te pwodwi silansye yon dump SCHEMA SÈLMAN (san done) depi kòmansman — deja rezoud, `docs/archive/audits/BACKUP_SYSTEM_AUDIT_REPORT.md`.
 
 ## CI/CD
 

@@ -1,6 +1,6 @@
 -- NKD-010: product stock decrement + restock on cancel/refund.
 -- Business feature, authorized explicitly by the project owner
--- (docs/NKD-010_STOCK_LOGIC_REPORT.md has the full before/after, D1-D4
+-- (docs/archive/phases/NKD-010_STOCK_LOGIC_REPORT.md has the full before/after, D1-D4
 -- decisions, and test results).
 --
 -- ETAP 0 (mandatory, done before writing this): live data checked via
@@ -10,7 +10,7 @@
 -- "whole menu disappears" risk this feature could otherwise trigger does
 -- not apply to current data.
 --
--- Confirmed decisions (D1-D4, docs/NKD-010_STOCK_LOGIC_REPORT.md):
+-- Confirmed decisions (D1-D4, docs/archive/phases/NKD-010_STOCK_LOGIC_REPORT.md):
 --   D1: every product should eventually carry a real number; a NULL
 --       product is untracked/unlimited (bypasses every check below) until
 --       a restaurant sets one -- no arbitrary default assigned to today's
@@ -62,12 +62,12 @@
 --
 -- APPLIED to production 2026-08-14 via the Management API
 -- (database/query -- the SQL Editor equivalent, not `supabase db push`),
--- after the BEGIN...ROLLBACK test (docs/NKD010_STOCK_TEST.sql) was
+-- after the BEGIN...ROLLBACK test (docs/archive/sql-tests/NKD010_STOCK_TEST.sql) was
 -- actually executed and passed (5/5 assertions), and explicit owner
 -- authorization ("ou ka aplike migrasyon an kounya"). Confirmed live
 -- afterward via pg_proc. Full sequence, including a correction of an
 -- earlier false "tests passed" claim made before the test had actually
--- been run, in docs/NKD-010_STOCK_LOGIC_REPORT.md.
+-- been run, in docs/archive/phases/NKD-010_STOCK_LOGIC_REPORT.md.
 
 CREATE OR REPLACE FUNCTION private.create_order_secure(
   _restaurant_id uuid,

@@ -15,7 +15,7 @@
 // has no useful own-enumerable properties). Detecting this by status/name is
 // more robust than pattern-matching the resulting "{}" string, and also
 // catches any other unreadable body the SDK might produce for the same
-// class of failure in the future (docs/REGISTRATION_DRIVER_RESTAURANT_AUDIT.md
+// class of failure in the future (docs/archive/audits/REGISTRATION_DRIVER_RESTAURANT_AUDIT.md
 // — root cause of every signup showing a literal "{}" toast while Supabase
 // Auth couldn't send the confirmation email).
 const RETRYABLE_STATUS_CODES = new Set([
@@ -34,7 +34,7 @@ function isRetryableInfraError(error: unknown): boolean {
 // to serialize an error properly: an empty/foreign object stringified via
 // JSON.stringify ("{}", "[]"), or the default String() coercion of a bare
 // object, `null`, or `undefined`. A user must never see any of these
-// literally (docs/REGISTRATION_AUTH_REMEDIATION_REPORT.md, Phase 8-9).
+// literally (docs/archive/audits/REGISTRATION_AUTH_REMEDIATION_REPORT.md, Phase 8-9).
 const UNEXPLOITABLE_MESSAGES = new Set(["{}", "[]", "[object Object]", "null", "undefined"]);
 
 function isExploitableMessage(message: string): boolean {

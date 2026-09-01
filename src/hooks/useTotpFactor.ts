@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Thin wrapper around Supabase's own native MFA API
- * (docs/ADMIN_ACCESS_SECURITY_AUDIT.md §8/§9, docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md) —
+ * (docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md §8/§9, docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md) —
  * `supabase.auth.mfa.*` is the entire mechanism; nothing here stores a
  * secret, generates a code, or re-implements TOTP. Shared by
  * `useReauth`/`ReauthDialog` (step-up on a specific sensitive action) and

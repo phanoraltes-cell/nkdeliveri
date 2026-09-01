@@ -83,7 +83,7 @@ async function verifyOptionalBearerMatchesUser(userId: string): Promise<void> {
 // policies keep working.
 //
 // Was `.schema("storage").from("objects").update(...)` — confirmed live
-// (docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5) to have zero effect:
+// (docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 5) to have zero effect:
 // both real objects sampled in production had owner=NULL despite this call
 // running right after each upload. Now goes through a SECURITY DEFINER RPC
 // instead (public.stamp_storage_object_owner_secure,

@@ -1,4 +1,4 @@
--- NatCash Otomatik integration (docs/PLOP_NATCASH_INTEGRATION_PLAN.md).
+-- NatCash Otomatik integration (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md).
 -- MonCash Otomatik and NatCash Otomatik become two independent checkout
 -- buttons, both backed by the same PLOP gateway (plop-provider.server.ts,
 -- unchanged) — only the checkout-flow wiring and this migration's gates
@@ -20,7 +20,7 @@ INSERT INTO public.payment_provider_settings (provider, visible, enabled, defaul
 -- is safe (scripts/check-migration-hazards.mjs only flags a signature
 -- change, confirmed none here). Two hardcodes generalized from "moncash
 -- only" to "moncash or natcash", both flagged in
--- docs/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5 as the real crux of this
+-- docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5 as the real crux of this
 -- chantier:
 --   a) the method-allowlist check (was `<> 'moncash'`)
 --   b) the provider-enabled check (was hardcoded to the `moncash_auto` row
@@ -85,7 +85,7 @@ BEGIN
 
   -- MonCash Otomatik and NatCash Otomatik are independent checkout
   -- buttons — each gated by its OWN payment_provider_settings row, never
-  -- a single shared one (docs/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5).
+  -- a single shared one (docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md § 2.5).
   v_provider_key := CASE WHEN v_payment.method = 'natcash' THEN 'natcash_auto' ELSE 'moncash_auto' END;
   v_provider_label := CASE WHEN v_payment.method = 'natcash' THEN 'NatCash Otomatik' ELSE 'MonCash Otomatik' END;
 

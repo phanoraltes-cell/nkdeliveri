@@ -24,7 +24,7 @@ const IDLE_UNLOCK_FLAG = "nk_admin_idle_unlock_pending";
  *      keyboard/touch/scroll activity (unchanged from the original
  *      session-hardening request).
  *   2. Step-up gate at dashboard entry (Phase 2,
- *      docs/ADMIN_ACCESS_SECURITY_AUDIT.md §9-10) — on mount, asks the
+ *      docs/archive/audits/ADMIN_ACCESS_SECURITY_AUDIT.md §9-10) — on mount, asks the
  *      server (check_admin_step_up_secure(), same "standard" tier used
  *      elsewhere) whether this session already has a valid recent
  *      step-up. If not, starts locked immediately, even on a completely

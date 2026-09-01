@@ -3,7 +3,7 @@
 # requires an explicit --confirm flag and prints exactly which database URL
 # it's about to overwrite before doing anything irreversible — restoring
 # into the wrong environment is the single most damaging mistake this
-# script could make. See docs/BACKUP_RESTORE.md for the full procedure.
+# script could make. See docs/runbooks/BACKUP_RESTORE.md for the full procedure.
 #
 # Usage:
 #   SUPABASE_DB_URL=postgres://... ./scripts/restore-database.sh backups/full_20260101T000000Z.sql --confirm

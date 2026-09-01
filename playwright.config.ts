@@ -1,6 +1,6 @@
 // Deliberately separate from vite.config.ts/vitest.config.ts — same
 // precedent already established for the unit-test config in this repo.
-// See docs/E2E_TEST_REPORT.md for what this suite covers and its known
+// See docs/archive/audits/E2E_TEST_REPORT.md for what this suite covers and its known
 // limitations (full network mock — see e2e/support/mock-supabase.ts).
 import { defineConfig, devices } from "@playwright/test";
 

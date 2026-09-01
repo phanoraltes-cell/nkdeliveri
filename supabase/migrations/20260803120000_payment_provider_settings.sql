@@ -7,7 +7,7 @@
 -- which *checkout method* (kach/moncash/natcash/moncash_auto) a customer
 -- may select. Conflating the two would mean a decaissement-gating change
 -- accidentally affecting checkout, or vice versa — see
--- docs/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md § 1 for the full
+-- docs/archive/payments/PAYMENT_PROVIDER_HARDENING_PHASE0_AUDIT.md § 1 for the full
 -- reasoning. Nothing about `payment_providers`, décaissement RPCs, or
 -- any other existing object is touched by this migration.
 
@@ -45,7 +45,7 @@ GRANT ALL ON public.payment_provider_settings TO service_role;
 -- ---------------------------------------------------------------------------
 -- Seed — Phase 3. Cash is the safe, always-available default; MonCash
 -- Automatik starts disabled (its env vars are absent from Vercel
--- Production as of this writing — see docs/DEPLOYMENT_REPORT.md) with the
+-- Production as of this writing — see docs/archive/audits/DEPLOYMENT_REPORT.md) with the
 -- same maintenance message already shown by the frontend-only measure in
 -- payment-method-availability.ts, now becoming the actual source of truth.
 INSERT INTO public.payment_provider_settings (provider, visible, enabled, default_provider, maintenance_message) VALUES

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/security")
 });
 
 /**
- * Self-service TOTP enrollment (docs/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
+ * Self-service TOTP enrollment (docs/archive/audits/ADMIN_ACCESS_SECURITY_REMEDIATION_REPORT.md).
  * Pure supabase.auth.mfa.* — no secret ever touches this app's own
  * database, no custom crypto. Once a verified factor exists here, the
  * server-side step-up gate (private.admin_step_up_status()) automatically

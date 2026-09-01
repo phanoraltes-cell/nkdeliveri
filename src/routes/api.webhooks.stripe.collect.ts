@@ -9,7 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * (https://www.nkdeliveri.com/api/webhooks/stripe/collect) in the Stripe
  * dashboard, subscribed to `checkout.session.completed` and
  * `checkout.session.expired`, once real Stripe credentials are set — see
- * docs/STRIPE_INTEGRATION_REPORT.md.
+ * docs/archive/audits/STRIPE_INTEGRATION_REPORT.md.
  */
 export const Route = createFileRoute("/api/webhooks/stripe/collect")({
   server: {

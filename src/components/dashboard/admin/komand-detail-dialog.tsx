@@ -27,7 +27,7 @@ import {
 import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
 // Shape mirrors get_order_admin_detail()'s jsonb_build_object exactly
-// (docs/KOMAND_ADMIN_AUDIT.md §Phase2, migration §5). Only the fields this
+// (docs/archive/audits/KOMAND_ADMIN_AUDIT.md §Phase2, migration §5). Only the fields this
 // dialog actually renders are typed — the RPC can carry more columns on
 // `order`/`delivery`/`payment` (full to_jsonb() of each row) without this
 // type needing to track every one of them.

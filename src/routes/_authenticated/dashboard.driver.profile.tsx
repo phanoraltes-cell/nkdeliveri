@@ -106,7 +106,7 @@ function DriverProfile() {
     if (file) setAvatarPreview(URL.createObjectURL(file));
   }
 
-  // Catch-up path for docs/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 9/13
+  // Catch-up path for docs/archive/audits/DRIVER_RESTAURANT_REGISTRATION_AUDIT.md § 9/13
   // (Root Cause R2/R3): the one-shot signup-time upload
   // (finalizeRegistrationDocuments) permanently locks out once the account
   // leaves `pending` or after 2h — there was previously *no* way, for

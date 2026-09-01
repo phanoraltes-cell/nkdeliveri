@@ -2,7 +2,7 @@
 // reused across ≥3 spec files (confirm dialogs, star ratings, add-to-
 // cart) — everything else is a short enough literal that inlining it in
 // each spec is clearer than a full Page Object Model layer (see
-// docs/E2E_TEST_REPORT.md § architecture decision). All text is literal
+// docs/archive/audits/E2E_TEST_REPORT.md § architecture decision). All text is literal
 // Haitian Creole (Kreyòl) copied verbatim from the source components —
 // never translate or paraphrase these strings.
 

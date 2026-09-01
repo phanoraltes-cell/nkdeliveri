@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated")({
     // momentarily failed request bounced an already-logged-in user back to
     // /auth for no real reason (the actual authorization boundary is
     // Postgres RLS on every request, not this client-side guard — see
-    // docs/MIGRATIONS.md and every RPC in supabase/migrations, which never
+    // docs/reference/MIGRATIONS.md and every RPC in supabase/migrations, which never
     // trust the client's role/session claims at face value). A genuinely
     // absent/expired/revoked session still correctly falls through to the
     // redirect below, since getSession() returns `session: null` in all of
