@@ -516,10 +516,16 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
               yo tou, ki jodi a pa gen okenn mwayen wè metòd peman yo san yo pa
               defile jis rive nan footer a. `md:hidden` — desktop kenbe egzakteman
               menm badge pozisyone anba a, san chanjman. */}
-          <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-brand-soft/50 bg-white px-4 py-3 shadow-brand-xs md:hidden">
-            <span className="text-xs font-semibold whitespace-nowrap text-ink-soft">
-              Peman disponib
-            </span>
+          {/* F-08 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — fond
+              changé pour bg-brand sur demande explicite (2026-08-31).
+              text-ink-soft (utilisé avant sur fond blanc) mesure 1.72:1 sur
+              bg-brand — remplacé par text-ink (5.88:1, passe AA) pour éviter
+              de recréer le même échec de contraste que le badge/bouton hero
+              avaient déjà (bg-brand + blanc = 2.80:1, corrigé ailleurs avec
+              bg-ink-warm). border-brand-soft/50 remplacé par border-brand-deep/30
+              pour rester visible sur fond orange plutôt que blanc. */}
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-2xl border border-brand-deep/30 bg-brand px-4 py-3 shadow-brand-xs md:hidden">
+            <span className="text-xs font-semibold whitespace-nowrap text-ink">Peman disponib</span>
             <img
               src="/moncash-logo-hero.png"
               alt="MonCash"
