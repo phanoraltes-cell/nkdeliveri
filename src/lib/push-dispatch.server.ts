@@ -82,6 +82,11 @@ export async function pushToUsers(
   // lookup failure doesn't get mistaken for that change itself failing.
   if (subsErr) console.error("[pushToUsers] failed to load subscriptions", subsErr);
   if (prefErr) console.error("[pushToUsers] failed to load preferences", prefErr);
+  // Odit Faz 5.6/7 — san sa a, yon echèk BD isit la (subsErr) te ekri EGZAKTEMAN
+  // menm rezon an ("no_subscription") nan notification_log tankou yon itilizatè
+  // ki reyèlman pa gen okenn abònman aktif — de ka byen diferan endistenkib nan
+  // ekran dyagnostik admin lan (bati espesyalman pou detekte pwoblèm sa yo).
+  const subsLoadFailed = !!subsErr;
 
   const prefsByUser = new Map(
     (prefRows ?? []).map((r) => [r.user_id, r.prefs as Record<string, unknown>]),
@@ -105,7 +110,11 @@ export async function pushToUsers(
           channel: "push",
           title: payload.title,
           status: "skipped",
-          error: pushDisabledUsers.has(uid) ? "push_disabled" : "no_subscription",
+          error: pushDisabledUsers.has(uid)
+            ? "push_disabled"
+            : subsLoadFailed
+              ? "subscriptions_lookup_failed"
+              : "no_subscription",
         }),
       ),
     );
