@@ -1330,6 +1330,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_intents: {
+        Row: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency?: string;
+          error?: string | null;
+          external_reference: string;
+          id?: string;
+          payment_method: string;
+          provider?: string;
+          provider_transaction_id?: string | null;
+          raw_payload?: Json | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          confirmed_at?: string | null;
+          created_at?: string;
+          currency?: string;
+          error?: string | null;
+          external_reference?: string;
+          id?: string;
+          payment_method?: string;
+          provider?: string;
+          provider_transaction_id?: string | null;
+          raw_payload?: Json | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       payment_methods: {
         Row: {
           code: string;
@@ -2959,6 +3010,7 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           id: string;
+          idempotency_key: string | null;
           lifetime_delta: number;
           note: string | null;
           paid_delta: number;
@@ -2973,6 +3025,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           id?: string;
+          idempotency_key?: string | null;
           lifetime_delta?: number;
           note?: string | null;
           paid_delta?: number;
@@ -2987,6 +3040,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           id?: string;
+          idempotency_key?: string | null;
           lifetime_delta?: number;
           note?: string | null;
           paid_delta?: number;
@@ -3030,6 +3084,7 @@ export type Database = {
           pending_balance: number;
           restaurant_id: string | null;
           updated_at: string;
+          user_id: string | null;
         };
         Insert: {
           available_balance?: number;
@@ -3041,6 +3096,7 @@ export type Database = {
           pending_balance?: number;
           restaurant_id?: string | null;
           updated_at?: string;
+          user_id?: string | null;
         };
         Update: {
           available_balance?: number;
@@ -3052,6 +3108,7 @@ export type Database = {
           pending_balance?: number;
           restaurant_id?: string | null;
           updated_at?: string;
+          user_id?: string | null;
         };
         Relationships: [
           {
@@ -3333,6 +3390,37 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      complete_wallet_topup_secure: {
+        Args: {
+          _decision: string;
+          _error?: string;
+          _external_reference: string;
+          _provider_transaction_id?: string;
+          _raw_payload?: Json;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3729,6 +3817,38 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_wallet_topup_secure: {
+        Args: {
+          _amount: number;
+          _error?: string;
+          _external_reference: string;
+          _payment_method: string;
+          _provider_transaction_id?: string;
+          _status?: string;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       delete_menu_category_secure: {
         Args: { _category_id: string };
         Returns: undefined;
@@ -3822,6 +3942,10 @@ export type Database = {
           order_number: string;
           outcome: string;
         }[];
+      };
+      expire_stale_wallet_topups_secure: {
+        Args: { _older_than_minutes?: number };
+        Returns: number;
       };
       fail_pending_payout_secure: {
         Args: {
@@ -4456,6 +4580,20 @@ export type Database = {
           not_after: string;
           refreshed_at: string;
           user_agent: string;
+        }[];
+      };
+      get_my_customer_wallet_secure: {
+        Args: never;
+        Returns: { available_balance: number; lifetime_earnings: number }[];
+      };
+      get_my_customer_wallet_history_secure: {
+        Args: { _from?: string; _limit?: number; _offset?: number; _to?: string };
+        Returns: {
+          available_delta: number;
+          created_at: string;
+          id: string;
+          note: string | null;
+          type: string;
         }[];
       };
       get_order_admin_detail: {
