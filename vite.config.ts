@@ -146,24 +146,22 @@ export default defineConfig({
           //    image bytes to returning visitors for up to 30 days after
           //    the next content swap. A new filename is a guaranteed cache
           //    MISS regardless of any client's existing SW cache state.
-          //    v2 kept on disk (not deleted) but no longer referenced —
-          //    same "unused, don't pay for it upfront" reasoning as
-          //    scooter.jpg below.
+          //    -v2 (app-mockup-v2.png) was kept on disk unreferenced for a
+          //    while, then deleted (odit tout baz la, Faz 3/7, 2026-08-31)
+          //    — no longer needs a globIgnores entry of its own (a glob
+          //    can't match a file that doesn't exist).
           //  - scooter.png (1.4 MB, newsletter-section.tsx): same
           //    `loading="lazy"` deferral, same reasoning — replaced
           //    scooter.jpg (61 kB) as the newsletter card's image. At
           //    1.4 MB this is now the single largest asset on the home
           //    page; an eager precache would defeat the lazy deferral for
           //    every visitor, whether or not they scroll to the card.
-          //  - scooter.jpg (61 kB): kept on disk (not deleted) but no
-          //    longer referenced anywhere in src/ after the swap above —
-          //    same "unused, don't pay for it upfront" reasoning as
-          //    payment-global/** below.
-          //  - bg-hero.png (1.9 MB, was hero-section.tsx's mobile hero):
-          //    replaced by bg-hero-v2.png/.webp (BRIEF — HERO MOBIL PWA,
-          //    2026-08-28, re-crop + overlay work). Same "unused, don't
-          //    pay for it upfront" reasoning as scooter.jpg above — kept
-          //    on disk, not deleted.
+          //  - scooter.jpg (61 kB, unreferenced since the scooter.png swap
+          //    above) and bg-hero.png (1.9 MB, unreferenced since the
+          //    bg-hero-v2.png/.webp swap, BRIEF — HERO MOBIL PWA,
+          //    2026-08-28) were both deleted (odit tout baz la, Faz 3/7,
+          //    2026-08-31) rather than left unreferenced on disk — neither
+          //    needs a globIgnores entry any more.
           //  - bg-hero-v2.png (2.44 MB, canvas-re-encoded <picture>
           //    fallback for the file above): excluded here for the exact
           //    reason hero-livreur.png once was below — it exceeds
@@ -204,10 +202,7 @@ export default defineConfig({
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
             "app-mockup-v3.png",
-            "app-mockup-v2.png",
             "scooter.png",
-            "scooter.jpg",
-            "bg-hero.png",
             "bg-hero-v2.png",
           ],
         },
