@@ -52,6 +52,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/customer", label: "Akèy", icon: LayoutDashboard },
     { to: "/restaurants", label: "Restoran", icon: Store },
     { to: "/orders", label: "Kòmand mwen", icon: ShoppingBag },
+    { to: "/dashboard/customer/wallet", label: "Wallet mwen", icon: Wallet },
     { to: "/dashboard/customer/chat", label: "Chat", icon: MessageCircle },
     { to: "/profile", label: "Adrès ak peman", icon: MapPin },
   ],

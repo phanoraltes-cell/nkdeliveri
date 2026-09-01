@@ -22,7 +22,7 @@ import type { Database } from "@/integrations/supabase/types";
  */
 
 export type CheckoutProviderId =
-  "kach" | "moncash" | "natcash" | "moncash_auto" | "natcash_auto" | "stripe";
+  "kach" | "moncash" | "natcash" | "moncash_auto" | "natcash_auto" | "stripe" | "wallet";
 
 /**
  * Human-readable label per checkout method — same wording as checkout.tsx's
@@ -40,6 +40,7 @@ export const PAYMENT_METHOD_LABEL: Record<CheckoutProviderId, string> = {
   moncash_auto: "MonCash Otomatik",
   natcash_auto: "NatCash Otomatik",
   stripe: "Kat Kredi",
+  wallet: "Wallet",
 };
 
 /**

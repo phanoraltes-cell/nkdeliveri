@@ -113,6 +113,9 @@ const METHODS = [
   },
   { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo-new.png" },
   { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
+  // Tach 1C — sub la re-kalkile pi ba (montre balans aktyèl la), men
+  // rete isit la kòm valè default pandan balans lan poko chaje.
+  { id: "wallet", label: "Wallet", sub: "Peye ak balans wallet ou", logo: null },
 ] as const;
 
 type CheckoutMethod = (typeof METHODS)[number]["id"];
@@ -185,6 +188,20 @@ function Checkout() {
       return Array.isArray(data) ? data[0] : data;
     },
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Tach 1C — balans wallet la, sèlman itil si kliyan an konekte. Sèvè a
+  // (create_order_secure) reverifye balans la endepandan — sa a se
+  // sèlman pou UX (montre balans + bouton "Rechaje" si li pa ase).
+  const walletBalance = useQuery({
+    queryKey: ["my-customer-wallet", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_my_customer_wallet_secure");
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] : data;
+    },
+    staleTime: 30 * 1000,
   });
 
   const savedAddresses = useQuery({
@@ -349,6 +366,13 @@ function Checkout() {
       toast.error("Restoran an fèmen kounye a. Tanpri eseye pita.");
       return;
     }
+    // Tach 1C — defans an plis kliyan-side; sèvè a (create_order_secure)
+    // reverifye balans la endepandan nan menm tranzaksyon an, se sa ki
+    // konte reyèlman.
+    if (method === "wallet" && (walletBalance.data?.available_balance ?? 0) < total) {
+      toast.error("Balans wallet ou pa ase pou peye kòmand sa a. Rechaje wallet ou anvan.");
+      return;
+    }
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
@@ -454,7 +478,9 @@ function Checkout() {
       toast.success(
         orderMethod === "moncash" || orderMethod === "natcash"
           ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
-          : "Kòmand kreye ak siksè",
+          : orderMethod === "wallet"
+            ? "Kòmand peye ak wallet ou — konfime imedyatman!"
+            : "Kòmand kreye ak siksè",
       );
       nav({ to: "/orders/$id", params: { id: orderId } });
     } catch (e) {
@@ -790,6 +816,38 @@ function Checkout() {
                           {info.via} la pou w peye dirèkteman. Kòmand la konfime otomatikman apre
                           peman an fin fèt — pa gen prèv pou telechaje.
                         </div>
+                      </div>
+                    );
+                  })()}
+                {method === "wallet" &&
+                  (() => {
+                    const balance = walletBalance.data?.available_balance ?? 0;
+                    const insufficient = !walletBalance.isLoading && balance < total;
+                    return (
+                      <div
+                        className={`mt-3 rounded-xl p-3 text-xs ${insufficient ? "bg-red-50 text-red-900" : "bg-emerald-50 text-emerald-900"}`}
+                      >
+                        {walletBalance.isLoading ? (
+                          "Ap chaje balans wallet ou…"
+                        ) : (
+                          <>
+                            Balans wallet ou: <b>{formatHTG(balance)}</b>
+                            {insufficient ? (
+                              <>
+                                {" "}
+                                — sa pa ase pou peye {formatHTG(total)}.{" "}
+                                <Link
+                                  to="/dashboard/customer/wallet"
+                                  className="font-bold underline underline-offset-2"
+                                >
+                                  Rechaje wallet ou
+                                </Link>
+                              </>
+                            ) : (
+                              " — ase pou peye kòmand sa a. Debi a imedya, pa gen prèv pou telechaje."
+                            )}
+                          </>
+                        )}
                       </div>
                     );
                   })()}

@@ -25,6 +25,11 @@ import { createFileRoute } from "@tanstack/react-router";
  * migration's own comment) drift against commission_ledger. Own try/catch,
  * same isolation reasoning as the retention block above.
  *
+ * Also runs the customer wallet top-up reconciliation (Tach 1B, PROMPT
+ * MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) — same Hobby-plan-cron-limit
+ * reasoning, a 4th isolated try/catch block, never allowed to mask or be
+ * masked by the 3 concerns above.
+ *
  * Protected by CRON_SECRET (same convention as
  * api.cron.moncash-reconcile.ts — Vercel automatically sends
  * `Authorization: Bearer <value>` on scheduled invocations, see
@@ -90,12 +95,27 @@ export const Route = createFileRoute("/api/cron/plop-reconcile")({
           walletReconciliationResult = { ok: false, error: message };
         }
 
+        // Tach 1B — menm izolasyon: yon echèk rekonsilyasyon rechaj wallet
+        // pa dwe janm kache/kaptire pa okenn nan 3 lòt konsèn yo pi wo a.
+        let walletTopupResult: { ok: true; summary: unknown } | { ok: false; error: string };
+        try {
+          const { reconcilePendingWalletTopups } =
+            await import("@/lib/payment-providers/plop-wallet-topup-reconcile.server");
+          const summary = await reconcilePendingWalletTopups();
+          walletTopupResult = { ok: true, summary };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("[wallet-topup-reconcile] failed", message);
+          walletTopupResult = { ok: false, error: message };
+        }
+
         return new Response(
           JSON.stringify({
             ok: plopResult.ok,
             plop: plopResult,
             retention: retentionResult,
             walletReconciliation: walletReconciliationResult,
+            walletTopup: walletTopupResult,
           }),
           {
             status: plopResult.ok ? 200 : 500,

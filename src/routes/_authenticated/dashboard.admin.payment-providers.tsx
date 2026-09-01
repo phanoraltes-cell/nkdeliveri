@@ -25,6 +25,7 @@ const PROVIDER_LABELS: Record<CheckoutProviderId, string> = {
   moncash_auto: "MonCash Otomatik",
   natcash_auto: "NatCash Otomatik",
   stripe: "Kat Kredi (Stripe)",
+  wallet: "Wallet",
 };
 
 type ProviderSettingRow = {

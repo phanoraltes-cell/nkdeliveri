@@ -6185,7 +6185,7 @@ export type Database = {
         | "cancelled"
         | "refunded"
         | "delivery_failed";
-      payment_method: "stripe" | "moncash" | "natcash" | "kach";
+      payment_method: "stripe" | "moncash" | "natcash" | "kach" | "wallet";
       payment_status:
         "pending" | "awaiting_proof" | "under_review" | "paid" | "failed" | "refunded";
       payout_status: "paid" | "confirmed" | "disputed" | "resolved";
@@ -6364,7 +6364,7 @@ export const Constants = {
         "refunded",
         "delivery_failed",
       ],
-      payment_method: ["stripe", "moncash", "natcash", "kach"],
+      payment_method: ["stripe", "moncash", "natcash", "kach", "wallet"],
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],
       payout_status: ["paid", "confirmed", "disputed", "resolved"],
       refund_status: ["requested", "approved", "rejected", "completed"],

@@ -1,0 +1,15 @@
+-- PROMPT MODIFIKASYON (WALLET, DEKÈSMAN, PIBLISITE) — Tach 1C, etap 1/2.
+--
+-- Ajoute 'wallet' nan ENUM public.payment_method (aktyèlman
+-- stripe|moncash|natcash|kach). SEPARE DELIBEREMAN de migrasyon ki pral
+-- itilize valè a (checkout, create_order_secure) — Postgres pa pèmèt yon
+-- ENUM ADD VALUE ak yon itilizasyon (INSERT/comparison, pa yon kò fonksyon
+-- ki jis defini) nan MENM transaksyon an. Menm apwòch egzat ak
+-- 20260817110000_nkd016_delivery_failed_enum_values.sql (ki te separe
+-- 'delivery_failed' nan pwòp fichye li, itilize apre nan
+-- 20260817120000_nkd016_delivery_failed.sql).
+--
+-- San danje pou done ki egziste yo: ADD VALUE IF NOT EXISTS pa touche
+-- okenn ranje aktyèl, e okenn kòd pa itilize 'wallet' toujou (pwochen
+-- migrasyon an ap fè sa).
+ALTER TYPE public.payment_method ADD VALUE IF NOT EXISTS 'wallet';

@@ -66,6 +66,7 @@ import { Route as AuthenticatedDashboardDriverDisputesRouteImport } from './rout
 import { Route as AuthenticatedDashboardDriverCommissionsRouteImport } from './routes/_authenticated/dashboard.driver.commissions'
 import { Route as AuthenticatedDashboardDriverChatRouteImport } from './routes/_authenticated/dashboard.driver.chat'
 import { Route as AuthenticatedDashboardDriverAvailableRouteImport } from './routes/_authenticated/dashboard.driver.available'
+import { Route as AuthenticatedDashboardCustomerWalletRouteImport } from './routes/_authenticated/dashboard.customer.wallet'
 import { Route as AuthenticatedDashboardCustomerChatRouteImport } from './routes/_authenticated/dashboard.customer.chat'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
 import { Route as AuthenticatedDashboardAdminSecurityRouteImport } from './routes/_authenticated/dashboard.admin.security'
@@ -410,6 +411,12 @@ const AuthenticatedDashboardDriverAvailableRoute =
     path: '/available',
     getParentRoute: () => AuthenticatedDashboardDriverRoute,
   } as any)
+const AuthenticatedDashboardCustomerWalletRoute =
+  AuthenticatedDashboardCustomerWalletRouteImport.update({
+    id: '/wallet',
+    path: '/wallet',
+    getParentRoute: () => AuthenticatedDashboardCustomerRoute,
+  } as any)
 const AuthenticatedDashboardCustomerChatRoute =
   AuthenticatedDashboardCustomerChatRouteImport.update({
     id: '/chat',
@@ -632,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
+  '/dashboard/customer/wallet': typeof AuthenticatedDashboardCustomerWalletRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
   '/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
@@ -712,6 +720,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
+  '/dashboard/customer/wallet': typeof AuthenticatedDashboardCustomerWalletRoute
   '/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
   '/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
@@ -799,6 +808,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/_authenticated/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
+  '/_authenticated/dashboard/customer/wallet': typeof AuthenticatedDashboardCustomerWalletRoute
   '/_authenticated/dashboard/driver/available': typeof AuthenticatedDashboardDriverAvailableRoute
   '/_authenticated/dashboard/driver/chat': typeof AuthenticatedDashboardDriverChatRoute
   '/_authenticated/dashboard/driver/commissions': typeof AuthenticatedDashboardDriverCommissionsRoute
@@ -886,6 +896,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/security'
     | '/dashboard/admin/users'
     | '/dashboard/customer/chat'
+    | '/dashboard/customer/wallet'
     | '/dashboard/driver/available'
     | '/dashboard/driver/chat'
     | '/dashboard/driver/commissions'
@@ -966,6 +977,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/security'
     | '/dashboard/admin/users'
     | '/dashboard/customer/chat'
+    | '/dashboard/customer/wallet'
     | '/dashboard/driver/available'
     | '/dashboard/driver/chat'
     | '/dashboard/driver/commissions'
@@ -1052,6 +1064,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/security'
     | '/_authenticated/dashboard/admin/users'
     | '/_authenticated/dashboard/customer/chat'
+    | '/_authenticated/dashboard/customer/wallet'
     | '/_authenticated/dashboard/driver/available'
     | '/_authenticated/dashboard/driver/chat'
     | '/_authenticated/dashboard/driver/commissions'
@@ -1508,6 +1521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDriverAvailableRouteImport
       parentRoute: typeof AuthenticatedDashboardDriverRoute
     }
+    '/_authenticated/dashboard/customer/wallet': {
+      id: '/_authenticated/dashboard/customer/wallet'
+      path: '/wallet'
+      fullPath: '/dashboard/customer/wallet'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomerWalletRouteImport
+      parentRoute: typeof AuthenticatedDashboardCustomerRoute
+    }
     '/_authenticated/dashboard/customer/chat': {
       id: '/_authenticated/dashboard/customer/chat'
       path: '/chat'
@@ -1792,6 +1812,7 @@ const AuthenticatedDashboardAdminRouteWithChildren =
 
 interface AuthenticatedDashboardCustomerRouteChildren {
   AuthenticatedDashboardCustomerChatRoute: typeof AuthenticatedDashboardCustomerChatRoute
+  AuthenticatedDashboardCustomerWalletRoute: typeof AuthenticatedDashboardCustomerWalletRoute
   AuthenticatedDashboardCustomerIndexRoute: typeof AuthenticatedDashboardCustomerIndexRoute
 }
 
@@ -1799,6 +1820,8 @@ const AuthenticatedDashboardCustomerRouteChildren: AuthenticatedDashboardCustome
   {
     AuthenticatedDashboardCustomerChatRoute:
       AuthenticatedDashboardCustomerChatRoute,
+    AuthenticatedDashboardCustomerWalletRoute:
+      AuthenticatedDashboardCustomerWalletRoute,
     AuthenticatedDashboardCustomerIndexRoute:
       AuthenticatedDashboardCustomerIndexRoute,
   }
