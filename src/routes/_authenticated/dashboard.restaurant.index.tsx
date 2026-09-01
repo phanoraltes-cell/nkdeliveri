@@ -23,7 +23,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
-import { DashboardAdCard } from "@/components/dashboard/cards/dashboard-ad-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -333,8 +332,6 @@ function RestaurantDashboard() {
               />
             )}
           </div>
-
-          <DashboardAdCard />
 
           {isOwner && (
             <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">

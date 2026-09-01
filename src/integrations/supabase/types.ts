@@ -2725,6 +2725,7 @@ export type Database = {
           created_at: string;
           created_by: string;
           cta_label: string | null;
+          dashboard_targets: string[];
           description: string | null;
           ends_at: string;
           id: string;
@@ -2753,6 +2754,7 @@ export type Database = {
           created_at?: string;
           created_by: string;
           cta_label?: string | null;
+          dashboard_targets?: string[];
           description?: string | null;
           ends_at: string;
           id?: string;
@@ -2781,6 +2783,7 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           cta_label?: string | null;
+          dashboard_targets?: string[];
           description?: string | null;
           ends_at?: string;
           id?: string;
@@ -3670,6 +3673,7 @@ export type Database = {
         Args: {
           _alt_text?: string;
           _cta_label?: string;
+          _dashboard_targets?: string[];
           _description?: string;
           _ends_at: string;
           _image_url?: string;
@@ -3695,6 +3699,7 @@ export type Database = {
           created_at: string;
           created_by: string;
           cta_label: string | null;
+          dashboard_targets: string[];
           description: string | null;
           ends_at: string;
           id: string;
@@ -3873,7 +3878,7 @@ export type Database = {
         Returns: string[];
       };
       get_active_placements_secure: {
-        Args: { _limit?: number; _placement: string };
+        Args: { _context?: string; _limit?: number; _placement: string };
         Returns: {
           alt_text: string;
           cta_label: string;
@@ -5949,6 +5954,7 @@ export type Database = {
         Args: {
           _alt_text?: string;
           _cta_label?: string;
+          _dashboard_targets?: string[];
           _description?: string;
           _ends_at: string;
           _id: string;
@@ -5973,6 +5979,7 @@ export type Database = {
           created_at: string;
           created_by: string;
           cta_label: string | null;
+          dashboard_targets: string[];
           description: string | null;
           ends_at: string;
           id: string;

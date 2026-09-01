@@ -14,7 +14,6 @@ import { SITE_URL } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { ImageWithFallback } from "@/components/image-with-fallback";
-import { useActivePlacements } from "@/hooks/useActivePlacements";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { Chip } from "@/components/ui/chip";
 
@@ -96,13 +95,6 @@ function RestaurantsPage() {
   const nav = useNavigate();
   const navSearch = Route.useNavigate();
 
-  // Sponsored restaurants (Phase 6) only make sense at the top of an
-  // unfiltered first page — showing them on page 3 of a name search would
-  // read as broken relevance, not "promoted".
-  const showSponsored = !q?.trim() && (page ?? 1) === 1;
-  const sponsored = useActivePlacements("search_results", 2);
-  const sponsoredRows = showSponsored ? (sponsored.data ?? []) : [];
-
   // NKD-015: platform-wide fee (admin-set), not restaurant-set — both
   // r.delivery_fee (main list) and s.restaurant_delivery_fee (sponsored
   // cards) no longer reflect the real charged fee since
@@ -166,65 +158,6 @@ function RestaurantsPage() {
             Pi rapid
           </Chip>
         </div>
-        {sponsoredRows.filter((s) => s.restaurant_slug).length > 0 && (
-          <>
-            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">
-              Sponsorize
-            </div>
-            <div className="mb-6 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
-              {sponsoredRows
-                .filter((s) => s.restaurant_slug)
-                .map((s, i) => (
-                  <Link
-                    key={s.id}
-                    to="/restaurants/$slug"
-                    params={{ slug: s.restaurant_slug! }}
-                    className="group overflow-hidden rounded-3xl bg-white shadow-brand-xs ring-1 ring-amber-300 transition hover:-translate-y-1.5 hover:shadow-brand-md"
-                  >
-                    <div className="relative overflow-hidden">
-                      <ImageWithFallback
-                        src={s.restaurant_cover_url}
-                        alt={s.restaurant_name ?? s.title}
-                        icon={Store}
-                        // Refonte Frontend Premium, Phase 8 (P8) — this
-                        // sponsored row renders first, above the fold, on
-                        // every viewport this grid supports (min 1
-                        // column). `loading="lazy"` on an image already
-                        // in the initial viewport can delay its own
-                        // fetch and is a documented LCP anti-pattern; only
-                        // defer past the first row actually likely to be
-                        // off-screen.
-                        loading={i < 4 ? undefined : "lazy"}
-                        width={240}
-                        height={144}
-                        className="h-36 w-full object-cover transition duration-500 group-hover:scale-110"
-                      />
-                      <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold uppercase text-amber-950 shadow-md">
-                        Peye
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-display text-base font-extrabold">{s.restaurant_name}</h3>
-                      <p className="mt-1 text-xs text-ink-soft">
-                        {s.restaurant_cuisine} · {s.restaurant_address}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink-soft">
-                        {s.restaurant_rating != null && (
-                          <span className="rounded-full bg-brand-soft px-2 py-0.5 font-bold text-brand-deep">
-                            ★ {Number(s.restaurant_rating).toFixed(1)}
-                          </span>
-                        )}
-                        {s.restaurant_avg_prep_time != null && (
-                          <span>{s.restaurant_avg_prep_time} min</span>
-                        )}
-                        {deliveryFee.data != null && <span>{formatHTG(deliveryFee.data)}</span>}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </>
-        )}
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           {rows.map((r, i) => (
             <Link

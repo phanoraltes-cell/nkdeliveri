@@ -14,15 +14,30 @@ import { cn } from "@/lib/utils";
 const POPUP_LIMIT = 6;
 const AUTO_ADVANCE_MS = 6000;
 
-// "Jamè pandan checkout" (demand eksplisit) — ak /auth ak /dashboard pou
-// menm rezon (yon modal ki mande aksyon pa dwe janm parazite yon flux
-// kritik: peman, konekte, oswa jesyon kont/restoran/livrezon).
+// "Jamè pandan checkout/peman/retrè, ni pandan konekte, ni nan dashboard
+// admin" (demand eksplisit, Tach 2 — WALLET/DEKÈSMAN/PIBLISITE) — sa a rete
+// yon EGZKLIZYON DIRÈK, endepandan de `dashboard_targets`: menm si yon
+// popup ta gen 'public' nan sib li, li pa janm parèt sou youn nan chemen sa
+// yo. Dashboard admin eksklu paske spesifikasyon an mande sèlman 3 dashboard
+// posib (kliyan/restoran/livrè) — pa gen valè "dashboard_admin" nan CHECK
+// baz done a menm. "/dashboard/*/payouts" kouvri paj retrè restoran/livrè
+// aktyèl yo; yon lòt chemen retrè lajan (Tach 3, kliyan/wallet) ta dwe
+// ajoute isit la tou lè li kreye.
 function isPopupExcludedRoute(pathname: string): boolean {
   return (
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/dashboard")
+    pathname.startsWith("/dashboard/admin") ||
+    pathname.includes("/payouts")
   );
+}
+
+// Tach 2 — kontèks popup la deside ki `dashboard_targets` ki aplike.
+function popupContext(pathname: string): string {
+  if (pathname.startsWith("/dashboard/customer")) return "dashboard_customer";
+  if (pathname.startsWith("/dashboard/restaurant")) return "dashboard_restaurant";
+  if (pathname.startsWith("/dashboard/driver")) return "dashboard_driver";
+  return "public";
 }
 
 /**
@@ -38,7 +53,7 @@ function isPopupExcludedRoute(pathname: string): boolean {
  */
 export function PopupAdModal() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const placements = useActivePlacements("popup", POPUP_LIMIT);
+  const placements = useActivePlacements("popup", POPUP_LIMIT, popupContext(pathname));
   const ads = placements.data ?? [];
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);

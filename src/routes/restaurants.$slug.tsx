@@ -16,7 +16,6 @@ import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
-import { SponsoredSection } from "@/components/restaurant/sponsored-section";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { useIsRestaurantOpen } from "@/hooks/useIsRestaurantOpen";
 
@@ -354,8 +353,6 @@ function RestaurantPage() {
             );
           })}
         </div>
-
-        <SponsoredSection currentRestaurantId={r.id} />
 
         {visibleCats.map((cat) => {
           const items =

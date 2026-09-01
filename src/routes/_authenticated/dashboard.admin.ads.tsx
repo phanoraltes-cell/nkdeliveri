@@ -39,17 +39,16 @@ const PLACEMENT_LABEL: Record<string, string> = {
   popup: "Popup (modal)",
 };
 
-// Only these placements actually render the ad's OWN media
-// (ad-banner-section.tsx, sponsored-section.tsx, popup-ad-modal.tsx) —
-// "search_results" shows the boosted restaurant's own cover photo instead
-// (restaurants.index.tsx), and "dashboard" is a small text-only card with
-// no image slot at all (dashboard-ad-card.tsx, by design — "never a
-// takeover"). The live-preview frame below only makes sense for the ones
-// that do.
+// Tach 2 (piblisite) — home_banner/search_results/restaurant_page/dashboard
+// pa ka kreye ankò e pa gen okenn kòmponan k ap rann yo ankò (ad-banner-
+// section.tsx, sponsored-section.tsx, dashboard-ad-card.tsx te efase),
+// men aparèy sa a rete pou monte apèsi a sou ansyen ranje ki toujou vizib
+// (dezaktive) nan lis "Bannyè (ansyen, dezaktive)" pi ba a. "popup" se sèl
+// tip ki gen yon vrè editè/apèsi aktif jodi a (popup-ad-modal.tsx).
 const PLACEMENT_MEDIA_FRAME: Record<string, string | null> = {
   home_banner: "aspect-[16/9]",
   search_results: null,
-  restaurant_page: "aspect-[23/15]", // matches sponsored-section.tsx's real 230×150 card exactly
+  restaurant_page: "aspect-[23/15]", // te koresponn ak kat 230×150 sponsored-section.tsx (efase)
   dashboard: null,
   popup: "aspect-[16/9]", // matches popup-ad-modal.tsx's hero image frame (premium redesign)
 };
@@ -195,6 +194,9 @@ function AdminAds() {
         // inactive pa dwe janm efase dimansyon estoke yo.
         _media_width: p.media_width ?? undefined,
         _media_height: p.media_height ?? undefined,
+        // Tach 2 — menm rezon: toggle pa dwe reyajiste kote popup la gen
+        // dwa parèt tounen 'public' sèlman.
+        _dashboard_targets: p.dashboard_targets,
         ...passthroughExtraFields(p),
       });
       if (error) throw error;
@@ -228,8 +230,9 @@ function AdminAds() {
         <div>
           <h1 className="font-display text-3xl font-extrabold text-ink">Piblisite</h1>
           <p className="mt-1 text-ink-soft">
-            Jere anons sponsorize yo — bannyè (akèy, rezilta rechèch, paj restoran, dashboard) ak
-            popup (modal).
+            Jere anons popup (modal) yo. Ansyen bannyè yo (akèy, rezilta rechèch, paj restoran,
+            dashboard) rete vizib anba pou istorik men dezaktive — pa gen nouvo bannyè ki ka kreye
+            ankò.
           </p>
         </div>
         <Link to="/dashboard/admin" className="text-sm font-bold text-brand-deep hover:underline">
@@ -270,7 +273,7 @@ function AdminAds() {
           aksyon eksplisit pou fèmen) — de eksperyans fondalman diferan,
           jistifye 2 seksyon separe olye yon sèl lis long melanje. */}
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-bold text-ink">Bannyè</h2>
+        <h2 className="font-display text-lg font-bold text-ink">Bannyè (ansyen, dezaktive)</h2>
         <div className="space-y-3">
           {bannerAds.map((p) => (
             <PlacementCard
@@ -411,7 +414,9 @@ function PlacementForm({
   onSaved: () => void;
 }) {
   const [f, setF] = useState({
-    placement: placement?.placement ?? "home_banner",
+    // Tach 2 (piblisite) — sèlman "popup" ka kreye kounye a (RPC la rejte
+    // lòt valè). Modifikasyon yon ansyen bannyè kenbe pwòp `placement` li.
+    placement: placement?.placement ?? "popup",
     restaurant_id: placement?.restaurant_id ?? "",
     title: placement?.title ?? initialTitle ?? "",
     description: placement?.description ?? initialDescription ?? "",
@@ -419,6 +424,7 @@ function PlacementForm({
     starts_at: placement?.starts_at ? placement.starts_at.slice(0, 10) : "",
     ends_at: placement?.ends_at ? placement.ends_at.slice(0, 10) : "",
     sort_order: placement?.sort_order != null ? String(placement.sort_order) : "0",
+    dashboardTargets: placement?.dashboard_targets ?? ["public"],
   });
   const [media, setMedia] = useState<MediaUploaderValue>(() => mediaFromPlacement(placement));
   const [saving, setSaving] = useState(false);
@@ -484,6 +490,8 @@ function PlacementForm({
     if (!f.title.trim()) return toast.error("Tit anons lan obligatwa");
     if (!f.description.trim()) return toast.error("Deskripsyon anons lan obligatwa");
     if (!f.starts_at || !f.ends_at) return toast.error("Chwazi dat kòmansman ak dat fen");
+    if (f.placement === "popup" && f.dashboardTargets.length === 0)
+      return toast.error("Chwazi omwen yon kote pou popup la parèt");
     const startsAt = new Date(f.starts_at).toISOString();
     const endsAt = new Date(f.ends_at + "T23:59:59").toISOString();
     if (new Date(endsAt) <= new Date(startsAt))
@@ -508,6 +516,7 @@ function PlacementForm({
           _alt_text: media.altText || undefined,
           _media_width: media.mediaWidth ?? undefined,
           _media_height: media.mediaHeight ?? undefined,
+          _dashboard_targets: f.dashboardTargets,
           ...passthroughExtraFields(placement),
         });
         if (error) {
@@ -552,6 +561,7 @@ function PlacementForm({
           _alt_text: media.altText || undefined,
           _media_width: media.mediaWidth ?? undefined,
           _media_height: media.mediaHeight ?? undefined,
+          _dashboard_targets: f.dashboardTargets,
         });
         if (error) {
           cleanupOrphanUpload();
@@ -578,24 +588,63 @@ function PlacementForm({
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <select
-          aria-label="Anplasman"
-          className={inputCls()}
-          value={f.placement}
-          disabled={!!placement}
-          onChange={(e) => setF({ ...f, placement: e.target.value })}
-        >
-          {Object.entries(PLACEMENT_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
+        {/* Tach 2 (piblisite) — sèlman "popup" ka kreye kounye a. Yon
+            ansyen bannyè k ap modifye kenbe pwòp plasman li (li obligatwa
+            pou l parèt isit la pou kontèks), men okenn nouvo bannyè pa ka
+            kreye — <select> la vin yon senp etikèt fiks pou yon nouvo
+            anons olye yon vrè chwa. */}
+        {placement ? (
+          <select aria-label="Anplasman" className={inputCls()} value={f.placement} disabled>
+            {Object.entries(PLACEMENT_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className={inputCls() + " flex items-center bg-brand-soft/20 text-ink-soft"}>
+            {PLACEMENT_LABEL.popup}
+          </div>
+        )}
         {f.placement === "popup" && (
-          <p className="text-xs text-ink-soft sm:col-span-2">
-            Popup la parèt yon sèl fwa pou chak 24 èdtan bay menm vizitè a, epi li pa parèt jamè
-            pandan checkout — sa se otomatik, pa gen anyen pou konfigire.
-          </p>
+          <>
+            <p className="text-xs text-ink-soft sm:col-span-2">
+              Popup la parèt sou chak chajman paj (okenn limit frekans stoke) pou vizitè k ap gade
+              yon kote li gen dwa parèt, epi li pa parèt jamè pandan checkout, konekte, oswa nan
+              dashboard admin.
+            </p>
+            <fieldset className="sm:col-span-2">
+              <legend className="mb-1.5 block text-xs font-bold uppercase text-ink-soft">
+                Kote pou l parèt <span className="text-red-600">*</span>
+              </legend>
+              <div className="flex flex-wrap gap-3">
+                {(
+                  [
+                    ["public", "Paj piblik (dakèy, lis restoran)"],
+                    ["dashboard_customer", "Dashboard kliyan"],
+                    ["dashboard_restaurant", "Dashboard restoran"],
+                    ["dashboard_driver", "Dashboard livrè"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-1.5 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      checked={f.dashboardTargets.includes(value)}
+                      onChange={(e) =>
+                        setF((prev) => ({
+                          ...prev,
+                          dashboardTargets: e.target.checked
+                            ? [...prev.dashboardTargets, value]
+                            : prev.dashboardTargets.filter((t) => t !== value),
+                        }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </>
         )}
         <select
           aria-label="Restoran (opsyonèl)"
