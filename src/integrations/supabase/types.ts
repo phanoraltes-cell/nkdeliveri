@@ -3945,6 +3945,53 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      admin_recover_wallet_topup_secure: {
+        Args: {
+          _external_reference: string;
+          _notes?: string;
+          _provider_transaction_id?: string;
+          _raw_payload?: Json;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_wallet_topups_admin_secure: {
+        Args: { _limit?: number; _offset?: number; _status?: string };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          customer_name: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider_transaction_id: string | null;
+          status: string;
+          total_count: number;
+          user_id: string;
+        }[];
+      };
       create_withdrawal_rule_secure: {
         Args: {
           _availability_delay_hours?: number;

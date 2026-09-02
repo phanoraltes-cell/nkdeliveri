@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { z } from "zod";
 import { absoluteUrl } from "@/lib/site-config";
 
@@ -32,6 +32,8 @@ export async function runInitiateWalletTopup(
   | { outcome: "failed"; error: string }
   | { outcome: "pending"; redirectUrl: string; intent: PaymentIntentRow }
   | { outcome: "already_confirmed"; intent: PaymentIntentRow }
+  /** PLOP konfime imedyatman men kredi a echwe — poll la/cron an ap reprann li. Jamè prezante kòm yon siksè. */
+  | { outcome: "pending_confirmation"; intent: PaymentIntentRow }
 > {
   const reference = crypto.randomUUID();
   const providerKey = data.paymentMethod === "natcash" ? "natcash_auto" : "moncash_auto";
@@ -101,6 +103,26 @@ export async function runInitiateWalletTopup(
   if (rpcError) throw new Error(rpcError.message);
 
   if (result.status === "success") {
+    // BUG KORIJE (ensidan 50 HTG, wè migrasyon 20260902000000): anvan,
+    // nou t ap retounen "already_confirmed" — epi UI a t ap di kliyan an
+    // "Rechaj la konfime imedyatman!" — pandan entansyon an te fèk
+    // anrejistre kòm 'pending' e OKENN kredi pa t janm fèt. Nou te bay
+    // yon manti bay kliyan an sou pwòp lajan l. Kounye a nou kredite
+    // pou vre anvan nou di li konfime; si kredi a echwe, nou di se
+    // "pending" (poll la ap reprann li), jamè yon fo siksè.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: completeError } = await supabaseAdmin.rpc("complete_wallet_topup_secure", {
+      _external_reference: reference,
+      _decision: "succeeded",
+      _provider_transaction_id: result.providerReference,
+      _raw_payload: (result.raw ?? null) as Json,
+    });
+    if (completeError) {
+      console.error(
+        `[wallet-topup] PLOP confirmed ${reference} immediately but the credit RPC failed: ${completeError.message}`,
+      );
+      return { outcome: "pending_confirmation", intent };
+    }
     return { outcome: "already_confirmed", intent };
   }
 

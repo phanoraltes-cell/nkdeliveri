@@ -23,6 +23,7 @@ import { DataTable, type DataTableColumn } from "@/components/dashboard/tables/d
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge";
 import { getProviderDisplayLabel } from "@/lib/payment-provider-display";
 import { getPlopStatus } from "@/lib/get-plop-status.functions";
+import { WalletTopupsAdminSection } from "@/components/dashboard/payouts/wallet-topups-admin-section";
 import { getStripeStatus } from "@/lib/get-stripe-status.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/collect")({
@@ -585,6 +586,8 @@ function AdminCollect() {
           columns={apiLogColumns}
         />
       </section>
+
+      <WalletTopupsAdminSection />
     </div>
   );
 }

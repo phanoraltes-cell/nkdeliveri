@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Wallet, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { createPollController } from "@/hooks/useCollectPaymentPoll";
+import { pollWalletTopup } from "@/lib/poll-wallet-topup.functions";
 import { formatHTG } from "@/lib/format";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ const TOPUP_METHODS = [
 
 function CustomerWallet() {
   const [showTopup, setShowTopup] = useState(false);
+  const qc = useQueryClient();
 
   const wallet = useQuery({
     queryKey: ["my-customer-wallet-page"],
@@ -34,6 +37,63 @@ function CustomerWallet() {
       return Array.isArray(data) ? data[0] : data;
     },
   });
+
+  // Konfimasyon IMEDYA lè kliyan an tounen soti nan PLOP. Anvan sa,
+  // rechaj wallet pa t gen okenn poll — sèl chemen an se te cron
+  // jounalye a, ki vle di jiska 24è anvan yon kliyan wè lajan l (epi,
+  // pi grav, ekspirasyon an te ka antere l anvan — wè migrasyon
+  // 20260902000000). Nou chèche pwòp entansyon ki an atant moun nan
+  // (RLS-scoped), epi nou poll li ak MENM machin pas la ak peman
+  // kòmand yo (createPollController).
+  const pendingTopup = useQuery({
+    queryKey: ["my-pending-wallet-topup"],
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_intents")
+        .select("external_reference, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const pollTopup = useServerFn(pollWalletTopup);
+  const pollRef = useRef(pollTopup);
+  pollRef.current = pollTopup;
+  const qcRef = useRef(qc);
+  qcRef.current = qc;
+
+  const reference = pendingTopup.data?.external_reference;
+  const createdAt = pendingTopup.data?.created_at;
+
+  useEffect(() => {
+    if (!reference || !createdAt) return;
+
+    const controller = createPollController({
+      externalReference: reference,
+      createdAt,
+      poll: async (args) => {
+        const result = await pollRef.current(args);
+        if (result.status === "succeeded") {
+          toast.success("Rechaj ou a konfime — lajan an nan wallet ou.");
+        } else if (result.status === "failed" || result.status === "expired") {
+          toast.error("Rechaj ou a pa t abouti. Si yo debite w, kontakte sipò ak referans lan.");
+        }
+        return result;
+      },
+      onSettled: () => {
+        qcRef.current.invalidateQueries({ queryKey: ["my-customer-wallet-page"] });
+        qcRef.current.invalidateQueries({ queryKey: ["my-customer-wallet-history"] });
+        qcRef.current.invalidateQueries({ queryKey: ["my-pending-wallet-topup"] });
+      },
+    });
+    controller.start();
+    return () => controller.stop();
+  }, [reference, createdAt]);
 
   const [history, setHistoryRange] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const historyQuery = useQuery({
@@ -73,6 +133,14 @@ function CustomerWallet() {
           </Button>
         </div>
       </div>
+
+      {reference && (
+        <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <b>Yon rechaj ap konfime…</b> Si w fenk peye sou MonCash/NatCash, rete sou paj sa a kèk
+          segonn — balans ou ap mete ajou otomatikman. Referans:{" "}
+          <code className="text-xs">{reference.slice(0, 8)}</code>
+        </div>
+      )}
 
       {showTopup && <TopupForm onClose={() => setShowTopup(false)} />}
 
@@ -161,6 +229,13 @@ function TopupForm({ onClose }: { onClose: () => void }) {
       }
       if (result.outcome === "already_confirmed") {
         toast.success("Rechaj la konfime imedyatman!");
+        onClose();
+        return;
+      }
+      if (result.outcome === "pending_confirmation") {
+        // PLOP konfime men kredi a poko pase — nou pa janm di "reyisi"
+        // pandan balans lan poko bouje (wè initiate-wallet-topup.logic.ts).
+        toast.info("Peman ou resevwa — n ap fini konfime l, balans ou ap mete ajou talè.");
         onClose();
         return;
       }
