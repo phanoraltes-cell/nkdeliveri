@@ -95,6 +95,13 @@ export const initiateProviderPayout = createServerFn({ method: "POST" })
       counterpartyName: receiverAccountName,
       reference: idempotencyKey,
       description: data.notes,
+      // Tach 3 — without this, plopProvider defaulted every disbursement
+      // to its own "moncash" fallback regardless of the rail the admin
+      // actually picked (data.method), silently paying a NatCash
+      // beneficiary through the wrong rail. Harmless before this change
+      // (every provider ignored/refused disburse entirely), a real bug
+      // now that PLOP executes it for real.
+      paymentMethod: data.method,
     });
 
     if (result.status === "failed") {

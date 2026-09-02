@@ -2,12 +2,27 @@
  * Low-level HTTP client for PLOP's "Paiement Marchand" (Collect) API
  * (https://plopplop.solutionip.app/paiement-doc) — see
  * docs/archive/plop/PLOP_PHASE0_AUDIT.md for the full endpoint audit this file is
- * built strictly against. Only the two Collect endpoints are implemented
- * here: `POST /api/paiement-marchand` (create) and `POST
- * /api/paiement-verify` (verify). PLOP's Withdrawal API (3-step
- * HMAC-signed flow) is a real, documented capability but explicitly out
- * of scope for this replacement (Collect only) — see
- * docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8 — and has no client here.
+ * built strictly against. Collect (create/verify) AND Withdrawal
+ * (auth/withdrawal-token/withdraw/verify) are both implemented here —
+ * PROMPT MODIFIKASYON (WALLET, DEKÈSMAN, PIBLISITE), Tach 3: the
+ * Withdrawal API was previously deliberately out of scope
+ * (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8) pending explicit owner
+ * validation for a separate chantier — Altes has now given that
+ * validation ("Konekte API retrè PLOP la").
+ *
+ * HONESTY NOTE on the Withdrawal functions below: the audit (§ 5-8)
+ * documents the 3-step flow, the HMAC formula, and the error codes with
+ * certainty (PLOP's own doc page). It does NOT capture a full example
+ * JSON response body for these endpoints the way it does for Collect
+ * (§ 7) — the exact success/error response shape here is inferred from
+ * PLOP's own Collect convention (`{status: boolean, message: string,
+ * ...}`) plus the documented `error_code` field for withdrawal errors
+ * (§ 8, § 14), not copy-pasted from a confirmed real payload. Every
+ * response is parsed defensively (never assumes a field exists) and an
+ * unrecognized shape is surfaced as a `PlopApiError`, never guessed as
+ * success — same posture as `trans_status` above. The FIRST real call
+ * this code ever makes is effectively the final verification of this
+ * assumption; there is no PLOP sandbox (§ 14.3).
  *
  * IMPORTANT — unlike MonCash's Business API (moncash-client.server.ts),
  * PLOP's Collect endpoints require no OAuth token, no signature, no
@@ -29,6 +44,7 @@
  * level. Logging is always best-effort: a logging failure must never
  * break a real payment flow, so it only ever warns, never throws.
  */
+import { createHmac } from "node:crypto";
 import type { Json } from "@/integrations/supabase/types";
 import { getPlopConfig, PLOP_BASE_URL } from "./plop-config.server";
 
@@ -478,4 +494,310 @@ export async function verifyPayment(reference: string): Promise<PlopVerifyResult
     walletUsed: typeof data.method === "string" ? data.method : null,
     raw: data,
   };
+}
+
+// =============================================================================
+// Withdrawal API (Tach 3, PROMPT MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) —
+// 3-step HMAC-signed flow, docs/archive/plop/PLOP_PHASE0_AUDIT.md § 5-8.
+
+/** PLOP's documented withdrawal error codes (§ 8) — surfaced as-is on `PlopApiError.raw`/message rather than re-interpreted, so an admin reading a failure sees PLOP's own vocabulary. */
+export type PlopWithdrawalErrorCode =
+  | "INVALID_SIGNATURE"
+  | "TIMESTAMP_EXPIRED"
+  | "NO_CLIENT_SECRET"
+  | "INVALID_TOKEN_TYPE"
+  | "PARAMETER_MISMATCH"
+  | "TOKEN_ALREADY_USED"
+  | "WITHDRAWAL_COOLDOWN"
+  | "METHOD_NOT_CONFIGURED"
+  | "INSUFFICIENT_BALANCE"
+  | "API_TRANSFER_FAILED"
+  | "DUPLICATE_REFERENCE";
+
+export type PlopWithdrawParams = {
+  amount: number;
+  /** moncash | kashpaw | natcash — same value set as Collect's payment_method (§ 7), reused here since the audit doesn't document a distinct list for Withdrawal. */
+  method: string;
+  /** Beneficiary's mobile money number, receiving the funds. */
+  recipient: string;
+  /** Our own reference — must be new (§ 8, "reference inédite" sinon 409 DUPLICATE_REFERENCE). */
+  reference: string;
+};
+
+/**
+ * Step 1 — `POST /api/auth/marchand`. Deliberately NOT cached/reused
+ * across calls: § 14.2 flags an unresolved contradiction in PLOP's own
+ * doc about `marchand_token`'s lifetime ("~1 minute" vs `expires_in: 300`
+ * in the example) — re-authenticating fresh for every withdrawal
+ * operation sidesteps that ambiguity entirely rather than risking a
+ * stale token mid-flow. Withdrawal volume is low (payouts, not customer
+ * checkout), so the extra round-trip is a non-issue.
+ */
+async function authenticateMarchand(): Promise<string> {
+  const { clientId, clientSecret } = getPlopConfig();
+
+  const response = await requestWithRetry(
+    `${PLOP_BASE_URL}/api/auth/marchand`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
+    },
+    {
+      endpoint: "/api/auth/marchand",
+      method: "POST",
+      requestSummary: { client_id: redactId(clientId) },
+      summarizeResponse: (body) => {
+        const b = body as { status?: boolean; message?: string };
+        return { status: b.status ?? null, message: b.message ?? null };
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new PlopApiError(
+      `PLOP auth/marchand echwe (HTTP ${response.status})`,
+      response.status,
+      await safeReadBody(response),
+    );
+  }
+
+  const data = (await parseJsonOrThrow(response, "auth/marchand")) as {
+    status?: boolean;
+    marchand_token?: string;
+    message?: string;
+  };
+  if (!data.status || typeof data.marchand_token !== "string" || !data.marchand_token) {
+    throw new PlopApiError(
+      `Repons auth/marchand PLOP la pa gen okenn marchand_token (${data.message ?? "san mesaj"})`,
+      response.status,
+      data,
+    );
+  }
+  return data.marchand_token;
+}
+
+/**
+ * HMAC-SHA256("amount|method|recipient|reference|timestamp", client_secret),
+ * hex-encoded — exact field order and pipe-separator per § 6. `amount` is
+ * interpolated via String(), same numeric value sent in the request body
+ * — not independently confirmed by a worked example in the audit (no
+ * such example exists for Withdrawal, § header note above), but the only
+ * reading consistent with "paramètres devant être strictement identiques"
+ * between step 2 and step 3.
+ */
+function computeWithdrawalSignature(
+  params: PlopWithdrawParams,
+  timestamp: number,
+  clientSecret: string,
+): string {
+  const message = `${params.amount}|${params.method}|${params.recipient}|${params.reference}|${timestamp}`;
+  return createHmac("sha256", clientSecret).update(message).digest("hex");
+}
+
+/** Step 2 — `POST /api/auth/marchand/withdrawal-token`. Returns the scoped, single-use, 120s token plus the exact timestamp used for the signature (step 3 must send the identical value). */
+async function getWithdrawalToken(
+  marchandToken: string,
+  params: PlopWithdrawParams,
+): Promise<{ withdrawalToken: string; timestamp: number }> {
+  const { clientSecret } = getPlopConfig();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = computeWithdrawalSignature(params, timestamp, clientSecret);
+
+  const response = await requestWithRetry(
+    `${PLOP_BASE_URL}/api/auth/marchand/withdrawal-token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${marchandToken}` },
+      body: JSON.stringify({
+        amount: params.amount,
+        method: params.method,
+        recipient: params.recipient,
+        reference: params.reference,
+        timestamp,
+        withdrawal_signature: signature,
+      }),
+    },
+    {
+      endpoint: "/api/auth/marchand/withdrawal-token",
+      method: "POST",
+      requestSummary: { reference: params.reference, amount: params.amount, method: params.method },
+      transactionReference: params.reference,
+      summarizeResponse: (body) => {
+        const b = body as { status?: boolean; message?: string; error_code?: string };
+        return {
+          status: b.status ?? null,
+          message: b.message ?? null,
+          error_code: b.error_code ?? null,
+        };
+      },
+    },
+  );
+
+  const body = await safeReadBody(response);
+  if (!response.ok) {
+    const b = (body ?? {}) as { message?: string; error_code?: string };
+    throw new PlopApiError(
+      `PLOP withdrawal-token echwe${b.error_code ? ` (${b.error_code})` : ""} (HTTP ${response.status}) pou reference=${params.reference}: ${b.message ?? "san mesaj"}`,
+      response.status,
+      body,
+    );
+  }
+
+  const data = body as { status?: boolean; withdrawal_token?: string; message?: string };
+  if (!data.status || typeof data.withdrawal_token !== "string" || !data.withdrawal_token) {
+    throw new PlopApiError(
+      `Repons withdrawal-token PLOP la pa gen okenn withdrawal_token (${data.message ?? "san mesaj"})`,
+      response.status,
+      data,
+    );
+  }
+  return { withdrawalToken: data.withdrawal_token, timestamp };
+}
+
+export type PlopWithdrawResult = {
+  status: "success" | "failed";
+  providerTransactionId: string | null;
+  errorCode: PlopWithdrawalErrorCode | null;
+  message: string | null;
+  raw: unknown;
+};
+
+/**
+ * Executes the full 3-step withdrawal — auth, then withdrawal-token, then
+ * the transfer itself. Step 3's body must be byte-for-byte identical to
+ * step 2's (§ 6, "paramètres identiques") or PLOP returns
+ * 403 PARAMETER_MISMATCH — the same four business fields plus the SAME
+ * `timestamp` returned from getWithdrawalToken are reused verbatim, never
+ * recomputed.
+ *
+ * Never throws for a PLOP-side rejection (INSUFFICIENT_BALANCE,
+ * METHOD_NOT_CONFIGURED, etc.) — those come back as `status:"failed"`
+ * with `errorCode` set, for the caller (plop-provider.server.ts) to map
+ * to a clean `InitiatePaymentResult`. Only a network/timeout/malformed-
+ * response failure throws `PlopApiError`, exactly like every Collect
+ * function above.
+ */
+export async function executeWithdrawal(params: PlopWithdrawParams): Promise<PlopWithdrawResult> {
+  const marchandToken = await authenticateMarchand();
+  const { withdrawalToken, timestamp } = await getWithdrawalToken(marchandToken, params);
+
+  const response = await requestWithRetry(
+    `${PLOP_BASE_URL}/api/withdraw/marchand`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${withdrawalToken}` },
+      body: JSON.stringify({
+        amount: params.amount,
+        method: params.method,
+        recipient: params.recipient,
+        reference: params.reference,
+        timestamp,
+      }),
+    },
+    {
+      endpoint: "/api/withdraw/marchand",
+      method: "POST",
+      requestSummary: { reference: params.reference, amount: params.amount, method: params.method },
+      transactionReference: params.reference,
+      summarizeResponse: (body) => {
+        const b = body as {
+          status?: boolean;
+          message?: string;
+          error_code?: string;
+          transaction_id?: string;
+        };
+        return {
+          status: b.status ?? null,
+          message: b.message ?? null,
+          error_code: b.error_code ?? null,
+          transaction_id: b.transaction_id ?? null,
+        };
+      },
+      extractProviderTransactionId: (body) => {
+        const b = body as { transaction_id?: string };
+        return typeof b.transaction_id === "string" ? b.transaction_id : null;
+      },
+    },
+    // Withdrawal-token is single-use and expires in 120s (§ 12) — a retry
+    // on a transient network error would need a BRAND NEW token (this
+    // one would already be consumed or expired), which requestWithRetry
+    // cannot do (it retries the same request). One attempt only; a
+    // network failure here surfaces as a genuine PlopApiError for the
+    // caller to treat as "unknown outcome, needs manual verification" via
+    // verifyWithdrawal(), never silently retried against a dead token.
+    { maxAttempts: 1 },
+  );
+
+  const body = await safeReadBody(response);
+  const b = (body ?? {}) as {
+    status?: boolean;
+    message?: string;
+    error_code?: string;
+    transaction_id?: string;
+  };
+
+  if (!response.ok || !b.status) {
+    return {
+      status: "failed",
+      providerTransactionId: null,
+      errorCode: (b.error_code as PlopWithdrawalErrorCode) ?? null,
+      message: b.message ?? `HTTP ${response.status}`,
+      raw: body,
+    };
+  }
+
+  return {
+    status: "success",
+    providerTransactionId: typeof b.transaction_id === "string" ? b.transaction_id : null,
+    errorCode: null,
+    message: b.message ?? null,
+    raw: body,
+  };
+}
+
+export type PlopWithdrawStatus = "pending" | "failed" | "success" | "refunded" | "unknown";
+
+/** `POST /api/withdraw/marchand/verify` — status lookup by our own `reference`, reusing the `marchand_token` from step 1 (not the withdrawal_token, § 8/§ 6). */
+export async function verifyWithdrawal(
+  reference: string,
+): Promise<{ status: PlopWithdrawStatus; raw: unknown }> {
+  const marchandToken = await authenticateMarchand();
+
+  const response = await requestWithRetry(
+    `${PLOP_BASE_URL}/api/withdraw/marchand/verify`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${marchandToken}` },
+      body: JSON.stringify({ reference }),
+    },
+    {
+      endpoint: "/api/withdraw/marchand/verify",
+      method: "POST",
+      requestSummary: { reference },
+      transactionReference: reference,
+      summarizeResponse: (body) => {
+        const b = body as { status?: string; message?: string };
+        return { status: b.status ?? null, message: b.message ?? null };
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new PlopApiError(
+      `PLOP withdraw/marchand/verify echwe (HTTP ${response.status}) pou reference=${reference}`,
+      response.status,
+      await safeReadBody(response),
+    );
+  }
+
+  const data = (await parseJsonOrThrow(response, "withdraw/marchand/verify")) as {
+    status?: string;
+  };
+  const known: PlopWithdrawStatus[] = ["pending", "failed", "success", "refunded"];
+  const status = known.includes(data.status as PlopWithdrawStatus)
+    ? (data.status as PlopWithdrawStatus)
+    : "unknown";
+
+  return { status, raw: data };
 }

@@ -1,17 +1,24 @@
 /**
  * Unit tests for the long-horizon reconciliation job — the 30s/2min/10min
- * backoff schedule for MonCash payouts stuck in 'pending' when a webhook
- * never arrives. Database and moncashProvider.checkStatus() are both
- * mocked; the RPC-level idempotence/rollback behavior these calls rely
- * on is verified separately against the live schema — see
- * docs/archive/moncash/MONCASH_TEST_REPORT.md.
+ * backoff schedule for provider-backed payouts stuck in 'pending' when no
+ * immediate answer came back. Database and plopProvider.checkStatus() are
+ * both mocked; the RPC-level idempotence/rollback behavior these calls
+ * rely on is verified separately against the live schema.
+ *
+ * Tach 3 (PROMPT MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) — this module
+ * moved from the dormant Digicel-direct integration to PLOP's real
+ * Withdrawal API; updated here to mock plopProvider (not moncashProvider)
+ * and plop_api_logs (not moncash_api_logs), matching that change.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PaymentStatusResult } from "../types";
+import type { PaymentDirection, PaymentStatusResult } from "../types";
 
-const checkStatusMock = vi.fn<(ref: string) => Promise<PaymentStatusResult>>();
-vi.mock("../moncash-provider.server", () => ({
-  moncashProvider: { checkStatus: (ref: string) => checkStatusMock(ref) },
+const checkStatusMock =
+  vi.fn<(ref: string, direction?: PaymentDirection) => Promise<PaymentStatusResult>>();
+vi.mock("../plop-provider.server", () => ({
+  plopProvider: {
+    checkStatus: (ref: string, direction?: PaymentDirection) => checkStatusMock(ref, direction),
+  },
 }));
 
 type LogsMode = { count: number; lastCheckedAt: string | null };
@@ -36,24 +43,27 @@ function buildLogsChain(mode: LogsMode) {
   return chain;
 }
 
-function buildPayoutsChain(rows: { transaction_reference: string }[]) {
+type PayoutRow = { transaction_reference: string; provider_code?: string };
+
+function buildPayoutsChain(rows: PayoutRow[]) {
   const chain: Record<string, unknown> = {};
   chain.select = vi.fn(() => chain);
+  chain.in = vi.fn(() => chain);
   chain.eq = vi.fn(() => chain);
   chain.lt = vi.fn(() => chain);
   chain.then = (resolve: (v: unknown) => unknown) =>
-    Promise.resolve({ data: rows, error: null }).then(resolve);
+    Promise.resolve({
+      data: rows.map((r) => ({ provider_code: "moncash_api", ...r })),
+      error: null,
+    }).then(resolve);
   return chain;
 }
 
-function buildSupabaseAdminMock(opts: {
-  payouts: { transaction_reference: string }[];
-  logsMode: LogsMode;
-}) {
+function buildSupabaseAdminMock(opts: { payouts: PayoutRow[]; logsMode: LogsMode }) {
   const rpc = vi.fn(async () => ({ error: null }));
   const from = vi.fn((table: string) => {
     if (table === "payouts") return buildPayoutsChain(opts.payouts);
-    if (table === "moncash_api_logs") return buildLogsChain(opts.logsMode);
+    if (table === "plop_api_logs") return buildLogsChain(opts.logsMode);
     throw new Error(`unexpected table: ${table}`);
   });
   return { supabaseAdmin: { from, rpc } };
@@ -156,7 +166,7 @@ describe("reconcilePendingMonCashPayouts", () => {
     const summary = await reconcilePendingMonCashPayouts();
 
     expect(summary.results).toEqual([{ transactionReference: "REF-5", outcome: "still_pending" }]);
-    expect(checkStatusMock).toHaveBeenCalledWith("REF-5");
+    expect(checkStatusMock).toHaveBeenCalledWith("REF-5", "disburse");
   });
 
   it("flags for manual review once the schedule is exhausted, without calling MonCash again", async () => {

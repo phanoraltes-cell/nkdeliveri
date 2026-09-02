@@ -20,6 +20,14 @@
  * Built strictly against docs/archive/plop/PLOP_PHASE0_AUDIT.md — nothing here
  * invents an endpoint, parameter, or behavior PLOP does not document.
  *
+ * PROMPT MODIFIKASYON (WALLET, DEKÈSMAN, PIBLISITE), Tach 3 — `direction:
+ * "disburse"` (PLOP's Withdrawal API) is now implemented for real, on
+ * Altes's explicit go-ahead ("Konekte API retrè PLOP la"). Registered
+ * under BOTH `moncash_api` and `natcash_api` in index.server.ts's
+ * registry (PLOP's own `method` field picks the actual rail per call,
+ * same as Collect) — see plop-client.server.ts's own header note for
+ * what's confirmed-by-audit vs inferred in the Withdrawal response shape.
+ *
  * `.server.ts` is load-bearing: the build fails if a route file or
  * component imports this module (or plop-client.server.ts) directly.
  */
@@ -30,18 +38,20 @@ import {
   createPayment,
   verifyPayment,
   isValidPaymentMethod,
+  executeWithdrawal,
+  verifyWithdrawal,
+  type PlopWithdrawalErrorCode,
 } from "./plop-client.server";
 
 const NOT_CONFIGURED = "PLOP pa konfigire toujou";
 
-// PLOP's Withdrawal API is a real, documented disbursement capability
-// (docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8) — but this replacement covers Collect
-// only, by explicit mission scope. `direction: "disburse"` is refused
-// here exactly like moncash-provider.server.ts refuses it today, for a
-// different reason: not "PLOP can't do this" but "this integration
-// doesn't implement it (yet, deliberately, out of scope)".
-const DISBURSEMENT_NOT_SUPPORTED =
-  "Entegrasyon PLOP sa a sèlman kouvri kolekte (peman kliyan) — API retrè PLOP la egziste men li pa branche isit la (deside eksplisitman ekate pou chantye sa a).";
+/** Maps PLOP's own withdrawal error codes to the coarse `InitiatePaymentResult.code` a caller can act on without parsing text. */
+function withdrawalErrorToCode(
+  errorCode: PlopWithdrawalErrorCode | null,
+): "rejected" | "invalid_wallet" {
+  if (errorCode === "METHOD_NOT_CONFIGURED") return "invalid_wallet";
+  return "rejected";
+}
 
 function describeError(err: unknown): string {
   if (err instanceof PlopApiError) return err.message;
@@ -58,7 +68,59 @@ export const plopProvider: PaymentProvider = {
       return { status: "failed", error: NOT_CONFIGURED, code: "not_configured" };
     }
     if (input.direction === "disburse") {
-      return { status: "failed", error: DISBURSEMENT_NOT_SUPPORTED, code: "unsupported" };
+      // Tach 3 — the real Withdrawal API. `counterpartyNumber` is
+      // required by every caller of this direction
+      // (initiate-provider-payout.functions.ts already refuses to call
+      // without it) — a missing one here is a caller-side bug, reported
+      // as a rejection rather than crashing on a PLOP call with an empty
+      // recipient.
+      if (!input.counterpartyNumber) {
+        return { status: "failed", error: "Nimewo benefisyè a manke", code: "rejected" };
+      }
+      const method = input.paymentMethod ?? "moncash";
+      if (!isValidPaymentMethod(method)) {
+        return {
+          status: "failed",
+          error: `Metòd retrè "${method}" pa yon valè PLOP rekonèt (moncash|kashpaw|natcash|all)`,
+          code: "invalid_wallet",
+        };
+      }
+      try {
+        const result = await executeWithdrawal({
+          amount: input.amount,
+          method,
+          recipient: input.counterpartyNumber,
+          reference: input.reference,
+        });
+        if (result.status === "success") {
+          return {
+            status: "success",
+            providerReference: result.providerTransactionId ?? input.reference,
+            raw: result.raw,
+          };
+        }
+        return {
+          status: "failed",
+          error:
+            result.message ?? `Retrè PLOP echwe${result.errorCode ? ` (${result.errorCode})` : ""}`,
+          code: withdrawalErrorToCode(result.errorCode),
+          raw: result.raw,
+        };
+      } catch (err) {
+        // A network/timeout/malformed-response failure — genuinely
+        // unknown whether PLOP actually executed the transfer (the
+        // withdrawal-token step is single-use, so this attempt itself
+        // can never be safely retried, see plop-client.server.ts's own
+        // comment). Reported as "pending", never "failed": a "failed"
+        // result here would let the caller believe no money moved when
+        // it might have — the reconciliation cron's verifyWithdrawal()
+        // is what eventually resolves this honestly instead of guessing.
+        const code = err instanceof PlopApiError && err.code === "timeout" ? "timeout" : "rejected";
+        if (code === "timeout") {
+          return { status: "pending", providerReference: input.reference, raw: describeError(err) };
+        }
+        return { status: "failed", error: describeError(err), code };
+      }
     }
     // Validated *before* the try/catch below on purpose — an unrecognized
     // `paymentMethod` is a caller-side mistake, never a PLOP outcome. Doing
@@ -136,8 +198,38 @@ export const plopProvider: PaymentProvider = {
     }
   },
 
-  async checkStatus(providerReference) {
+  async checkStatus(providerReference, direction = "collect") {
     if (!isPlopConfigured()) return { status: "unknown", error: NOT_CONFIGURED };
+
+    // Tach 3 — the withdrawal lookup is structurally different from the
+    // collect one (different endpoint, different status vocabulary) —
+    // routed here rather than merged into the block below, which stays
+    // exactly as it was for Collect.
+    if (direction === "disburse") {
+      try {
+        const result = await verifyWithdrawal(providerReference);
+        if (result.status === "success") {
+          return { status: "success", providerReference, raw: result.raw };
+        }
+        if (result.status === "failed") {
+          return { status: "failed", error: "PLOP endike retrè a echwe", raw: result.raw };
+        }
+        if (result.status === "pending") {
+          return { status: "pending", raw: result.raw };
+        }
+        // "refunded" or "unknown" — neither a plain success nor a plain
+        // failure; reported as unknown so the reconciliation schedule
+        // keeps checking rather than guessing (same posture as Collect's
+        // own "unknown" branch below).
+        return {
+          status: "unknown",
+          error: `PLOP retounen yon estati retrè enkoni: ${result.status}`,
+        };
+      } catch (err) {
+        return { status: "unknown", error: describeError(err) };
+      }
+    }
+
     try {
       const result = await verifyPayment(providerReference);
       if (result.transStatus === "ok") {

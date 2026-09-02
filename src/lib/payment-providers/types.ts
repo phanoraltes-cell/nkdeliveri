@@ -100,8 +100,22 @@ export interface PaymentProvider {
   /** True once this provider has real, validated credentials — false hides it from the admin UI (`payment_providers.is_active` is the DB-side mirror of this, flipped by hand once a real integration lands). */
   isConfigured(): boolean;
   initiatePayment(input: InitiatePaymentInput): Promise<InitiatePaymentResult>;
-  /** Poll the provider directly for a payment's current state — the reconciliation path for a request that timed out on our side but may have still succeeded on theirs. */
-  checkStatus(providerReference: string): Promise<PaymentStatusResult>;
+  /**
+   * Poll the provider directly for a payment's current state — the
+   * reconciliation path for a request that timed out on our side but may
+   * have still succeeded on theirs. `direction` disambiguates providers
+   * (PLOP, Tach 3) that use one method for two structurally different
+   * lookups (Collect's `verifyPayment` vs Withdrawal's `verifyWithdrawal`)
+   * — defaults to `"collect"` so every pre-existing caller (checking a
+   * customer payment) keeps its current behavior unchanged; a
+   * disbursement-reconciliation caller passes `"disburse"` explicitly.
+   * Providers that only ever do one direction (MonCash, NatCash, Stripe,
+   * manual) simply ignore this parameter.
+   */
+  checkStatus(
+    providerReference: string,
+    direction?: PaymentDirection,
+  ): Promise<PaymentStatusResult>;
   cancelPayment(providerReference: string): Promise<CancelPaymentResult>;
   /**
    * Validates an inbound webhook's authenticity (signature/HMAC per the

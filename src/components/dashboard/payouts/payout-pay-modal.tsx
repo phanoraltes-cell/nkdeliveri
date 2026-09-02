@@ -31,14 +31,14 @@ export type PayoutBeneficiary = {
 
 type PayoutChannel = { method: "moncash" | "natcash"; providerCode: string; label: string };
 
-// Exactly the 3 choices an admin should see today: automatic MonCash (an
-// API call), and the two manual rails (an admin sends the money by hand,
-// same as always). No "NatCash Automatik" — natcashProvider has no
-// secrets/implementation at all, so offering it would be a dead end.
-// Never remove the two manual entries — see payout-pay-modal.tsx's own
-// invariant, restated in PAYMENT_PROVIDERS.md.
+// Tach 3 (PROMPT MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) — "NatCash
+// Automatik" ajoute: plopProvider kounye a egzekite tou de rèl yo pou
+// vre (index.server.ts, "moncash_api"/"natcash_api" tou de rezoud sou
+// PLOP). Never remove the two manual entries — see payout-pay-modal.tsx's
+// own invariant, restated in PAYMENT_PROVIDERS.md.
 const PAYOUT_CHANNELS: PayoutChannel[] = [
   { method: "moncash", providerCode: "moncash_api", label: "MonCash Automatik" },
+  { method: "natcash", providerCode: "natcash_api", label: "NatCash Automatik" },
   { method: "moncash", providerCode: "manual", label: "MonCash Manyèl" },
   { method: "natcash", providerCode: "manual", label: "NatCash Manyèl" },
 ];
@@ -82,10 +82,11 @@ export function PayoutPayModal({
   const [file, setFile] = useState<File | null>(null);
 
   // Phase 3 of the admin evolution plan: which method (moncash/natcash) is
-  // already selectable; this is the separate "who executes it" axis —
-  // 100% manual today, ready for a real API provider without touching
-  // the manual flow. moncash_api/natcash_api stay is_active=false until a
-  // real integration exists (src/lib/payment-providers/).
+  // already selectable; this is the separate "who executes it" axis.
+  // Tach 3 — moncash_api/natcash_api now have a real integration (PLOP),
+  // gated behind payment_providers.is_active (flipped in a deliberately
+  // separate, not-yet-applied migration — see the wallet/dekèsman AKÒ FEN
+  // TRAVAY report — until a real test withdrawal is done).
   const providers = useQuery({
     queryKey: ["payment-providers"],
     queryFn: async () => {

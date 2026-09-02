@@ -1,11 +1,17 @@
 /**
  * Unit tests for plop-provider.server.ts — the layer that decides what
  * PLOP's connector is and isn't allowed to do. Mirrors
- * moncash-provider.test.ts's structure; the equivalent central invariant
- * here is that `direction:"disburse"` must NEVER succeed (this
- * replacement is Collect-only by explicit mission scope — see
- * docs/archive/plop/PLOP_PHASE0_AUDIT.md § 8), and `verifyWebhook()` must ALWAYS
+ * moncash-provider.test.ts's structure. `verifyWebhook()` must ALWAYS
  * refuse (PLOP documents no webhook — docs/archive/plop/PLOP_PHASE0_AUDIT.md § 9).
+ *
+ * Tach 3 (PROMPT MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) — `direction:
+ * "disburse"` is now a REAL implementation (PLOP's Withdrawal API,
+ * executeWithdrawal()/verifyWithdrawal() in plop-client.server.ts), on
+ * Altes's explicit go-ahead. The old invariant here ("disbursement must
+ * always be refused") is gone; these tests instead cover success,
+ * PLOP-side rejection mapping, and the "never guess failed on a
+ * network/timeout error" rule (the withdrawal-token is single-use, so a
+ * retry is impossible and money may have already moved).
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -32,31 +38,21 @@ describe("plopProvider — code identity", () => {
   });
 });
 
-describe("plopProvider.initiatePayment — disbursement must always be refused", () => {
+describe("plopProvider.initiatePayment — direction:'disburse' (Tach 3, PLOP Withdrawal API)", () => {
   beforeEach(() => {
     vi.resetModules();
   });
 
-  it("refuses direction:'disburse' even when fully configured", async () => {
-    setConfiguredEnv();
-    const { plopProvider } = await import("../plop-provider.server");
-
-    const result = await plopProvider.initiatePayment({
-      direction: "disburse",
-      amount: 500,
-      counterpartyNumber: "+50912345678",
-      counterpartyName: "Test Beneficiary",
-      reference: "REF-1",
+  it("refuses direction:'disburse' when NOT configured (not_configured wins first, never calls executeWithdrawal)", async () => {
+    clearPlopEnv();
+    const executeWithdrawalMock = vi.fn();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, executeWithdrawal: executeWithdrawalMock };
     });
 
-    expect(result.status).toBe("failed");
-    if (result.status === "failed") expect(result.code).toBe("unsupported");
-  });
-
-  it("refuses direction:'disburse' when NOT configured (not_configured wins first)", async () => {
-    clearPlopEnv();
     const { plopProvider } = await import("../plop-provider.server");
-
     const result = await plopProvider.initiatePayment({
       direction: "disburse",
       amount: 500,
@@ -67,6 +63,195 @@ describe("plopProvider.initiatePayment — disbursement must always be refused",
 
     expect(result.status).toBe("failed");
     if (result.status === "failed") expect(result.code).toBe("not_configured");
+    expect(executeWithdrawalMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing counterpartyNumber before ever calling PLOP (caller-side bug, not a PLOP outcome)", async () => {
+    setConfiguredEnv();
+    const executeWithdrawalMock = vi.fn();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, executeWithdrawal: executeWithdrawalMock };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      reference: "REF-NO-RECIPIENT",
+    });
+
+    expect(result.status).toBe("failed");
+    if (result.status === "failed") expect(result.code).toBe("rejected");
+    expect(executeWithdrawalMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unrecognized paymentMethod with code:'invalid_wallet' without calling PLOP", async () => {
+    setConfiguredEnv();
+    const executeWithdrawalMock = vi.fn();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, executeWithdrawal: executeWithdrawalMock };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      paymentMethod: "bogus-wallet",
+      reference: "REF-BAD-WALLET",
+    });
+
+    expect(result.status).toBe("failed");
+    if (result.status === "failed") expect(result.code).toBe("invalid_wallet");
+    expect(executeWithdrawalMock).not.toHaveBeenCalled();
+  });
+
+  it("returns status:'success' with PLOP's transaction id when the withdrawal succeeds", async () => {
+    setConfiguredEnv();
+    const executeWithdrawalMock = vi.fn(async () => ({
+      status: "success" as const,
+      providerTransactionId: "WD-TX-1",
+      errorCode: null,
+      message: null,
+      raw: { status: true, transaction_id: "WD-TX-1" },
+    }));
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return { ...actual, executeWithdrawal: executeWithdrawalMock };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      counterpartyName: "Test Beneficiary",
+      reference: "REF-1",
+    });
+
+    expect(result.status).toBe("success");
+    if (result.status === "success") expect(result.providerReference).toBe("WD-TX-1");
+    expect(executeWithdrawalMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 500,
+        method: "moncash",
+        recipient: "+50912345678",
+        reference: "REF-1",
+      }),
+    );
+  });
+
+  it("maps PLOP's INSUFFICIENT_BALANCE rejection to status:'failed', code:'rejected'", async () => {
+    setConfiguredEnv();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        executeWithdrawal: vi.fn(async () => ({
+          status: "failed" as const,
+          providerTransactionId: null,
+          errorCode: "INSUFFICIENT_BALANCE" as const,
+          message: "Balans machann lan pa sifi",
+          raw: { status: false, error_code: "INSUFFICIENT_BALANCE" },
+        })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      reference: "REF-INSUFFICIENT",
+    });
+
+    expect(result.status).toBe("failed");
+    if (result.status === "failed") expect(result.code).toBe("rejected");
+  });
+
+  it("maps PLOP's METHOD_NOT_CONFIGURED rejection to code:'invalid_wallet' specifically", async () => {
+    setConfiguredEnv();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        executeWithdrawal: vi.fn(async () => ({
+          status: "failed" as const,
+          providerTransactionId: null,
+          errorCode: "METHOD_NOT_CONFIGURED" as const,
+          message: "Metòd sa a pa konfigire",
+          raw: { status: false, error_code: "METHOD_NOT_CONFIGURED" },
+        })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      paymentMethod: "natcash",
+      reference: "REF-NOT-CONFIGURED",
+    });
+
+    expect(result.status).toBe("failed");
+    if (result.status === "failed") expect(result.code).toBe("invalid_wallet");
+  });
+
+  it("reports status:'pending' (never 'failed') when executeWithdrawal throws a timeout — the withdrawal-token is single-use so this attempt can never be safely retried", async () => {
+    setConfiguredEnv();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        executeWithdrawal: vi.fn(async () => {
+          throw new actual.PlopApiError("simulated timeout", undefined, undefined, "timeout");
+        }),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      reference: "REF-TIMEOUT",
+    });
+
+    expect(result.status).toBe("pending");
+    if (result.status === "pending") expect(result.providerReference).toBe("REF-TIMEOUT");
+  });
+
+  it("reports status:'failed' (not 'pending') when executeWithdrawal throws a non-timeout error", async () => {
+    setConfiguredEnv();
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        executeWithdrawal: vi.fn(async () => {
+          throw new actual.PlopApiError("simulated auth failure");
+        }),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.initiatePayment({
+      direction: "disburse",
+      amount: 500,
+      counterpartyNumber: "+50912345678",
+      reference: "REF-AUTH-FAIL",
+    });
+
+    expect(result.status).toBe("failed");
   });
 
   it("isConfigured() reflects real secret presence, not a hardcoded value", async () => {
@@ -78,6 +263,96 @@ describe("plopProvider.initiatePayment — disbursement must always be refused",
     setConfiguredEnv();
     const { plopProvider: configured } = await import("../plop-provider.server");
     expect(configured.isConfigured()).toBe(true);
+  });
+});
+
+describe("plopProvider.checkStatus — direction:'disburse' (PLOP Withdrawal verify)", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    setConfiguredEnv();
+  });
+
+  it("maps a withdrawal verify status of 'success' to status:'success'", async () => {
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        verifyWithdrawal: vi.fn(async () => ({ status: "success" as const, raw: {} })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.checkStatus("REF-W1", "disburse");
+
+    expect(result.status).toBe("success");
+    if (result.status === "success") expect(result.providerReference).toBe("REF-W1");
+  });
+
+  it("maps a withdrawal verify status of 'failed' to status:'failed'", async () => {
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        verifyWithdrawal: vi.fn(async () => ({ status: "failed" as const, raw: {} })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.checkStatus("REF-W2", "disburse");
+
+    expect(result.status).toBe("failed");
+  });
+
+  it("maps a withdrawal verify status of 'pending' to status:'pending'", async () => {
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        verifyWithdrawal: vi.fn(async () => ({ status: "pending" as const, raw: {} })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.checkStatus("REF-W3", "disburse");
+
+    expect(result.status).toBe("pending");
+  });
+
+  it("maps 'refunded' and other non-terminal statuses to status:'unknown', never a guessed success/failure", async () => {
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        verifyWithdrawal: vi.fn(async () => ({ status: "refunded" as const, raw: {} })),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.checkStatus("REF-W4", "disburse");
+
+    expect(result.status).toBe("unknown");
+  });
+
+  it("maps a verifyWithdrawal rejection (network/API failure) to status:'unknown', never lets the exception escape", async () => {
+    vi.doMock("../plop-client.server", async () => {
+      const actual =
+        await vi.importActual<typeof import("../plop-client.server")>("../plop-client.server");
+      return {
+        ...actual,
+        verifyWithdrawal: vi.fn(async () => {
+          throw new actual.PlopApiError("network error while verifying withdrawal");
+        }),
+      };
+    });
+
+    const { plopProvider } = await import("../plop-provider.server");
+    const result = await plopProvider.checkStatus("REF-W5", "disburse");
+
+    expect(result.status).toBe("unknown");
   });
 });
 

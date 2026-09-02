@@ -1,7 +1,6 @@
 import type { PaymentProvider, PaymentProviderCode } from "./types";
 import { manualProvider } from "./manual-provider.server";
-import { moncashProvider } from "./moncash-provider.server";
-import { natcashProvider } from "./natcash-provider.server";
+import { plopProvider } from "./plop-provider.server";
 import { stripeProvider } from "./stripe-provider.server";
 
 export type {
@@ -27,11 +26,22 @@ export type {
  * `payment_providers.is_active` (the DB row) is the actual gate the admin
  * form respects; this registry only needs to grow by one import + one
  * entry per new provider, never a rewrite of the payout flow itself.
+ *
+ * PROMPT MODIFIKASYON (WALLET, DEKÈSMAN, PIBLISITE), Tach 3 — `moncash_api`
+ * and `natcash_api` both now resolve to `plopProvider` (its real
+ * Withdrawal API, plop-provider.server.ts), replacing the dormant
+ * Digicel-direct (`moncash-provider.server.ts`, always refused disburse)
+ * and unconfigured-stub (`natcash-provider.server.ts`) implementations —
+ * same "swap the implementation behind a stable provider_code" pattern
+ * already used for Collect (§ header comment on plop-provider.server.ts).
+ * `moncash-provider.server.ts`/`natcash-provider.server.ts` are kept on
+ * disk (legacy, unreferenced from this registry now) rather than deleted
+ * — out of scope for this change to remove them outright.
  */
 const PROVIDERS: Record<PaymentProviderCode, PaymentProvider> = {
   manual: manualProvider,
-  moncash_api: moncashProvider,
-  natcash_api: natcashProvider,
+  moncash_api: plopProvider,
+  natcash_api: plopProvider,
   // Present here only because `PaymentProviderCode`'s type requires every
   // code to have a registry entry (TypeScript completeness) — Collect
   // never reaches stripeProvider through this registry (it's imported

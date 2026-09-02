@@ -6,15 +6,15 @@
  * be swapped (Digicel → PLOP, or any future replacement) without a
  * migration or a data rewrite every time.
  *
- * Deliberately scoped to the **Collect** admin surfaces this replacement
- * is about — no existing décaissement (payout) file
- * (`payout-pay-modal.tsx`) consumes this
- * today, and none should be retrofitted to as part of this chantier: on
- * the payout side, `moncash_api` still genuinely means the dormant
- * Digicel-direct integration, never PLOP (docs/archive/plop/PLOP_REMEDIATION_REPORT.md
- * § "Objectif 4"). This module exists ahead of its first real consumer —
- * the first Collect-facing admin view (Phase 6) — precisely so that view
- * never has a reason to hardcode "MonCash API" for what is actually PLOP.
+ * Originally scoped to Collect only (`moncash_api` on the payout side
+ * used to mean the dormant Digicel-direct integration, never PLOP). Tach
+ * 3 (PROMPT MODIFIKASYON WALLET/DEKÈSMAN/PIBLISITE) changed that: both
+ * `moncash_api` and `natcash_api` now resolve to `plopProvider` on the
+ * payout side too (index.server.ts) — `payout-pay-modal.tsx` still
+ * doesn't consume this module (its own local `PAYOUT_CHANNELS` labels
+ * already say "Automatik" without exposing the internal code), but the
+ * map below is corrected regardless so it's never wrong if a future
+ * payout-facing screen does start consuming it.
  *
  * No `.server.ts` suffix: this is plain data + a pure function, safe in
  * both server and client bundles (same category as
@@ -24,12 +24,11 @@ import type { PaymentProviderCode } from "@/lib/payment-providers/types";
 
 export const PROVIDER_CODE_DISPLAY_LABELS: Record<PaymentProviderCode, string> = {
   manual: "Manyèl",
-  // ex-"MonCash API" (still the literal payment_providers.label seed
-  // value on the payout side, intentionally left alone — see module
-  // comment above) — never surfaced verbatim on any Collect-facing
-  // admin screen.
+  // ex-"MonCash API"/"NatCash API" (still the literal payment_providers
+  // .label seed values, intentionally left alone in the DB — see module
+  // comment above) — never surfaced verbatim on any admin screen.
   moncash_api: "PLOP",
-  natcash_api: "NatCash API",
+  natcash_api: "PLOP",
   stripe_api: "Stripe",
 };
 
