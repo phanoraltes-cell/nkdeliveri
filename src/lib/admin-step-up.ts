@@ -13,6 +13,28 @@ export function isStepUpError(error: unknown): boolean {
   return message.startsWith("STEP_UP_REQUIRED");
 }
 
+/**
+ * Mesaj kòrèk pou yon erè step-up — DISTENGE 2 ka ki pa menm ditou:
+ *
+ *   STEP_UP_REQUIRED      (tier standard) -> verifikasyon an ekspire
+ *                          vre; re-klike epi konfime = sa mache.
+ *   STEP_UP_REQUIRED_MFA  (tier strict)   -> sèl yon kòd TOTP ka pase.
+ *                          Si kont lan pa gen okenn faktè TOTP anrejistre,
+ *                          RE-KLIKE P AP JANM MACHE (modpas/OAuth/kòd
+ *                          sekou pa janm satisfè tier strict la —
+ *                          20260811120000_admin_step_up_enforcement.sql).
+ *
+ * Anvan sa, tou de ka yo t ap montre "Verifikasyon sekirite ekspire —
+ * klike ankò", ki voye yon admin san TOTP nan yon bouk san sòti.
+ */
+export function stepUpErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.startsWith("STEP_UP_REQUIRED_MFA")) {
+    return "Aksyon sa a mande yon kòd otantifikasyon (TOTP). Aktive verifikasyon an de etap nan Sekirite kont, apre sa eseye ankò.";
+  }
+  return "Verifikasyon sekirite ekspire — klike ankò pou re-verifye.";
+}
+
 export type StepUpTelemetryEvent =
   | "admin_step_up_started"
   | "admin_step_up_success"

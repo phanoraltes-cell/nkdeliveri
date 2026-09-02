@@ -67,6 +67,9 @@ export function useReauth() {
   const [totpCode, setTotpCode] = useState("");
   const [backupCode, setBackupCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Ekspoze bay dyalòg la pou l ka di klèman lè yon aksyon STRICT pa ka
+  // pase ditou san yon faktè TOTP (olye ofri yon chemen ki pa ka mache).
+  const [pendingTier, setPendingTier] = useState<StepUpTier>("standard");
   const [error, setError] = useState<string | null>(null);
   const verifiedUntilRef = useRef<Partial<Record<StepUpTier, number>>>({});
   const pendingActionRef = useRef<(() => void) | null>(null);
@@ -118,6 +121,7 @@ export function useReauth() {
       }
       pendingActionRef.current = action;
       pendingTierRef.current = tier;
+      setPendingTier(tier);
       setError(null);
       setPassword("");
       setTotpCode("");
@@ -235,6 +239,7 @@ export function useReauth() {
       open: dialogOpen,
       setOpen: setDialogOpen,
       mode,
+      tier: pendingTier,
       hasPassword,
       hasVerifiedFactor: totp.hasVerifiedFactor,
       hasBackupCodes: backup.hasCodes,

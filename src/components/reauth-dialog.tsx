@@ -1,4 +1,5 @@
 import { ShieldCheck, KeyRound, Ticket } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,8 @@ type ReauthDialogState = {
   open: boolean;
   setOpen: (open: boolean) => void;
   mode: "totp" | "backup" | "password" | "oauth";
+  /** Tier aksyon k ap tann nan — "strict" pa janm ka satisfè san yon faktè TOTP. */
+  tier: "standard" | "strict";
   hasPassword: boolean;
   hasVerifiedFactor: boolean;
   hasBackupCodes: boolean;
@@ -51,6 +54,31 @@ export function ReauthDialog({ state }: { state: ReauthDialogState }) {
 
         {state.checkingFactor ? (
           <p className="text-sm text-ink-soft">Chajman…</p>
+        ) : state.tier === "strict" && !state.hasVerifiedFactor ? (
+          // Modpas, OAuth ak kòd sekou pa JANM satisfè tier strict la
+          // sèvè-side. San sa a, admin nan ta tounen nan yon bouk:
+          // klike -> konfime modpas -> RPC refize -> "eseye ankò"…
+          <div className="space-y-3">
+            <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              <b>Aksyon sa a mande verifikasyon an de etap (TOTP).</b>
+              <p className="mt-1">
+                Modpas oswa Google pa ase pou yon aksyon finansye sansib. Kont ou poko gen yon
+                aplikasyon otantifikasyon konfigire — se poutèt sa aksyon an bloke.
+              </p>
+            </div>
+            <p className="text-xs text-ink-soft">
+              Ale nan <b>Sekirite kont</b>, eskane kòd QR la ak Google Authenticator (oswa Authy),
+              epi retounen fè aksyon an ankò.
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => state.setOpen(false)}>
+                Fèmen
+              </Button>
+              <Link to="/dashboard/admin/security" onClick={() => state.setOpen(false)}>
+                <Button>Ale nan Sekirite kont</Button>
+              </Link>
+            </DialogFooter>
+          </div>
         ) : state.mode === "totp" && state.hasVerifiedFactor ? (
           <form
             onSubmit={(e) => {

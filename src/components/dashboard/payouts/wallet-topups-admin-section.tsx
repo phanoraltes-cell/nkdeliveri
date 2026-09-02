@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { inputClsCompact } from "@/lib/utils";
 import { useReauth, isStepUpError } from "@/hooks/useReauth";
+import { stepUpErrorMessage } from "@/lib/admin-step-up";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
 type TopupRow = {
@@ -106,7 +107,7 @@ export function WalletTopupsAdminSection() {
     onError: (e) => {
       if (isStepUpError(e)) {
         invalidateStepUp("strict");
-        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        toast.error(stepUpErrorMessage(e));
         return;
       }
       toast.error(e.message ?? "Erè");
@@ -136,7 +137,7 @@ export function WalletTopupsAdminSection() {
     onError: (e) => {
       if (isStepUpError(e)) {
         invalidateStepUp("strict");
-        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        toast.error(stepUpErrorMessage(e));
         return;
       }
       toast.error(e.message ?? "Erè");

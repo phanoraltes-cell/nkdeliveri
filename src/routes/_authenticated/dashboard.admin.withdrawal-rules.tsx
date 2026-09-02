@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { formatHTG } from "@/lib/format";
 import { useReauth, isStepUpError } from "@/hooks/useReauth";
+import { stepUpErrorMessage } from "@/lib/admin-step-up";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
 // Role guard lives on the parent layout (dashboard.admin.tsx), same
@@ -120,7 +121,7 @@ function AdminWithdrawalRules() {
     onError: (e) => {
       if (isStepUpError(e)) {
         invalidateStepUp("strict");
-        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        toast.error(stepUpErrorMessage(e));
         return;
       }
       toast.error(e.message ?? "Erè");
