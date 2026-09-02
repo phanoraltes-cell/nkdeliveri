@@ -190,19 +190,35 @@ function Checkout() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Tach 1C — balans wallet la, sèlman itil si kliyan an konekte. Sèvè a
-  // (create_order_secure) reverifye balans la endepandan — sa a se
-  // sèlman pou UX (montre balans + bouton "Rechaje" si li pa ase).
-  const walletBalance = useQuery({
-    queryKey: ["my-customer-wallet", user?.id],
+  // Tach 1C/3C — chak wallet kliyan an ka peye ak li: pwòp wallet kliyan
+  // li a, plis (Tach 3C) nenpòt wallet restoran li posede oswa wallet
+  // livrè li a, si genyen. Sèvè a (create_order_secure) reverifye balans
+  // AK dwa posesyon an endepandan — sa a se sèlman pou UX (montre balans,
+  // bouton "Rechaje", ak yon pikè si gen plis pase yon wallet disponib).
+  const payableWallets = useQuery({
+    queryKey: ["my-payable-wallets", user?.id, items[0]?.restaurantId],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_my_customer_wallet_secure");
+      const { data, error } = await supabase.rpc("get_my_payable_wallets_secure", {
+        _restaurant_id: items[0]?.restaurantId,
+      });
       if (error) throw error;
-      return Array.isArray(data) ? data[0] : data;
+      return data ?? [];
     },
     staleTime: 30 * 1000,
   });
+
+  // Tach 3C — chwazi ki wallet pou itilize (defo: premye youn ki pa
+  // bloke pou self-ordering, souvan sèl wallet kliyan an, ki kenbe
+  // konpòtman Tach 1C a inchanje pou gwo majorite itilizatè yo).
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+  useEffect(() => {
+    if (selectedWalletId || !payableWallets.data?.length) return;
+    const firstUsable = payableWallets.data.find((w) => !w.self_order_blocked);
+    setSelectedWalletId(firstUsable?.wallet_id ?? payableWallets.data[0].wallet_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payableWallets.data]);
+  const selectedWallet = payableWallets.data?.find((w) => w.wallet_id === selectedWalletId) ?? null;
 
   const savedAddresses = useQuery({
     queryKey: ["my-addresses", user?.id],
@@ -366,12 +382,22 @@ function Checkout() {
       toast.error("Restoran an fèmen kounye a. Tanpri eseye pita.");
       return;
     }
-    // Tach 1C — defans an plis kliyan-side; sèvè a (create_order_secure)
-    // reverifye balans la endepandan nan menm tranzaksyon an, se sa ki
-    // konte reyèlman.
-    if (method === "wallet" && (walletBalance.data?.available_balance ?? 0) < total) {
-      toast.error("Balans wallet ou pa ase pou peye kòmand sa a. Rechaje wallet ou anvan.");
-      return;
+    // Tach 1C/3C — defans an plis kliyan-side; sèvè a (create_order_secure)
+    // reverifye balans, posesyon, AK blokaj self-ordering la endepandan
+    // nan menm tranzaksyon an, se sa ki konte reyèlman.
+    if (method === "wallet") {
+      if (!selectedWallet) {
+        toast.error("Chwazi ki wallet ou vle peye a.");
+        return;
+      }
+      if (selectedWallet.self_order_blocked) {
+        toast.error("Ou pa ka peye yon kòmand nan pwòp restoran ou ak balans ou.");
+        return;
+      }
+      if (selectedWallet.available_balance < total) {
+        toast.error("Balans wallet ou pa ase pou peye kòmand sa a. Rechaje wallet ou anvan.");
+        return;
+      }
     }
     setSubmitting(true);
     try {
@@ -393,6 +419,10 @@ function Checkout() {
         // Sèvè a (create_order_secure) refè TOUT kalkil rabè a ankò tou
         // sèl — sa a se sèlman ki kòd kliyan an te antre, jamè yon montan.
         _promo_code: appliedPromo?.code,
+        // Tach 3C — ki wallet pou debite lè method='wallet'. undefined
+        // pou tout lòt metòd (paramèt la ignore), oswa si pa gen wallet
+        // chwazi ditou (sèvè a fè tè menm gad la kanmenm).
+        _wallet_id: method === "wallet" ? (selectedWalletId ?? undefined) : undefined,
       });
       if ("networkFailure" in orderResult) {
         // Deliberately not a hard error state — the order may well have
@@ -821,33 +851,73 @@ function Checkout() {
                   })()}
                 {method === "wallet" &&
                   (() => {
-                    const balance = walletBalance.data?.available_balance ?? 0;
-                    const insufficient = !walletBalance.isLoading && balance < total;
+                    const wallets = payableWallets.data ?? [];
+                    const balance = selectedWallet?.available_balance ?? 0;
+                    const insufficient = !payableWallets.isLoading && balance < total;
+                    const blocked = selectedWallet?.self_order_blocked ?? false;
                     return (
-                      <div
-                        className={`mt-3 rounded-xl p-3 text-xs ${insufficient ? "bg-red-50 text-red-900" : "bg-emerald-50 text-emerald-900"}`}
-                      >
-                        {walletBalance.isLoading ? (
-                          "Ap chaje balans wallet ou…"
-                        ) : (
-                          <>
-                            Balans wallet ou: <b>{formatHTG(balance)}</b>
-                            {insufficient ? (
-                              <>
-                                {" "}
-                                — sa pa ase pou peye {formatHTG(total)}.{" "}
-                                <Link
-                                  to="/dashboard/customer/wallet"
-                                  className="font-bold underline underline-offset-2"
-                                >
-                                  Rechaje wallet ou
-                                </Link>
-                              </>
-                            ) : (
-                              " — ase pou peye kòmand sa a. Debi a imedya, pa gen prèv pou telechaje."
-                            )}
-                          </>
+                      <div className="mt-3 space-y-2">
+                        {/* Tach 3C — pikè a parèt sèlman si gen plis pase yon
+                            wallet disponib (restoran/livrè ki gen pwòp
+                            wallet yo tou); yon kliyan òdinè wè ZEWO chanjman. */}
+                        {wallets.length > 1 && (
+                          <div className="flex flex-col gap-1.5">
+                            {wallets.map((w) => (
+                              <label
+                                key={w.wallet_id ?? "customer-default"}
+                                className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-3 py-2 text-xs ${
+                                  selectedWalletId === w.wallet_id
+                                    ? "border-brand bg-brand-soft/40"
+                                    : "border-brand-soft/60 bg-white"
+                                } ${w.self_order_blocked ? "opacity-50" : ""}`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    name="wallet-picker"
+                                    checked={selectedWalletId === w.wallet_id}
+                                    disabled={w.self_order_blocked}
+                                    onChange={() => setSelectedWalletId(w.wallet_id)}
+                                  />
+                                  {w.label}
+                                  {w.self_order_blocked && (
+                                    <span className="text-[10px] text-red-600">
+                                      (ou pa ka peye pwòp restoran ou)
+                                    </span>
+                                  )}
+                                </span>
+                                <b>{formatHTG(w.available_balance)}</b>
+                              </label>
+                            ))}
+                          </div>
                         )}
+                        <div
+                          className={`rounded-xl p-3 text-xs ${insufficient || blocked ? "bg-red-50 text-red-900" : "bg-emerald-50 text-emerald-900"}`}
+                        >
+                          {payableWallets.isLoading ? (
+                            "Ap chaje wallet ou…"
+                          ) : blocked ? (
+                            "Ou pa ka peye yon kòmand nan pwòp restoran ou ak balans sa a — chwazi yon lòt wallet."
+                          ) : (
+                            <>
+                              Balans wallet ou: <b>{formatHTG(balance)}</b>
+                              {insufficient ? (
+                                <>
+                                  {" "}
+                                  — sa pa ase pou peye {formatHTG(total)}.{" "}
+                                  <Link
+                                    to="/dashboard/customer/wallet"
+                                    className="font-bold underline underline-offset-2"
+                                  >
+                                    Rechaje wallet ou
+                                  </Link>
+                                </>
+                              ) : (
+                                " — ase pou peye kòmand sa a. Debi a imedya, pa gen prèv pou telechaje."
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     );
                   })()}

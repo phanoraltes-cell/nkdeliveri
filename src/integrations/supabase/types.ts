@@ -65,6 +65,7 @@ export type Database = {
           _method: Database["public"]["Enums"]["payment_method"];
           _promo_code?: string;
           _restaurant_id: string;
+          _wallet_id?: string;
           _wants_location_sharing?: boolean;
         };
         Returns: string;
@@ -1603,6 +1604,8 @@ export type Database = {
           stripe_session_id: string | null;
           transaction_ref: string | null;
           updated_at: string;
+          /** Tach 3C — ki wallet (kliyan, restoran, oswa livrè) ki debite lè method='wallet'. NULL pou tout lòt metòd, ak pou ranje ki kreye anvan kolòn sa a te egziste (Tach 1C). */
+          wallet_id: string | null;
         };
         Insert: {
           amount: number;
@@ -1628,6 +1631,7 @@ export type Database = {
           stripe_session_id?: string | null;
           transaction_ref?: string | null;
           updated_at?: string;
+          wallet_id?: string | null;
         };
         Update: {
           amount?: number;
@@ -1653,6 +1657,7 @@ export type Database = {
           stripe_session_id?: string | null;
           transaction_ref?: string | null;
           updated_at?: string;
+          wallet_id?: string | null;
         };
         Relationships: [
           {
@@ -1660,6 +1665,13 @@ export type Database = {
             columns: ["order_id"];
             isOneToOne: false;
             referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "wallets";
             referencedColumns: ["id"];
           },
           {
@@ -3608,6 +3620,7 @@ export type Database = {
           _method: Database["public"]["Enums"]["payment_method"];
           _promo_code?: string;
           _restaurant_id: string;
+          _wallet_id?: string;
           _wants_location_sharing?: boolean;
         };
         Returns: string;
@@ -4610,6 +4623,19 @@ export type Database = {
           id: string;
           note: string | null;
           type: string;
+        }[];
+      };
+      get_my_payable_wallets_secure: {
+        Args: { _restaurant_id?: string };
+        Returns: {
+          available_balance: number;
+          driver_id: string | null;
+          kind: string;
+          label: string;
+          restaurant_id: string | null;
+          self_order_blocked: boolean;
+          /** NULL for a not-yet-topped-up customer wallet (matching get_my_customer_wallet_secure's own synthetic-zero-row shape) — create_order_secure treats a null _wallet_id as "use my own customer wallet" by default, so this degrades correctly with no special-casing needed. */
+          wallet_id: string | null;
         }[];
       };
       get_order_admin_detail: {
