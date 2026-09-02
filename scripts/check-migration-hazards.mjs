@@ -21,6 +21,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import { reportOnConflictHazards } from "./check-on-conflict-hazards.mjs";
+
 const MIGRATIONS_DIR = "supabase/migrations";
 
 function stripSchema(name) {
@@ -190,6 +192,10 @@ function main() {
     return h.existingSignatures.some((sig) => finalSigs.has(sig === "(no args)" ? "" : sig));
   });
 
+  // Dezyèm klas danje, endepandan de overload yo: ON CONFLICT sou yon
+  // endèks inik PASYÈL (SQLSTATE 42P10 nan runtime). Wè
+  // check-on-conflict-hazards.mjs pou ensidan ki fè l ajoute a.
+  if (reportOnConflictHazards() > 0) process.exit(1);
   if (unresolved.length === 0) {
     console.log(
       `check-migration-hazards: ${files.length} migrations scanned, ${hazards.length} historical overload(s) all later cleaned up, no unresolved hazards.`,

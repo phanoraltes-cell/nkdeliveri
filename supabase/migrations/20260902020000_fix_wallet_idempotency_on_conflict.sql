@@ -1,0 +1,46 @@
+-- BUG KRITIK — TOUT chemen lajan wallet yo te kase depi Tach 1C.
+--
+-- SENTÒM: "there is no unique or exclusion constraint matching the ON
+-- CONFLICT specification" (SQLSTATE 42P10) lè yon RPC eseye kredite oswa
+-- debite yon wallet.
+--
+-- KÒZ: 20260901010000 te kreye endèks idanpotans lan kòm yon endèks
+-- PASYÈL:
+--
+--   CREATE UNIQUE INDEX wallet_transactions_idempotency_key_uniq
+--     ON public.wallet_transactions(idempotency_key)
+--     WHERE idempotency_key IS NOT NULL;   <-- predika a
+--
+-- Postgres PA KA enfere yon endèks pasyèl nan yon `ON CONFLICT (col)`
+-- san menm predika a repete nan deklarasyon an. Donk CHAK
+-- `ON CONFLICT (idempotency_key) DO NOTHING` nan pwojè a leve yon erè —
+-- li pa janm te ka mache.
+--
+-- KONBYEN KOTE SA TOUCHE (tout se lajan reyèl):
+--   1. complete_wallet_topup_secure      -> kredi rechaj wallet
+--   2. admin_recover_wallet_topup_secure -> rekiperasyon rechaj
+--   3. admin_force_credit_wallet_topup_secure -> kredi manyèl
+--   4. create_order_secure               -> debi wallet pou yon kòmand
+--   5. update_order_status_secure        -> ranbousman wallet
+--
+-- Sa vle di: ni rechaj, ni peman kòmand ak wallet, ni ranbousman pa t
+-- janm ka konplete. Se yon dezyèm kòz, endepandan de sa ekspirasyon an
+-- (20260902000000), nan ensidan 50 HTG la.
+--
+-- KOREKSYON: retire predika a. Yon endèks UNIQUE sou yon kolòn ki ka
+-- NULL trete chak NULL kòm DISTENK nan Postgres (NULLS DISTINCT, konpòtman
+-- pa defo) — donk ranje san idempotency_key (kredi komisyon, peman
+-- payout, elt.) rete san kontrent EGZAKTEMAN jan yo te ye, pandan
+-- `ON CONFLICT (idempotency_key)` vin enferab. Se MENM patwon egzat ki
+-- deja pwouve tèt li sou orders.idempotency_key
+-- (20260818100000_nkd011_order_idempotency.sql:64), ki gen yon endèks
+-- konplè san predika epi ki mache depi lontan nan pwodiksyon.
+--
+-- Garanti idanpotans lan PA febli: 2 ranje ak MENM idempotency_key ki pa
+-- NULL rete enposib — se sa ki anpeche yon doub-kredi.
+--
+-- Pa gen okenn risk done: nou pa ka gen doub ki egziste deja (ansyen
+-- endèks pasyèl la te deja bloke yo), e NULL yo pa janm antre an konfli.
+DROP INDEX IF EXISTS public.wallet_transactions_idempotency_key_uniq;
+CREATE UNIQUE INDEX wallet_transactions_idempotency_key_uniq
+  ON public.wallet_transactions(idempotency_key);
