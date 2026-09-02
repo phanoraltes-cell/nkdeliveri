@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { formatHTG } from "@/lib/format";
@@ -47,6 +48,34 @@ export function WithdrawalRequestSection({
     moncashConfigured && ({ value: "moncash", label: "MonCash" } as const),
     natcashConfigured && ({ value: "natcash", label: "NatCash" } as const),
   ].filter(Boolean) as { value: "moncash" | "natcash"; label: string }[];
+
+  // Tach 3D — règ frè/limit aktif la, jis pou APÈSI "montan → frè →
+  // nèt" anvan menm soumèt; request_withdrawal_secure refè EGZAKTEMAN
+  // menm kalkil la sèvè-side, se sa ki konte reyèlman.
+  const rule = useQuery({
+    queryKey: ["withdrawal-rule", beneficiaryType],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_active_withdrawal_rule_secure", {
+        _role: beneficiaryType,
+      });
+      if (error) throw error;
+      return Array.isArray(data) ? (data[0] ?? null) : data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const numAmount = Number(amount) || 0;
+  const feePreview = (() => {
+    if (!rule.data || numAmount <= 0) return null;
+    const free = rule.data.free_threshold != null && numAmount <= rule.data.free_threshold;
+    const fee = free
+      ? 0
+      : Math.min(
+          numAmount,
+          Math.round((numAmount * rule.data.fee_percentage) / 100 + rule.data.flat_fee),
+        );
+    return { fee, net: numAmount - fee };
+  })();
 
   const request = useMutation({
     mutationFn: async () => {
@@ -135,9 +164,28 @@ export function WithdrawalRequestSection({
           </div>
         </div>
       )}
+      {feePreview && (
+        <div className="mt-3 rounded-xl bg-brand-soft/40 p-3 text-xs text-ink-soft">
+          Montan mande: <b className="text-ink">{formatHTG(numAmount)}</b> — Frè:{" "}
+          <b className="text-ink">{formatHTG(feePreview.fee)}</b> — Ou ap resevwa:{" "}
+          <b className="text-brand-deep">{formatHTG(feePreview.net)}</b>
+        </div>
+      )}
       <p className="mt-3 text-xs text-ink-soft">
-        Balans disponib: <b className="text-ink">{formatHTG(availableBalance)}</b> — minimòm retrè:{" "}
-        <b className="text-ink">{formatHTG(250)}</b>.
+        Balans disponib: <b className="text-ink">{formatHTG(availableBalance)}</b>
+        {rule.data && (
+          <>
+            {" "}
+            — minimòm retrè: <b className="text-ink">{formatHTG(rule.data.min_amount)}</b>
+            {rule.data.max_amount != null && (
+              <>
+                {" "}
+                — maksimòm: <b className="text-ink">{formatHTG(rule.data.max_amount)}</b>
+              </>
+            )}
+          </>
+        )}
+        .
       </p>
     </section>
   );

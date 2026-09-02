@@ -1728,8 +1728,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -1746,6 +1748,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         Insert: {
           admin_notes?: string | null;
@@ -1755,8 +1758,10 @@ export type Database = {
           dispute_reason?: string | null;
           disputed_at?: string | null;
           driver_id?: string | null;
+          fee_amount?: number;
           id?: string;
           method: string;
+          net_amount?: number;
           paid_by?: string | null;
           proof_url?: string | null;
           provider_code?: string;
@@ -1773,6 +1778,7 @@ export type Database = {
           transaction_reference: string;
           updated_at?: string;
           wallet_id: string;
+          withdrawal_rule_id?: string | null;
         };
         Update: {
           admin_notes?: string | null;
@@ -1782,8 +1788,10 @@ export type Database = {
           dispute_reason?: string | null;
           disputed_at?: string | null;
           driver_id?: string | null;
+          fee_amount?: number;
           id?: string;
           method?: string;
+          net_amount?: number;
           paid_by?: string | null;
           proof_url?: string | null;
           provider_code?: string;
@@ -1800,6 +1808,7 @@ export type Database = {
           transaction_reference?: string;
           updated_at?: string;
           wallet_id?: string;
+          withdrawal_rule_id?: string | null;
         };
         Relationships: [
           {
@@ -3149,6 +3158,57 @@ export type Database = {
           },
         ];
       };
+      withdrawal_rules: {
+        Row: {
+          availability_delay_hours: number;
+          created_at: string;
+          created_by: string | null;
+          daily_limit: number | null;
+          effective_from: string;
+          fee_percentage: number;
+          flat_fee: number;
+          free_threshold: number | null;
+          id: string;
+          max_amount: number | null;
+          min_amount: number;
+          notes: string | null;
+          role: string;
+          weekly_limit: number | null;
+        };
+        Insert: {
+          availability_delay_hours?: number;
+          created_at?: string;
+          created_by?: string | null;
+          daily_limit?: number | null;
+          effective_from?: string;
+          fee_percentage?: number;
+          flat_fee?: number;
+          free_threshold?: number | null;
+          id?: string;
+          max_amount?: number | null;
+          min_amount?: number;
+          notes?: string | null;
+          role: string;
+          weekly_limit?: number | null;
+        };
+        Update: {
+          availability_delay_hours?: number;
+          created_at?: string;
+          created_by?: string | null;
+          daily_limit?: number | null;
+          effective_from?: string;
+          fee_percentage?: number;
+          flat_fee?: number;
+          free_threshold?: number | null;
+          id?: string;
+          max_amount?: number | null;
+          min_amount?: number;
+          notes?: string | null;
+          role?: string;
+          weekly_limit?: number | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -3392,8 +3452,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -3410,6 +3472,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -3523,8 +3586,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -3541,6 +3606,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -3657,8 +3723,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -3675,6 +3743,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -3876,6 +3945,68 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_withdrawal_rule_secure: {
+        Args: {
+          _availability_delay_hours?: number;
+          _daily_limit?: number;
+          _effective_from?: string;
+          _fee_percentage: number;
+          _flat_fee: number;
+          _free_threshold?: number;
+          _max_amount?: number;
+          _min_amount: number;
+          _notes?: string;
+          _role: string;
+          _weekly_limit?: number;
+        };
+        Returns: {
+          availability_delay_hours: number;
+          created_at: string;
+          created_by: string | null;
+          daily_limit: number | null;
+          effective_from: string;
+          fee_percentage: number;
+          flat_fee: number;
+          free_threshold: number | null;
+          id: string;
+          max_amount: number | null;
+          min_amount: number;
+          notes: string | null;
+          role: string;
+          weekly_limit: number | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "withdrawal_rules";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_active_withdrawal_rule_secure: {
+        Args: { _as_of?: string; _role: string };
+        Returns: {
+          availability_delay_hours: number;
+          created_at: string;
+          created_by: string | null;
+          daily_limit: number | null;
+          effective_from: string;
+          fee_percentage: number;
+          flat_fee: number;
+          free_threshold: number | null;
+          id: string;
+          max_amount: number | null;
+          min_amount: number;
+          notes: string | null;
+          role: string;
+          weekly_limit: number | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "withdrawal_rules";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       delete_menu_category_secure: {
         Args: { _category_id: string };
         Returns: undefined;
@@ -3936,8 +4067,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -3954,6 +4087,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -3989,8 +4123,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -4007,6 +4143,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -4871,8 +5008,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -4889,6 +5028,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5166,8 +5306,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -5184,6 +5326,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5202,8 +5345,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -5220,6 +5365,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5243,8 +5389,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -5261,6 +5409,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5279,8 +5428,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -5297,6 +5448,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5341,8 +5493,10 @@ export type Database = {
           dispute_reason: string | null;
           disputed_at: string | null;
           driver_id: string | null;
+          fee_amount: number;
           id: string;
           method: string;
+          net_amount: number;
           paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
@@ -5359,6 +5513,7 @@ export type Database = {
           transaction_reference: string;
           updated_at: string;
           wallet_id: string;
+          withdrawal_rule_id: string | null;
         };
         SetofOptions: {
           from: "*";

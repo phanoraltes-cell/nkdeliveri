@@ -17,6 +17,8 @@ import { generatePayoutReceipt } from "@/lib/payout-receipt";
 type PayoutHistoryRow = {
   id: string;
   amount: number;
+  fee_amount: number;
+  net_amount: number;
   method: string;
   status: string;
   resolution: string | null;
@@ -55,7 +57,7 @@ export function PayoutHistoryTable({
       const { data, error } = await supabase
         .from("payouts")
         .select(
-          "id, amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason, proof_url",
+          "id, amount, fee_amount, net_amount, method, status, resolution, created_at, receiver_number, receiver_account_name, transaction_reference, dispute_reason, proof_url",
         )
         .eq(column, beneficiaryId!)
         .order("created_at", { ascending: false });
@@ -116,6 +118,8 @@ export function PayoutHistoryTable({
             generatePayoutReceipt({
               id: r.id,
               amount: Number(r.amount),
+              feeAmount: r.fee_amount ? Number(r.fee_amount) : undefined,
+              netAmount: Number(r.net_amount),
               method: r.method,
               receiverNumber: r.receiver_number,
               receiverAccountName: r.receiver_account_name,

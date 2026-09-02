@@ -58,10 +58,12 @@ export async function runRequestWithdrawal(
   if (requestError) throw new Error(requestError.message);
 
   const attempt = await attemptWithdrawalProvider(supabase, requested);
-  if (attempt.outcome === "not_configured") {
-    // Not configured/active at the application layer — stays 'requested'
-    // for an admin to process manually. Not an error: this is the
-    // expected, honest state until a real integration/activation exists.
+  if (attempt.outcome === "not_configured" || attempt.outcome === "not_yet_available") {
+    // Not configured/active at the application layer, or (Tach 3D) the
+    // rule's availability_delay_hours hasn't elapsed yet (always true
+    // immediately after a fresh request when that delay is > 0) — either
+    // way stays 'requested' for later automatic pickup or an admin to
+    // process manually. Not an error: this is the expected, honest state.
     return { outcome: "requested", payout: requested };
   }
   return attempt;

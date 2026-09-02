@@ -11,6 +11,9 @@ export type PayoutReceiptData = {
   status: string;
   beneficiaryName: string;
   createdAt: string;
+  /** Tach 3D — present only for a self-service withdrawal request that had a withdrawal_rules fee applied; omitted (undefined) for every payout that predates that feature or carries no fee, so the receipt shows nothing extra for them. */
+  feeAmount?: number;
+  netAmount?: number;
 };
 
 /**
@@ -33,7 +36,13 @@ export async function generatePayoutReceipt(payout: PayoutReceiptData) {
 
   const rows: [string, string][] = [
     ["Benefisyè", payout.beneficiaryName],
-    ["Montan", formatHTG(payout.amount)],
+    ["Montan mande", formatHTG(payout.amount)],
+    ...(payout.feeAmount
+      ? ([
+          ["Frè", formatHTG(payout.feeAmount)],
+          ["Montan resevwa (nèt)", formatHTG(payout.netAmount ?? payout.amount - payout.feeAmount)],
+        ] as [string, string][])
+      : []),
     ["Metòd", payout.method.toUpperCase()],
     ["Nimewo resevwa", payout.receiverNumber],
     ...(payout.receiverAccountName

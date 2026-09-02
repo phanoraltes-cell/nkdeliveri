@@ -20,6 +20,8 @@ type PayoutRow = Database["public"]["Tables"]["payouts"]["Row"];
 
 export type AttemptWithdrawalProviderResult =
   | { outcome: "not_configured"; payout: PayoutRow }
+  /** Tach 3D — the rule's availability_delay_hours hasn't elapsed since the request was created yet (ERRCODE 55000 from mark_requested_withdrawal_processing_secure/admin_mark_requested_withdrawal_paid_secure). Distinct from "not_configured" so the caller shows the real reason, not a misleading "PLOP isn't set up" message. */
+  | { outcome: "not_yet_available"; payout: PayoutRow; error: string }
   | { outcome: "pending"; payout: PayoutRow }
   | { outcome: "success"; payout: PayoutRow }
   | { outcome: "failed"; payout: PayoutRow; error: string };
@@ -45,12 +47,19 @@ export async function attemptWithdrawalProvider(
     { _payout_id: payout.id, _provider_code: providerCode, _own_reference: idempotencyKey },
   );
   if (markError) {
+    if (markError.code === "55000") {
+      return { outcome: "not_yet_available", payout, error: markError.message };
+    }
     return { outcome: "not_configured", payout };
   }
 
+  // Tach 3D — the beneficiary receives net_amount (amount minus the
+  // withdrawal_rules fee, already computed and snapshotted at request
+  // time); the wallet reserved the gross `amount`, but only the net
+  // figure is ever actually wired out.
   const result = await provider.initiatePayment({
     direction: "disburse",
-    amount: processing.amount,
+    amount: processing.net_amount,
     counterpartyNumber: processing.receiver_number,
     counterpartyName: processing.receiver_account_name,
     reference: idempotencyKey,

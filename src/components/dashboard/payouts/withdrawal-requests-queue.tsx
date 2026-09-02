@@ -25,6 +25,8 @@ import { ReauthDialog } from "@/components/reauth-dialog";
 type RequestRow = {
   id: string;
   amount: number;
+  fee_amount: number;
+  net_amount: number;
   method: string;
   receiver_number: string;
   created_at: string;
@@ -55,7 +57,7 @@ export function WithdrawalRequestsQueue() {
       const { data, error } = await supabase
         .from("payouts")
         .select(
-          "id, amount, method, receiver_number, created_at, restaurant_id, driver_id, restaurants(name), drivers(first_name, last_name)",
+          "id, amount, fee_amount, net_amount, method, receiver_number, created_at, restaurant_id, driver_id, restaurants(name), drivers(first_name, last_name)",
         )
         .eq("status", "requested")
         .order("created_at", { ascending: true });
@@ -83,6 +85,7 @@ export function WithdrawalRequestsQueue() {
       else if (result.outcome === "pending")
         toast.success("Demann voye bay pwovidè a. N ap konfime rezilta a talè.");
       else if (result.outcome === "failed") toast.error(`Pwovidè echwe: ${result.error}`);
+      else if (result.outcome === "not_yet_available") toast.error(result.error);
       else toast.error("Pwovidè otomatik pa disponib toujou — peye l manyèlman.");
       invalidateAll();
     },
@@ -138,6 +141,16 @@ export function WithdrawalRequestsQueue() {
     },
     { key: "name", header: "Benefisyè", cell: (r) => beneficiaryName(r) },
     { key: "amount", header: "Montan", cell: (r) => formatHTG(Number(r.amount)) },
+    {
+      key: "net_amount",
+      header: "Nèt (apre frè)",
+      cell: (r) => (
+        <span className={r.fee_amount > 0 ? "font-bold text-brand-deep" : ""}>
+          {formatHTG(Number(r.net_amount))}
+        </span>
+      ),
+      hideOnMobileCard: true,
+    },
     { key: "method", header: "Metòd", cell: (r) => r.method.toUpperCase() },
     { key: "receiver_number", header: "Nimewo", cell: (r) => r.receiver_number },
     {
@@ -188,10 +201,21 @@ export function WithdrawalRequestsQueue() {
           <DialogHeader>
             <DialogTitle>Peye demann retrè a manyèlman</DialogTitle>
             <DialogDescription>
-              {payTarget &&
-                `${beneficiaryName(payTarget)} — ${formatHTG(Number(payTarget.amount))} sou ${payTarget.receiver_number}`}
+              {payTarget && `${beneficiaryName(payTarget)} — sou ${payTarget.receiver_number}`}
             </DialogDescription>
           </DialogHeader>
+          {payTarget && payTarget.fee_amount > 0 && (
+            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+              Montan mande: <b>{formatHTG(Number(payTarget.amount))}</b> — Frè:{" "}
+              <b>{formatHTG(Number(payTarget.fee_amount))}</b> — Voye:{" "}
+              <b>{formatHTG(Number(payTarget.net_amount))}</b> sèlman (pa montan brit la).
+            </div>
+          )}
+          {payTarget && payTarget.fee_amount === 0 && (
+            <div className="rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
+              Voye: <b>{formatHTG(Number(payTarget.net_amount))}</b> (okenn frè sou demann sa a).
+            </div>
+          )}
           <div className="space-y-3">
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
