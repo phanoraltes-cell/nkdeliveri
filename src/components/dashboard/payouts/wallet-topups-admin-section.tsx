@@ -11,6 +11,16 @@ import type { StatusTone } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
 import { formatHTG } from "@/lib/format";
 import { recoverWalletTopup } from "@/lib/recover-wallet-topup.functions";
+import { forceCreditWalletTopup } from "@/lib/force-credit-wallet-topup.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { inputClsCompact } from "@/lib/utils";
 import { useReauth, isStepUpError } from "@/hooks/useReauth";
 import { ReauthDialog } from "@/components/reauth-dialog";
 
@@ -56,6 +66,10 @@ export function WalletTopupsAdminSection() {
   const recover = useServerFn(recoverWalletTopup);
   const { withReauth, invalidateStepUp, dialogState } = useReauth();
   const [status, setStatus] = useState<string>("");
+  const forceCredit = useServerFn(forceCreditWalletTopup);
+  const [forceTarget, setForceTarget] = useState<TopupRow | null>(null);
+  const [justification, setJustification] = useState("");
+  const [plopSaid, setPlopSaid] = useState<Record<string, string>>({});
 
   const topups = useQuery({
     queryKey: ["admin-wallet-topups", status],
@@ -71,15 +85,52 @@ export function WalletTopupsAdminSection() {
   });
 
   const runRecover = useMutation({
-    mutationFn: (externalReference: string) => recover({ data: { externalReference } }),
-    onSuccess: (result) => {
+    mutationFn: async (externalReference: string) => {
+      const result = await recover({ data: { externalReference } });
+      return { externalReference, result };
+    },
+    onSuccess: ({ externalReference, result }) => {
       if (result.outcome === "recovered") {
         toast.success("Rechaj la rekipere — balans kliyan an kredite.");
       } else if (result.outcome === "not_paid") {
         toast.error(result.error);
       } else {
-        toast.error(result.error ?? "Pa ka rekipere kounye a");
+        // provider_unavailable — sèl lòt rezilta ki posib.
+        toast.error(result.error);
       }
+      if (result.outcome === "not_paid") {
+        setPlopSaid((m) => ({ ...m, [externalReference]: result.error }));
+      }
+      qc.invalidateQueries({ queryKey: ["admin-wallet-topups"] });
+    },
+    onError: (e) => {
+      if (isStepUpError(e)) {
+        invalidateStepUp("strict");
+        toast.error("Verifikasyon sekirite ekspire — klike ankò pou re-verifye.");
+        return;
+      }
+      toast.error(e.message ?? "Erè");
+    },
+  });
+
+  const runForceCredit = useMutation({
+    mutationFn: async () => {
+      if (!forceTarget) throw new Error("Pa gen rechaj chwazi");
+      if (justification.trim().length < 10) {
+        throw new Error("Jistifikasyon obligatwa (omwen 10 karaktè)");
+      }
+      return forceCredit({
+        data: {
+          externalReference: forceTarget.external_reference,
+          justification: justification.trim(),
+          providerTransactionId: forceTarget.provider_transaction_id ?? undefined,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Balans kliyan an kredite — tras odit anrejistre kòm desizyon admin.");
+      setForceTarget(null);
+      setJustification("");
       qc.invalidateQueries({ queryKey: ["admin-wallet-topups"] });
     },
     onError: (e) => {
@@ -126,15 +177,27 @@ export function WalletTopupsAdminSection() {
         r.status === "succeeded" ? (
           <span className="text-xs text-ink-soft">—</span>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={runRecover.isPending}
-            onClick={() => withReauth(() => runRecover.mutate(r.external_reference), "strict")}
-          >
-            <LifeBuoy className="mr-1 h-3.5 w-3.5" />
-            Rekipere
-          </Button>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={runRecover.isPending}
+                onClick={() => withReauth(() => runRecover.mutate(r.external_reference), "strict")}
+              >
+                <LifeBuoy className="mr-1 h-3.5 w-3.5" />
+                Rekipere
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => setForceTarget(r)}>
+                Kredi manyèl
+              </Button>
+            </div>
+            {plopSaid[r.external_reference] && (
+              <span className="max-w-[22rem] text-right text-[10px] text-red-600">
+                {plopSaid[r.external_reference]}
+              </span>
+            )}
+          </div>
         ),
     },
   ];
@@ -176,6 +239,50 @@ export function WalletTopupsAdminSection() {
           columns={columns}
         />
       </section>
+
+      <Dialog open={!!forceTarget} onOpenChange={(open) => !open && setForceTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kredi manyèl (verifye pa yon moun)</DialogTitle>
+            <DialogDescription>
+              {forceTarget &&
+                `${forceTarget.customer_name} — ${formatHTG(Number(forceTarget.amount))} — referans ${forceTarget.external_reference.slice(0, 8)}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+              <b>Atansyon:</b> aksyon sa a kredite balans kliyan an <b>SAN</b> konfimasyon API PLOP
+              la. Sèvi ak li sèlman si ou verifye peman an ou menm (dashbòd PLOP, SMS MonCash kliyan
+              an, elt.). Li ap anrejistre kòm yon desizyon admin nan jounal odit la.
+            </div>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-soft">
+                Jistifikasyon (obligatwa) — ki jan ou verifye peman an?
+              </span>
+              <textarea
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                rows={3}
+                placeholder="Egzanp: Peman parèt konfime nan dashbòd PLOP la, ID tranzaksyon XXXX, 50 HTG, dat 01/09."
+                className={inputClsCompact()}
+              />
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setForceTarget(null)}>
+              Anile
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={runForceCredit.isPending || justification.trim().length < 10}
+              onClick={() => withReauth(() => runForceCredit.mutate(), "strict")}
+            >
+              {runForceCredit.isPending ? "Ap kredite…" : "Kredite balans lan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ReauthDialog state={dialogState} />
     </>
   );

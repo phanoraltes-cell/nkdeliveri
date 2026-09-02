@@ -32,13 +32,18 @@ export const recoverWalletTopup = createServerFn({ method: "POST" })
 
     const status = await plopProvider.checkStatus(data.externalReference);
     if (status.status !== "success") {
+      // Nou montre EGZAKTEMAN sa PLOP reponn — san sa, admin nan rete
+      // devan yon mi san okenn enfòmasyon pou l deside kisa pou l fè
+      // (se egzakteman sa ki te pase ak ensidan 50 HTG la).
+      const detail =
+        status.status === "unknown"
+          ? status.error
+          : JSON.stringify((status as { raw?: unknown }).raw ?? {}).slice(0, 300);
       return {
         outcome: "not_paid" as const,
         providerStatus: status.status,
-        error:
-          status.status === "unknown"
-            ? `PLOP pa ka konfime referans sa a: ${status.error}`
-            : "PLOP pa endike okenn peman reyisi pou referans sa a",
+        providerDetail: detail,
+        error: `PLOP pa konfime peman an (repons: ${status.status}). Detay: ${detail}`,
       };
     }
 

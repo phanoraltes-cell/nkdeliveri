@@ -3945,6 +3945,35 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      admin_force_credit_wallet_topup_secure: {
+        Args: {
+          _external_reference: string;
+          _justification: string;
+          _provider_transaction_id?: string;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       admin_recover_wallet_topup_secure: {
         Args: {
           _external_reference: string;
