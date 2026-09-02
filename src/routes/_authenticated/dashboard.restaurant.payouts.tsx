@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatHTG } from "@/lib/format";
 import { inputClsCompact } from "@/lib/utils";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
+import { WithdrawalRequestSection } from "@/components/dashboard/wallet/withdrawal-request-section";
 import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
 import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
@@ -147,6 +148,15 @@ function MerchantPayouts() {
       </div>
 
       <WalletSummaryCards wallet={wallet.data ?? null} />
+
+      <WithdrawalRequestSection
+        beneficiaryType="restaurant"
+        beneficiaryId={r?.id}
+        availableBalance={Number(wallet.data?.available_balance ?? 0)}
+        moncashConfigured={Boolean(r?.moncash_number)}
+        natcashConfigured={Boolean(r?.natcash_number)}
+        invalidateKeys={[walletQueryKey, ["me-payout-history"]]}
+      />
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Nimewo peman ou</h2>

@@ -2,16 +2,22 @@ import type { StatusTone } from "@/components/dashboard/status-badge";
 
 /** Kreyòl label/tone for a `payouts.status` value (a single manual-payment record). */
 export const PAYOUT_STATUS_LABEL: Record<string, string> = {
+  requested: "Demann voye",
+  pending: "An tretman",
   paid: "Peye",
   confirmed: "Konfime",
   disputed: "Kontete",
   resolved: "Rezoud",
+  failed: "Echwe",
 };
 export const PAYOUT_STATUS_TONE: Record<string, StatusTone> = {
+  requested: "warn",
+  pending: "warn",
   paid: "info",
   confirmed: "good",
   disputed: "bad",
   resolved: "neutral",
+  failed: "bad",
 };
 
 /** Kreyòl label for the `resolution` sub-field, shown alongside "Rezoud". */

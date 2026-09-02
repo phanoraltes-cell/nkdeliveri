@@ -26,8 +26,10 @@ type PayoutConfirmSectionProps = {
  * Rendered inline per payout row on a beneficiary's own "My Payments" page
  * (not per-order — a payout isn't tied to one order). While status is
  * "paid" (admin just sent it, awaiting the beneficiary's reaction), shows
- * Confirm/Report-a-problem actions; otherwise just the status pill. Follows
- * the same conditional-form-reveal shape as RefundSection.
+ * Confirm/Report-a-problem actions; while status is "requested" (Tach 3B —
+ * a self-service withdrawal, funds already reserved, nothing sent yet),
+ * shows a Cancel action; otherwise just the status pill. Follows the same
+ * conditional-form-reveal shape as RefundSection.
  */
 export function PayoutConfirmSection({
   payoutId,
@@ -43,6 +45,20 @@ export function PayoutConfirmSection({
   function invalidateAll() {
     for (const key of invalidateKeys) qc.invalidateQueries({ queryKey: key });
   }
+
+  const cancel = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("cancel_requested_withdrawal_secure", {
+        _payout_id: payoutId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Demann retrè anile. Lajan an tounen nan balans disponib ou.");
+      invalidateAll();
+    },
+    onError: (e) => toast.error(e.message ?? "Erè"),
+  });
 
   const confirm = useMutation({
     mutationFn: async () => {
@@ -80,6 +96,22 @@ export function PayoutConfirmSection({
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
+
+  if (status === "requested") {
+    return (
+      <div className="flex flex-col items-end gap-2">
+        <StatusBadge tone={PAYOUT_STATUS_TONE[status]}>{PAYOUT_STATUS_LABEL[status]}</StatusBadge>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={cancel.isPending}
+          onClick={() => cancel.mutate()}
+        >
+          {cancel.isPending ? "Ap anile…" : "Anile demann"}
+        </Button>
+      </div>
+    );
+  }
 
   if (status !== "paid") {
     return (

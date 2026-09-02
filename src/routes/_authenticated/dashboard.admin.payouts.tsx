@@ -30,6 +30,7 @@ import {
   type BeneficiaryDetail,
 } from "@/components/dashboard/payouts/beneficiary-detail-dialog";
 import { useAdminPayoutsData, type WalletRow } from "@/hooks/useAdminPayoutsData";
+import { WithdrawalRequestsQueue } from "@/components/dashboard/payouts/withdrawal-requests-queue";
 
 // recharts (~350KB) is only needed once this section has mounted — see
 // dashboard.admin.index.tsx for the same lazy-import + Suspense/Skeleton pattern.
@@ -324,6 +325,8 @@ function AdminPayouts() {
           icon={Timer}
         />
       </div>
+
+      <WithdrawalRequestsQueue />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-brand-xs">

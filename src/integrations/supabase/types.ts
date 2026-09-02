@@ -660,6 +660,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           permit_expires_at: string | null;
           permit_grace_until: string | null;
@@ -692,6 +693,7 @@ export type Database = {
           moncash_number?: string | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
+          payout_account_updated_at?: string | null;
           payout_frequency?: string;
           permit_expires_at?: string | null;
           permit_grace_until?: string | null;
@@ -724,6 +726,7 @@ export type Database = {
           moncash_number?: string | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
+          payout_account_updated_at?: string | null;
           payout_frequency?: string;
           permit_expires_at?: string | null;
           permit_grace_until?: string | null;
@@ -1715,12 +1718,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -1741,12 +1745,13 @@ export type Database = {
           driver_id?: string | null;
           id?: string;
           method: string;
-          paid_by: string;
+          paid_by?: string | null;
           proof_url?: string | null;
           provider_code?: string;
           provider_transaction_id?: string | null;
           receiver_account_name?: string | null;
           receiver_number: string;
+          requested_by?: string | null;
           resolution?: string | null;
           resolved_at?: string | null;
           resolved_by?: string | null;
@@ -1767,12 +1772,13 @@ export type Database = {
           driver_id?: string | null;
           id?: string;
           method?: string;
-          paid_by?: string;
+          paid_by?: string | null;
           proof_url?: string | null;
           provider_code?: string;
           provider_transaction_id?: string | null;
           receiver_account_name?: string | null;
           receiver_number?: string;
+          requested_by?: string | null;
           resolution?: string | null;
           resolved_at?: string | null;
           resolved_by?: string | null;
@@ -2546,6 +2552,8 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          /** Tach 3B — dat/lè nimewo peman an CHANJE reyèlman pou dènye fwa (pa chak sovgad); NULL = janm chanje depi konfigirasyon inisyal. Itilize pou peryòd atant anti-fròd 24è la anvan yon retrè pwòp-tèt. */
+          payout_account_updated_at: string | null;
           restaurant_id: string;
           updated_at: string;
         };
@@ -2558,6 +2566,7 @@ export type Database = {
           monthly_commission_amount?: number | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
+          payout_account_updated_at?: string | null;
           restaurant_id: string;
           updated_at?: string;
         };
@@ -2570,6 +2579,7 @@ export type Database = {
           monthly_commission_amount?: number | null;
           natcash_account_name?: string | null;
           natcash_number?: string | null;
+          payout_account_updated_at?: string | null;
           restaurant_id?: string;
           updated_at?: string;
         };
@@ -3224,6 +3234,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           permit_expires_at: string | null;
           permit_grace_until: string | null;
@@ -3371,12 +3382,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -3501,12 +3513,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -3633,12 +3646,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -3911,12 +3925,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -3963,12 +3978,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -4831,12 +4847,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -5108,6 +5125,160 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_withdrawal_secure: {
+        Args: {
+          _amount?: number;
+          _driver_id?: string;
+          _method?: string;
+          _restaurant_id?: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      mark_requested_withdrawal_processing_secure: {
+        Args: { _own_reference: string; _payout_id: string; _provider_code: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      admin_mark_requested_withdrawal_paid_secure: {
+        Args: {
+          _notes?: string;
+          _payout_id: string;
+          _proof_url?: string;
+          _transaction_reference: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      cancel_requested_withdrawal_secure: {
+        Args: { _payout_id: string; _reason?: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          id: string;
+          method: string;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       resolve_dispute_secure: {
         Args: { _dispute_id: string; _resolution: string };
         Returns: {
@@ -5146,12 +5317,13 @@ export type Database = {
           driver_id: string | null;
           id: string;
           method: string;
-          paid_by: string;
+          paid_by: string | null;
           proof_url: string | null;
           provider_code: string;
           provider_transaction_id: string | null;
           receiver_account_name: string | null;
           receiver_number: string;
+          requested_by: string | null;
           resolution: string | null;
           resolved_at: string | null;
           resolved_by: string | null;
@@ -5258,6 +5430,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           permit_expires_at: string | null;
           permit_grace_until: string | null;
@@ -5446,6 +5619,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           permit_expires_at: string | null;
           permit_grace_until: string | null;
@@ -5597,6 +5771,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           phone: string | null;
           status: Database["public"]["Enums"]["driver_status"];
@@ -5634,6 +5809,7 @@ export type Database = {
           moncash_number: string | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           payout_frequency: string;
           phone: string | null;
           status: Database["public"]["Enums"]["driver_status"];
@@ -5916,6 +6092,7 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           restaurant_id: string;
           updated_at: string;
         };
@@ -5993,6 +6170,7 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
+          payout_account_updated_at: string | null;
           restaurant_id: string;
           updated_at: string;
         };

@@ -51,6 +51,10 @@ export const sendPayoutUpdatePush = createServerFn({ method: "POST" })
     }
 
     if (data.event === "confirmed") {
+      // Tach 3B — a self-service withdrawal completed automatically via
+      // PLOP (complete_pending_payout_secure) never had an admin execute
+      // it, so paid_by stays NULL; nothing to push to in that case.
+      if (!payout.paid_by) return { sent: 0 };
       return pushToUsers([payout.paid_by], {
         title: "Peman konfime",
         body: `Benefisyè a konfime li resevwa peman ${payout.amount} HTG.`,

@@ -189,13 +189,20 @@ async function pushOutcomeNotification(
         data: { payoutId: payout.id },
       });
     }
-    await pushToUsers([payout.paid_by], {
-      title: "Peman pwovidè reyisi",
-      body: `Peman ${payout.amount} HTG atravè MonCash konfime pa pwovidè a.`,
-      url: "/dashboard/admin/moncash",
-      tag: `payout-${payout.id}`,
-      data: { payoutId: payout.id },
-    });
+    // Tach 3B — a self-service withdrawal request has no initiating admin
+    // (paid_by is now nullable: request_withdrawal_secure leaves it NULL
+    // until an admin manually executes it); only push here when one
+    // actually exists, mirroring fail_pending_payout_secure's own
+    // paid_by IS NOT NULL guard for the identical reason.
+    if (payout.paid_by) {
+      await pushToUsers([payout.paid_by], {
+        title: "Peman pwovidè reyisi",
+        body: `Peman ${payout.amount} HTG atravè MonCash konfime pa pwovidè a.`,
+        url: "/dashboard/admin/moncash",
+        tag: `payout-${payout.id}`,
+        data: { payoutId: payout.id },
+      });
+    }
     return;
   }
 
@@ -209,6 +216,7 @@ async function pushOutcomeNotification(
       data: { payoutId: payout.id },
     });
   }
+  if (!payout.paid_by) return;
   await pushToUsers([payout.paid_by], {
     title: "Peman pwovidè echwe",
     body: `Yon tantativ peman ${payout.amount} HTG atravè MonCash echwe. Lajan an retounen nan balans disponib la.`,

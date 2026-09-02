@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { WalletSummaryCards } from "@/components/dashboard/wallet/wallet-summary-cards";
+import { WithdrawalRequestSection } from "@/components/dashboard/wallet/withdrawal-request-section";
 import { WalletPayoutHistorySection } from "@/components/dashboard/wallet/wallet-payout-history-section";
 import { useRealtimeTableSync } from "@/hooks/useRealtimeTableSync";
 
@@ -119,6 +120,15 @@ function DriverPayouts() {
       </div>
 
       <WalletSummaryCards wallet={wallet.data ?? null} />
+
+      <WithdrawalRequestSection
+        beneficiaryType="driver"
+        beneficiaryId={d?.id}
+        availableBalance={Number(wallet.data?.available_balance ?? 0)}
+        moncashConfigured={Boolean(d?.moncash_number)}
+        natcashConfigured={Boolean(d?.natcash_number)}
+        invalidateKeys={[walletQueryKey, ["me-payout-history"]]}
+      />
 
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <h2 className="font-display text-lg font-bold">Nimewo peman</h2>
