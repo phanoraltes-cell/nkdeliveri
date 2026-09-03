@@ -37,6 +37,11 @@ check_a AS (
       OR p.proname LIKE '%refund%' OR p.proname LIKE '%commission%'
       OR p.proname LIKE '%order_secure%'
     )
+    -- Eksepsyon delibere: checkout la montre nimewo MonCash/NatCash
+    -- platfòm nan bay yon vizitè ki poko konekte (lekti sèlman, done
+    -- piblik pa konsepsyon). Menm eksepsyon ak MONEY_ANON_ALLOWED nan
+    -- scripts/check-money-authorization.mjs.
+    AND p.proname <> 'get_platform_payout_public'
 ),
 
 -- B) RPC service_role SÈLMAN pa dwe rele pa yon sesyon konekte.

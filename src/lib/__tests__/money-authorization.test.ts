@@ -121,3 +121,43 @@ describe("otorizasyon lajan — chak verifikasyon detekte yon vrè vyolasyon", (
     expect(findMoneyAuthViolations(dir).filter((v) => v.check === "D")).toEqual([]);
   });
 });
+
+describe("otorizasyon lajan — verifikasyon E (dwa dirèk anon)", () => {
+  it("E — siyale yon fonksyon lajan ki gen sèlman REVOKE FROM PUBLIC", () => {
+    // Se EGZAKTEMAN sityasyon an ki te bay 15 fonksyon rele pa anon sou
+    // vrè baz done a pandan analiz estatik la t ap di 0 vyolasyon.
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.recompute_wallet_secure(uuid, uuid) RETURNS void AS $$ $$ LANGUAGE sql;" +
+        "\nREVOKE ALL ON FUNCTION public.recompute_wallet_secure(uuid, uuid) FROM PUBLIC;",
+    );
+    const violations = findMoneyAuthViolations(dir);
+    expect(violations.map((v) => v.check)).toContain("E");
+    expect(violations.find((v) => v.check === "E")?.detail).toContain("recompute_wallet_secure");
+  });
+
+  it("E — satisfè lè REVOKE a site `anon` eksplisitman", () => {
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.recompute_wallet_secure(uuid, uuid) RETURNS void AS $$ $$ LANGUAGE sql;" +
+        "\nREVOKE ALL ON FUNCTION public.recompute_wallet_secure(uuid, uuid) FROM PUBLIC, anon;",
+    );
+    expect(findMoneyAuthViolations(dir).filter((v) => v.check === "E")).toEqual([]);
+  });
+
+  it("E — pa plenyen pou get_platform_payout_public (piblik delibereman)", () => {
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.get_platform_payout_public(uuid) RETURNS void AS $$ $$ LANGUAGE sql;",
+    );
+    expect(findMoneyAuthViolations(dir).filter((v) => v.check === "E")).toEqual([]);
+  });
+
+  it("E — yon fonksyon ki pa touche lajan pa konsène", () => {
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.list_restaurants_public() RETURNS void AS $$ $$ LANGUAGE sql;",
+    );
+    expect(findMoneyAuthViolations(dir).filter((v) => v.check === "E")).toEqual([]);
+  });
+});
