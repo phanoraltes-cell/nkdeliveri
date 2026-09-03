@@ -71,6 +71,9 @@ export function WalletTopupsAdminSection() {
   const [forceTarget, setForceTarget] = useState<TopupRow | null>(null);
   const [justification, setJustification] = useState("");
   const [plopSaid, setPlopSaid] = useState<Record<string, string>>({});
+  // Referans PLOP di KLÈMAN li pa peye (trans_status: "no") — kredi
+  // manyèl sou youn nan sa yo ta kreye lajan ki pa egziste.
+  const [explicitlyUnpaid, setExplicitlyUnpaid] = useState<Record<string, boolean>>({});
 
   const topups = useQuery({
     queryKey: ["admin-wallet-topups", status],
@@ -101,6 +104,7 @@ export function WalletTopupsAdminSection() {
       }
       if (result.outcome === "not_paid") {
         setPlopSaid((m) => ({ ...m, [externalReference]: result.error }));
+        setExplicitlyUnpaid((m) => ({ ...m, [externalReference]: result.explicitlyUnpaid }));
       }
       qc.invalidateQueries({ queryKey: ["admin-wallet-topups"] });
     },
@@ -251,6 +255,14 @@ export function WalletTopupsAdminSection() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {forceTarget && explicitlyUnpaid[forceTarget.external_reference] && (
+              <div className="rounded-xl border-2 border-red-300 bg-red-50 p-3 text-xs text-red-900">
+                <b>KANPE.</b> PLOP di klèman peman sa a <b>pa janm fèt</b> (trans_status: no) — se
+                pa yon dout rezo. Si ou kredite l, w ap ajoute lajan ki pa egziste nan balans kliyan
+                an. Kontinye SÈLMAN si ou gen yon prèv endepandan (SMS MonCash kliyan an, relve
+                kont) ki montre lajan an te reyèlman soti.
+              </div>
+            )}
             <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
               <b>Atansyon:</b> aksyon sa a kredite balans kliyan an <b>SAN</b> konfimasyon API PLOP
               la. Sèvi ak li sèlman si ou verifye peman an ou menm (dashbòd PLOP, SMS MonCash kliyan

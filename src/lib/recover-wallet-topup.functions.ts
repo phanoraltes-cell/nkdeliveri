@@ -35,15 +35,31 @@ export const recoverWalletTopup = createServerFn({ method: "POST" })
       // Nou montre EGZAKTEMAN sa PLOP reponn — san sa, admin nan rete
       // devan yon mi san okenn enfòmasyon pou l deside kisa pou l fè
       // (se egzakteman sa ki te pase ak ensidan 50 HTG la).
+      const raw = (status as { raw?: Record<string, unknown> }).raw ?? {};
+      const transStatus = typeof raw.trans_status === "string" ? raw.trans_status : null;
+
+      // Tradiksyon EKSPLISIT — "message: success" nan repons PLOP la vle
+      // di "rechèch la reyisi", PA "peman an reyisi". Se trans_status ki
+      // di sa. Yon admin ki li JSON brit la ka fasilman konfonn yo two,
+      // epi kredite yon peman ki pa t janm fèt (lajan ki soti nan anyen).
+      const verdict =
+        transStatus === "no"
+          ? "PLOP di peman an POKO FÈT (trans_status: no) — kliyan an pa t fin peye. PA kredite l manyèlman."
+          : status.status === "unknown"
+            ? `PLOP pa ka reponn sou referans sa a: ${status.error}`
+            : `PLOP pa konfime peman an (trans_status: ${transStatus ?? "enkoni"}).`;
+
       const detail =
-        status.status === "unknown"
-          ? status.error
-          : JSON.stringify((status as { raw?: unknown }).raw ?? {}).slice(0, 300);
+        status.status === "unknown" ? (status.error ?? "") : JSON.stringify(raw).slice(0, 300);
+
       return {
         outcome: "not_paid" as const,
         providerStatus: status.status,
+        transStatus,
+        /** true = PLOP di klèman li pa peye (pa yon dout rezo) — kredi manyèl ta yon erè. */
+        explicitlyUnpaid: transStatus === "no",
         providerDetail: detail,
-        error: `PLOP pa konfime peman an (repons: ${status.status}). Detay: ${detail}`,
+        error: verdict,
       };
     }
 
