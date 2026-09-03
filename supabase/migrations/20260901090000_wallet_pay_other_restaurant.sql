@@ -34,7 +34,7 @@ ALTER TABLE public.payments ADD COLUMN wallet_id uuid REFERENCES public.wallets(
 -- peye ak yo: wallet kliyan li (si li egziste), wallet nenpòt restoran li
 -- posede (si gen youn ki deja kreye — kreyasyon paresè sou premye
 -- kredi), wallet livrè li (si li se yon livrè).
-CREATE FUNCTION public.get_my_payable_wallets_secure(_restaurant_id uuid DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.get_my_payable_wallets_secure(_restaurant_id uuid DEFAULT NULL)
 RETURNS TABLE (
   wallet_id uuid,
   kind text,

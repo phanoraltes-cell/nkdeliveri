@@ -20,7 +20,7 @@
 -- MENM GAD DOUB-KREDI: ledger la (idempotency_key 'topup:<intent_id>',
 -- endèks inik). Nou INSERT anvan; nou sèlman ogmante balans lan si
 -- INSERT la reyèlman kreye yon ranje. Rele l 10 fwa = yon sèl kredi.
-CREATE FUNCTION public.admin_force_credit_wallet_topup_secure(
+CREATE OR REPLACE FUNCTION public.admin_force_credit_wallet_topup_secure(
   _external_reference text,
   _justification text,
   _provider_transaction_id text DEFAULT NULL

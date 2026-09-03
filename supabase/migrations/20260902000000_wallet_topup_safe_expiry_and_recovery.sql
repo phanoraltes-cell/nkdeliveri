@@ -82,7 +82,7 @@ GRANT EXECUTE ON FUNCTION public.expire_stale_wallet_topups_secure(int) TO servi
 -- pasyèl ki deja egziste). Nou INSERT ANVAN, epi nou sèlman ogmante
 -- balans lan si INSERT la reyèlman kreye yon ranje. Rele fonksyon an
 -- 10 fwa = yon sèl kredi, garanti pa baz done a, pa pa lojik.
-CREATE FUNCTION public.admin_recover_wallet_topup_secure(
+CREATE OR REPLACE FUNCTION public.admin_recover_wallet_topup_secure(
   _external_reference text,
   _provider_transaction_id text DEFAULT NULL,
   _raw_payload jsonb DEFAULT NULL,
@@ -188,7 +188,7 @@ GRANT EXECUTE ON FUNCTION public.admin_recover_wallet_topup_secure(text, text, j
 -- yo (pa t gen okenn anvan sa: ni yon paj, ni yon RPC — yon rechaj kwoke
 -- te envizib nèt pou admin, ki se yon rezon kle poukisa ensidan sa a
 -- pase san yo pa wè l).
-CREATE FUNCTION public.get_wallet_topups_admin_secure(
+CREATE OR REPLACE FUNCTION public.get_wallet_topups_admin_secure(
   _status text DEFAULT NULL,
   _limit int DEFAULT 50,
   _offset int DEFAULT 0

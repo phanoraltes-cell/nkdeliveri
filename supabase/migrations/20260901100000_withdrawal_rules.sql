@@ -33,7 +33,7 @@
 
 -- ---------------------------------------------------------------------------
 -- 1) withdrawal_rules
-CREATE TABLE public.withdrawal_rules (
+CREATE TABLE IF NOT EXISTS public.withdrawal_rules (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   role text NOT NULL CHECK (role IN ('restaurant', 'driver')),
   fee_percentage numeric(6,2) NOT NULL DEFAULT 0 CHECK (fee_percentage >= 0 AND fee_percentage <= 100),
@@ -51,7 +51,7 @@ CREATE TABLE public.withdrawal_rules (
   created_at timestamptz NOT NULL DEFAULT now(),
   notes text
 );
-CREATE INDEX withdrawal_rules_role_effective_idx ON public.withdrawal_rules(role, effective_from DESC);
+CREATE INDEX IF NOT EXISTS withdrawal_rules_role_effective_idx ON public.withdrawal_rules(role, effective_from DESC);
 
 ALTER TABLE public.withdrawal_rules ENABLE ROW LEVEL SECURITY;
 -- Li li se piblik-pou-konekte (menm posti ak payment_methods/
@@ -67,15 +67,24 @@ GRANT SELECT ON public.withdrawal_rules TO authenticated;
 -- plasholder Tach 3B yo (250 HTG min, 50 000 HTG/24è, 0% frè) — okenn
 -- chanjman konpòtman pou benefisyè ki deja gen demann anba ansyen kòd
 -- la, jiskaske Altes deside yon vrè règ atravè admin UI a.
-INSERT INTO public.withdrawal_rules (role, fee_percentage, flat_fee, min_amount, daily_limit, notes) VALUES
-  ('restaurant', 0, 0, 250, 50000, 'Vèsyon inisyal — reprodwi plasholder Tach 3B yo, poko yon vrè desizyon biznis.'),
-  ('driver', 0, 0, 250, 50000, 'Vèsyon inisyal — reprodwi plasholder Tach 3B yo, poko yon vrè desizyon biznis.');
+-- Gad re-kouri: si migrasyon an kouri 2 fwa, yon dezyèm seri seed ta
+-- kreye 2 règ ak MENM effective_from pou menm wòl la — epi
+-- "ORDER BY effective_from DESC LIMIT 1" ta vin anbigi (Postgres ta
+-- chwazi youn arbitrèman). Sa ta vle di frè/limit yon retrè depann de
+-- yon tiraj osò. Nou seed SÈLMAN si wòl la pa gen okenn règ ankò.
+INSERT INTO public.withdrawal_rules (role, fee_percentage, flat_fee, min_amount, daily_limit, notes)
+SELECT v.role, 0, 0, 250, 50000,
+       'Vèsyon inisyal — reprodwi plasholder Tach 3B yo, poko yon vrè desizyon biznis.'
+FROM (VALUES ('restaurant'), ('driver')) AS v(role)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.withdrawal_rules w WHERE w.role = v.role
+);
 
 -- ---------------------------------------------------------------------------
 -- 2) create_withdrawal_rule_secure — admin sèlman, TOUJOU yon INSERT
 -- (yon nouvo vèsyon), janm yon UPDATE — kenbe istorik la konplè pou
 -- retrè ki deja fèt yo ka toujou site ki règ ki te aplike.
-CREATE FUNCTION public.create_withdrawal_rule_secure(
+CREATE OR REPLACE FUNCTION public.create_withdrawal_rule_secure(
   _role text,
   _fee_percentage numeric,
   _flat_fee numeric,
@@ -146,7 +155,7 @@ GRANT EXECUTE ON FUNCTION public.create_withdrawal_rule_secure(text, numeric, nu
 -- jan ak SELECT policy a), sèvi kòm yon fonksyon pratik pou checkout/
 -- withdrawal-request-section.tsx montre yon apèsi "montan → frè → nèt"
 -- san yo pa gen pou yo repwodwi lojik "pi resan ki aktif la" nan React.
-CREATE FUNCTION public.get_active_withdrawal_rule_secure(_role text, _as_of timestamptz DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.get_active_withdrawal_rule_secure(_role text, _as_of timestamptz DEFAULT NULL)
 RETURNS public.withdrawal_rules
 LANGUAGE sql
 STABLE
@@ -165,9 +174,9 @@ GRANT EXECUTE ON FUNCTION public.get_active_withdrawal_rule_secure(text, timesta
 -- 4) payouts — nouvo kolòn pou anrejistre EGZAKTEMAN ki règ te aplike ak
 -- rezilta kalkil li a, snapshote pou tout tan nan moman demann lan.
 ALTER TABLE public.payouts
-  ADD COLUMN withdrawal_rule_id uuid REFERENCES public.withdrawal_rules(id),
-  ADD COLUMN fee_amount numeric(10,2) NOT NULL DEFAULT 0,
-  ADD COLUMN net_amount numeric(10,2);
+  ADD COLUMN IF NOT EXISTS withdrawal_rule_id uuid REFERENCES public.withdrawal_rules(id),
+  ADD COLUMN IF NOT EXISTS fee_amount numeric(10,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS net_amount numeric(10,2);
 UPDATE public.payouts SET net_amount = amount WHERE net_amount IS NULL;
 ALTER TABLE public.payouts ALTER COLUMN net_amount SET NOT NULL;
 
