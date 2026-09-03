@@ -121,12 +121,36 @@ export async function pushToUsers(
     return { sent: 0, sentByUser: {} as Record<string, number> };
   }
 
+  // Gad konfigirasyon — anvan sa, yon VAPID_PRIVATE_JWK ki manke t ap
+  // pete ak `"undefined" is not valid JSON` jouk nan ekran itilizatè a.
+  // Kounye a nou echwe pwòpman: chak destinatè anrejistre kòm "skipped"
+  // ak yon rezon ki di sa ki manke, epi apèl la retounen notConfigured.
+  const { getVapidConfig } = await import("@/lib/push-vapid.server");
+  const vapidResult = getVapidConfig();
+  if (!vapidResult.configured) {
+    console.error("[push] " + vapidResult.error);
+    await Promise.all(
+      [...new Set(userIds)].map((uid) =>
+        logNotification(supabaseAdmin, {
+          userId: uid,
+          eventType: payload.tag,
+          channel: "push",
+          title: payload.title,
+          status: "skipped",
+          error: "push_not_configured",
+        }),
+      ),
+    );
+    return {
+      sent: 0,
+      sentByUser: {} as Record<string, number>,
+      notConfigured: true as const,
+      error: vapidResult.error,
+    };
+  }
+
   const { buildPushPayload } = await import("@block65/webcrypto-web-push");
-  const vapid = {
-    subject: process.env.VAPID_SUBJECT!,
-    publicKey: process.env.VAPID_PUBLIC_KEY!,
-    privateKey: JSON.parse(process.env.VAPID_PRIVATE_JWK!),
-  };
+  const vapid = vapidResult.vapid;
 
   let sent = 0;
   const sentByUser: Record<string, number> = {};

@@ -55,7 +55,14 @@ vi.mock("@block65/webcrypto-web-push", () => ({
 function setVapidEnv() {
   process.env.VAPID_SUBJECT = "mailto:test@example.com";
   process.env.VAPID_PUBLIC_KEY = "test-public-key";
-  process.env.VAPID_PRIVATE_JWK = JSON.stringify({ kty: "EC", crv: "P-256" });
+  // Chan "d" obligatwa: @block65/webcrypto-web-push konstwi JWK la li
+  // menm ak `d: vapid.privateKey`. Ansyen fixture la pa t genyen l, ki
+  // kache reyalite a — yon konfigirasyon san "d" PA valid.
+  process.env.VAPID_PRIVATE_JWK = JSON.stringify({
+    kty: "EC",
+    crv: "P-256",
+    d: "test-private-d",
+  });
 }
 
 async function importPushToUsers() {

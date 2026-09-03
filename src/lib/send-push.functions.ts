@@ -74,11 +74,15 @@ export const sendPaymentReviewPush = createServerFn({ method: "POST" })
 
     const { buildPushPayload } = await import("@block65/webcrypto-web-push");
 
-    const vapid = {
-      subject: process.env.VAPID_SUBJECT!,
-      publicKey: process.env.VAPID_PUBLIC_KEY!,
-      privateKey: JSON.parse(process.env.VAPID_PRIVATE_JWK!),
-    };
+    // Menm gad ak push-dispatch.server.ts — yon kle ki manke pa dwe
+    // janm pete ak `"undefined" is not valid JSON`.
+    const { getVapidConfig } = await import("@/lib/push-vapid.server");
+    const vapidResult = getVapidConfig();
+    if (!vapidResult.configured) {
+      console.error("[sendPaymentReviewPush] " + vapidResult.error);
+      return { sent: 0 };
+    }
+    const vapid = vapidResult.vapid;
 
     const message = {
       data: JSON.stringify({

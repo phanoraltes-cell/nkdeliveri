@@ -58,8 +58,17 @@ export function PushToggle() {
     setTesting(true);
     try {
       const res = await sendTest();
-      if (res.sent > 0) toast.success("Notifikasyon tès voye — tann yon ti moman.");
-      else toast.error("Pa gen abònman aktif pou resevwa l — aktive notifikasyon anvan.");
+      if (res.sent > 0) {
+        toast.success("Notifikasyon tès voye — tann yon ti moman.");
+      } else if ("notConfigured" in res && res.notConfigured) {
+        // Kle VAPID yo pa konfigire sou sèvè a. Anvan sa, ka sa a t ap
+        // parèt kòm `"undefined" is not valid JSON`, ki pa t di anyen.
+        toast.error(res.error ?? "Notifikasyon push pa konfigire sou sèvè a.");
+      } else if ("rateLimited" in res && res.rateLimited) {
+        toast.error("Twòp tès nan yon ti tan — tann kèk minit.");
+      } else {
+        toast.error("Pa gen abònman aktif pou resevwa l — aktive notifikasyon anvan.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Echèk voye tès la");
     } finally {
