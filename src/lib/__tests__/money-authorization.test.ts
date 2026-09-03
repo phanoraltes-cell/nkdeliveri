@@ -161,3 +161,30 @@ describe("otorizasyon lajan — verifikasyon E (dwa dirèk anon)", () => {
     expect(findMoneyAuthViolations(dir).filter((v) => v.check === "E")).toEqual([]);
   });
 });
+
+describe("otorizasyon lajan — makè ANON-REVOKE (revoke dinamik pa non)", () => {
+  it("aksepte yon makè lè siyati a pa ka kode an di", () => {
+    // Ka reyèl la: create_order_secure gen 9 agiman anvan Tach 3C ak 10
+    // apre. Yon REVOKE ak siyati kode an di echwe ak 42883 si lòt
+    // migrasyon an poko aplike — se sa ki te rive. Makè a deklare
+    // entansyon an pandan SQL la revoke chak surchaj ki egziste.
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.recompute_wallet_secure(uuid, uuid) RETURNS void AS $$ $$ LANGUAGE sql;" +
+        "\n-- ANON-REVOKE: recompute_wallet_secure" +
+        "\nDO $$ BEGIN END $$;",
+    );
+    expect(findMoneyAuthViolations(dir).filter((v) => v.check === "E")).toEqual([]);
+  });
+
+  it("yon makè pou yon LÒT fonksyon pa kouvri sa ki manke a", () => {
+    const dir = withMigration(
+      cleanBaseline() +
+        "\nCREATE FUNCTION public.recompute_wallet_secure(uuid, uuid) RETURNS void AS $$ $$ LANGUAGE sql;" +
+        "\n-- ANON-REVOKE: yon_lot_fonksyon",
+    );
+    const violations = findMoneyAuthViolations(dir).filter((v) => v.check === "E");
+    expect(violations).toHaveLength(1);
+    expect(violations[0].detail).toContain("recompute_wallet_secure");
+  });
+});

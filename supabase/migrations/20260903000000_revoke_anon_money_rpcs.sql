@@ -59,28 +59,65 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- REVOKE EKSPLISIT — an plis blòk dinamik la anwo a.
+-- REVOKE EKSPLISIT PA NON — an plis blòk dinamik la anwo a.
 --
--- POUKISA TOUDE: blòk dinamik la ranje eta VIVAN an (li pran menm sa ki
--- rive la pa yon chemen mwen pa konnen). Deklarasyon eksplisit sa yo
--- kite yon tras GREPABLE nan istwa migrasyon an, epi se yo ki fè
--- verifikasyon estatik la (check E nan scripts/check-money-authorization
--- .mjs) kapab konfime entansyon an san yon baz done.
+-- POUKISA PA NON EPI PA PA SIYATI: premye vèsyon migrasyon sa a te kode
+-- siyati egzat chak fonksyon. Li te echwe ak:
+--     ERROR 42883: function public.create_order_secure(..., uuid) does
+--     not exist
+-- paske siyati create_order_secure la chanje selon ki migrasyon ki deja
+-- aplike (9 agiman anvan Tach 3C, 10 apre). Yon migrasyon sekirite pa
+-- dwe kraze paske yon LÒT migrasyon poko aplike — li dwe fèmen sa ki la.
 --
--- Se 10 fonksyon ki te fè SÈLMAN `REVOKE ... FROM PUBLIC` — sa ki pa t
--- retire dwa dirèk `anon` Supabase bay pa defo a.
-REVOKE ALL ON FUNCTION public.update_restaurant_commission_secure(uuid, text, numeric, numeric) FROM anon;
-REVOKE ALL ON FUNCTION public.recompute_wallet_secure(uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.get_restaurant_wallets_admin(text, text, text, int, int, text, date, date) FROM anon;
-REVOKE ALL ON FUNCTION public.get_driver_wallets_admin(text, text, text, int, int, text, date, date) FROM anon;
-REVOKE ALL ON FUNCTION public.get_commission_monthly_series(date, date) FROM anon;
-REVOKE ALL ON FUNCTION public.get_top_restaurants_by_commission(date, date, int) FROM anon;
-REVOKE ALL ON FUNCTION public.get_top_drivers_by_commission(date, date, int) FROM anon;
-REVOKE ALL ON FUNCTION public.get_restaurant_commissions_secure(uuid, text, date, date, text, text, int, int) FROM anon;
-REVOKE ALL ON FUNCTION public.get_driver_commissions_secure(uuid, text, date, date, text, text, int, int) FROM anon;
-REVOKE ALL ON FUNCTION public.execute_commission_backfill_secure(uuid[]) FROM anon;
+-- Donk nou site NON yo (sa ki enpòtan an), epi nou revoke sou CHAK
+-- surchaj ki reyèlman egziste. Si yon fonksyon pa la, nou pase sou li
+-- an silans — pa gen anyen pou fèmen.
+--
+-- Makè `ANON-REVOKE:` yo se pa dekorasyon: verifikasyon estatik la
+-- (check E, scripts/check-money-authorization.mjs) li yo pou l konfime
+-- entansyon an san yon baz done. Kite yo.
+--
+-- ANON-REVOKE: update_restaurant_commission_secure
+-- ANON-REVOKE: recompute_wallet_secure
+-- ANON-REVOKE: get_restaurant_wallets_admin
+-- ANON-REVOKE: get_driver_wallets_admin
+-- ANON-REVOKE: get_commission_monthly_series
+-- ANON-REVOKE: get_top_restaurants_by_commission
+-- ANON-REVOKE: get_top_drivers_by_commission
+-- ANON-REVOKE: get_restaurant_commissions_secure
+-- ANON-REVOKE: get_driver_commissions_secure
+-- ANON-REVOKE: execute_commission_backfill_secure
+-- ANON-REVOKE: create_order_secure
+DO $$
+DECLARE
+  v_name text;
+  r record;
+  v_total int := 0;
+BEGIN
+  FOREACH v_name IN ARRAY ARRAY[
+    'update_restaurant_commission_secure',
+    'recompute_wallet_secure',
+    'get_restaurant_wallets_admin',
+    'get_driver_wallets_admin',
+    'get_commission_monthly_series',
+    'get_top_restaurants_by_commission',
+    'get_top_drivers_by_commission',
+    'get_restaurant_commissions_secure',
+    'get_driver_commissions_secure',
+    'execute_commission_backfill_secure',
+    'create_order_secure'
+  ] LOOP
+    FOR r IN
+      SELECT pg_get_function_identity_arguments(p.oid) AS args
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = v_name
+    LOOP
+      EXECUTE format('REVOKE ALL ON FUNCTION public.%I(%s) FROM anon;', v_name, r.args);
+      EXECUTE format('REVOKE ALL ON FUNCTION public.%I(%s) FROM PUBLIC;', v_name, r.args);
+      v_total := v_total + 1;
+    END LOOP;
+  END LOOP;
 
--- create_order_secure: DROP+CREATE nan 20260901090000 (Tach 3C) te kreye
--- yon NOUVO fonksyon, donk ALTER DEFAULT PRIVILEGES Supabase la te
--- re-bay anon EXECUTE. REVOKE ki te la a te site PUBLIC sèlman.
-REVOKE ALL ON FUNCTION public.create_order_secure(uuid, jsonb, text, text, text, public.payment_method, boolean, uuid, text, uuid) FROM anon;
+  RAISE NOTICE 'Revoke eksplisit aplike sou % surchaj', v_total;
+END $$;

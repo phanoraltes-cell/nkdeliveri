@@ -88,8 +88,16 @@ export function findMoneyAuthViolations(dir = MIGRATIONS_DIR) {
   const anonRevoked = new Set();
 
   for (const file of files) {
-    const text = stripNoise(readFileSync(join(dir, file), "utf8"));
+    const raw = readFileSync(join(dir, file), "utf8");
+    const text = stripNoise(raw);
     let m;
+
+    // Konvansyon dokimante: yon revoke dinamik pa non (lè siyati a ka
+    // varye selon ki migrasyon ki aplike) deklare entansyon l ak yon
+    // makè `-- ANON-REVOKE: <non>`. Nou li l nan tèks BRIT la paske
+    // stripNoise retire kòmantè yo.
+    const markerRe = /ANON-REVOKE: *([A-Za-z0-9_]+)/gi;
+    while ((m = markerRe.exec(raw))) anonRevoked.add(m[1]);
 
     const grantRe = /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+([\w.]+)\s*\([^)]*\)\s*TO\s+([^;]+);/gi;
     while ((m = grantRe.exec(text))) {
