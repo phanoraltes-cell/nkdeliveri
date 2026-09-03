@@ -22,6 +22,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { reportOnConflictHazards } from "./check-on-conflict-hazards.mjs";
+import { reportMoneyAuthViolations } from "./check-money-authorization.mjs";
 
 const MIGRATIONS_DIR = "supabase/migrations";
 
@@ -196,6 +197,12 @@ function main() {
   // endèks inik PASYÈL (SQLSTATE 42P10 nan runtime). Wè
   // check-on-conflict-hazards.mjs pou ensidan ki fè l ajoute a.
   if (reportOnConflictHazards() > 0) process.exit(1);
+
+  // Twazyèm klas: otorizasyon lajan (Tach 4) — sifas anon, RPC
+  // service_role, RLS sou tab lajan, ekriti dirèk. Wè
+  // check-money-authorization.mjs ak tès la nan
+  // src/lib/__tests__/money-authorization.test.ts.
+  if (reportMoneyAuthViolations() > 0) process.exit(1);
   if (unresolved.length === 0) {
     console.log(
       `check-migration-hazards: ${files.length} migrations scanned, ${hazards.length} historical overload(s) all later cleaned up, no unresolved hazards.`,
