@@ -23,6 +23,7 @@ import { join } from "node:path";
 
 import { reportOnConflictHazards } from "./check-on-conflict-hazards.mjs";
 import { reportMoneyAuthViolations } from "./check-money-authorization.mjs";
+import { reportCheckConstraintDrift } from "./check-check-constraint-drift.mjs";
 
 const MIGRATIONS_DIR = "supabase/migrations";
 
@@ -203,6 +204,11 @@ function main() {
   // check-money-authorization.mjs ak tès la nan
   // src/lib/__tests__/money-authorization.test.ts.
   if (reportMoneyAuthViolations() > 0) process.exit(1);
+
+  // Katriyèm klas: yon CHECK ... IN (...) ki reekri epi ki pèdi yon
+  // valè. Frape 2 fwa sou wallet_transactions_type_check — yon fwa an
+  // silans, yon fwa ak 23514 sou vrè baz done a.
+  if (reportCheckConstraintDrift() > 0) process.exit(1);
   if (unresolved.length === 0) {
     console.log(
       `check-migration-hazards: ${files.length} migrations scanned, ${hazards.length} historical overload(s) all later cleaned up, no unresolved hazards.`,

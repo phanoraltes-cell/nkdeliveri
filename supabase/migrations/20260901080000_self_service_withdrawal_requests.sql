@@ -76,14 +76,38 @@ CREATE UNIQUE INDEX IF NOT EXISTS payouts_transaction_reference_provider_uniq
 -- 2) wallet_transactions: 4 nouvo tip pou vokabilè ledger pwòp-tèt la
 -- rete distenk de vèsyon admin-inisye a (payout_sent/payout_pending),
 -- menm jan 20260730100000 te fè pou payout_pending vs payout_sent.
+-- ATANSYON — LIS SA A SE YON INYON, PA YON NOUVO LIS.
+--
+-- Chak fwa kontrent sa a reekri, li DWE genyen TOUT valè ki te janm
+-- pèmèt. De fwa deja nou pa t fè sa:
+--   * 20260901010000 (Tach 1C) te reekri l san payout_pending,
+--     payout_provider_confirmed, payout_provider_failed — 3 tip
+--     20260730100000 te ajoute. Li pa t echwe SÈLMAN paske chemen
+--     peman pwovidè a pa t janm kouri, donk pa te gen ranje.
+--   * Premye vèsyon migrasyon sa a te reekri l san topup_credit,
+--     order_payment_debit, order_refund_credit, wallet_adjustment — 4
+--     tip Tach 1C te ajoute. Li ECHWE ak:
+--       23514: check constraint "wallet_transactions_type_check" is
+--       violated by some row
+--     paske rekiperasyon 50 HTG la te deja kreye yon ranje topup_credit.
+--
+-- Yon valè ki disparèt nan lis sa a pa yon detay: li kraze an silans
+-- chemen lajan ki itilize l la, jiskaske yon vrè tranzaksyon frape l.
+-- check F nan scripts/check-money-authorization.mjs kounye a bloke
+-- nenpòt reekriti ki pèdi yon valè.
 ALTER TABLE public.wallet_transactions DROP CONSTRAINT wallet_transactions_type_check;
 ALTER TABLE public.wallet_transactions ADD CONSTRAINT wallet_transactions_type_check
   CHECK (type IN (
+    -- Orijinal (20260722100000)
     'commission_credit', 'commission_reversed',
     'payout_sent', 'payout_confirmed', 'payout_reversed',
+    'wallet_recomputed',
+    -- Sikèl pwovidè (20260730100000)
     'payout_pending', 'payout_provider_confirmed', 'payout_provider_failed',
-    'withdrawal_requested', 'withdrawal_processing', 'withdrawal_manual_paid', 'withdrawal_cancelled',
-    'wallet_recomputed'
+    -- Wallet kliyan (20260901010000, Tach 1C)
+    'topup_credit', 'order_payment_debit', 'order_refund_credit', 'wallet_adjustment',
+    -- Retrè pwòp-tèt (migrasyon sa a, Tach 3B)
+    'withdrawal_requested', 'withdrawal_processing', 'withdrawal_manual_paid', 'withdrawal_cancelled'
   ));
 
 -- ---------------------------------------------------------------------------

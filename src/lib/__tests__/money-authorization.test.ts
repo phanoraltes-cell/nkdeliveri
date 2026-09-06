@@ -188,3 +188,44 @@ describe("otorizasyon lajan — makè ANON-REVOKE (revoke dinamik pa non)", () =
     expect(violations[0].detail).toContain("recompute_wallet_secure");
   });
 });
+
+describe("CHECK ki pèdi valè (drift)", () => {
+  it("pa gen okenn pèt ki pa rezoud nan migrasyon yo jodi a", async () => {
+    const { findCheckConstraintDrift } =
+      await import("../../../scripts/check-check-constraint-drift.mjs");
+    expect(findCheckConstraintDrift()).toEqual([]);
+  });
+
+  it("siyale yon reekriti ki pèdi yon valè", async () => {
+    const { findCheckConstraintDrift } =
+      await import("../../../scripts/check-check-constraint-drift.mjs");
+    // Egzakteman bug la: dezyèm definisyon an bliye 'topup_credit'.
+    const dir = withMigration(
+      "ALTER TABLE public.wallet_transactions ADD CONSTRAINT t_check CHECK (type IN ('a', 'topup_credit'));",
+    );
+    writeFileSync(
+      join(dir, "20990102000000_test.sql"),
+      "ALTER TABLE public.wallet_transactions ADD CONSTRAINT t_check CHECK (type IN ('a'));",
+    );
+    const drift = findCheckConstraintDrift(dir);
+    expect(drift).toHaveLength(1);
+    expect(drift[0].lost).toEqual(["topup_credit"]);
+  });
+
+  it("yon definisyon PITA ki restore valè a retire pwoblèm nan", async () => {
+    const { findCheckConstraintDrift } =
+      await import("../../../scripts/check-check-constraint-drift.mjs");
+    const dir = withMigration(
+      "ALTER TABLE public.wallet_transactions ADD CONSTRAINT t_check CHECK (type IN ('a', 'topup_credit'));",
+    );
+    writeFileSync(
+      join(dir, "20990102000000_test.sql"),
+      "ALTER TABLE public.wallet_transactions ADD CONSTRAINT t_check CHECK (type IN ('a'));",
+    );
+    writeFileSync(
+      join(dir, "20990103000000_test.sql"),
+      "ALTER TABLE public.wallet_transactions ADD CONSTRAINT t_check CHECK (type IN ('a', 'topup_credit'));",
+    );
+    expect(findCheckConstraintDrift(dir)).toEqual([]);
+  });
+});
