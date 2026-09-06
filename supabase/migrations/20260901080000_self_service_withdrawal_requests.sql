@@ -1,3 +1,22 @@
+-- ############################################################################
+-- ⚠️  SI OU APLIKE MIGRASYON SA A APRE 20260901100000 (Tach 3D):
+--     RE-APLIKE 20260901100000 IMEDYATMAN APRE.
+--
+-- Poukisa: migrasyon sa a defini 3 fonksyon ke Tach 3D redefini ak yon
+-- vèsyon PI NÒF (frè, limit chak jou/semèn, delè disponibilite):
+--     request_withdrawal_secure
+--     mark_requested_withdrawal_processing_secure
+--     admin_mark_requested_withdrawal_paid_secure
+--
+-- Si 3D deja aplike epi ou kouri migrasyon sa a, CREATE OR REPLACE la ap
+-- EKRAZE vèsyon 3D yo — an silans, san okenn erè. Retrè yo ta sispann
+-- aplike frè ak limit yo epi tounen sou valè fiks yo. Re-aplike 3D
+-- (li idanpotan) remete bon vèsyon yo.
+--
+-- Lòd ki kòrèk: 20260901080000 -> 20260901090000 -> 20260901100000
+-- Kouri scripts/sql/check-migration-state.sql pou konnen kote ou ye.
+-- ############################################################################
+
 -- PROMPT MODIFIKASYON (WALLET, DEKÈSMAN, PIBLISITE) — Tach 3B: DEMANN
 -- RETRÈ PWÒP TÈT pou restoran/livrè, ranplase modèl "sèlman admin ka
 -- inisye yon peman" (initiate_payout_secure/create_pending_payout_secure,
@@ -48,12 +67,12 @@
 -- demann pwòp-tèt pa gen okenn admin ki "peye" li nan moman kreyasyon
 -- an), ak yon nouvo kolòn requested_by (imyab, kenbe distenk de paid_by
 -- ki ka chanje pita lè yon admin egzekite l manyèlman).
-ALTER TABLE public.payouts DROP CONSTRAINT payouts_status_check;
+ALTER TABLE public.payouts DROP CONSTRAINT IF EXISTS payouts_status_check;
 ALTER TABLE public.payouts ADD CONSTRAINT payouts_status_check
   CHECK (status IN ('requested', 'pending', 'paid', 'confirmed', 'disputed', 'resolved', 'failed'));
 
 ALTER TABLE public.payouts ALTER COLUMN paid_by DROP NOT NULL;
-ALTER TABLE public.payouts ADD COLUMN requested_by uuid REFERENCES auth.users(id);
+ALTER TABLE public.payouts ADD COLUMN IF NOT EXISTS requested_by uuid REFERENCES auth.users(id);
 
 -- Pwoteje complete_pending_payout_secure/fail_pending_payout_secure kont
 -- de ranje k ap konfonn (yo chèche pa transaction_reference+provider_code
@@ -95,7 +114,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS payouts_transaction_reference_provider_uniq
 -- chemen lajan ki itilize l la, jiskaske yon vrè tranzaksyon frape l.
 -- check F nan scripts/check-money-authorization.mjs kounye a bloke
 -- nenpòt reekriti ki pèdi yon valè.
-ALTER TABLE public.wallet_transactions DROP CONSTRAINT wallet_transactions_type_check;
+ALTER TABLE public.wallet_transactions DROP CONSTRAINT IF EXISTS wallet_transactions_type_check;
 ALTER TABLE public.wallet_transactions ADD CONSTRAINT wallet_transactions_type_check
   CHECK (type IN (
     -- Orijinal (20260722100000)
@@ -113,8 +132,8 @@ ALTER TABLE public.wallet_transactions ADD CONSTRAINT wallet_transactions_type_c
 -- ---------------------------------------------------------------------------
 -- 3) Swiv dat/lè yon nimewo peman CHANJE reyèlman (pa chak sovgad) —
 -- itilize pou peryòd atant anti-fròd la nan request_withdrawal_secure.
-ALTER TABLE public.restaurant_payout_details ADD COLUMN payout_account_updated_at timestamptz;
-ALTER TABLE public.drivers ADD COLUMN payout_account_updated_at timestamptz;
+ALTER TABLE public.restaurant_payout_details ADD COLUMN IF NOT EXISTS payout_account_updated_at timestamptz;
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS payout_account_updated_at timestamptz;
 
 -- Menm siyati egzat ak vèsyon aktyèl la (20260718160000) — CREATE OR
 -- REPLACE san danje, pa yon nouvo overload.
@@ -210,7 +229,7 @@ $$;
 -- fonksyon SECURITY DEFINER Postgres pa ka) — se koòch TypeScript la
 -- (request-withdrawal.functions.ts) ki rele sa a AVAN li eseye yon
 -- tantativ PLOP otomatik.
-CREATE FUNCTION public.request_withdrawal_secure(
+CREATE OR REPLACE FUNCTION public.request_withdrawal_secure(
   _restaurant_id uuid DEFAULT NULL,
   _driver_id uuid DEFAULT NULL,
   _amount numeric DEFAULT NULL,
@@ -356,7 +375,7 @@ GRANT EXECUTE ON FUNCTION public.request_withdrawal_secure(uuid, uuid, numeric, 
 -- fail_pending_payout_secure/cron rekonsilyasyon an ka jwenn li apre.
 -- Otorize: benefisyè a li menm (pou yon vrè "otomatik pwòp tèt") oswa
 -- yon admin (pou l re-eseye yon demann k ap tann).
-CREATE FUNCTION public.mark_requested_withdrawal_processing_secure(
+CREATE OR REPLACE FUNCTION public.mark_requested_withdrawal_processing_secure(
   _payout_id uuid,
   _provider_code text,
   _own_reference text
@@ -415,7 +434,7 @@ GRANT EXECUTE ON FUNCTION public.mark_requested_withdrawal_processing_secure(uui
 -- e beneficyè a/admin prefere fè l manyèlman). Pa touche balans (deja
 -- rezève). STRICT step-up, menm jan ak initiate_payout_secure — se menm
 -- risk (lajan reyèl kite platfòm nan).
-CREATE FUNCTION public.admin_mark_requested_withdrawal_paid_secure(
+CREATE OR REPLACE FUNCTION public.admin_mark_requested_withdrawal_paid_secure(
   _payout_id uuid,
   _transaction_reference text,
   _proof_url text DEFAULT NULL,
@@ -513,7 +532,7 @@ GRANT EXECUTE ON FUNCTION public.admin_mark_requested_withdrawal_paid_secure(uui
 -- ---------------------------------------------------------------------------
 -- 7) cancel_requested_withdrawal_secure — benefisyè a anile pwòp demann
 -- pa yo AVAN nenpòt tretman kòmanse, lajan an retounen disponib.
-CREATE FUNCTION public.cancel_requested_withdrawal_secure(_payout_id uuid, _reason text DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.cancel_requested_withdrawal_secure(_payout_id uuid, _reason text DEFAULT NULL)
 RETURNS public.payouts
 LANGUAGE plpgsql
 SECURITY DEFINER

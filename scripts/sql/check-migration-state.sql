@@ -12,6 +12,15 @@
 -- migrasyon, epi w ap konnen egzakteman kote ou ye.
 --
 -- Kouri l ankò apre — chak liy dwe di APLIKE.
+--
+-- ⚠️  DANJE LÒD: si yon migrasyon PI NÒF aplike men yon PI ANSYEN pa
+-- aplike, aplike ansyen an ka EKRAZE fonksyon nouvo a redefini — an
+-- silans, san erè. Egzanp reyèl: Tach 3D (20260901100000) redefini 3
+-- fonksyon Tach 3B (20260901080000) kreye. Aplike 3B apre 3D ap remete
+-- ansyen vèsyon yo epi retrè yo pèdi frè/limit yo.
+--
+-- REGLE: apre ou aplike yon migrasyon ki te sote, RE-APLIKE tout
+-- migrasyon PI NÒF ki deja aplike yo (yo tout idanpotan kounye a).
 
 WITH checks(migrasyon, sa_li_kreye, aplike) AS (
   VALUES
