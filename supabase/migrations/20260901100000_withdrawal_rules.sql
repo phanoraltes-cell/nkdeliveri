@@ -58,6 +58,7 @@ ALTER TABLE public.withdrawal_rules ENABLE ROW LEVEL SECURITY;
 -- payment_providers) — se sèlman yon orè frè, pa done sansib, e
 -- benefisyè a bezwen wè l pou apèsi "montan mande → frè → sa l ap
 -- resevwa" anvan menm li soumèt yon demann.
+DROP POLICY IF EXISTS "withdrawal_rules read" ON public.withdrawal_rules;
 CREATE POLICY "withdrawal_rules read" ON public.withdrawal_rules FOR SELECT TO authenticated
   USING (true);
 REVOKE ALL ON public.withdrawal_rules FROM PUBLIC, anon;

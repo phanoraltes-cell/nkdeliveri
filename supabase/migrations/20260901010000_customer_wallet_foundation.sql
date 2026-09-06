@@ -36,6 +36,7 @@ ALTER TABLE public.wallets ADD CONSTRAINT wallets_one_beneficiary CHECK (
 -- se yon OR, jamè ranplase youn ak lòt) — pa touche
 -- "wallets read"/private.payout_beneficiary_visible ki egziste deja pou
 -- restoran/livrè.
+DROP POLICY IF EXISTS "wallets customer read" ON public.wallets;
 CREATE POLICY "wallets customer read" ON public.wallets FOR SELECT TO authenticated
   USING (user_id IS NOT NULL AND user_id = auth.uid());
 
@@ -64,6 +65,7 @@ CREATE UNIQUE INDEX wallet_transactions_idempotency_key_uniq
 -- pa ka janm matche yon wallet kliyan (tou de toujou NULL pou yon wallet
 -- kliyan). Pa modifye fonksyon ki egziste deja a — li itilize pa lòt kote
 -- tou, chanje l ta gen efè bò pa verifye.
+DROP POLICY IF EXISTS "wallet_transactions customer read" ON public.wallet_transactions;
 CREATE POLICY "wallet_transactions customer read" ON public.wallet_transactions FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.wallets w WHERE w.id = wallet_transactions.wallet_id AND w.user_id = auth.uid()
@@ -96,8 +98,10 @@ CREATE INDEX payment_intents_status_created_at_idx ON public.payment_intents(sta
 
 ALTER TABLE public.payment_intents ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.payment_intents FROM PUBLIC, anon;
+DROP POLICY IF EXISTS "payment_intents own read" ON public.payment_intents;
 CREATE POLICY "payment_intents own read" ON public.payment_intents FOR SELECT TO authenticated
   USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "payment_intents admin read" ON public.payment_intents;
 CREATE POLICY "payment_intents admin read" ON public.payment_intents FOR SELECT TO authenticated
   USING (private.has_role(auth.uid(), 'admin') OR private.has_role(auth.uid(), 'super_admin'));
 GRANT SELECT ON public.payment_intents TO authenticated;
