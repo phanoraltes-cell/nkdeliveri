@@ -34,17 +34,25 @@ export const OTHER_METHODS = [
     sub: "Peman ak kat, konfimasyon imedya",
     logo: "/stripe-card-logo.svg",
   },
+  // YON SÈL antre pou peman manyèl la (2026-09, sou demann Altes). Anvan,
+  // "MonCash Manyèl" ak "NatCash" te de bouton separe ki te mande menm
+  // bagay la: peye alamen epi voye yon prèv. Kliyan an te oblije chwazi
+  // yon rezo AVAN li wè nimewo a. Kounye a li klike yon sèl fwa epi li wè
+  // TOUDE nimewo yo, epi li peye sou sa l vle.
   {
-    id: "moncash",
-    label: "MonCash Manyèl",
+    id: "manyel",
+    label: "MonCash oswa NatCash",
     sub: "Peman manyèl ak prèv",
     logo: "/moncash-logo-hero.png",
+    secondLogo: "/natcash-logo-new.png",
   },
-  { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo-new.png" },
   { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
 ] as const;
 
 export type CheckoutMethod = (typeof OTHER_METHODS)[number]["id"];
+
+/** Nimewo yon rezo manyèl, jan `platform_payout_settings` bay li. */
+export type ManualAccount = { number: string | null; name: string | null };
 
 export type PayableWallet = {
   wallet_id: string | null;
@@ -65,8 +73,8 @@ type Props = {
   wallets: PayableWallet[];
   selectedWalletId: string | null;
   onSelectWallet: (walletId: string | null) => void;
-  payNumber: string | null;
-  payName: string | null;
+  /** De kont manyèl yo — toude parèt ansanm lè kliyan an chwazi peman manyèl. */
+  manualAccounts: { moncash: ManualAccount; natcash: ManualAccount };
 };
 
 export function PaymentMethodsSection({
@@ -79,8 +87,7 @@ export function PaymentMethodsSection({
   wallets,
   selectedWalletId,
   onSelectWallet,
-  payNumber,
-  payName,
+  manualAccounts,
 }: Props) {
   // Wallet la aktif SÈLMAN nan ka 1 epi si kliyan an pa t chwazi yon lòt
   // metòd. Nan tout lòt ka, lòt metòd yo se sa k ap sèvi.
@@ -242,12 +249,21 @@ export function PaymentMethodsSection({
           }
         >
           {OTHER_METHODS.map((m) => {
-            const providerOff = !isProviderEnabled(providerSettings, m.id);
+            // `manyel` pa yon liy nan `payment_provider_settings` — li se
+            // yon kouvèti sou de rezo ki la yo. Li disponib depi YOUN nan
+            // de a aktif; si admin etenn toude, li disparèt menm jan ak
+            // nenpòt lòt metòd. Mesaj antretyen an soti nan sa ki rete a.
+            const providerOff =
+              m.id === "manyel"
+                ? !isProviderEnabled(providerSettings, "moncash") &&
+                  !isProviderEnabled(providerSettings, "natcash")
+                : !isProviderEnabled(providerSettings, m.id);
             const disabled = providerOff || otherMethodsMuted;
-            const maintenanceMessage = getProviderSetting(
-              providerSettings,
-              m.id,
-            )?.maintenanceMessage;
+            const maintenanceMessage =
+              m.id === "manyel"
+                ? (getProviderSetting(providerSettings, "moncash")?.maintenanceMessage ??
+                  getProviderSetting(providerSettings, "natcash")?.maintenanceMessage)
+                : getProviderSetting(providerSettings, m.id)?.maintenanceMessage;
             const checked = !walletActive && method === m.id;
             return (
               <label
@@ -270,14 +286,31 @@ export function PaymentMethodsSection({
                   aria-label={`${m.label} — ${providerOff && maintenanceMessage ? maintenanceMessage : m.sub}`}
                 />
                 {m.logo ? (
-                  <img
-                    src={m.logo}
-                    alt=""
-                    width={40}
-                    height={28}
-                    loading="lazy"
-                    className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
-                  />
+                  // Metòd manyèl la pote DE logo, paske li kouvri de rezo.
+                  // Yo anpile ak yon ti chevoche pou yo pran menm laj ak
+                  // yon sèl logo — kat yo rete menm gwosè youn ak lòt.
+                  <span className="flex h-7 w-10 shrink-0 items-center">
+                    <img
+                      src={m.logo}
+                      alt=""
+                      width={40}
+                      height={28}
+                      loading="lazy"
+                      className={`h-7 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5 ${
+                        "secondLogo" in m ? "w-6" : "w-10"
+                      }`}
+                    />
+                    {"secondLogo" in m && (
+                      <img
+                        src={m.secondLogo}
+                        alt=""
+                        width={40}
+                        height={28}
+                        loading="lazy"
+                        className="-ml-1.5 h-7 w-6 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
+                      />
+                    )}
+                  </span>
                 ) : (
                   <span
                     aria-hidden="true"
@@ -314,28 +347,65 @@ export function PaymentMethodsSection({
         (method === "moncash_auto" || method === "natcash_auto" || method === "stripe") && (
           <MethodHint method={method} />
         )}
-      {!walletActive && (method === "moncash" || method === "natcash") && (
-        <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
-          <img
-            src={method === "moncash" ? "/moncash-logo-hero.png" : "/natcash-logo-new.png"}
-            alt=""
-            width={40}
-            height={28}
-            loading="lazy"
-            className="h-7 w-10 shrink-0 rounded-md border border-amber-200 bg-white object-contain p-0.5"
-          />
-          <div>
-            Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
-            <b>
-              {method === "moncash" ? "MonCash " : "NatCash "}
-              {payNumber ?? "(pa konfigire)"}
-            </b>
-            {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj kòmand la. Yon
-            administratè ap verifye epi konfime kòmand la.
-          </div>
+      {!walletActive && method === "manyel" && (
+        <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+          <p>
+            Apre w konfime kòmand la, voye lajan an sou <b>youn</b> nan de nimewo sa yo, epi
+            telechaje prèv peman an sou paj kòmand la. Yon administratè ap verifye epi konfime
+            kòmand la.
+          </p>
+          {/* TOUDE nimewo yo ansanm — se tout rezon fizyon an: kliyan an
+              wè kote li ka peye anvan li deside, olye li chwazi yon rezo
+              alavèg epi dekouvri nimewo a apre. */}
+          <ul className="mt-2.5 space-y-1.5">
+            <ManualAccountRow
+              logo="/moncash-logo-hero.png"
+              network="MonCash"
+              account={manualAccounts.moncash}
+            />
+            <ManualAccountRow
+              logo="/natcash-logo-new.png"
+              network="NatCash"
+              account={manualAccounts.natcash}
+            />
+          </ul>
+          <p className="mt-2.5">
+            Sou paj kòmand la w ap di nou ki nimewo ou te sèvi — se sa ki ede administratè a jwenn
+            peman w lan pi vit.
+          </p>
         </div>
       )}
     </section>
+  );
+}
+
+/** Yon liy « logo · rezo · nimewo (non kont) » nan blòk peman manyèl la. */
+function ManualAccountRow({
+  logo,
+  network,
+  account,
+}: {
+  logo: string;
+  network: string;
+  account: ManualAccount;
+}) {
+  return (
+    <li className="flex items-center gap-2.5">
+      <img
+        src={logo}
+        alt=""
+        width={40}
+        height={28}
+        loading="lazy"
+        className="h-7 w-10 shrink-0 rounded-md border border-amber-200 bg-white object-contain p-0.5"
+      />
+      <span className="min-w-0">
+        <b>
+          {network} {account.number ?? "(pa konfigire)"}
+        </b>
+        {account.name ? <> ({account.name})</> : null}
+      </span>
+    </li>
   );
 }
 

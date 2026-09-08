@@ -17,6 +17,8 @@ type PaymentProofSectionProps = {
   payRoutingNote: string;
   needsProof: boolean;
   reviewNotes: string | null | undefined;
+  /** Rezo manyèl ki gen yon nimewo konfigire — kliyan an di ki youn li te sèvi. */
+  manualNetworks: string[];
 };
 
 /** Order-detail page's manual-payment card: instructions, proof upload form, and previously submitted proofs. */
@@ -28,11 +30,20 @@ export function PaymentProofSection({
   payRoutingNote,
   needsProof,
   reviewNotes,
+  manualNetworks,
 }: PaymentProofSectionProps) {
   const qc = useQueryClient();
   const [txRef, setTxRef] = useState("");
   const [senderPhone, setSenderPhone] = useState("");
   const [notes, setNotes] = useState("");
+  // Depi de metòd manyèl yo fizyone an yon sèl, kliyan an wè TOUDE nimewo yo
+  // epi li peye sou sa l vle — donk kolòn `payments.method` (ki kenbe yon
+  // sèl ray) pa ka di ki nimewo li te reyèlman sèvi. Nou mande l isit la,
+  // kote li fèk peye a epi li konnen repons lan, olye nou fè l pran yon
+  // angajman alavèg nan checkout. Repons lan ale nan `payment_proofs.notes`
+  // — yon kolòn ki egziste deja, zewo migrasyon — pou administratè a gade
+  // sou bon rezo a lè l ap verifye.
+  const [paidNetwork, setPaidNetwork] = useState(manualNetworks[0] ?? "");
   const [file, setFile] = useState<File | null>(null);
 
   const proofs = useQuery({
@@ -67,7 +78,11 @@ export function PaymentProofSection({
         _file_url: path,
         _transaction_ref: (txRef || null) as string,
         _sender_phone: (senderPhone || null) as string,
-        _notes: (notes || null) as string,
+        // Rezo a an premye nan nòt la: se premye bagay administratè a
+        // bezwen konnen pou l chèche tranzaksyon an nan bon kont lan.
+        _notes: ([paidNetwork ? `Peye sou ${paidNetwork}` : "", notes]
+          .filter(Boolean)
+          .join(" — ") || null) as string,
       });
       if (rpcErr) throw rpcErr;
     },
@@ -143,6 +158,29 @@ export function PaymentProofSection({
               required
             />
           </div>
+          {manualNetworks.length > 1 && (
+            <div>
+              <label
+                htmlFor="proof-paid-network"
+                className="mb-1 block text-xs font-bold uppercase text-ink-soft"
+              >
+                Ki nimewo ou te peye a?
+              </label>
+              <select
+                id="proof-paid-network"
+                value={paidNetwork}
+                onChange={(e) => setPaidNetwork(e.target.value)}
+                className={inputClsCompact()}
+                required
+              >
+                {manualNetworks.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <input
               value={txRef}

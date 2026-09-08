@@ -14,11 +14,12 @@ test.describe("Checkout — MonCash Otomatik / NatCash Otomatik temporarily disa
       "table:products": [product],
       "table:addresses": [],
       "table:payment_provider_settings": paymentProviderSettings,
+      // De nimewo yo konfigire: metòd manyèl fizyone a dwe montre TOUDE.
       "rpc:get_platform_payout_public": {
-        moncash_number: null,
-        moncash_account_name: null,
-        natcash_number: null,
-        natcash_account_name: null,
+        moncash_number: "50912345678",
+        moncash_account_name: "NK Deliveri",
+        natcash_number: "50987654321",
+        natcash_account_name: "NK Deliveri",
       },
     });
     await page.goto(`/restaurants/${restaurant.slug}`);
@@ -47,20 +48,17 @@ test.describe("Checkout — MonCash Otomatik / NatCash Otomatik temporarily disa
     await natcashAuto.check({ force: true }).catch(() => {});
     await expect(cash).toBeChecked();
 
-    // MonCash Manyèl and NatCash (manual) remain fully selectable. Each
-    // radio's accessible name is its `aria-label` (label + sub-line, e.g.
-    // "NatCash — Peman manyèl ak prèv"), so a plain `exact: true` match on
-    // just "NatCash" never matches anything — a negative lookahead excludes
-    // "NatCash Otomatik" without needing to know the exact sub-line text.
-    const moncashManual = page.getByRole("radio", { name: /MonCash Manyèl/ });
-    await moncashManual.check();
-    await expect(moncashManual).toBeChecked();
-    await expect(moncashManual).toBeEnabled();
+    // Depi fizyon 2026-09, de metòd manyèl yo se YON SÈL radyo ki kouvri
+    // MonCash ak NatCash. Non aksesib li se  la (etikèt +
+    // sou-liy), donk yon match sou etikèt la ase.
+    const manual = page.getByRole("radio", { name: /MonCash oswa NatCash/ });
+    await manual.check();
+    await expect(manual).toBeChecked();
+    await expect(manual).toBeEnabled();
+    await expect(cash).not.toBeChecked();
 
-    const natcashManual = page.getByRole("radio", { name: /^NatCash(?!\s*Otomatik)/ });
-    await natcashManual.check();
-    await expect(natcashManual).toBeChecked();
-    await expect(natcashManual).toBeEnabled();
-    await expect(moncashManual).not.toBeChecked();
+    // Epi li montre TOUDE nimewo yo, se tout rezon fizyon an.
+    await expect(page.getByText(/MonCash 509/)).toBeVisible();
+    await expect(page.getByText(/NatCash 509/)).toBeVisible();
   });
 });

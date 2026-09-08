@@ -89,6 +89,20 @@ function OrderDetail() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["order", id] }),
   });
 
+  // De nimewo manyèl yo (MonCash ak NatCash). Menm rekèt piblik ak paj
+  // peman an, ak MENM kle kach — donk yon moun ki sot nan checkout pa fè
+  // yon dezyèm apèl rezo. Inkondisyonèl epi anvan retou bonè yo, menm
+  // rezon Rules-of-Hooks ak rès la.
+  const platformPayout = useQuery({
+    queryKey: ["platform-payout-public"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_platform_payout_public");
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] : data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const delivery = useOrderDelivery(order.data?.id);
   const driverPoint =
     delivery?.driver_lat != null && delivery?.driver_lng != null
@@ -216,9 +230,35 @@ function OrderDetail() {
       payment?.status === "pending" ||
       payment?.status === "failed");
 
-  const payLabel = payment
-    ? `${payment.method === "moncash" ? "MonCash" : "NatCash"} · ${payment.receiver_number ?? "(pa konfigire)"}${payment.receiver_account_name ? " (" + payment.receiver_account_name + ")" : ""}`
-    : "";
+  // Depi fizyon metòd manyèl yo (2026-09), kliyan an wè TOUDE nimewo yo sou
+  // paj peman an epi li peye sou sa l vle. Montre yon sèl nimewo isit la —
+  // sa kolòn `payments.receiver_number` anrejistre a — ta kontredi sa nou
+  // te di l, epi sa ta fè yon moun ki te peye sou lòt rezo a kwè li fè yon
+  // erè. Nou montre toude.
+  const manualNumbers = payment
+    ? [
+        {
+          network: "MonCash",
+          number: platformPayout.data?.moncash_number ?? null,
+          name: platformPayout.data?.moncash_account_name ?? null,
+          recorded: payment.method === "moncash",
+        },
+        {
+          network: "NatCash",
+          number: platformPayout.data?.natcash_number ?? null,
+          name: platformPayout.data?.natcash_account_name ?? null,
+          recorded: payment.method === "natcash",
+        },
+      ].filter((a) => a.number !== null)
+    : [];
+  const payLabel =
+    manualNumbers.length > 0
+      ? manualNumbers
+          .map((a) => `${a.network} · ${a.number}${a.name ? " (" + a.name + ")" : ""}`)
+          .join("  —  oswa  —  ")
+      : payment
+        ? `${payment.method === "moncash" ? "MonCash" : "NatCash"} · (pa konfigire)`
+        : "";
   const payRoutingNote =
     payment?.receiver_type === "merchant"
       ? "Peman an ale dirèkteman sou kont restoran an."
@@ -358,6 +398,7 @@ function OrderDetail() {
             total={o.total}
             payLabel={payLabel}
             payRoutingNote={payRoutingNote}
+            manualNetworks={manualNumbers.map((a) => a.network)}
             needsProof={needsProof}
             reviewNotes={payment.review_notes}
           />
@@ -453,6 +494,7 @@ function OrderDetail() {
                 total={o.total}
                 payLabel={payLabel}
                 payRoutingNote={payRoutingNote}
+                manualNetworks={manualNumbers.map((a) => a.network)}
                 needsProof={needsProof}
                 reviewNotes={payment.review_notes}
               />

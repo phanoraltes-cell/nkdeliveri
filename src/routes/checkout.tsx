@@ -23,6 +23,7 @@ import { isNetworkError, translateSupabaseError, NETWORK_GIVE_UP_MESSAGE } from 
 import {
   getDefaultProvider,
   getProviderSetting,
+  isProviderEnabled,
   type PaymentProviderSetting,
 } from "@/lib/payment-provider-availability";
 import { CheckoutHeader } from "@/components/checkout/checkout-header";
@@ -157,6 +158,14 @@ function Checkout() {
   useEffect(() => {
     if (methodTouchedByUser || !providerAvailability.data) return;
     const fallback = getDefaultProvider(providerAvailability.data);
+    // `moncash`/`natcash` pa gen pwòp bouton yo ankò — yo fizyone nan
+    // `manyel`. Si admin mete youn nan yo kòm defo, se metòd manyèl la ki
+    // pre-chwazi, pa `kach`: san sa yon konfigirasyon admin ki valab ta
+    // tonbe an silans sou yon lòt metòd.
+    if (fallback === "moncash" || fallback === "natcash") {
+      setMethod("manyel");
+      return;
+    }
     const isOtherMethod = OTHER_METHODS.some((m) => m.id === fallback);
     setMethod(isOtherMethod ? (fallback as CheckoutMethod) : "kach");
   }, [providerAvailability.data, methodTouchedByUser]);
@@ -470,21 +479,36 @@ function Checkout() {
   // "MonCash Otomatik"/"NatCash Otomatik" move money through the same rail
   // as their manual counterpart — create_order_secure only knows the rail
   // (payment_method enum), never *how* it gets confirmed.
+  //
+  // `manyel` se yon metòd ENFAS ki kouvri de rezo yo (kliyan an wè toude
+  // nimewo yo epi li peye sou sa l vle). Men enum `payment_method` nan
+  // baz done a pa gen yon valè "manyèl": li konnen `moncash` oswa
+  // `natcash`. Nou anrejistre yon ray pa defo — MonCash si li konfigire
+  // epi aktif, sinon NatCash — epi paj kòmand la montre TOUDE nimewo yo
+  // kanmenm, epi kliyan an deklare ki nimewo li te sèvi lè l voye prèv la.
+  // Konsa nou pa fè yon kliyan kwè li oblije peye sou ray nou anrejistre a.
+  const moncashUsable =
+    isProviderEnabled(providerSettings, "moncash") && !!platformPayout.data?.moncash_number;
+  const manualRail: "moncash" | "natcash" = moncashUsable ? "moncash" : "natcash";
   const orderMethod =
-    method === "moncash_auto" ? "moncash" : method === "natcash_auto" ? "natcash" : method;
+    method === "moncash_auto"
+      ? "moncash"
+      : method === "natcash_auto"
+        ? "natcash"
+        : method === "manyel"
+          ? manualRail
+          : method;
 
-  const payNumber =
-    orderMethod === "moncash"
-      ? (platformPayout.data?.moncash_number ?? null)
-      : orderMethod === "natcash"
-        ? (platformPayout.data?.natcash_number ?? null)
-        : null;
-  const payName =
-    orderMethod === "moncash"
-      ? (platformPayout.data?.moncash_account_name ?? null)
-      : orderMethod === "natcash"
-        ? (platformPayout.data?.natcash_account_name ?? null)
-        : null;
+  const manualAccounts = {
+    moncash: {
+      number: platformPayout.data?.moncash_number ?? null,
+      name: platformPayout.data?.moncash_account_name ?? null,
+    },
+    natcash: {
+      number: platformPayout.data?.natcash_number ?? null,
+      name: platformPayout.data?.natcash_account_name ?? null,
+    },
+  };
 
   const prepTime = restaurantInfo.data?.avg_prep_time ?? null;
   const etaLabel =
@@ -808,8 +832,7 @@ function Checkout() {
               wallets={wallets}
               selectedWalletId={selectedWalletId}
               onSelectWallet={setSelectedWalletId}
-              payNumber={payNumber}
-              payName={payName}
+              manualAccounts={manualAccounts}
             />
 
             {/* ---------- §5 Kòd pwomo ---------- */}
