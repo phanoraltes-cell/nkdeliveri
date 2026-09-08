@@ -207,7 +207,7 @@ function NotificationsPage() {
           {unread.length > 0 && (
             <button
               onClick={() => markRead.mutate(unread.map((n) => n.id))}
-              className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-2.5 text-xs font-bold text-brand-deep hover:bg-brand-deep hover:text-white"
+              className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-3 py-2.5 text-xs font-bold text-brand-deep hover:bg-brand hover:text-white"
             >
               <Check className="h-3.5 w-3.5" /> Make tout kòm li
             </button>
@@ -273,7 +273,7 @@ function NotificationsPage() {
                       e.stopPropagation();
                       markRead.mutate([n.id]);
                     }}
-                    className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand-deep hover:text-white"
+                    className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white"
                   >
                     Li
                   </button>

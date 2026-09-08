@@ -440,7 +440,7 @@ function RestaurantOrders() {
                         key={n.to}
                         disabled={changeStatus.isPending}
                         onClick={() => changeStatus.mutate({ orderId: o.id, status: n.to })}
-                        className="inline-flex items-center gap-1 rounded-full bg-brand-deep px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep-hover disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-2.5 text-xs font-bold text-white hover:bg-brand-deep disabled:opacity-50"
                       >
                         {n.label} <ChevronRight className="h-3.5 w-3.5" />
                       </button>

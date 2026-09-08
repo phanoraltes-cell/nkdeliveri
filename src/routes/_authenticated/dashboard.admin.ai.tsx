@@ -363,7 +363,7 @@ function AdPanel() {
             >
               <h3 className="font-display text-sm font-extrabold text-ink">{p.title}</h3>
               <p className="mt-1 flex-1 text-xs text-ink-soft">{p.description}</p>
-              <span className="mt-2 inline-block w-fit rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white">
+              <span className="mt-2 inline-block w-fit rounded-full bg-brand px-3 py-1 text-xs font-bold text-white">
                 {p.cta}
               </span>
               <div className="mt-3 flex gap-2">

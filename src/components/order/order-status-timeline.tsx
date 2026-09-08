@@ -92,7 +92,7 @@ export function OrderStatusTimeline({ status }: { status: string }) {
               <span
                 className={`relative z-10 mx-auto flex h-4 w-4 items-center justify-center rounded-full border-2 ${
                   done
-                    ? "border-brand bg-brand-deep text-white"
+                    ? "border-brand bg-brand text-white"
                     : active
                       ? "border-brand bg-white ring-4 ring-brand-soft"
                       : "border-brand-soft bg-white"

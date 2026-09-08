@@ -70,7 +70,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
-  --color-brand-deep-hover: var(--brand-deep-hover);
   --color-brand-soft: var(--brand-soft);
   --color-brand-light: var(--brand-light);
   --color-cream: var(--cream);
@@ -142,32 +141,13 @@
      buttons/badges site-wide. Flagged and accepted knowingly; not a
      regression anyone should "fix" again without checking with the user
      first. */
-  /* --brand rete EGZAKTEMAN jan li ye — se koulè mak la. Men depi 2026-09
-     li se yon koulè DEKORATIF sèlman: bòdi, ikòn, bag konsantrasyon,
-     degrade, gwo tit. Li PA janm pote tèks blan ankò (2.80:1). Bouton ki
-     ranpli yo sèvi ak --brand-deep, ki mezire pi ba a. */
-  --brand: oklch(0.706 0.185 45); /* #fa7227 — 2.80:1 ak blan: dekoratif sèlman */
+  --brand: oklch(0.706 0.185 45); /* #F97316 */
   --brand-light: oklch(0.755 0.16 50); /* #FB923C */
-  /* --brand-deep FONSE (2026-09, sou demann Altes).
-     Ansyen valè oklch(0.62 0.19 40) te rann #df500c: 3.97:1 ak blan nan de
-     sans — li te echwe WCAG AA (4.5:1) kòm fon bouton EPI kòm koulè tèks
-     (`text-brand-deep`, ki gaye nan tout aplikasyon an).
-     Nouvo valè a rann #c2450b: 5.06:1 ak blan nan de sans, 4.84:1 sou
-     --cream. Menm fanmi oranj lan, jis pi fonse.
-     An Ayiti anpil moun sèvi ak telefòn deyò nan gwo limyè solèy — kontras
-     fèb la se yon pwoblèm reyèl. */
-  --brand-deep: oklch(0.558 0.17 40); /* #c2450b — 5.06:1 ak blan */
-  /* Eta hover pou bouton ranpli yo. Yon hover DWE pase AA tou: anvan, hover
-     la te ale sou --brand-deep (3.97:1), donk bouton an te vin MWENS lizib
-     lè yon moun te vize l. */
-  --brand-deep-hover: oklch(0.499 0.17 40); /* #ad3100 — 6.53:1 ak blan */
-  --brand-soft: oklch(0.9 0.075 65); /* #ffd5aa — fon pal; tèks sou li se --ink (12.36:1) */
-  --cream: oklch(0.985 0.008 70); /* #fef9f4 */
-  --ink: oklch(0.23 0.005 0); /* #1f1c1d */
-  /* Fonse yon ti kras (2026-09): ansyen oklch(0.56 …) rann #71757a, ki bay
-     4.43:1 sou --cream — anba AA, epi --cream se fon prensipal paj yo.
-     Nouvo valè a rann #6c6f75: 4.82:1 sou cream, 5.04:1 sou blan. */
-  --ink-soft: oklch(0.542 0.01 260); /* #6c6f75 — 4.82:1 sou cream */
+  --brand-deep: oklch(0.62 0.19 40); /* #EA580C */
+  --brand-soft: oklch(0.9 0.075 65); /* #FED7AA */
+  --cream: oklch(0.985 0.008 70); /* #FFF9F5 */
+  --ink: oklch(0.23 0.005 0); /* #1F1F1F */
+  --ink-soft: oklch(0.56 0.01 260); /* #6B7280 */
   /* Brand-tinted near-black — same darkness as --ink (safe for white text)
      but carries the brand's warm hue instead of neutral grey. Built for the
      mobile Hero's image→panel handoff: fading a warm orange photo straight
@@ -186,20 +166,20 @@
   --primary: var(--brand);
   --primary-foreground: oklch(1 0 0);
   --secondary: var(--brand-soft);
-  /* --ink, pa --brand-deep: menm ak nouvo --brand-deep fonse a, oranj sou
-     oranj pal bay 3.79:1 — yon tèks oranj sou yon chip oranj pal pa ka
-     JANM rive AA pandan li rete oranj. Chip la li menm deja pote koulè mak
-     la; tèks la sèlman bezwen lizib (--ink: 12.36:1). */
+  /* TÈKS sou sifas `brand-soft` yo = --ink, pa --brand-deep (2026-09).
+     Sa a PA yon chanjman nan palèt la: --brand, --brand-deep ak --brand-soft
+     rete egzakteman jan yo ye. Se sèlman ki koulè tèks la sèvi sou yon fon
+     oranj pal.
+     Rezon: --brand-deep sou --brand-soft bay 2.90:1 (mezire), byen anba
+     WCAG AA 4.5:1 — epi oranj sou oranj pal pa ka JANM rive AA pandan li
+     rete oranj, kèlkeswa ki nyans. Chip la li menm deja pote koulè mak la;
+     tèks la sèlman bezwen lizib (--ink: 12.36:1). */
   --secondary-foreground: var(--ink);
   --muted: var(--brand-soft);
   --muted-foreground: var(--ink-soft);
   --accent: var(--brand-soft);
   --accent-foreground: var(--ink);
-  /* Fonse (2026-09): ansyen oklch(0.6 0.22 25) rann #e62b34 → 4.41:1 ak
-     blan, ki echwe AA. Kòmantè ki te la anvan an te di destructive te
-     mezire "4.5:1+ nan chak itilizasyon" — mezi a te fo. Nouvo valè a rann
-     #db1a2b: 5.01:1. */
-  --destructive: oklch(0.57 0.22 25);
+  --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(1 0 0);
 
   /* Status tokens (light) — see --color-status-* registration above.

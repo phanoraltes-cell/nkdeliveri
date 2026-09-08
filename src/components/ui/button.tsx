@@ -9,33 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // SOLISYON A (kontras, 2026-09) — fon an se `brand-deep` (#c2450b,
-        // 5.06:1 ak blan), pa `brand` (#fa7227, 2.80:1). Hover la ale sou
-        // `brand-deep-hover` (6.53:1): anvan, hover la te desann sou
-        // `brand-deep` ansyen an (3.97:1), donk bouton an te vin MWENS
-        // lizib egzakteman lè moun nan te vize l.
-        //
-        // Pou pase sou SOLISYON B (kenbe oranj klere a, tèks fonse):
-        //   "bg-brand text-ink shadow-brand-sm hover:-translate-y-0.5 hover:bg-brand-light ..."
-        //   (--ink sou --brand bay 6.04:1). Se yon sèl liy ki chanje.
         default:
-          "bg-brand-deep text-white shadow-brand-sm hover:-translate-y-0.5 hover:bg-brand-deep-hover hover:shadow-brand-md active:translate-y-0",
-        // `hover:bg-destructive/90` te bese kontras la anba AA sou hover;
-        // nou kenbe koulè plen an epi nou sèvi ak lonbraj/mouvman pou
-        // reyaksyon an, menm modèl ak varyant default la.
+          "bg-brand text-white shadow-brand-sm hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md active:translate-y-0",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:-translate-y-0.5 hover:shadow-md active:translate-y-0",
-        // Hover yo pote `brand-deep-hover`, pa `brand-deep`: sou yon fon
-        // `brand-soft/40` (ghost) `brand-deep` bay 4.46:1 — jis anba AA.
-        // Mezire, pa estime: se yon diferans de 0.04 ki pa ta janm parèt
-        // nan yon revi je.
+          "bg-destructive text-destructive-foreground shadow-sm hover:-translate-y-0.5 hover:bg-destructive/90 hover:shadow-md active:translate-y-0",
         outline:
-          "border-2 border-brand-soft bg-white text-ink shadow-sm hover:border-brand hover:bg-brand-soft/30 hover:text-brand-deep-hover",
-        // text-ink, pa text-brand-deep: oranj sou oranj pal pa ka rive AA.
+          "border-2 border-brand-soft bg-white text-ink shadow-sm hover:border-brand hover:bg-brand-soft/30 hover:text-brand-deep",
+        // text-ink, pa text-brand-deep: oranj sou oranj pal bay 2.90:1 epi li pa
+        // ka JANM rive AA. Palèt la pa chanje — sèlman koulè tèks la.
         secondary: "bg-brand-soft/70 text-ink hover:bg-brand-soft",
-        ghost: "text-ink hover:bg-brand-soft/40 hover:text-brand-deep-hover",
-        // text-brand-deep (5.06:1 sou blan), pa text-brand (2.80:1).
-        link: "rounded-none text-brand-deep underline-offset-4 hover:text-brand-deep-hover hover:underline",
+        ghost: "text-ink hover:bg-brand-soft/40 hover:text-brand-deep",
+        link: "rounded-none text-brand underline-offset-4 hover:text-brand-deep hover:underline",
       },
       size: {
         default: "h-11 px-5 py-2",

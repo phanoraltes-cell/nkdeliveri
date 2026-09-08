@@ -663,7 +663,7 @@ function Checkout() {
             <p className="text-ink-soft">Panye w vid pou kounye a.</p>
             <Link
               to="/"
-              className="mt-3 inline-flex h-11 items-center rounded-xl bg-brand-deep px-5 font-bold text-white transition hover:bg-brand-deep-hover"
+              className="mt-3 inline-flex h-11 items-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand-deep"
             >
               Kòmanse kòmande
             </Link>
@@ -713,7 +713,7 @@ function Checkout() {
               <div className="flex items-center gap-3 rounded-2xl border-2 border-brand bg-brand-soft/40 p-3">
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-deep text-white"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white"
                 >
                   <Truck className="h-5 w-5" />
                 </span>

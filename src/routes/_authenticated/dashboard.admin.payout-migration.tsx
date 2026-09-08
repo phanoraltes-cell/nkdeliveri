@@ -471,7 +471,7 @@ function Steps({ current }: { current: Step }) {
           key={s}
           className={`rounded-full px-3 py-1.5 ${
             i === currentIndex
-              ? "bg-brand-deep text-white"
+              ? "bg-brand text-white"
               : i < currentIndex
                 ? "bg-brand-soft/70 text-brand-deep"
                 : "bg-ink/5 text-ink-soft"

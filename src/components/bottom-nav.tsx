@@ -57,7 +57,7 @@ export function BottomNav() {
                 <span className="relative flex h-7 w-7 items-center justify-center">
                   <Icon className="h-6 w-6 transition-transform duration-200" />
                   {badge > 0 && (
-                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-deep px-1 text-[10px] font-extrabold text-white shadow-brand-xs">
+                    <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold text-white shadow-brand-xs">
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}

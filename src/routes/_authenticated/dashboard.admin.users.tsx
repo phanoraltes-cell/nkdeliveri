@@ -363,7 +363,7 @@ function AdminUsers() {
                             )
                           }
                           disabled={addRole.isPending}
-                          className="rounded-md bg-brand-soft/60 px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand-deep hover:text-white disabled:opacity-50"
+                          className="rounded-md bg-brand-soft/60 px-2 py-1 text-[10px] font-bold text-brand-deep hover:bg-brand hover:text-white disabled:opacity-50"
                         >
                           + Ajoute
                         </button>

@@ -225,7 +225,7 @@ export function OrderChatThread({ orderId, isOpen }: OrderChatThreadProps) {
             disabled={send.isPending || uploading || (!reply.trim() && !file)}
             onClick={sendReply}
             aria-label="Voye"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-deep text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep-hover hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </button>

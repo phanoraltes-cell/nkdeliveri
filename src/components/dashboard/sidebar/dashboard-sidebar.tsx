@@ -72,7 +72,7 @@ function SidebarLink({
         <TooltipTrigger asChild>
           <Link
             to={to}
-            activeProps={{ className: "!bg-brand-deep !text-white !shadow-brand-sm" }}
+            activeProps={{ className: "!bg-brand !text-white !shadow-brand-sm" }}
             className={cn(
               "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all",
               "justify-center lg:justify-start",

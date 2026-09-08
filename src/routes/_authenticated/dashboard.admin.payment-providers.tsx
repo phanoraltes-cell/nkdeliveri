@@ -230,7 +230,7 @@ function AdminPaymentProviders() {
                   <button
                     onClick={() => withReauth(() => saveMessage.mutate(row), "strict")}
                     disabled={saveMessage.isPending}
-                    className="rounded-lg bg-brand-deep px-3 py-2 text-xs font-bold text-white hover:bg-brand-deep-hover"
+                    className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white hover:bg-brand-deep"
                   >
                     Sove
                   </button>
