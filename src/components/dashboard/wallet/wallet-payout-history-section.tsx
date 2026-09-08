@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ProofThumb } from "@/components/proof-thumb";
 import { PayoutConfirmSection } from "@/components/order/payout-confirm-section";
 import { formatHTG } from "@/lib/format";
+import { toAmount } from "@/lib/money";
 import { generatePayoutReceipt } from "@/lib/payout-receipt";
 
 type PayoutHistoryRow = {
@@ -105,9 +106,13 @@ export function WalletPayoutHistorySection({
           onClick={() =>
             generatePayoutReceipt({
               id: r.id,
-              amount: Number(r.amount),
-              feeAmount: r.fee_amount ? Number(r.fee_amount) : undefined,
-              netAmount: Number(r.net_amount),
+              // toAmount, pa Number(): `Number(null)` bay 0, epi yon peman
+              // ki pre-Tach 3D gen `net_amount` NULL — resi a t ap ekri
+              // "Montan resevwa (nèt): 0 HTG" sou yon dokiman benefisyè a
+              // kenbe. `undefined` kite resi a rekalkile brit - frè.
+              amount: toAmount(r.amount) ?? 0,
+              feeAmount: toAmount(r.fee_amount) ?? undefined,
+              netAmount: toAmount(r.net_amount) ?? undefined,
               method: r.method,
               receiverNumber: r.receiver_number,
               receiverAccountName: r.receiver_account_name,

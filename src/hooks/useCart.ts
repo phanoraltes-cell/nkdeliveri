@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { isValidAmount, reportInvalidAmount } from "@/lib/money";
 
 export type CartItem = {
   productId: string;
@@ -18,10 +19,45 @@ export type CartItem = {
 const KEY = "nk-cart-v1";
 const EVT = "nk-cart-changed";
 
+/**
+ * Yon ranje panye nou ka fè konfyans pou kalkile yon total.
+ *
+ * `JSON.parse` retounen `any`: sa ki soti nan `localStorage` pa gen okenn
+ * garanti kalite, menm si `CartItem` di `price: number`. Yon `price` ki
+ * vin yon string (yon ansyen vèsyon panye a), ki manke, oswa ki modifye
+ * alamen nan DevTools bay `qty * price = NaN` — epi NaN sa a monte
+ * dirèkteman nan sou-total la, nan total la, epi nan desizyon « èske
+ * wallet la ase ». Se menm fanmi bug ak `Number(undefined)` nan
+ * useDeliveryFee.
+ *
+ * Nou VERIFYE olye nou kwè. Yon ranje ki pa valab retire nan panye a olye
+ * li kraze total la: kliyan an wè plat li yo ak yon total ki gen sans, epi
+ * nou resevwa yon alèt Sentry ak sous pwoblèm nan.
+ */
+function isUsableCartItem(row: unknown): row is CartItem {
+  if (typeof row !== "object" || row === null) return false;
+  const item = row as Record<string, unknown>;
+  return (
+    typeof item.productId === "string" &&
+    typeof item.restaurantId === "string" &&
+    isValidAmount(item.price) &&
+    item.price >= 0 &&
+    isValidAmount(item.qty) &&
+    Number.isInteger(item.qty) &&
+    item.qty > 0
+  );
+}
+
 function read(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(KEY) || "[]");
+    const parsed: unknown = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    const usable = parsed.filter(isUsableCartItem);
+    if (usable.length !== parsed.length) {
+      reportInvalidAmount("useCart:localStorage", `${parsed.length - usable.length} ranje jete`);
+    }
+    return usable;
   } catch {
     return [];
   }

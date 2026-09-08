@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { inputClsCompact } from "@/lib/utils";
 import { formatHTG } from "@/lib/format";
+import { isValidNonNegativeAmount, requireAmount, toAmount, toAmountOr } from "@/lib/money";
 import { requestWithdrawal } from "@/lib/request-withdrawal.functions";
 
 type WithdrawalRequestSectionProps = {
@@ -64,24 +65,50 @@ export function WithdrawalRequestSection({
     staleTime: 5 * 60 * 1000,
   });
 
-  const numAmount = Number(amount) || 0;
+  const numAmount = toAmountOr(amount, 0);
   const feePreview = (() => {
     if (!rule.data || numAmount <= 0) return null;
+    // Règ la soti nan baz done a: si `fee_percentage` oswa `flat_fee`
+    // manke, `Math.round(NaN)` bay NaN epi apèsi a te montre « Frè: NaN
+    // HTG · W ap resevwa: NaN HTG » — sou ekran kote yon moun deside konbyen
+    // lajan pou l retire. Nou pito pa montre okenn apèsi ditou.
+    const feePercentage = toAmount(rule.data.fee_percentage);
+    const flatFee = toAmount(rule.data.flat_fee);
+    if (feePercentage === null || flatFee === null) return null;
+
     const free = rule.data.free_threshold != null && numAmount <= rule.data.free_threshold;
     const fee = free
       ? 0
-      : Math.min(
-          numAmount,
-          Math.round((numAmount * rule.data.fee_percentage) / 100 + rule.data.flat_fee),
-        );
+      : Math.min(numAmount, Math.round((numAmount * feePercentage) / 100 + flatFee));
     return { fee, net: numAmount - fee };
   })();
+
+  // Règ enfas: yon bouton ki angaje lajan pa dwe rete aktif si yon montan
+  // nan kalkil la envalid — li bloke EPI li di poukisa. Anvan, bouton an te
+  // aktif depi jaden an pa vid ("abc" te pase), epi moun nan te dekouvri
+  // pwoblèm nan sèlman apre yon klik, atravè yon toast.
+  const balanceUnavailable = !isValidNonNegativeAmount(availableBalance);
+  const blockReason = balanceUnavailable
+    ? "Nou pa ka li balans ou kounye a. Rechaje paj la epi eseye ankò."
+    : !method
+      ? "Chwazi yon metòd peman."
+      : amount.trim() === ""
+        ? null // moun nan poko kòmanse — pa yon erè, jis pa gen anyen pou fè
+        : numAmount <= 0
+          ? "Antre yon montan ki pi gwo pase zewo."
+          : numAmount > availableBalance
+            ? "Montan an depase balans disponib ou."
+            : null;
+  const canSubmit = !balanceUnavailable && !!method && amount.trim() !== "" && blockReason === null;
 
   const request = useMutation({
     mutationFn: async () => {
       if (!beneficiaryId) throw new Error("Pwofil pa jwenn");
-      const numAmount = Number(amount);
-      if (!numAmount || numAmount <= 0) throw new Error("Montan envalid");
+      // requireAmount, pa Number(): si valè a pa yon montan nou LEVE yon
+      // erè ak yon mesaj klè olye nou voye yon chif nou pa sèten bay yon
+      // RPC ki deplase lajan.
+      const numAmount = requireAmount(amount, "demann retrè");
+      if (numAmount <= 0) throw new Error("Montan envalid");
       if (numAmount > availableBalance) throw new Error("Balans disponib la pa ase");
       if (!method) throw new Error("Chwazi yon metòd peman");
 
@@ -155,7 +182,7 @@ export function WithdrawalRequestSection({
           <div className="flex items-end">
             <Button
               className="w-full font-display font-extrabold"
-              disabled={request.isPending || !amount || !method}
+              disabled={request.isPending || !canSubmit}
               onClick={() => request.mutate()}
             >
               <Send className="mr-1.5 h-3.5 w-3.5" />
@@ -163,6 +190,11 @@ export function WithdrawalRequestSection({
             </Button>
           </div>
         </div>
+      )}
+      {blockReason && (
+        <p role="alert" className="mt-2 text-xs font-semibold text-destructive">
+          {blockReason}
+        </p>
       )}
       {feePreview && (
         <div className="mt-3 rounded-xl bg-brand-soft/40 p-3 text-xs text-ink-soft">

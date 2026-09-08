@@ -22,6 +22,7 @@ import { useMyRestaurant } from "@/hooks/useMyRestaurant";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formatHTG } from "@/lib/format";
+import { sumAmounts } from "@/lib/money";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
@@ -102,9 +103,14 @@ function RestaurantDashboard() {
         ordersToday: rows.length,
         pending: rows.filter((o) => o.status === "pending").length,
         preparing: rows.filter((o) => o.status === "preparing").length,
-        revenueToday: rows
-          .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
-          .reduce((sum, o) => sum + Number(o.total), 0),
+        // Menm rezon ak revni livrè a: yon sèl `total` ki pa yon nonb
+        // kontamine tout sòm nan an silans. Pi bon montre « — » pase yon
+        // revni jounen ki fo.
+        revenueToday: sumAmounts(
+          rows
+            .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
+            .map((o) => o.total),
+        ),
       };
     },
   });

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import type { MapMarker } from "@/components/maps/LeafletMap";
 import { useLiveOrders } from "@/hooks/useLiveOrders";
 import { formatHTG } from "@/lib/format";
+import { sumAmounts } from "@/lib/money";
 import { KpiCard } from "@/components/dashboard/cards/kpi-card";
 import { EmptyState } from "@/components/dashboard/cards/empty-state";
 import { DataTable } from "@/components/dashboard/tables/data-table";
@@ -112,7 +113,12 @@ function DriverDashboard() {
       if (totalRes.error) throw totalRes.error;
       return {
         deliveriesToday: todayRes.data?.length ?? 0,
-        revenueToday: (todayRes.data ?? []).reduce((sum, d) => sum + Number(d.fee), 0),
+        // `sum + Number(d.fee)`: yon sèl `fee` ki NULL oswa ki manke bay
+        // NaN, epi NaN kontamine tout sòm nan — livrè a te ka wè « NaN
+        // HTG » (oswa, ak yon `|| 0`, « 0 HTG » ki pi mal toujou paske li
+        // parèt vre) pou yon jounen li travay. sumAmounts bay `null`, epi
+        // formatHTG montre « — ».
+        revenueToday: sumAmounts((todayRes.data ?? []).map((d) => d.fee)),
         totalDeliveries: totalRes.count ?? 0,
       };
     },

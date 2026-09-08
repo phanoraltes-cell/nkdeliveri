@@ -37,6 +37,7 @@ import {
   isWalletActive,
   resolveWalletDisplayState,
 } from "@/lib/wallet-payment-display";
+import { requireAmount } from "@/lib/money";
 
 // Local, safe placeholder shown only for the brief window before
 // payment_provider_settings has loaded — never a fallback decision in
@@ -390,9 +391,13 @@ function Checkout() {
     if (!code) return;
     setCheckingPromo(true);
     try {
+      // `JSON.stringify(NaN)` bay `null` — yon sou-total ki kase pa t ap
+      // rive kòm NaN sou sèvè a, li t ap rive kòm NULL, epi rabè a t ap
+      // kalkile sou anyen. requireAmount rete la anvan rekèt la pati.
+      const subtotalForPromo = requireAmount(subtotalAfterPromotion, "kòd pwomo · sou-total");
       const { data, error } = await supabase.rpc("validate_promo_code_secure", {
         _code: code,
-        _subtotal: subtotalAfterPromotion,
+        _subtotal: subtotalForPromo,
       });
       if (error) throw error;
       const result = Array.isArray(data) ? data[0] : data;
@@ -845,16 +850,24 @@ function Checkout() {
                     aria-label="Kòd pwomo"
                     className={inputCls() + " flex-1"}
                   />
+                  {/* Bloke tou lè total la pa disponib: yon rabè kalkile
+                      sou yon sou-total nou pa sèten de li se yon montan
+                      pèsonn pa ka esplike. */}
                   <Button
                     type="button"
                     variant="outline"
                     isLoading={checkingPromo}
-                    disabled={!promoCodeInput.trim()}
+                    disabled={!promoCodeInput.trim() || !totalReady}
                     onClick={applyPromoCode}
                   >
                     Aplike
                   </Button>
                 </div>
+              )}
+              {!totalReady && !appliedPromo && (
+                <p className="mt-1.5 text-xs text-ink-soft">
+                  N ap tann total la anvan nou ka aplike yon kòd.
+                </p>
               )}
             </section>
 

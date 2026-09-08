@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CREOLE_DAY } from "@/lib/creole";
+import { reportInvalidAmount, toAmount } from "@/lib/money";
 
 export type WeeklySeriesPoint = { label: string; value: number };
 
@@ -31,8 +32,17 @@ function bucketWeeklySeries<T>(
   for (const row of rows) {
     const { date, value } = toDateAndValue(row);
     if (!date) continue;
+    // Yon sèl valè NaN ta kontamine tout jounen an (`NaN + x = NaN`), epi
+    // graf la ta parèt vid san okenn eksplikasyon. Nou sote ranje a epi nou
+    // siyale l: yon tandans ki manke yon pwen rete li, yon graf ki tounen
+    // NaN pa di anyen.
+    const amount = toAmount(value);
+    if (amount === null) {
+      reportInvalidAmount("useWeeklySeries", value);
+      continue;
+    }
     const key = new Date(date).toDateString();
-    if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + value);
+    if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + amount);
   }
   return Array.from(byDay.entries()).map(([dateStr, value]) => ({
     label: CREOLE_DAY[new Date(dateStr).getDay()],

@@ -1,5 +1,6 @@
 import { formatHTG } from "@/lib/format";
 import { PAYOUT_STATUS_LABEL } from "@/lib/payout-status";
+import { toAmount } from "@/lib/money";
 
 export type PayoutReceiptData = {
   id: string;
@@ -37,12 +38,22 @@ export async function generatePayoutReceipt(payout: PayoutReceiptData) {
   const rows: [string, string][] = [
     ["Benefisyè", payout.beneficiaryName],
     ["Montan mande", formatHTG(payout.amount)],
-    ...(payout.feeAmount
-      ? ([
-          ["Frè", formatHTG(payout.feeAmount)],
-          ["Montan resevwa (nèt)", formatHTG(payout.netAmount ?? payout.amount - payout.feeAmount)],
-        ] as [string, string][])
-      : []),
+    // `payout.netAmount ?? (amount - feeAmount)` te gen yon pyèj: `??` PA
+    // kenbe NaN. `netAmount: Number(r.net_amount)` sou yon peman ki
+    // pre-Tach 3D (kote `net_amount` se NULL) bay NaN, epi NaN pase tou
+    // dwat nan resi a — yon dokiman yon benefisyè kenbe kòm prèv, ki di
+    // « Montan resevwa (nèt): NaN HTG ». Nou kalkile nèt la sèlman lè de
+    // pati yo valab.
+    ...(() => {
+      const fee = toAmount(payout.feeAmount);
+      if (fee === null || fee <= 0) return [];
+      const gross = toAmount(payout.amount);
+      const net = toAmount(payout.netAmount) ?? (gross === null ? null : gross - fee);
+      return [
+        ["Frè", formatHTG(fee)],
+        ["Montan resevwa (nèt)", formatHTG(net)],
+      ] as [string, string][];
+    })(),
     ["Metòd", payout.method.toUpperCase()],
     ["Nimewo resevwa", payout.receiverNumber],
     ...(payout.receiverAccountName

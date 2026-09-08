@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toAmount } from "@/lib/money";
 
 /**
  * NKD-015 — the platform-wide delivery fee, read from
@@ -28,8 +29,8 @@ export function useDeliveryFee() {
       // ki rete aktif. Yon montan ki pa yon nonb fini se yon ECHÈK, se pa
       // yon valè — nou fè rekèt la echwe pou chak moun ki rele l ka trete
       // sa kòm sa (`isError`), olye yo pase NaN a pi lwen.
-      const fee = Number(data?.fee_htg);
-      if (!Number.isFinite(fee)) {
+      const fee = toAmount(data?.fee_htg);
+      if (fee === null) {
         throw new Error("Konfigirasyon frè livrezon an pa disponib.");
       }
       return fee;
