@@ -57,6 +57,14 @@ export type Database = {
       };
       create_order_secure: {
         Args: {
+          /**
+           * Tach 1 — sèl bagay kliyan an ka di sou wallet la. `false` = li
+           * klike "Peye ak yon lòt metòd". Sèvè a deside rès la: si balans
+           * lan ase epi sa a pa `false`, se wallet ki peye, kèlkeswa
+           * `_method`. Trikaj sou li pa bay anyen — li kite w ak yon
+           * kòmand ki PA peye.
+           */
+          _allow_wallet?: boolean;
           _contact_phone: string;
           _delivery_address: string;
           _delivery_notes: string;
@@ -3678,6 +3686,14 @@ export type Database = {
       };
       create_order_secure: {
         Args: {
+          /**
+           * Tach 1 — sèl bagay kliyan an ka di sou wallet la. `false` = li
+           * klike "Peye ak yon lòt metòd". Sèvè a deside rès la: si balans
+           * lan ase epi sa a pa `false`, se wallet ki peye, kèlkeswa
+           * `_method`. Trikaj sou li pa bay anyen — li kite w ak yon
+           * kòmand ki PA peye.
+           */
+          _allow_wallet?: boolean;
           _contact_phone: string;
           _delivery_address: string;
           _delivery_notes: string;

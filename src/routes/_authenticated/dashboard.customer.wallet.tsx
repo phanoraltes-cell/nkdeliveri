@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, Plus, X } from "lucide-react";
+import { Wallet, Plus, X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createPollController } from "@/hooks/useCollectPaymentPoll";
 import { pollWalletTopup } from "@/lib/poll-wallet-topup.functions";
@@ -16,7 +16,26 @@ import { initiateWalletTopup } from "@/lib/initiate-wallet-topup.functions";
 
 // Role guard lives on the parent layout (dashboard.customer.tsx), same
 // convention as every other customer route.
+//
+// `?next=/checkout` — Tach 1 ka 2: bouton "Ajoute lajan" nan paj peman an
+// voye kliyan an isit la. Panye a rete nan localStorage, donk sèl bagay ki
+// manke se yon chemen retou ki vizib.
+//
+// SE YON LIS BLAN, PA YON VALIDASYON JENERIK. Nenpòt lòt valè vin
+// `undefined`. Yon `next` lib (menm limite a "kòmanse ak /") ta fè paj sa
+// a tounen yon tranplen redireksyon; epi kòm yon sèl kote voye moun isit
+// la, yon lis blan ak yon sèl antre pa koute nou anyen.
+const RETURN_PATHS = ["/checkout"] as const;
+type ReturnPath = (typeof RETURN_PATHS)[number];
+
+function safeReturnPath(value: unknown): ReturnPath | undefined {
+  return RETURN_PATHS.find((p) => p === value);
+}
+
 export const Route = createFileRoute("/_authenticated/dashboard/customer/wallet")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    next: safeReturnPath(search.next),
+  }),
   component: CustomerWallet,
 });
 
@@ -26,6 +45,7 @@ const TOPUP_METHODS = [
 ];
 
 function CustomerWallet() {
+  const { next } = Route.useSearch();
   const [showTopup, setShowTopup] = useState(false);
   const qc = useQueryClient();
 
@@ -111,6 +131,15 @@ function CustomerWallet() {
 
   return (
     <div className="space-y-5">
+      {next && (
+        <Link
+          to={next}
+          className="flex items-center gap-2 rounded-2xl border-2 border-brand-soft bg-brand-soft/30 px-4 py-3 text-sm font-bold text-brand-deep transition hover:bg-brand-soft/60"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Retounen nan kòmand ou an — panye a rete jan w te kite l
+        </Link>
+      )}
       <div>
         <h1 className="flex items-center gap-2 font-display text-3xl font-extrabold text-ink">
           <Wallet className="h-7 w-7 text-brand-deep" aria-hidden="true" /> Wallet mwen

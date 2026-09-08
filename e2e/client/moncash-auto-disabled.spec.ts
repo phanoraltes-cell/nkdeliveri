@@ -25,42 +25,42 @@ test.describe("Checkout — MonCash Otomatik / NatCash Otomatik temporarily disa
     await page.getByRole("button", { name: `Ajoute ${product.name} nan panye` }).click();
     await page.goto("/checkout");
 
-    const moncashAutoButton = page.getByRole("button", { name: /MonCash Otomatik/ });
-    const natcashAutoButton = page.getByRole("button", { name: /NatCash Otomatik/ });
-    const cashButton = page.getByRole("button", { name: /Kach nan livrezon/ });
+    // Depi refont Tach 2 a, metòd peman yo se vre radyo (`role=radio`), pa
+    // bouton. Nou verifye ETA SEMANTIK la (checked/disabled) olye klas CSS:
+    // se sa yon lektè ekran wè, epi li pa kase chak fwa yon klas chanje.
+    const moncashAuto = page.getByRole("radio", { name: /MonCash Otomatik/ });
+    const natcashAuto = page.getByRole("radio", { name: /NatCash Otomatik/ });
+    const cash = page.getByRole("radio", { name: /Kach nan livrezon/ });
 
-    // Cash is selected by default (border-brand + bg-brand-soft class combo).
-    await expect(cashButton).toHaveClass(/border-brand bg-brand-soft/);
+    // Cash is the seeded default provider.
+    await expect(cash).toBeChecked();
 
-    // Both automatic methods show the "coming soon" badge and are truly disabled.
-    await expect(moncashAutoButton).toContainText("Byento disponib");
-    await expect(moncashAutoButton).toContainText("MonCash Otomatik ap retounen byento.");
-    await expect(moncashAutoButton).toBeDisabled();
-
-    await expect(natcashAutoButton).toContainText("Byento disponib");
-    await expect(natcashAutoButton).toContainText("NatCash Otomatik ap retounen byento.");
-    await expect(natcashAutoButton).toBeDisabled();
+    // Both automatic methods show the "coming soon" message and are truly disabled.
+    await expect(moncashAuto).toBeDisabled();
+    await expect(page.getByText("MonCash Otomatik ap retounen byento.")).toBeVisible();
+    await expect(natcashAuto).toBeDisabled();
+    await expect(page.getByText("NatCash Otomatik ap retounen byento.")).toBeVisible();
 
     // Clicking them (even though disabled) must not change selection.
-    await moncashAutoButton.click({ force: true }).catch(() => {});
-    await expect(cashButton).toHaveClass(/border-brand bg-brand-soft/);
-    await natcashAutoButton.click({ force: true }).catch(() => {});
-    await expect(cashButton).toHaveClass(/border-brand bg-brand-soft/);
+    await moncashAuto.check({ force: true }).catch(() => {});
+    await expect(cash).toBeChecked();
+    await natcashAuto.check({ force: true }).catch(() => {});
+    await expect(cash).toBeChecked();
 
     // MonCash Manyèl and NatCash (manual) remain fully selectable. Each
-    // button's accessible name is its full text content (label + sub-line,
-    // e.g. "NatCash Peman manyèl ak prèv"), so a plain `exact: true` match
-    // on just "NatCash" never matches anything — a negative lookahead
-    // excludes "NatCash Otomatik" (whose name continues with "Otomatik ...")
-    // without needing to know the exact sub-line text.
-    const moncashManualButton = page.getByRole("button", { name: /MonCash Manyèl/ });
-    await moncashManualButton.click();
-    await expect(moncashManualButton).toHaveClass(/border-brand bg-brand-soft/);
-    await expect(moncashManualButton).toBeEnabled();
+    // radio's accessible name is its `aria-label` (label + sub-line, e.g.
+    // "NatCash — Peman manyèl ak prèv"), so a plain `exact: true` match on
+    // just "NatCash" never matches anything — a negative lookahead excludes
+    // "NatCash Otomatik" without needing to know the exact sub-line text.
+    const moncashManual = page.getByRole("radio", { name: /MonCash Manyèl/ });
+    await moncashManual.check();
+    await expect(moncashManual).toBeChecked();
+    await expect(moncashManual).toBeEnabled();
 
-    const natcashManualButton = page.getByRole("button", { name: /^NatCash(?!\s*Otomatik)/ });
-    await natcashManualButton.click();
-    await expect(natcashManualButton).toHaveClass(/border-brand bg-brand-soft/);
-    await expect(natcashManualButton).toBeEnabled();
+    const natcashManual = page.getByRole("radio", { name: /^NatCash(?!\s*Otomatik)/ });
+    await natcashManual.check();
+    await expect(natcashManual).toBeChecked();
+    await expect(natcashManual).toBeEnabled();
+    await expect(moncashManual).not.toBeChecked();
   });
 });

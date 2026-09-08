@@ -1,10 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/useCart";
 import { formatHTG } from "@/lib/format";
-import { useEffect, useState } from "react";
-import { Minus, Plus, Trash2, MapPin, Banknote, Tag, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapPin, Tag, X, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +14,6 @@ import { sendNewOrderPush } from "@/lib/send-order-push.functions";
 import { sendCollectPaymentAdminErrorPush } from "@/lib/send-collect-payment-admin-error-push.functions";
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { initiateCollectPayment } from "@/lib/initiate-collect-payment.functions";
 import { usePaymentProviderAvailability } from "@/hooks/usePaymentProviderAvailability";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
@@ -26,9 +23,20 @@ import { isNetworkError, translateSupabaseError, NETWORK_GIVE_UP_MESSAGE } from 
 import {
   getDefaultProvider,
   getProviderSetting,
-  isProviderEnabled,
   type PaymentProviderSetting,
 } from "@/lib/payment-provider-availability";
+import { CheckoutHeader } from "@/components/checkout/checkout-header";
+import { OrderItemsStrip } from "@/components/checkout/order-items-strip";
+import {
+  OTHER_METHODS,
+  PaymentMethodsSection,
+  type CheckoutMethod,
+} from "@/components/checkout/payment-methods-section";
+import {
+  decideWalletSubmit,
+  isWalletActive,
+  resolveWalletDisplayState,
+} from "@/lib/wallet-payment-display";
 
 // Local, safe placeholder shown only for the brief window before
 // payment_provider_settings has loaded — never a fallback decision in
@@ -79,46 +87,30 @@ const PLACEHOLDER_PROVIDER_SETTINGS: PaymentProviderSetting[] = [
     defaultProvider: false,
     maintenanceMessage: "Peman ak kat kredi ap disponib byento.",
   },
+  // Tach 1 — wallet la gen yon ranje kounye a (migrasyon 20260904000000) pou
+  // yon admin ka etenn peman otomatik ak wallet si gen yon pwoblèm.
+  {
+    provider: "wallet",
+    visible: true,
+    enabled: true,
+    defaultProvider: false,
+    maintenanceMessage: null,
+  },
 ];
 
 export const Route = createFileRoute("/checkout")({
-  head: () => noIndexMeta("Panye — NK Deliveri"),
+  head: () => noIndexMeta("Peman — NK Deliveri"),
   component: Checkout,
 });
 
-const METHODS = [
-  {
-    id: "moncash_auto",
-    label: "MonCash Otomatik",
-    sub: "Peman otomatik, konfimasyon imedya",
-    logo: "/moncash-logo-hero.png",
-  },
-  {
-    id: "natcash_auto",
-    label: "NatCash Otomatik",
-    sub: "Peman otomatik, konfimasyon imedya",
-    logo: "/natcash-logo-new.png",
-  },
-  {
-    id: "stripe",
-    label: "Kat Kredi",
-    sub: "Peman ak kat, konfimasyon imedya",
-    logo: "/stripe-card-logo.svg",
-  },
-  {
-    id: "moncash",
-    label: "MonCash Manyèl",
-    sub: "Peman manyèl ak prèv",
-    logo: "/moncash-logo-hero.png",
-  },
-  { id: "natcash", label: "NatCash", sub: "Peman manyèl ak prèv", logo: "/natcash-logo-new.png" },
-  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
-  // Tach 1C — sub la re-kalkile pi ba (montre balans aktyèl la), men
-  // rete isit la kòm valè default pandan balans lan poko chaje.
-  { id: "wallet", label: "Wallet", sub: "Peye ak balans wallet ou", logo: null },
-] as const;
-
-type CheckoutMethod = (typeof METHODS)[number]["id"];
+/**
+ * Tan livrezon estime: tan prepare restoran an (`avg_prep_time`, done
+ * reyèl) plis yon fenèt woutaj. Nou montre yon FOUCHÈT, pa yon chif egzat —
+ * nou pa gen okenn estimasyon woutaj reyèl, epi pwomèt "35 min" nèt se
+ * pwomèt yon bagay nou pa ka garanti.
+ */
+const DELIVERY_MIN_EXTRA = 20;
+const DELIVERY_MAX_EXTRA = 35;
 
 // NKD-012 — Senaryo A: connection drops after create_order_secure's
 // request is sent but before the response arrives. A network failure
@@ -144,9 +136,9 @@ async function createOrderWithRetry(
 }
 
 function Checkout() {
-  const { items, setQty, setItemNotes, remove, subtotal, count } = useCart();
-  const { clear } = useCart();
+  const { items, setQty, setItemNotes, subtotal, count, clear } = useCart();
   const { user } = useAuth();
+
   // "kach" is the same safe fallback the migration seeds as the real
   // default — synced to the actual DB default below once it loads, but
   // never blocking the first paint on a network round-trip.
@@ -159,10 +151,13 @@ function Checkout() {
   // the real settings load, adopt the real default, but only if the
   // customer hasn't already picked something themselves (a later
   // background refetch must never yank their selection out from under
-  // them).
+  // them). `wallet` pa yon "default" valab isit la: li gen pwòp liy pa l
+  // epi se sèvè a ki chwazi l (Tach 1), donk nou tonbe sou 'kach'.
   useEffect(() => {
     if (methodTouchedByUser || !providerAvailability.data) return;
-    setMethod(getDefaultProvider(providerAvailability.data));
+    const fallback = getDefaultProvider(providerAvailability.data);
+    const isOtherMethod = OTHER_METHODS.some((m) => m.id === fallback);
+    setMethod(isOtherMethod ? (fallback as CheckoutMethod) : "kach");
   }, [providerAvailability.data, methodTouchedByUser]);
 
   function selectMethod(id: CheckoutMethod) {
@@ -176,9 +171,17 @@ function Checkout() {
   const [notes, setNotes] = useState("");
   const [wantsLocationSharing, setWantsLocationSharing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Gad doub-klik la. `submitting` (eta React) pa ase pou kont li: de
+  // evènman klik ki rive nan MENM tick la wè toude ansyen valè `false` la
+  // paske React pa fin re-rann ant yo. Yon ref chanje SINKWÒN, donk
+  // dezyèm klik la sòti imedyatman. Bouton an `disabled` tou — de kouch,
+  // paske se yon kòmand ak lajan dèyè l.
+  const submittingRef = useRef(false);
   const nav = useNavigate();
   const sendNewOrderPushFn = useServerFn(sendNewOrderPush);
   const sendCollectPaymentAdminErrorPushFn = useServerFn(sendCollectPaymentAdminErrorPush);
+
+  const cartRestaurantId = items[0]?.restaurantId;
 
   const platformPayout = useQuery({
     queryKey: ["platform-payout-public"],
@@ -192,15 +195,15 @@ function Checkout() {
 
   // Tach 1C/3C — chak wallet kliyan an ka peye ak li: pwòp wallet kliyan
   // li a, plis (Tach 3C) nenpòt wallet restoran li posede oswa wallet
-  // livrè li a, si genyen. Sèvè a (create_order_secure) reverifye balans
-  // AK dwa posesyon an endepandan — sa a se sèlman pou UX (montre balans,
-  // bouton "Rechaje", ak yon pikè si gen plis pase yon wallet disponib).
+  // livrè li a, si genyen. Sèvè a (create_order_secure) DESIDE epi
+  // reverifye balans AK dwa posesyon an endepandan — sa a se sèlman pou
+  // afichaj (Tach 1, twa ka yo).
   const payableWallets = useQuery({
-    queryKey: ["my-payable-wallets", user?.id, items[0]?.restaurantId],
+    queryKey: ["my-payable-wallets", user?.id, cartRestaurantId],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_my_payable_wallets_secure", {
-        _restaurant_id: items[0]?.restaurantId,
+        _restaurant_id: cartRestaurantId,
       });
       if (error) throw error;
       return data ?? [];
@@ -208,17 +211,28 @@ function Checkout() {
     staleTime: 30 * 1000,
   });
 
-  // Tach 3C — chwazi ki wallet pou itilize (defo: premye youn ki pa
-  // bloke pou self-ordering, souvan sèl wallet kliyan an, ki kenbe
-  // konpòtman Tach 1C a inchanje pou gwo majorite itilizatè yo).
+  // Tach 3C — ki wallet pou itilize (defo: premye youn ki pa bloke pou
+  // self-ordering, souvan sèl wallet kliyan an).
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   useEffect(() => {
     if (selectedWalletId || !payableWallets.data?.length) return;
-    const firstUsable = payableWallets.data.find((w) => !w.self_order_blocked);
+    // Nou prefere yon wallet ki EGZISTE tout bon epi ki gen lajan ladan l.
+    // Ranje "wallet kliyan" an toujou la menm lè kliyan an pa janm rechaje
+    // (wallet_id NULL, balans 0 — wè get_my_payable_wallets_secure); si nou
+    // te chwazi l tou senpleman paske li premye, yon restoratè ki gen
+    // lajan nan wallet restoran li pa t ap janm wè opsyon wallet la.
+    const withFunds = payableWallets.data.find(
+      (w) => !w.self_order_blocked && w.wallet_id && Number(w.available_balance) > 0,
+    );
+    const firstUsable = withFunds ?? payableWallets.data.find((w) => !w.self_order_blocked);
     setSelectedWalletId(firstUsable?.wallet_id ?? payableWallets.data[0].wallet_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payableWallets.data]);
-  const selectedWallet = payableWallets.data?.find((w) => w.wallet_id === selectedWalletId) ?? null;
+
+  // Tach 1 — SÈL bagay kliyan an ka di sou wallet la: "mwen vle yon lòt
+  // metòd". Tout rès la (montan, si wallet la debite, si kòmand la konte
+  // kòm peye) se sèvè a ki deside — wè migrasyon 20260904000000.
+  const [walletOptOut, setWalletOptOut] = useState(false);
 
   const savedAddresses = useQuery({
     queryKey: ["my-addresses", user?.id],
@@ -247,30 +261,44 @@ function Checkout() {
 
   // NKD-015: platform-wide fee (admin-set, not restaurant-set), read from
   // the same source create_order_secure itself reads at order-creation
-  // time (public.platform_delivery_zones' default zone) — see
-  // useDeliveryFee's own comment for why this is shared across every
-  // call site that needs to display it, not just re-queried here.
+  // time (public.platform_delivery_zones' default zone).
   const platformFee = useDeliveryFee();
+  // Si frè a pa li, nou PA fè semblan li se 0: total la ta fo, epi moun nan
+  // ta konfime yon montan ki pa sa sèvè a pral chaje. Nou bloke bouton an
+  // epi nou di poukisa (wè `feeUnavailable` pi ba).
+  const feeUnavailable = !platformFee.isLoading && !Number.isFinite(platformFee.data);
   const deliveryFee = items.length > 0 ? (platformFee.data ?? 0) : 0;
   const serviceFee = 0;
 
+  // Tach 2 §3 — tan estime. `avg_prep_time` se yon done reyèl restoran an.
+  const restaurantInfo = useQuery({
+    queryKey: ["checkout-restaurant-info", cartRestaurantId],
+    enabled: !!cartRestaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("id, name, avg_prep_time")
+        .eq("id", cartRestaurantId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Minimal client-side safety net (see useIsRestaurantOpen's own comment)
-  // — last checkpoint before the RPC's own re-check would otherwise reject
-  // at the very last click. `create_order_secure` still re-verifies
-  // server-side regardless of what this shows; this is display only.
-  const cartRestaurantId = items[0]?.restaurantId;
+  // — `create_order_secure` still re-verifies server-side regardless.
   const isOpenQuery = useIsRestaurantOpen(cartRestaurantId);
   const restaurantClosed = isOpenQuery.data === false;
 
-  // Tach 3 — pwomosyon restoran OTOMATIK (menu antye oswa plat espesifik).
-  // Zewo aksyon kliyan: si yon pwomosyon `auto_apply=true` matche panye a,
-  // li parèt otomatikman. Menm fonksyon
+  // Tach 3 — pwomosyon restoran OTOMATIK. Menm fonksyon
   // (compute_restaurant_promotion_discount) ke create_order_secure rele
   // pou verite final la — apesi a pa ka janm "gaye" de kalkil sèvè a.
   const itemsPayload = items.map((it) => ({ product_id: it.productId, quantity: it.qty }));
+  const promotionQueryEnabled = !!cartRestaurantId && items.length > 0;
   const restaurantPromotion = useQuery({
     queryKey: ["active-restaurant-promotion", cartRestaurantId, itemsPayload],
-    enabled: !!cartRestaurantId && items.length > 0,
+    enabled: promotionQueryEnabled,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("compute_restaurant_promotion_discount", {
         _restaurant_id: cartRestaurantId!,
@@ -283,12 +311,64 @@ function Checkout() {
   const promotionDiscount = Number(restaurantPromotion.data?.discount_amount ?? 0);
   const subtotalAfterPromotion = subtotal - promotionDiscount;
 
-  // Tach 2 — kòd pwomo. `atSubtotal` gade valè (apre pwomosyon restoran an,
-  // Tach 3) la te genyen lè kòd la aplike: yon pousantaj rabè depann de
-  // sa, donk si panye a chanje apre (kantite, atik retire) apesi a ka vin
-  // fo. Effect anba a efase apesi a otomatikman nan ka sa a — SÈVÈ a
-  // (create_order_secure) refè tout kalkil la ankò kanmenm nan tout ka, sa
-  // a se pou UI a rete koyeran, pa yon mezi sekirite.
+  // Tach 2 §2 — ki plat ki gen badj. `compute_restaurant_promotion_discount`
+  // bay sèlman yon montan total, pa yon lis plat, donk nou li pwomosyon an
+  // li menm (`scope`/`dish_ids`) pou nou pa envante yon badj sou yon plat
+  // ki pa nan pwomosyon an.
+  const promotionId = restaurantPromotion.data?.promotion_id ?? null;
+  const promotionDetail = useQuery({
+    queryKey: ["checkout-promotion-detail", promotionId],
+    enabled: !!promotionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("promotions")
+        .select("id, scope, dish_ids")
+        .eq("id", promotionId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const productIdsKey = items
+    .map((it) => it.productId)
+    .sort()
+    .join(",");
+  const cartProducts = useQuery({
+    queryKey: ["checkout-cart-products", productIdsKey],
+    enabled: productIdsKey.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, stock_quantity")
+        .in("id", productIdsKey.split(","));
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const itemBadges = useMemo(() => {
+    const stockByProductId = new Map<string, number>();
+    for (const p of cartProducts.data ?? []) {
+      if (p.stock_quantity !== null) stockByProductId.set(p.id, p.stock_quantity);
+    }
+    const detail = promotionDetail.data;
+    const promoDishIds = new Set<string>(
+      !detail
+        ? []
+        : detail.scope === "menu"
+          ? items.map((it) => it.productId)
+          : (detail.dish_ids ?? []),
+    );
+    return { promoDishIds, stockByProductId };
+  }, [cartProducts.data, promotionDetail.data, items]);
+
+  // Tach 2 — kòd pwomo. `atSubtotal` gade valè (apre pwomosyon restoran an)
+  // la te genyen lè kòd la aplike: yon pousantaj rabè depann de sa, donk si
+  // panye a chanje apre, apesi a ka vin fo. Effect anba a efase apesi a
+  // otomatikman nan ka sa a — SÈVÈ a refè tout kalkil la kanmenm.
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{
     code: string;
@@ -341,28 +421,71 @@ function Checkout() {
   const discountAmount = appliedPromo?.discountAmount ?? 0;
   const total = subtotalAfterPromotion - discountAmount + deliveryFee + serviceFee;
 
-  // "MonCash Otomatik"/"NatCash Otomatik" (checkout ids `moncash_auto`/
-  // `natcash_auto`, both backed by the same PLOP gateway —
-  // docs/archive/plop/PLOP_NATCASH_INTEGRATION_PLAN.md) move money through the same
-  // rail as their manual counterpart — create_order_secure only knows the
-  // rail (payment_method enum: moncash/natcash/kach/stripe), never *how*
-  // it gets confirmed. The distinction is a checkout-flow choice, not a
-  // new backend method.
+  // =========================================================================
+  // TACH 1 — twa ka afichaj yo.
+  //
+  // ATANSYON: sa ki anba a se AFICHAJ. Sèvè a re-deside tout bagay ak pwòp
+  // total pa l (create_order_secure). Si de yo pa dakò — pa egzanp frè
+  // livrezon an fèk chanje — se sèvè a ki genyen, epi nou jwenn yon refi
+  // pwòp ("balans pa ase") olye yon kòmand ki peye ak yon lòt metòd an
+  // silans.
+  // =========================================================================
+  const walletSetting = getProviderSetting(providerSettings, "wallet");
+  // Menm COALESCE ak SQL la: yon ranje ki manke = aktive. Sa evite yon
+  // dekalaj kote kòd la deplwaye anvan migrasyon an aplike epi wallet la
+  // disparèt nèt pou tout moun.
+  const walletEnabled = walletSetting?.enabled ?? true;
+
+  const wallets = useMemo(() => payableWallets.data ?? [], [payableWallets.data]);
+  const selectedWallet = wallets.find((w) => w.wallet_id === selectedWalletId) ?? null;
+  const walletBalance = Number(selectedWallet?.available_balance ?? 0);
+
+  // Total la pa final toutotan frè livrezon an oswa pwomosyon an poko rive.
+  // Deside sou yon total pwovizwa ta fè liy wallet la sote ant "ase" ak
+  // "pa ase" devan je moun nan.
+  const totalReady =
+    !platformFee.isLoading &&
+    !feeUnavailable &&
+    (!promotionQueryEnabled || !restaurantPromotion.isLoading);
+
+  const walletState = resolveWalletDisplayState({
+    signedIn: !!user,
+    walletsLoading: payableWallets.isLoading,
+    totalReady,
+    totalUnavailable: feeUnavailable,
+    walletEnabled,
+    walletId: selectedWallet?.wallet_id ?? null,
+    balance: walletBalance,
+    selfOrderBlocked: selectedWallet?.self_order_blocked ?? false,
+    total,
+  });
+
+  const walletActive = isWalletActive(walletState, walletOptOut);
+
+  // "MonCash Otomatik"/"NatCash Otomatik" move money through the same rail
+  // as their manual counterpart — create_order_secure only knows the rail
+  // (payment_method enum), never *how* it gets confirmed.
   const orderMethod =
     method === "moncash_auto" ? "moncash" : method === "natcash_auto" ? "natcash" : method;
 
   const payNumber =
     orderMethod === "moncash"
-      ? platformPayout.data?.moncash_number
+      ? (platformPayout.data?.moncash_number ?? null)
       : orderMethod === "natcash"
-        ? platformPayout.data?.natcash_number
+        ? (platformPayout.data?.natcash_number ?? null)
         : null;
   const payName =
     orderMethod === "moncash"
-      ? platformPayout.data?.moncash_account_name
+      ? (platformPayout.data?.moncash_account_name ?? null)
       : orderMethod === "natcash"
-        ? platformPayout.data?.natcash_account_name
+        ? (platformPayout.data?.natcash_account_name ?? null)
         : null;
+
+  const prepTime = restaurantInfo.data?.avg_prep_time ?? null;
+  const etaLabel =
+    prepTime === null
+      ? null
+      : `${prepTime + DELIVERY_MIN_EXTRA}–${prepTime + DELIVERY_MAX_EXTRA} min`;
 
   async function submit() {
     if (!user) {
@@ -382,27 +505,20 @@ function Checkout() {
       toast.error("Restoran an fèmen kounye a. Tanpri eseye pita.");
       return;
     }
-    // Tach 1C/3C — defans an plis kliyan-side; sèvè a (create_order_secure)
-    // reverifye balans, posesyon, AK blokaj self-ordering la endepandan
-    // nan menm tranzaksyon an, se sa ki konte reyèlman.
-    if (method === "wallet") {
-      if (!selectedWallet) {
-        toast.error("Chwazi ki wallet ou vle peye a.");
-        return;
-      }
-      if (selectedWallet.self_order_blocked) {
-        toast.error("Ou pa ka peye yon kòmand nan pwòp restoran ou ak balans ou.");
-        return;
-      }
-      if (selectedWallet.available_balance < total) {
-        toast.error("Balans wallet ou pa ase pou peye kòmand sa a. Rechaje wallet ou anvan.");
-        return;
-      }
-    }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const rId = items[0].restaurantId;
       const idempotencyKey = getOrCreateIdempotencyKey();
+      // TACH 1 — sa nou voye bay sèvè a. Lojik la nan
+      // src/lib/wallet-payment-display.ts (teste inè pa inè), pa isit la.
+      const walletSubmit = decideWalletSubmit({
+        state: walletState,
+        walletOptOut,
+        fallbackMethod: orderMethod,
+        selectedWalletId,
+      });
       const orderResult = await createOrderWithRetry({
         _restaurant_id: rId,
         _items: items.map((it) => ({
@@ -413,22 +529,19 @@ function Checkout() {
         _delivery_address: address,
         _contact_phone: phone,
         _delivery_notes: notes || "",
-        _method: orderMethod,
+        _method: walletSubmit.method,
+        _allow_wallet: walletSubmit.allowWallet,
+        _wallet_id: walletSubmit.walletId,
         _wants_location_sharing: wantsLocationSharing,
         _idempotency_key: idempotencyKey,
-        // Sèvè a (create_order_secure) refè TOUT kalkil rabè a ankò tou
-        // sèl — sa a se sèlman ki kòd kliyan an te antre, jamè yon montan.
+        // Sèvè a refè TOUT kalkil rabè a ankò tou sèl — sa a se sèlman ki
+        // kòd kliyan an te antre, jamè yon montan.
         _promo_code: appliedPromo?.code,
-        // Tach 3C — ki wallet pou debite lè method='wallet'. undefined
-        // pou tout lòt metòd (paramèt la ignore), oswa si pa gen wallet
-        // chwazi ditou (sèvè a fè tè menm gad la kanmenm).
-        _wallet_id: method === "wallet" ? (selectedWalletId ?? undefined) : undefined,
       });
       if ("networkFailure" in orderResult) {
         // Deliberately not a hard error state — the order may well have
         // been created server-side (that's exactly Senaryo A). Same
-        // idempotency key stays saved for the next manual retry, and the
-        // link lets the customer check for themselves right now.
+        // idempotency key stays saved for the next manual retry.
         toast.error(NETWORK_GIVE_UP_MESSAGE, {
           action: { label: "Wè kòmand mwen yo", onClick: () => nav({ to: "/orders" }) },
         });
@@ -436,8 +549,7 @@ function Checkout() {
       }
       const orderId = orderResult.orderId;
       // The order now definitively exists — this attempt is done, whatever
-      // happens in the payment-initiation steps below. The next checkout
-      // (new cart, new items) needs its own key.
+      // happens in the payment-initiation steps below.
       clearIdempotencyKey();
 
       // Best-effort — a failed push send must never block order creation.
@@ -445,23 +557,32 @@ function Checkout() {
         console.warn("[push] new-order notify failed", e),
       );
 
-      if (method === "moncash_auto" || method === "natcash_auto" || method === "stripe") {
-        // The order already exists at this point (create_order_secure
-        // above succeeded) — a failure from here on is a payment-
-        // initiation problem, never a reason to let the customer land
-        // back on this same form with the cart still full. Doing so
-        // would let a resubmit call create_order_secure a second time
-        // for the same cart, creating a duplicate order. Once the order
-        // exists, it — not the cart — is the source of truth, so every
-        // path below clears the cart and sends the customer to it;
-        // orders.$id.tsx already shows a clear "otomatik la pa t reyisi"
-        // state for the failure case.
-        const { data: paymentRow, error: payErr } = await supabase
-          .from("payments")
-          .select("id")
-          .eq("order_id", orderId)
-          .single();
-        if (payErr || !paymentRow) {
+      // TACH 1 — SE SÈVÈ A KI TE DESIDE, donk se li menm nou mande kisa ki
+      // te pase, pa eta lokal nou an. Yon rekèt ki te di "kach" ka byen
+      // sòti kòm yon kòmand peye ak wallet. Si nou te fè konfyans ak
+      // `walletActive` isit la, nou ta ka di yon moun "voye prèv peman w"
+      // pou yon kòmand ki DEJA peye — oswa pi mal, kòmanse yon koleksyon
+      // MonCash sou li epi fè l peye de fwa.
+      //
+      // Nou sote rekèt la lè `walletActive`: nan ka sa a nou te voye
+      // `_method: 'wallet'` epi RPC la reyisi, donk peman an se wallet, san
+      // dout posib — pa gen anyen pou n mande.
+      const paymentLookup = walletActive
+        ? null
+        : await supabase.from("payments").select("id, method").eq("order_id", orderId).single();
+      const paymentRow = paymentLookup?.data ?? null;
+      const paidByWallet = walletActive || paymentRow?.method === "wallet";
+
+      if (
+        !paidByWallet &&
+        (method === "moncash_auto" || method === "natcash_auto" || method === "stripe")
+      ) {
+        // The order already exists at this point — a failure from here on
+        // is a payment-initiation problem, never a reason to let the
+        // customer land back on this form with the cart still full (a
+        // resubmit would create a duplicate order). Once the order exists,
+        // it — not the cart — is the source of truth.
+        if (!paymentRow) {
           clear();
           toast.error("Kòmand kreye, men nou pa jwenn peman an. Kontakte sipò.");
           nav({ to: "/orders/$id", params: { id: orderId } });
@@ -470,14 +591,9 @@ function Checkout() {
 
         const result = await initiateCollect({ data: { paymentId: paymentRow.id } });
         if (result.outcome === "failed") {
-          // Best-effort admin push (post-incident audit remediation,
-          // docs/archive/payments/PAYMENT_POST_INCIDENT_REMEDIATION_REPORT.md, Correction
-          // 5) — create_collect_payment_secure already recorded this via
-          // create_collect_payment_secure -> notify_secure (in-app bell,
-          // always fired); this is the missing real push notification
-          // sibling, [[project_notification_push_convention]]. A failure
-          // here must never block or alter the customer-facing outcome
-          // below, exactly like sendNewOrderPushFn above.
+          // Best-effort admin push — create_collect_payment_secure already
+          // recorded this in-app; this is the push sibling. A failure here
+          // must never alter the customer-facing outcome below.
           sendCollectPaymentAdminErrorPushFn({ data: { paymentId: paymentRow.id } }).catch((e) =>
             console.warn("[push] collect-payment-admin-error notify failed", e),
           );
@@ -490,10 +606,6 @@ function Checkout() {
           return;
         }
         if (result.outcome === "already_confirmed") {
-          // Rare reconciliation-on-error path (docs/archive/plop/PLOP_PHASE2_AUDIT.md §
-          // A1) — the provider already confirmed this payment before this
-          // call even returned. Nothing to redirect to; the order page's
-          // own poll/Realtime picks up the "paid" status within moments.
           clear();
           toast.success("Peman an konfime! N ap trete kòmand ou an.");
           nav({ to: "/orders/$id", params: { id: orderId } });
@@ -506,23 +618,19 @@ function Checkout() {
 
       clear();
       toast.success(
-        orderMethod === "moncash" || orderMethod === "natcash"
-          ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
-          : orderMethod === "wallet"
-            ? "Kòmand peye ak wallet ou — konfime imedyatman!"
+        paidByWallet
+          ? "Kòmand peye ak wallet ou — konfime imedyatman!"
+          : orderMethod === "moncash" || orderMethod === "natcash"
+            ? "Kòmand kreye! Kounye a voye prèv peman w lan pou nou konfime li."
             : "Kòmand kreye ak siksè",
       );
       nav({ to: "/orders/$id", params: { id: orderId } });
     } catch (e) {
       // NKD-012: create_order_secure's own RAISE EXCEPTION (business
-      // errors — insufficient stock, restaurant closed, etc.) always
-      // carries a Postgres code and reaches here unchanged; a genuine
-      // network failure was already retried inside createOrderWithRetry
-      // and returned as { networkFailure: true } above, never thrown — so
-      // by the time execution reaches this catch, translateSupabaseError
-      // is always the right call. isNetworkError is still checked here as
-      // a safety net for a failure elsewhere in this try block (the
-      // payments lookup, initiateCollect) that isn't the retried RPC call.
+      // errors) always carries a Postgres code and reaches here unchanged;
+      // a genuine network failure was already retried inside
+      // createOrderWithRetry. isNetworkError stays as a safety net for a
+      // failure elsewhere in this try block.
       if (isNetworkError(e)) {
         toast.error(NETWORK_GIVE_UP_MESSAGE, {
           action: { label: "Wè kòmand mwen yo", onClick: () => nav({ to: "/orders" }) },
@@ -531,174 +639,98 @@ function Checkout() {
         toast.error(translateSupabaseError(e));
       }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
 
+  const confirmDisabled = submitting || !totalReady || restaurantClosed;
+
   return (
     <div className="min-h-screen bg-cream">
-      <SiteHeader />
-      <main className="mx-auto max-w-[640px] px-5 py-10">
-        <div className="rounded-3xl bg-white p-6 shadow-brand-md ring-1 ring-brand-soft/40">
-          <h1 className="mb-5 font-display text-2xl font-extrabold">Panye w</h1>
+      <CheckoutHeader />
 
-          {count === 0 ? (
-            <div className="py-10 text-center text-ink-soft">
-              Panye w vid pou kounye a.{" "}
-              <Link to="/" className="font-bold text-brand-deep">
-                Kòmanse kòmande
-              </Link>
-            </div>
-          ) : (
-            <>
-              {restaurantClosed && (
-                <div className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
-                  Nou fèmen kounye a. Tanpri eseye pita.
-                </div>
-              )}
-              {items.map((it) => (
-                <div
-                  key={it.productId}
-                  className="flex items-center gap-3 border-b border-dashed border-brand-soft py-3"
-                >
-                  {it.imageUrl && (
-                    <img
-                      src={it.imageUrl}
-                      width={56}
-                      height={56}
-                      loading="lazy"
-                      className="h-14 w-14 shrink-0 rounded-xl object-cover"
-                      alt={it.name}
-                    />
-                  )}
-                  {/* min-w-0 lets this column shrink below its text's natural
-                      width on narrow screens instead of pushing the qty/remove
-                      controls out of view — same fix as the hero search bar. */}
-                  <div className="min-w-0 flex-1">
-                    <b className="block truncate text-sm">{it.name}</b>
-                    <span className="text-xs text-ink-soft">
-                      {formatHTG(it.price)} · {it.restaurantName}
-                    </span>
-                    <input
-                      value={it.notes ?? ""}
-                      onChange={(e) => setItemNotes(it.productId, e.target.value)}
-                      placeholder="Nòt pou plat sa a (opsyonèl)…"
-                      aria-label={`Nòt pou ${it.name}`}
-                      className="mt-1 w-full min-w-0 rounded-lg border border-brand-soft bg-cream px-2 py-1 text-xs text-ink outline-none placeholder:text-ink-soft focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
-                    />
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      onClick={() => setQty(it.productId, it.qty - 1)}
-                      aria-label={`Diminye kantite ${it.name}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-6 text-center text-sm font-bold">{it.qty}</span>
-                    <button
-                      onClick={() => setQty(it.productId, it.qty + 1)}
-                      aria-label={`Ogmante kantite ${it.name}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => remove(it.productId)}
-                      aria-label={`Retire ${it.name} nan panye`}
-                      className="ml-1 flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+      {/* pb: laj ba kole anba a (bouton 3rem + espasman) plis zòn san
+          danje iOS la, pou dènye seksyon an pa janm kache dèyè l. */}
+      <main className="mx-auto max-w-[720px] px-4 pt-5 pb-[calc(6.5rem+var(--sab))]">
+        {count === 0 ? (
+          <div className="rounded-3xl bg-white p-8 text-center shadow-brand-md ring-1 ring-brand-soft/40">
+            <p className="text-ink-soft">Panye w vid pou kounye a.</p>
+            <Link
+              to="/"
+              className="mt-3 inline-flex h-11 items-center rounded-xl bg-brand px-5 font-bold text-white transition hover:bg-brand-deep"
+            >
+              Kòmanse kòmande
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {restaurantClosed && (
+              <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
+                Nou fèmen kounye a. Tanpri eseye pita.
+              </div>
+            )}
+            {feeUnavailable && (
+              <div
+                role="alert"
+                className="rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800"
+              >
+                Nou pa ka kalkile frè livrezon an kounye a, donk nou pa ka montre w total la. Tanpri
+                rechaje paj la nan yon ti moman — nou p ap kite w konfime yon montan nou pa sèten de
+                li.
+              </div>
+            )}
 
-              <div className="mt-4 border-t-2 border-dashed border-brand-soft pt-4">
-                <label
-                  htmlFor="checkout-promo"
-                  className="mb-2 flex items-center gap-1.5 text-sm font-bold"
+            {/* ---------- §2 Rezime plat yo ---------- */}
+            <OrderItemsStrip
+              items={items}
+              setQty={setQty}
+              setItemNotes={setItemNotes}
+              badges={itemBadges}
+              promotionTitle={
+                promotionDiscount > 0 ? (restaurantPromotion.data?.title ?? null) : null
+              }
+            />
+
+            {/* ---------- §3 Livrezon ---------- */}
+            <section aria-labelledby="checkout-delivery-title" className="min-w-0">
+              <h2
+                id="checkout-delivery-title"
+                className="mb-3 font-display text-base font-bold text-ink"
+              >
+                Livrezon
+              </h2>
+
+              {/* Yon sèl opsyon livrezon egziste jodi a (yon frè platfòm
+                  inik, `platform_delivery_zones`). Nou montre l kòm sa l ye
+                  — yon opsyon chwazi — olye nou envante de nivo sèvis ki pa
+                  egziste nan baz done a. */}
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-brand bg-brand-soft/40 p-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white"
                 >
-                  <Tag className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Kòd pwomo
-                </label>
-                {appliedPromo ? (
-                  <div className="flex items-center justify-between rounded-xl border-2 border-status-good bg-status-good-soft px-3 py-2 text-sm font-bold text-status-good">
-                    <span>
-                      {appliedPromo.code} · -{formatHTG(appliedPromo.discountAmount)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={removePromoCode}
-                      aria-label="Retire kòd pwomo a"
-                      className="text-status-good hover:opacity-70"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      id="checkout-promo"
-                      value={promoCodeInput}
-                      onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          void applyPromoCode();
-                        }
-                      }}
-                      placeholder="Antre yon kòd…"
-                      className={inputCls() + " flex-1"}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      isLoading={checkingPromo}
-                      disabled={!promoCodeInput.trim()}
-                      onClick={applyPromoCode}
-                    >
-                      Aplike
-                    </Button>
-                  </div>
-                )}
+                  <Truck className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <b className="block text-sm text-ink">Livrezon estanda</b>
+                  {/* `text-ink`, PA `text-ink-soft`: sou fon `bg-brand-soft/40`
+                      la (#feead6) ink-soft bay yon kontras 3.96:1, anba
+                      minimòm WCAG AA 4.5:1 (axe konfime l). */}
+                  <small className="block text-xs text-ink">
+                    {restaurantInfo.isLoading
+                      ? "N ap kalkile tan an…"
+                      : etaLabel
+                        ? `Rive nan ${etaLabel} apeprè`
+                        : "Tan an depann de restoran an"}
+                  </small>
+                </div>
+                <b className="shrink-0 text-sm tabular-nums text-ink">
+                  {platformFee.isLoading ? "…" : feeUnavailable ? "—" : formatHTG(deliveryFee)}
+                </b>
               </div>
 
-              <div className="mt-4 space-y-1 text-sm">
-                <div className="flex justify-between text-ink-soft">
-                  <span>Sou-total</span>
-                  <span>{formatHTG(subtotal)}</span>
-                </div>
-                {promotionDiscount > 0 && restaurantPromotion.data && (
-                  <div className="flex justify-between font-semibold text-status-good">
-                    <span>🎉 {restaurantPromotion.data.title}</span>
-                    <span>-{formatHTG(promotionDiscount)}</span>
-                  </div>
-                )}
-                {discountAmount > 0 && (
-                  <div className="flex justify-between font-semibold text-status-good">
-                    <span>Rabè ({appliedPromo?.code})</span>
-                    <span>-{formatHTG(discountAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-ink-soft">
-                  <span>Frè livrezon</span>
-                  <span>{formatHTG(deliveryFee)}</span>
-                </div>
-                <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-3 font-display text-lg font-extrabold">
-                  <span>Total</span>
-                  <span>{formatHTG(total)}</span>
-                </div>
-              </div>
-
-              {/* Two visually separated groups on the same page (per the
-                  Refonte spec's checkout wireframe) rather than a
-                  multi-step wizard — the click-count stays minimal, but
-                  "where this goes" and "how you're paying" no longer read
-                  as one undifferentiated block of fields. */}
-              <div className="mt-6 border-t-2 border-dashed border-brand-soft pt-5">
-                <h2 className="mb-3 flex items-center gap-2 font-display text-base font-bold text-ink">
-                  <MapPin className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Livrezon
-                </h2>
+              <div className="mt-3 rounded-2xl border border-brand-soft bg-white p-4">
                 <label htmlFor="checkout-address" className="mb-2 block text-sm font-bold">
                   Adrès livrezon
                 </label>
@@ -711,7 +743,8 @@ function Checkout() {
                         onClick={() => setAddress(`${a.address_line}, ${a.city}`)}
                         className="inline-flex h-8 items-center gap-1 rounded-full border border-brand-soft bg-white px-2.5 text-xs font-semibold text-brand-deep hover:bg-brand-soft/40"
                       >
-                        <MapPin className="h-3 w-3" /> {a.label || a.address_line}
+                        <MapPin className="h-3 w-3" aria-hidden="true" />{" "}
+                        {a.label || a.address_line}
                       </button>
                     ))}
                   </div>
@@ -757,211 +790,150 @@ function Checkout() {
                   </span>
                 </label>
               </div>
+            </section>
 
-              <div className="mt-5 border-t-2 border-dashed border-brand-soft pt-5">
-                <h2 className="mb-3 flex items-center gap-2 font-display text-base font-bold text-ink">
-                  <Banknote className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Peman
-                </h2>
-                <label className="mb-2 block text-sm font-bold">Metòd peman</label>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {METHODS.map((m) => {
-                    const isDisabled = !isProviderEnabled(providerSettings, m.id);
-                    const maintenanceMessage = getProviderSetting(
-                      providerSettings,
-                      m.id,
-                    )?.maintenanceMessage;
-                    return (
-                      <button
-                        key={m.id}
-                        onClick={() => selectMethod(m.id)}
-                        disabled={isDisabled}
-                        aria-disabled={isDisabled}
-                        className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left text-sm font-bold transition ${
-                          isDisabled
-                            ? "cursor-not-allowed border-brand-soft/60 bg-cream opacity-60"
-                            : method === m.id
-                              ? "border-brand bg-brand-soft shadow-brand-xs"
-                              : "border-brand-soft bg-white hover:-translate-y-0.5 hover:border-brand hover:shadow-brand-xs"
-                        }`}
-                      >
-                        {m.logo && (
-                          <img
-                            src={m.logo}
-                            alt=""
-                            width={40}
-                            height={28}
-                            loading="lazy"
-                            className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white object-contain p-0.5"
-                          />
-                        )}
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-center gap-1.5">
-                            {m.label}
-                            {isDisabled && (
-                              <Badge variant="secondary" className="shrink-0 font-semibold">
-                                Byento disponib
-                              </Badge>
-                            )}
-                          </span>
-                          <small className="mt-0.5 block text-xs font-normal text-ink-soft">
-                            {isDisabled ? maintenanceMessage : m.sub}
-                          </small>
-                        </span>
-                      </button>
-                    );
-                  })}
+            {/* ---------- §4 Metòd peman (wallet an premye) ---------- */}
+            <PaymentMethodsSection
+              providerSettings={providerSettings}
+              method={method}
+              onSelectMethod={selectMethod}
+              walletState={walletState}
+              walletOptOut={walletOptOut}
+              onWalletOptOut={setWalletOptOut}
+              wallets={wallets}
+              selectedWalletId={selectedWalletId}
+              onSelectWallet={setSelectedWalletId}
+              payNumber={payNumber}
+              payName={payName}
+            />
+
+            {/* ---------- §5 Kòd pwomo ---------- */}
+            <section aria-labelledby="checkout-promo-title" className="min-w-0">
+              <h2
+                id="checkout-promo-title"
+                className="mb-2 flex items-center gap-1.5 font-display text-base font-bold text-ink"
+              >
+                <Tag className="h-4 w-4 text-brand-deep" aria-hidden="true" /> Kòd pwomo
+              </h2>
+              {appliedPromo ? (
+                <div className="flex items-center justify-between rounded-xl border-2 border-status-good bg-status-good-soft px-3 py-2 text-sm font-bold text-status-good">
+                  <span>
+                    {appliedPromo.code} · -{formatHTG(appliedPromo.discountAmount)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removePromoCode}
+                    aria-label="Retire kòd pwomo a"
+                    className="text-status-good hover:opacity-70"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </div>
-                {(method === "moncash_auto" || method === "natcash_auto" || method === "stripe") &&
-                  (() => {
-                    const info =
-                      method === "moncash_auto"
-                        ? {
-                            logo: "/moncash-logo-hero.png",
-                            label: "MonCash Otomatik",
-                            via: "MonCash",
-                          }
-                        : method === "natcash_auto"
-                          ? {
-                              logo: "/natcash-logo-new.png",
-                              label: "NatCash Otomatik",
-                              via: "NatCash",
-                            }
-                          : {
-                              logo: "/stripe-card-logo.svg",
-                              label: "Kat Kredi",
-                              via: "kat kredi ou",
-                            };
-                    return (
-                      <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900">
-                        <img
-                          src={info.logo}
-                          alt=""
-                          width={40}
-                          height={28}
-                          loading="lazy"
-                          className="h-7 w-10 shrink-0 rounded-md border border-emerald-200 bg-white object-contain p-0.5"
-                        />
-                        <div>
-                          <b>{info.label}</b> — apre w konfime kòmand la, n ap voye w sou paj peman{" "}
-                          {info.via} la pou w peye dirèkteman. Kòmand la konfime otomatikman apre
-                          peman an fin fèt — pa gen prèv pou telechaje.
-                        </div>
-                      </div>
-                    );
-                  })()}
-                {method === "wallet" &&
-                  (() => {
-                    const wallets = payableWallets.data ?? [];
-                    const balance = selectedWallet?.available_balance ?? 0;
-                    const insufficient = !payableWallets.isLoading && balance < total;
-                    const blocked = selectedWallet?.self_order_blocked ?? false;
-                    return (
-                      <div className="mt-3 space-y-2">
-                        {/* Tach 3C — pikè a parèt sèlman si gen plis pase yon
-                            wallet disponib (restoran/livrè ki gen pwòp
-                            wallet yo tou); yon kliyan òdinè wè ZEWO chanjman. */}
-                        {wallets.length > 1 && (
-                          <div className="flex flex-col gap-1.5">
-                            {wallets.map((w) => (
-                              <label
-                                key={w.wallet_id ?? "customer-default"}
-                                className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-3 py-2 text-xs ${
-                                  selectedWalletId === w.wallet_id
-                                    ? "border-brand bg-brand-soft/40"
-                                    : "border-brand-soft/60 bg-white"
-                                } ${w.self_order_blocked ? "opacity-50" : ""}`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <input
-                                    type="radio"
-                                    name="wallet-picker"
-                                    checked={selectedWalletId === w.wallet_id}
-                                    disabled={w.self_order_blocked}
-                                    onChange={() => setSelectedWalletId(w.wallet_id)}
-                                  />
-                                  {w.label}
-                                  {w.self_order_blocked && (
-                                    <span className="text-[10px] text-red-600">
-                                      (ou pa ka peye pwòp restoran ou)
-                                    </span>
-                                  )}
-                                </span>
-                                <b>{formatHTG(w.available_balance)}</b>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                        <div
-                          className={`rounded-xl p-3 text-xs ${insufficient || blocked ? "bg-red-50 text-red-900" : "bg-emerald-50 text-emerald-900"}`}
-                        >
-                          {payableWallets.isLoading ? (
-                            "Ap chaje wallet ou…"
-                          ) : blocked ? (
-                            "Ou pa ka peye yon kòmand nan pwòp restoran ou ak balans sa a — chwazi yon lòt wallet."
-                          ) : (
-                            <>
-                              Balans wallet ou: <b>{formatHTG(balance)}</b>
-                              {insufficient ? (
-                                <>
-                                  {" "}
-                                  — sa pa ase pou peye {formatHTG(total)}.{" "}
-                                  <Link
-                                    to="/dashboard/customer/wallet"
-                                    className="font-bold underline underline-offset-2"
-                                  >
-                                    Rechaje wallet ou
-                                  </Link>
-                                </>
-                              ) : (
-                                " — ase pou peye kòmand sa a. Debi a imedya, pa gen prèv pou telechaje."
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                {(method === "moncash" || method === "natcash") && (
-                  <div className="mt-3 flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
-                    <img
-                      src={
-                        method === "moncash" ? "/moncash-logo-hero.png" : "/natcash-logo-new.png"
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    id="checkout-promo"
+                    value={promoCodeInput}
+                    onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void applyPromoCode();
                       }
-                      alt=""
-                      width={40}
-                      height={28}
-                      loading="lazy"
-                      className="h-7 w-10 shrink-0 rounded-md border border-amber-200 bg-white object-contain p-0.5"
-                    />
-                    <div>
-                      Apre w konfime kòmand la, w ap voye lajan an sou nimewo{" "}
-                      <b>
-                        {method === "moncash" ? "MonCash " : "NatCash "}
-                        {payNumber ?? "(pa konfigire)"}
-                      </b>
-                      {payName ? <> ({payName})</> : null} epi telechaje prèv peman an sou paj
-                      kòmand la. Yon administratè ap verifye epi konfime kòmand la.
-                    </div>
+                    }}
+                    placeholder="Antre yon kòd…"
+                    aria-label="Kòd pwomo"
+                    className={inputCls() + " flex-1"}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    isLoading={checkingPromo}
+                    disabled={!promoCodeInput.trim()}
+                    onClick={applyPromoCode}
+                  >
+                    Aplike
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            {/* ---------- §6 Rezime pri ---------- */}
+            <section
+              aria-labelledby="checkout-summary-title"
+              className="rounded-2xl border border-brand-soft bg-white p-4"
+            >
+              <h2
+                id="checkout-summary-title"
+                className="mb-2 font-display text-base font-bold text-ink"
+              >
+                Rezime pri
+              </h2>
+              <dl className="space-y-1 text-sm">
+                <div className="flex justify-between text-ink-soft">
+                  <dt>Sou-total</dt>
+                  <dd className="tabular-nums">{formatHTG(subtotal)}</dd>
+                </div>
+                {promotionDiscount > 0 && restaurantPromotion.data && (
+                  <div className="flex justify-between font-semibold text-status-good">
+                    <dt>🎉 {restaurantPromotion.data.title}</dt>
+                    <dd className="tabular-nums">-{formatHTG(promotionDiscount)}</dd>
                   </div>
                 )}
-              </div>
-
-              <Button
-                className="mt-6 h-auto w-full py-4 font-display font-extrabold"
-                onClick={submit}
-                disabled={submitting || platformFee.isLoading || restaurantClosed}
-              >
-                {submitting
-                  ? "Ap kreye…"
-                  : restaurantClosed
-                    ? "Restoran an fèmen"
-                    : `Konfime kòmand la · ${formatHTG(total)}`}
-              </Button>
-            </>
-          )}
-        </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between font-semibold text-status-good">
+                    <dt>Rabè ({appliedPromo?.code})</dt>
+                    <dd className="tabular-nums">-{formatHTG(discountAmount)}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between text-ink-soft">
+                  <dt>Frè livrezon</dt>
+                  <dd className="tabular-nums">
+                    {platformFee.isLoading ? "…" : feeUnavailable ? "—" : formatHTG(deliveryFee)}
+                  </dd>
+                </div>
+                <div className="mt-2 flex justify-between border-t-2 border-brand-soft pt-3 font-display text-lg font-extrabold">
+                  <dt>Total</dt>
+                  <dd className="tabular-nums">{totalReady ? formatHTG(total) : "—"}</dd>
+                </div>
+              </dl>
+              {walletActive && (
+                <p className="mt-2 text-xs font-semibold text-status-good">
+                  Total la ap retire nan wallet ou lè w konfime.
+                </p>
+              )}
+            </section>
+          </div>
+        )}
       </main>
-      <SiteFooter />
+
+      {/* ---------- §7 Ba kole anba a ---------- */}
+      {count > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-soft bg-white/95 pb-[var(--sab)] backdrop-blur">
+          <div className="mx-auto flex max-w-[720px] items-center gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <div className="text-xs text-ink-soft">Total</div>
+              <div className="font-display text-lg font-extrabold tabular-nums text-ink">
+                {totalReady ? formatHTG(total) : "—"}
+              </div>
+            </div>
+            <Button
+              className="ml-auto h-12 w-full max-w-[260px] font-display font-extrabold"
+              onClick={submit}
+              isLoading={submitting}
+              disabled={confirmDisabled}
+            >
+              {restaurantClosed
+                ? "Restoran an fèmen"
+                : feeUnavailable
+                  ? "Total la endisponib"
+                  : walletActive
+                    ? "Peye ak wallet"
+                    : "Konfime kòmand la"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

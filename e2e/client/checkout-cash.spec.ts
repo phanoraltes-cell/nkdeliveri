@@ -32,7 +32,7 @@ test.describe("Client — Commander / Payer (Kach)", () => {
 
     await page.locator("#checkout-address").fill(order.delivery_address);
     await page.locator("#checkout-phone").fill(order.contact_phone);
-    await page.getByRole("button", { name: /Kach nan livrezon/ }).click();
+    await page.getByRole("radio", { name: /Kach nan livrezon/ }).check();
 
     await page.getByRole("button", { name: /Konfime kòmand la/ }).click();
 

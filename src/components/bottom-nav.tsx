@@ -3,12 +3,17 @@ import { Home, Store, ShoppingBag, ClipboardList, User as UserIcon } from "lucid
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 
-const HIDDEN_PREFIXES = ["/dashboard", "/auth"];
+const HIDDEN_PREFIXES = ["/dashboard", "/auth", "/checkout"];
 
 /**
  * Fixed bottom tab bar shown on mobile only (md:hidden). Hidden on
- * /dashboard (has its own role-based nav) and /auth (focused task screen) to
- * avoid a redundant second nav, matching native-app tab bar conventions.
+ * /dashboard (has its own role-based nav), /auth and /checkout (focused
+ * task screens) to avoid a redundant second nav, matching native-app tab
+ * bar conventions.
+ *
+ * /checkout: depi refont Tach 2 a, paj peman an gen pwòp ba kole anba pa l
+ * (total + bouton konfime). De ba fiks anba youn sou lòt ta kache bouton
+ * peman an sou telefòn — se egzakteman menm rezon ki fè /auth kache.
  */
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });

@@ -25,7 +25,7 @@ test.describe("Responsive — checkout form usability", () => {
     await page.goto("/checkout");
 
     await expect(page.locator("#checkout-address")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Kach nan livrezon/ })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Kach nan livrezon/ })).toBeVisible();
     await page.screenshot({
       path: `test-results/screenshots/checkout-${testInfo.project.name}.png`,
       fullPage: true,

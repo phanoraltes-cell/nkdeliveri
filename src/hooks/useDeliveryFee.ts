@@ -23,7 +23,16 @@ export function useDeliveryFee() {
         .eq("is_default", true)
         .single();
       if (error) throw error;
-      return Number(data.fee_htg);
+      // `Number(undefined)` se NaN, epi NaN kontamine chak kalkil apre l:
+      // sou paj peman an sa te bay "Total: NaN HTG" ak yon bouton konfime
+      // ki rete aktif. Yon montan ki pa yon nonb fini se yon ECHÈK, se pa
+      // yon valè — nou fè rekèt la echwe pou chak moun ki rele l ka trete
+      // sa kòm sa (`isError`), olye yo pase NaN a pi lwen.
+      const fee = Number(data?.fee_htg);
+      if (!Number.isFinite(fee)) {
+        throw new Error("Konfigirasyon frè livrezon an pa disponib.");
+      }
+      return fee;
     },
     staleTime: 5 * 60_000,
   });

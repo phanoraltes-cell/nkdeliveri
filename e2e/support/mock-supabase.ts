@@ -78,6 +78,15 @@ export function baseHandlersForRole(role: FixtureRole): RouteHandlers {
     "rpc:get_primary_role": PRIMARY_ROLE[role],
     "table:user_roles": userRolesRows(role),
     "table:notifications": [],
+    // Frè livrezon platfòm lan (NKD-015). San li, `useDeliveryFee` te
+    // resevwa yon repons vid, epi `Number(undefined)` te bay NaN — paj
+    // peman an te montre "Total: NaN HTG". Depi kounye a hook la trete yon
+    // montan ki pa fini kòm yon ECHÈK epi paj la bloke konfimasyon an,
+    // donk yon spec san mòk sa a t ap teste yon eta pàn, pa flit reyèl la.
+    // Yon OBJÈ, pa yon tablo: sèl moun ki li tab sa a (`useDeliveryFee`)
+    // sèvi ak `.single()`, epi mòk la voye valè a jan l ye — yon tablo ta
+    // bay `data.fee_htg === undefined`, sa vle di menm NaN nou fèk ranje a.
+    "table:platform_delivery_zones": { fee_htg: 100, is_default: true },
   };
 }
 
