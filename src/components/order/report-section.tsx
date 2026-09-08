@@ -212,7 +212,7 @@ export function ReportSection({ orderId, orderStatus, orderUpdatedAt }: ReportSe
                       onClick={() => setTarget(value)}
                       className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${
                         target === value
-                          ? "border-brand bg-brand text-white"
+                          ? "border-brand bg-brand-deep text-white"
                           : "border-brand-soft bg-white text-ink-soft"
                       }`}
                     >

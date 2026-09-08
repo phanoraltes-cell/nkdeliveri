@@ -208,7 +208,7 @@ export function ProductForm({
       <button
         disabled={saving}
         onClick={save}
-        className="mt-4 rounded-full bg-brand px-6 py-2 text-sm font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
+        className="mt-4 rounded-full bg-brand-deep px-6 py-2 text-sm font-bold text-white shadow-brand-sm transition hover:-translate-y-0.5 hover:bg-brand-deep-hover hover:shadow-brand-md disabled:pointer-events-none disabled:opacity-50"
       >
         {saving ? "Ap sove…" : "Sove plat la"}
       </button>

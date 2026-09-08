@@ -66,8 +66,8 @@ export function MobileDrawer({ role, allRoles, employeeRole, onSignOut }: Mobile
                 onClick={() => setOpen(false)}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold ${
                   f.to === activeFamilyTo
-                    ? "bg-brand text-white"
-                    : "bg-brand-soft/50 text-brand-deep hover:bg-brand-soft"
+                    ? "bg-brand-deep text-white"
+                    : "bg-brand-soft/50 text-ink hover:bg-brand-soft"
                 }`}
               >
                 {f.label}
@@ -94,7 +94,7 @@ export function MobileDrawer({ role, allRoles, employeeRole, onSignOut }: Mobile
                 <Link
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  activeProps={{ className: "!bg-brand !text-white" }}
+                  activeProps={{ className: "!bg-brand-deep !text-white" }}
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-brand-soft/40"
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

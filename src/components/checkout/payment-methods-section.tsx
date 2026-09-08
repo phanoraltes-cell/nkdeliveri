@@ -177,7 +177,7 @@ export function PaymentMethodsSection({
             <Link
               to="/dashboard/customer/wallet"
               search={{ next: "/checkout" }}
-              className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl bg-brand px-4 text-sm font-bold text-white transition hover:bg-brand-deep focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
+              className="mt-2.5 flex h-10 w-full items-center justify-center rounded-xl bg-brand-deep px-4 text-sm font-bold text-white transition hover:bg-brand-deep-hover focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
             >
               Ajoute lajan
             </Link>

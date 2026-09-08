@@ -191,7 +191,7 @@ export function HaitiVideoPopup() {
             }}
             className="flex items-center gap-2 rounded-full bg-white py-2.5 pl-3 pr-4 shadow-[0_12px_28px_rgba(0,0,0,0.18)] ring-1 ring-brand-soft/60 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.22)]"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-deep text-white">
               <Play className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
             </span>
             <span className="text-sm font-bold text-ink">Bèlte Ayiti</span>

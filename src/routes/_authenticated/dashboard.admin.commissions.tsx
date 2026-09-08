@@ -123,7 +123,7 @@ function AdminCommissions() {
                   className={cn(
                     "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition",
                     selected?.id === b.id
-                      ? "bg-brand text-white"
+                      ? "bg-brand-deep text-white"
                       : "text-ink hover:bg-brand-soft/40",
                   )}
                 >

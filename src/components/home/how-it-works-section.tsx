@@ -35,10 +35,10 @@ export function HowItWorksSection() {
             transition={{ duration: 0.4, delay: i * 0.08 }}
             className="group relative rounded-3xl bg-white p-6 text-center shadow-[0_8px_28px_rgba(249,115,22,0.08)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(249,115,22,0.18)]"
           >
-            <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-xs font-extrabold text-white">
+            <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand-deep text-xs font-extrabold text-white">
               {i + 1}
             </span>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-soft/50 text-brand transition group-hover:scale-110 group-hover:bg-brand group-hover:text-white">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-soft/50 text-brand transition group-hover:scale-110 group-hover:bg-brand-deep group-hover:text-white">
               <s.icon className="h-8 w-8" />
             </div>
             <h3 className="mb-1.5 font-display text-lg font-extrabold text-ink">{s.title}</h3>

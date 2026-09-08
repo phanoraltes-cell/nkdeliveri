@@ -87,7 +87,7 @@ export function AddressManager({ userId }: { userId: string }) {
             setEditing(null);
             setShowForm(true);
           }}
-          className="inline-flex h-9 items-center gap-1 rounded-full bg-brand-soft/60 px-3 text-xs font-bold text-brand-deep hover:bg-brand-soft"
+          className="inline-flex h-9 items-center gap-1 rounded-full bg-brand-soft/60 px-3 text-xs font-bold text-ink hover:bg-brand-soft"
         >
           <Plus className="h-3.5 w-3.5" /> Ajoute
         </button>

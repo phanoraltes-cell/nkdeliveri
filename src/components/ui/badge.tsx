@@ -8,10 +8,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-brand text-white shadow-brand-xs hover:bg-brand-deep",
-        secondary: "border-transparent bg-brand-soft/70 text-brand-deep hover:bg-brand-soft",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        // Menm règ ak Button (kontras 2026-09): tèks blan mande
+        // `brand-deep` (5.06:1), pa `brand` (2.80:1); tèks sou yon chip
+        // `brand-soft` se `--ink` (12.36:1) — oranj sou oranj pal pa ka
+        // rive AA.
+        default:
+          "border-transparent bg-brand-deep text-white shadow-brand-xs hover:bg-brand-deep-hover",
+        secondary: "border-transparent bg-brand-soft/70 text-ink hover:bg-brand-soft",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
         outline: "border-brand-soft text-ink",
       },
     },

@@ -76,7 +76,7 @@ export function LiveMapSection({
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
             {onlineDriverCount} livrè aktif
           </span>
-          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-ink">
             {activeDeliveryCount} livrezon an kou
           </span>
         </div>

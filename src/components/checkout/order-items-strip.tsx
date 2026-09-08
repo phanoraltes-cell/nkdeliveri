@@ -104,7 +104,7 @@ export function OrderItemsStrip({ items, setQty, setItemNotes, badges, promotion
                     aria-label={
                       it.qty === 1 ? `Retire ${it.name} nan panye` : `Diminye kantite ${it.name}`
                     }
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand-deep hover:text-white focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none"
                   >
                     <Minus className="h-3 w-3" aria-hidden="true" />
                   </button>
@@ -120,7 +120,7 @@ export function OrderItemsStrip({ items, setQty, setItemNotes, badges, promotion
                     onClick={() => setQty(it.productId, it.qty + 1)}
                     disabled={stockLeft !== undefined && it.qty >= stockLeft}
                     aria-label={`Ogmante kantite ${it.name}`}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand hover:text-white focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-deep transition hover:bg-brand-deep hover:text-white focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Plus className="h-3 w-3" aria-hidden="true" />
                   </button>

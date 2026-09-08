@@ -40,7 +40,7 @@ export function PendingPaymentsSection({
               <div className="min-w-0">
                 <div className="font-display text-lg font-extrabold">
                   {p.orders?.order_number}
-                  <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                  <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-ink">
                     {p.method}
                   </span>
                   <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">

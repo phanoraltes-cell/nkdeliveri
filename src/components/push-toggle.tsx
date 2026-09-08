@@ -136,7 +136,7 @@ export function PushToggle() {
           className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
             enabled
               ? "bg-emerald-600 text-white hover:bg-emerald-700"
-              : "bg-brand-soft text-brand-deep hover:bg-brand hover:text-white"
+              : "bg-brand-soft text-brand-deep hover:bg-brand-deep hover:text-white"
           } disabled:opacity-60`}
         >
           {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}

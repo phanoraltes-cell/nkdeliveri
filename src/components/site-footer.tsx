@@ -70,7 +70,7 @@ export function SiteFooter() {
   ] as const;
 
   return (
-    <footer className="mt-16 bg-brand text-white">
+    <footer className="mt-16 bg-brand-deep text-white">
       <div className="mx-auto grid max-w-[1100px] gap-8 px-5 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2.5">

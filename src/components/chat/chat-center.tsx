@@ -146,8 +146,8 @@ export function ChatCenter({
                 className={cn(
                   "rounded-full px-3 py-1.5 text-xs font-bold transition",
                   filter === f.key
-                    ? "bg-brand text-white"
-                    : "bg-brand-soft/50 text-brand-deep hover:bg-brand-soft",
+                    ? "bg-brand-deep text-white"
+                    : "bg-brand-soft/50 text-ink hover:bg-brand-soft",
                 )}
               >
                 {f.label}

@@ -82,7 +82,7 @@ function TypeSelector({ onSelect }: { onSelect: (t: AccountType) => void }) {
             onClick={() => onSelect(o.type)}
             className="group flex flex-col items-start rounded-2xl border-2 border-brand-soft/60 bg-white p-5 text-left shadow-brand-xs transition hover:-translate-y-1 hover:border-brand hover:shadow-brand-lg"
           >
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep group-hover:bg-brand group-hover:text-white">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft/60 text-brand-deep group-hover:bg-brand-deep group-hover:text-white">
               <Icon className="h-6 w-6" />
             </div>
             <div className="font-display text-lg font-bold text-ink">{o.title}</div>

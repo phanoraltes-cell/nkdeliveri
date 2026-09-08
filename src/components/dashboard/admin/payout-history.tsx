@@ -141,7 +141,7 @@ export function PayoutHistory({
           <button
             key={m}
             onClick={() => setFilter(m)}
-            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${filter === m ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-brand-deep"}`}
+            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${filter === m ? "bg-brand-deep text-white" : "bg-brand-soft/60 text-ink"}`}
           >
             {m === "all" ? "Tout metòd" : m}
           </button>

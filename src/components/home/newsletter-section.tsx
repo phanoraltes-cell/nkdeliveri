@@ -43,7 +43,7 @@ export function NewsletterSection() {
 
   return (
     <section className="mx-auto max-w-[1200px] px-5 pb-16">
-      <div className="grid overflow-hidden rounded-[32px] bg-brand text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.3fr_1fr]">
+      <div className="grid overflow-hidden rounded-[32px] bg-brand-deep text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.3fr_1fr]">
         <div className="p-8 md:p-12">
           <h2 className="mb-2 font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold">
             Rete konekte ak NK Deliveri+

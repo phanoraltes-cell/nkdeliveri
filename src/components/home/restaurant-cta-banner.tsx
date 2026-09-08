@@ -7,7 +7,7 @@ const chefImg = "/chef.jpg";
 export function RestaurantCtaBanner() {
   return (
     <section className="mx-auto max-w-[1200px] px-5 pb-14">
-      <div className="relative grid overflow-hidden rounded-[32px] bg-brand text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.4fr_1fr]">
+      <div className="relative grid overflow-hidden rounded-[32px] bg-brand-deep text-white shadow-[0_20px_60px_rgba(249,115,22,0.35)] md:grid-cols-[1.4fr_1fr]">
         <div className="relative z-10 p-8 md:p-12">
           <h2 className="mb-3 font-display text-[clamp(1.6rem,2.8vw,2.2rem)] font-extrabold leading-tight">
             Ou restoran ?

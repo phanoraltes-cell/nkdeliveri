@@ -48,7 +48,7 @@ export function PopularRestaurantsSection({
             onClick={() => onCuisineChange(c)}
             className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
               cuisine === c
-                ? "border-brand bg-brand text-white shadow-[0_6px_16px_rgba(249,115,22,0.3)]"
+                ? "border-brand bg-brand-deep text-white shadow-[0_6px_16px_rgba(249,115,22,0.3)]"
                 : "border-brand-soft bg-white text-ink-soft hover:border-brand hover:text-brand"
             }`}
           >

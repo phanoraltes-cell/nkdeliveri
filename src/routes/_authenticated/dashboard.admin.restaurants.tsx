@@ -115,7 +115,7 @@ function AdminRestaurants() {
                 </div>
                 <button
                   onClick={() => setEditingId(r.id)}
-                  className="inline-flex items-center gap-1 rounded-full bg-brand-soft/60 px-3 py-2 text-xs font-bold text-brand-deep hover:bg-brand hover:text-white"
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-soft/60 px-3 py-2 text-xs font-bold text-brand-deep hover:bg-brand-deep hover:text-white"
                 >
                   <Percent className="h-3.5 w-3.5" /> Modifye
                 </button>
@@ -194,14 +194,14 @@ function CommissionForm({
         <button
           type="button"
           onClick={() => setType("per_order")}
-          className={`rounded-full px-3 py-1.5 text-xs font-bold ${type === "per_order" ? "bg-brand text-white" : "bg-white text-ink-soft border border-brand-soft"}`}
+          className={`rounded-full px-3 py-1.5 text-xs font-bold ${type === "per_order" ? "bg-brand-deep text-white" : "bg-white text-ink-soft border border-brand-soft"}`}
         >
           Pousantaj pa kòmand
         </button>
         <button
           type="button"
           onClick={() => setType("monthly")}
-          className={`rounded-full px-3 py-1.5 text-xs font-bold ${type === "monthly" ? "bg-brand text-white" : "bg-white text-ink-soft border border-brand-soft"}`}
+          className={`rounded-full px-3 py-1.5 text-xs font-bold ${type === "monthly" ? "bg-brand-deep text-white" : "bg-white text-ink-soft border border-brand-soft"}`}
         >
           Montan fiks chak mwa
         </button>

@@ -32,7 +32,7 @@ export function ActiveDeliveriesSection({
       <section className="rounded-2xl border border-brand-soft/60 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold text-ink">Livrezon aktif</h2>
-          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-brand-deep">
+          <span className="rounded-full bg-brand-soft/60 px-3 py-1 text-xs font-bold text-ink">
             {active.length}
           </span>
         </div>
