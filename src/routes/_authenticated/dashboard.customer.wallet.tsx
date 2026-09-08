@@ -154,7 +154,7 @@ function CustomerWallet() {
           <div>
             <div className="text-xs font-bold uppercase text-ink-soft">Balans disponib</div>
             <div className="font-display text-4xl font-extrabold text-ink">
-              {wallet.isLoading ? "…" : formatHTG(wallet.data?.available_balance ?? 0)}
+              {wallet.isLoading ? "…" : formatHTG(wallet.data?.available_balance)}
             </div>
           </div>
           <Button onClick={() => setShowTopup(true)}>

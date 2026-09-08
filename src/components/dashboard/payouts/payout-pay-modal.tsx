@@ -224,7 +224,7 @@ export function PayoutPayModal({
           <DialogHeader>
             <DialogTitle>Voye yon peman</DialogTitle>
             <DialogDescription>
-              {beneficiary?.name} — Balans disponib: {formatHTG(beneficiary?.availableBalance ?? 0)}
+              {beneficiary?.name} — Balans disponib: {formatHTG(beneficiary?.availableBalance)}
             </DialogDescription>
           </DialogHeader>
 

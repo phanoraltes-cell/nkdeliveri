@@ -17,20 +17,16 @@ type WalletSummaryCardsProps = {
 export function WalletSummaryCards({ wallet, totalOrders }: WalletSummaryCardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <KpiCard
-        label="Balans disponib"
-        value={formatHTG(wallet?.available_balance ?? 0)}
-        icon={Wallet}
-      />
+      <KpiCard label="Balans disponib" value={formatHTG(wallet?.available_balance)} icon={Wallet} />
       <KpiCard
         label="An atant konfimasyon"
-        value={formatHTG(wallet?.pending_balance ?? 0)}
+        value={formatHTG(wallet?.pending_balance)}
         icon={Clock}
       />
-      <KpiCard label="Total peye" value={formatHTG(wallet?.paid_balance ?? 0)} icon={HandCoins} />
+      <KpiCard label="Total peye" value={formatHTG(wallet?.paid_balance)} icon={HandCoins} />
       <KpiCard
         label="Total antre (lavi)"
-        value={formatHTG(wallet?.lifetime_earnings ?? 0)}
+        value={formatHTG(wallet?.lifetime_earnings)}
         icon={TrendingUp}
       />
       {totalOrders !== undefined && (
