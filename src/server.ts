@@ -4,6 +4,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { initSentryServer, captureExceptionServer } from "./lib/sentry.server";
+import { isPrivatePath } from "@/lib/private-paths";
 
 initSentryServer();
 
@@ -111,6 +112,16 @@ export default {
       const normalized = await normalizeCatastrophicSsrResponse(response);
       normalized.headers.set("Content-Security-Policy", buildCsp(nonce));
       normalized.headers.set("Reporting-Endpoints", REPORTING_ENDPOINTS);
+      // Dezyèm kouch kont endeksaj paj prive. robots.txt se yon DEMANN, epi
+      // nan ka nou an Cloudflare enjekte yon dezyèm gwoup "User-agent: *"
+      // ak "Allow: /" ANWO pa nou an — yon robo ki pran premye gwoup ki
+      // matche a sèlman pa ta janm wè "Disallow" nou yo. Antèt sa a vwayaje
+      // ak chak repons, li pa depann de okenn fichye yon lòt sistèm ka
+      // modifye, epi li travay sou repons ki pa HTML tou (/api/*), kote yon
+      // balis <meta name="robots"> pa ta menm ka egziste.
+      if (isPrivatePath(new URL(request.url).pathname)) {
+        normalized.headers.set("X-Robots-Tag", "noindex, nofollow");
+      }
       return normalized;
     } catch (error) {
       console.error(error);
