@@ -23,12 +23,18 @@
 
 const GIS_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 const GIS_LOAD_TIMEOUT_MS = 5000;
+// Konbyen tan nou tann One Tap anvan nou tonbe sou sekou a. Li dwe ase
+// long pou yon moun wè fenèt la epi klike (One Tap parèt nan yon segonn),
+// men pa ase long pou bouton an parèt kase.
+const GIS_PROMPT_TIMEOUT_MS = 12000;
 
 type GisCredentialResponse = { credential?: string };
 type GisPromptNotification = {
-  isNotDisplayed: () => boolean;
-  isSkippedMoment: () => boolean;
-  isDismissedMoment: () => boolean;
+  // Opsyonèl EKSPRÈ: ak FedCM aktive, Google pa sipòte isNotDisplayed()
+  // ni isSkippedMoment() ankò. Yo ka absan nèt.
+  isNotDisplayed?: () => boolean;
+  isSkippedMoment?: () => boolean;
+  isDismissedMoment?: () => boolean;
   // Google BAY rezon an — nou pa t ap li l anvan, se poutèt sa chak echèk
   // te parèt menm jan. `unregistered_origin` la se sa ki di ou origin nan
   // pa nan Google Cloud Console; san li, ou ka pase jou ap devine.
@@ -47,6 +53,7 @@ declare global {
             callback: (response: GisCredentialResponse) => void;
             auto_select?: boolean;
             cancel_on_tap_outside?: boolean;
+            use_fedcm_for_prompt?: boolean;
           }) => void;
           prompt: (momentListener?: (notification: GisPromptNotification) => void) => void;
           cancel: () => void;
@@ -78,6 +85,7 @@ export type GoogleSignInFailureReason =
   | "unregistered_origin"
   | "dismissed_by_user"
   | "no_google_session"
+  | "prompt_ignored"
   | "unknown";
 
 /** Kisa pou fè pou chak kategori — mesaj la ale nan konsòl la, pa sou paj piblik la. */
@@ -92,6 +100,8 @@ const REASON_HINT: Record<GoogleSignInFailureReason, string> = {
   dismissed_by_user: "Itilizatè a fèmen One Tap la li menm — se pa yon pàn.",
   no_google_session:
     "Pa gen sesyon Google nan navigatè a, oswa moun nan te dezaktive One Tap. Sekou OAuth la se bon repons lan isit la.",
+  prompt_ignored:
+    "One Tap parèt men pèsonn pa reponn li nan delè a (oswa Google pa bay okenn moman ak FedCM). Sekou OAuth la se bon repons lan isit la.",
   unknown: "Rezon an pa idantifye — gade mesaj erè a ak konsòl Google la.",
 };
 
@@ -187,36 +197,69 @@ export async function getGoogleIdToken(): Promise<string> {
 
   return new Promise<string>((resolve, reject) => {
     let settled = false;
+    const settle = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(promptTimeout);
+      fn();
+    };
+
+    // GAD KONT BLOKAJ ETÈNÈL. `prompt()` rele moman-listener la SÈLMAN lè
+    // One Tap pa parèt, sote, oswa fèmen. Si li PARÈT epi moun nan senpleman
+    // inyore l, PA GEN okenn moman epi `callback` la pa janm rele — promès
+    // la pa t ap janm rezoud, epi bouton an t ap rete « Ap redirije… » pou
+    // tout tan. Yon delè fè nou tonbe sou sekou a olye nou pann.
+    const promptTimeout = setTimeout(() => {
+      settle(() => reject(new GoogleSignInError("prompt_ignored")));
+    }, GIS_PROMPT_TIMEOUT_MS);
+
     window.google!.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID!,
       // false — pa chwazi yon kont otomatikman san itilizatè a wè/konfime
       // anyen; sa ta sipriz moun nan sou yon aparèy pataje.
       auto_select: false,
       cancel_on_tap_outside: true,
+      // FedCM — SE SA KI TE FÈ ONE TAP PA JANM PARÈT NAN CHROME.
+      // Chrome ap retire cookies tyès pati; san opsyon sa a, GIS toujou
+      // depann de yo epi navigatè a bloke One Tap an silans. Rezilta:
+      // chak koneksyon tonbe sou sekou OAuth la, epi moun nan wè ekran
+      // redireksyon Google la (ki montre domèn Supabase la) olye yon
+      // fenèt One Tap sou pwòp sit la. Google mande opsyon sa a pou tout
+      // nouvo entegrasyon.
+      use_fedcm_for_prompt: true,
       callback: (response) => {
-        settled = true;
-        if (response.credential) resolve(response.credential);
-        else reject(new Error("Google pa retounen okenn kredansyèl"));
+        settle(() => {
+          if (response.credential) resolve(response.credential);
+          else reject(new GoogleSignInError("unknown", "no_credential"));
+        });
       },
     });
+
     window.google!.accounts.id.prompt((notification) => {
-      if (settled) return;
-      // Nou mande Google POUKISA, olye nou jete tout ka yo ansanm. Twa
-      // moman diferan, twa rezon diferan — epi `unregistered_origin` la se
-      // sa ki di ou konfigirasyon Google Cloud la ki an kòz, pa kòd la.
-      if (notification.isNotDisplayed()) {
+      // Nou mande Google POUKISA, olye nou jete tout ka yo ansanm —
+      // `unregistered_origin` la se sa ki di konfigirasyon Google Cloud la
+      // an kòz, pa kòd la.
+      //
+      // MEN ATANSYON: ak FedCM aktive, Google PA sipòte
+      // `isNotDisplayed()` ni `isSkippedMoment()` ankò. Nou rele yo ak
+      // `?.()` epi nou aksepte `undefined` — si yo absan, delè a pi wo a
+      // se sa ki fè travay la. Se poutèt sa gad delè a pa opsyonèl.
+      if (notification.isNotDisplayed?.()) {
         const raw = notification.getNotDisplayedReason?.();
-        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
+        settle(() => reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null)));
         return;
       }
-      if (notification.isSkippedMoment()) {
+      if (notification.isSkippedMoment?.()) {
         const raw = notification.getSkippedReason?.();
-        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
+        settle(() => reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null)));
         return;
       }
-      if (notification.isDismissedMoment()) {
+      if (notification.isDismissedMoment?.()) {
         const raw = notification.getDismissedReason?.();
-        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
+        // `credential_returned` se yon fèmti NÒMAL: One Tap fèmen paske
+        // koneksyon an reyisi. Callback la ap rezoud — pa rejte sou li.
+        if (raw === "credential_returned") return;
+        settle(() => reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null)));
       }
     });
   });
