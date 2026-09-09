@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { formatHTG } from "@/lib/format";
+import { toAmount } from "@/lib/money";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
@@ -93,7 +94,26 @@ export const Route = createFileRoute("/restaurants/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) return noIndexMeta("Restoran pa jwenn — NK Deliveri");
-    const { r } = loaderData;
+    const { r, prods } = loaderData;
+    // `priceRange` kalkile depi pri ki REYÈLMAN AFICHE sou paj la (menm lis
+    // `prods` konpozan an rann). Règ Google la strik: done estriktire ki pa
+    // koresponn ak kontni vizib la se yon rezon penalite. Nou pa envante yon
+    // fouchèt "$$" — nou li vrè pri yo.
+    //
+    // `toAmount` (pa `Number`): yon pri ki kase nan baz la ta bay `NaN–NaN
+    // HTG` nan done estriktire yo — egzakteman kalite bagay ki fè yon paj
+    // pran yon penalite an silans.
+    const prices = prods
+      .map((p) => toAmount(p.price))
+      .filter((n): n is number => n !== null && n > 0);
+    const priceRange =
+      prices.length > 0
+        ? (() => {
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return min === max ? `${min} HTG` : `${min}–${max} HTG`;
+          })()
+        : undefined;
     const description =
       r.description ?? `Kòmande nan ${r.name}, livrezon rapid nan ${PRIMARY_CITY.name}.`;
     const path = `/restaurants/${r.slug}`;
@@ -114,6 +134,12 @@ export const Route = createFileRoute("/restaurants/$slug")({
           url: absoluteUrl(path),
           servesCuisine: r.cuisine ?? undefined,
           telephone: r.phone ?? undefined,
+          priceRange,
+          // Zòn livrezon an — se menm vil la Organization nan rasin lan
+          // deklare, epi se sa paj la di kliyan an tou. Yon Restaurant se
+          // deja yon soutip LocalBusiness nan schema.org, donk nou pa ajoute
+          // yon dezyèm blòk LocalBusiness ki ta di menm bagay la de fwa.
+          areaServed: { "@type": "City", name: PRIMARY_CITY.name },
           address: {
             "@type": "PostalAddress",
             streetAddress: r.address ?? undefined,
