@@ -70,6 +70,7 @@ import { Route as AuthenticatedDashboardCustomerWalletRouteImport } from './rout
 import { Route as AuthenticatedDashboardCustomerChatRouteImport } from './routes/_authenticated/dashboard.customer.chat'
 import { Route as AuthenticatedDashboardAdminWithdrawalRulesRouteImport } from './routes/_authenticated/dashboard.admin.withdrawal-rules'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated/dashboard.admin.users'
+import { Route as AuthenticatedDashboardAdminSystemStatusRouteImport } from './routes/_authenticated/dashboard.admin.system-status'
 import { Route as AuthenticatedDashboardAdminSecurityRouteImport } from './routes/_authenticated/dashboard.admin.security'
 import { Route as AuthenticatedDashboardAdminRestaurantsRouteImport } from './routes/_authenticated/dashboard.admin.restaurants'
 import { Route as AuthenticatedDashboardAdminReportsRouteImport } from './routes/_authenticated/dashboard.admin.reports'
@@ -436,6 +437,12 @@ const AuthenticatedDashboardAdminUsersRoute =
     path: '/users',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminSystemStatusRoute =
+  AuthenticatedDashboardAdminSystemStatusRouteImport.update({
+    id: '/system-status',
+    path: '/system-status',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminSecurityRoute =
   AuthenticatedDashboardAdminSecurityRouteImport.update({
     id: '/security',
@@ -644,6 +651,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
+  '/dashboard/admin/system-status': typeof AuthenticatedDashboardAdminSystemStatusRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/admin/withdrawal-rules': typeof AuthenticatedDashboardAdminWithdrawalRulesRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
@@ -726,6 +734,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
+  '/dashboard/admin/system-status': typeof AuthenticatedDashboardAdminSystemStatusRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/dashboard/admin/withdrawal-rules': typeof AuthenticatedDashboardAdminWithdrawalRulesRoute
   '/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
@@ -815,6 +824,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/reports': typeof AuthenticatedDashboardAdminReportsRoute
   '/_authenticated/dashboard/admin/restaurants': typeof AuthenticatedDashboardAdminRestaurantsRoute
   '/_authenticated/dashboard/admin/security': typeof AuthenticatedDashboardAdminSecurityRoute
+  '/_authenticated/dashboard/admin/system-status': typeof AuthenticatedDashboardAdminSystemStatusRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
   '/_authenticated/dashboard/admin/withdrawal-rules': typeof AuthenticatedDashboardAdminWithdrawalRulesRoute
   '/_authenticated/dashboard/customer/chat': typeof AuthenticatedDashboardCustomerChatRoute
@@ -904,6 +914,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/reports'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
+    | '/dashboard/admin/system-status'
     | '/dashboard/admin/users'
     | '/dashboard/admin/withdrawal-rules'
     | '/dashboard/customer/chat'
@@ -986,6 +997,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/reports'
     | '/dashboard/admin/restaurants'
     | '/dashboard/admin/security'
+    | '/dashboard/admin/system-status'
     | '/dashboard/admin/users'
     | '/dashboard/admin/withdrawal-rules'
     | '/dashboard/customer/chat'
@@ -1074,6 +1086,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/reports'
     | '/_authenticated/dashboard/admin/restaurants'
     | '/_authenticated/dashboard/admin/security'
+    | '/_authenticated/dashboard/admin/system-status'
     | '/_authenticated/dashboard/admin/users'
     | '/_authenticated/dashboard/admin/withdrawal-rules'
     | '/_authenticated/dashboard/customer/chat'
@@ -1562,6 +1575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminUsersRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/system-status': {
+      id: '/_authenticated/dashboard/admin/system-status'
+      path: '/system-status'
+      fullPath: '/dashboard/admin/system-status'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminSystemStatusRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/security': {
       id: '/_authenticated/dashboard/admin/security'
       path: '/security'
@@ -1766,6 +1786,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminReportsRoute: typeof AuthenticatedDashboardAdminReportsRoute
   AuthenticatedDashboardAdminRestaurantsRoute: typeof AuthenticatedDashboardAdminRestaurantsRoute
   AuthenticatedDashboardAdminSecurityRoute: typeof AuthenticatedDashboardAdminSecurityRoute
+  AuthenticatedDashboardAdminSystemStatusRoute: typeof AuthenticatedDashboardAdminSystemStatusRoute
   AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
   AuthenticatedDashboardAdminWithdrawalRulesRoute: typeof AuthenticatedDashboardAdminWithdrawalRulesRoute
   AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
@@ -1820,6 +1841,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminRestaurantsRoute,
     AuthenticatedDashboardAdminSecurityRoute:
       AuthenticatedDashboardAdminSecurityRoute,
+    AuthenticatedDashboardAdminSystemStatusRoute:
+      AuthenticatedDashboardAdminSystemStatusRoute,
     AuthenticatedDashboardAdminUsersRoute:
       AuthenticatedDashboardAdminUsersRoute,
     AuthenticatedDashboardAdminWithdrawalRulesRoute:
