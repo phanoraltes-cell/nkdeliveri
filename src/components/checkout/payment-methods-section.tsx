@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { isWalletActive, type WalletDisplayState } from "@/lib/wallet-payment-display";
-import { Wallet, Check } from "lucide-react";
+import { Wallet, Check, Banknote } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,7 +46,10 @@ export const OTHER_METHODS = [
     logo: "/moncash-logo-hero.png",
     secondLogo: "/natcash-logo-new.png",
   },
-  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null },
+  // Kach pa gen yon logo pwovidè — pa gen konpayi dèyè l. Li pote ikòn
+  // biyè a nan menm kad la ak lòt yo, pou liy lan pa parèt kase ak yon
+  // bwat vid pandan chak lòt metòd gen yon imaj.
+  { id: "kach", label: "Kach nan livrezon", sub: "Peye lè manje a rive", logo: null, icon: "cash" },
 ] as const;
 
 export type CheckoutMethod = (typeof OTHER_METHODS)[number]["id"];
@@ -314,8 +317,10 @@ export function PaymentMethodsSection({
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="h-7 w-10 shrink-0 rounded-md border border-brand-soft/60 bg-white"
-                  />
+                    className="flex h-7 w-10 shrink-0 items-center justify-center rounded-md border border-brand-soft/60 bg-white text-brand-deep"
+                  >
+                    {"icon" in m && m.icon === "cash" && <Banknote className="h-4 w-4" />}
+                  </span>
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-1.5">
