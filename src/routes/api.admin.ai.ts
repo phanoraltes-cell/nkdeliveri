@@ -5,7 +5,7 @@ import { sanitize } from "@/lib/ai/sanitize";
 import {
   askClaude,
   streamClaude,
-  claudeErrorToKreyol,
+  describeClaudeFailure,
   isAiConfigured,
   MODEL_FAST,
   MODEL_STRONG,
@@ -125,10 +125,11 @@ export const Route = createFileRoute("/api/admin/ai")({
           // Kritè aksèptasyon #5: si kle a manke, panèl la montre yon
           // mesaj klè — rès dashboard la kontinye mache. Isit la se
           // menm mesaj la, jis nan yon repons ki pa 500 brit.
+          const notConfigured = describeClaudeFailure(new AiNotConfiguredError());
           return new Response(
-            JSON.stringify({ error: claudeErrorToKreyol(new AiNotConfiguredError()) }),
+            JSON.stringify({ error: notConfigured.message, kind: notConfigured.kind }),
             {
-              status: 503,
+              status: notConfigured.status,
               headers: { "content-type": "application/json" },
             },
           );
@@ -202,9 +203,21 @@ export const Route = createFileRoute("/api/admin/ai")({
               headers: { "content-type": "application/json" },
             });
           } catch (err) {
-            await logUsage(userId, "ad", MODEL_STRONG, null, "error", String(err));
-            return new Response(JSON.stringify({ error: claudeErrorToKreyol(err) }), {
-              status: 502,
+            // Estati a soti nan kategori echèk la, pa yon 502 fiks: yon kont
+            // san kredi bay 402, yon kle refize bay 401, yon kle ki manke
+            // bay 503. Se konsa yon moun ki gade Network tab la konnen
+            // kisa k ap pase san li pa louvri jounal la.
+            const failure = describeClaudeFailure(err);
+            await logUsage(
+              userId,
+              "ad",
+              MODEL_STRONG,
+              null,
+              "error",
+              failure.detail || failure.kind,
+            );
+            return new Response(JSON.stringify({ error: failure.message, kind: failure.kind }), {
+              status: failure.status,
               headers: { "content-type": "application/json" },
             });
           }
@@ -286,9 +299,20 @@ export const Route = createFileRoute("/api/admin/ai")({
                 ]);
                 controller.enqueue(encoder.encode(sse("done", { cached: false })));
               } catch (err) {
-                await logUsage(userId, "summary", model, null, "error", String(err));
+                // Stream la deja kòmanse, donk kòd HTTP la deja voye — nou pa ka
+                // chanje l. Nou voye kategori a nan evènman an pou UI a ka montre
+                // bon aksyon an, epi describeClaudeFailure ekri kòz la nan jounal.
+                const failure = describeClaudeFailure(err);
+                await logUsage(
+                  userId,
+                  "summary",
+                  model,
+                  null,
+                  "error",
+                  failure.detail || failure.kind,
+                );
                 controller.enqueue(
-                  encoder.encode(sse("error", { message: claudeErrorToKreyol(err) })),
+                  encoder.encode(sse("error", { message: failure.message, kind: failure.kind })),
                 );
               } finally {
                 controller.close();
@@ -347,9 +371,12 @@ export const Route = createFileRoute("/api/admin/ai")({
               await logUsage(userId, feature, finalUsage.model, finalUsage, "success");
               controller.enqueue(encoder.encode(sse("done", {})));
             } catch (err) {
-              await logUsage(userId, feature, model, null, "error", String(err));
+              // Menm bagay ak lòt branch stream la: kategori a nan evènman an,
+              // kòz la nan jounal la.
+              const failure = describeClaudeFailure(err);
+              await logUsage(userId, feature, model, null, "error", failure.detail || failure.kind);
               controller.enqueue(
-                encoder.encode(sse("error", { message: claudeErrorToKreyol(err) })),
+                encoder.encode(sse("error", { message: failure.message, kind: failure.kind })),
               );
             } finally {
               controller.close();

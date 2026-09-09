@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AiNotConfiguredError, classifyAnthropicError } from "@/lib/integrations/anthropic-failure";
+import { logIntegrationFailure, type IntegrationFailure } from "@/lib/integrations/failure";
 
 /**
  * TACH 2 (ASISTAN AI ADMIN) — sèl kote ki pale dirèkteman ak SDK Anthropic
@@ -17,12 +19,10 @@ import Anthropic from "@anthropic-ai/sdk";
 export const MODEL_FAST = process.env.ANTHROPIC_MODEL_FAST || "claude-haiku-4-5";
 export const MODEL_STRONG = process.env.ANTHROPIC_MODEL_STRONG || "claude-opus-5";
 
-export class AiNotConfiguredError extends Error {
-  constructor() {
-    super("ANTHROPIC_API_KEY pa konfigire sou sèvè a.");
-    this.name = "AiNotConfiguredError";
-  }
-}
+// Klas la viv nan integrations/anthropic-failure.ts kounye a (menm kote ak
+// klasifikatè a). Re-eksporte isit la pou tout apèl ki egziste deja rete
+// valab — se toujou yon sèl klas, pa de.
+export { AiNotConfiguredError };
 
 let cachedClient: Anthropic | null = null;
 
@@ -123,23 +123,19 @@ export function streamClaude({
  * pi jeneral la, jan gid SDK a rekòmande.
  */
 export function claudeErrorToKreyol(err: unknown): string {
-  if (err instanceof AiNotConfiguredError) {
-    return "Asistan AI a pa konfigire sou sèvè a kounye a. Rès dashboard la kontinye mache nòmalman.";
-  }
-  if (err instanceof Anthropic.AuthenticationError) {
-    return "Kle API Claude a envalid oswa ekspire. Kontakte yon devlopè pou verifye konfigirasyon an.";
-  }
-  if (err instanceof Anthropic.RateLimitError) {
-    return "Twòp demann bay Claude kounye a. Tanpri eseye ankò nan kèk minit.";
-  }
-  if (err instanceof Anthropic.APIConnectionTimeoutError) {
-    return "Claude pran twò lontan pou reponn. Tanpri eseye ankò.";
-  }
-  if (err instanceof Anthropic.APIConnectionError) {
-    return "Pa gen koneksyon ak sèvis AI a kounye a. Tanpri eseye ankò pita.";
-  }
-  if (err instanceof Anthropic.APIError) {
-    return `Sèvis AI a retounen yon erè (${err.status}). Tanpri eseye ankò.`;
-  }
-  return "Yon erè enkoni rive ak asistan AI a. Tanpri eseye ankò.";
+  return describeClaudeFailure(err).message;
+}
+
+/**
+ * Klase yon erè Claude, EKRI L NAN JOUNAL LA, epi retounen l.
+ *
+ * Se sèl chemen wout la sèvi: konsa yon echèk pa ka janm rive nan yon
+ * repons HTTP san li pa kite yon tras nan jounal sèvè a ak kòz la, kòd
+ * founisè a ak `request_id` an. Ansyen vèsyon an te retounen yon mesaj
+ * sèlman — sa vle di yon pàn ki dire jou pa t kite anyen pou chèche.
+ */
+export function describeClaudeFailure(err: unknown): IntegrationFailure {
+  const failure = classifyAnthropicError(err);
+  logIntegrationFailure(failure);
+  return failure;
 }

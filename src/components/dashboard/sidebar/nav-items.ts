@@ -1,4 +1,5 @@
 import {
+  Activity,
   LayoutDashboard,
   ShoppingBag,
   Store,
@@ -132,6 +133,7 @@ const NAV_BY_ROLE: Record<DashboardRole, NavItem[]> = {
     { to: "/dashboard/admin/contracts", label: "Kontra Restoran", icon: FileSignature },
     { to: "/dashboard/admin/partners", label: "Patnè Ofisyèl", icon: Handshake },
     { to: "/dashboard/admin/security", label: "Sekirite kont", icon: ShieldCheck },
+    { to: "/dashboard/admin/system-status", label: "Eta sistèm nan", icon: Activity },
     { to: "/dashboard/admin/notification-log", label: "Jounal Notifikasyon", icon: Radio },
     { to: "/dashboard/admin/ai", label: "Asistan AI", icon: Sparkles },
   ],
