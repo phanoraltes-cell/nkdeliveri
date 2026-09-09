@@ -29,6 +29,12 @@ type GisPromptNotification = {
   isNotDisplayed: () => boolean;
   isSkippedMoment: () => boolean;
   isDismissedMoment: () => boolean;
+  // Google BAY rezon an — nou pa t ap li l anvan, se poutèt sa chak echèk
+  // te parèt menm jan. `unregistered_origin` la se sa ki di ou origin nan
+  // pa nan Google Cloud Console; san li, ou ka pase jou ap devine.
+  getNotDisplayedReason?: () => string;
+  getSkippedReason?: () => string;
+  getDismissedReason?: () => string;
 };
 
 declare global {
@@ -50,7 +56,77 @@ declare global {
   }
 }
 
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+/**
+ * `import.meta.env` — pa `process.env`. Vite ANBAKE varyab `VITE_*` yo nan
+ * bundle la PANDAN BUILD LA: yo pa li nan moman egzekisyon. Konsekans ki
+ * pyeje moun: ajoute varyab la nan Vercel PA ase — fòk gen yon NOUVO BUILD
+ * apre sa. Yon redeplwaman san rebuild kite ansyen valè a (oswa vid) nan
+ * bundle la.
+ *
+ * `?.trim()` epi tès vid: yon varyab ki egziste men ki vid (`VITE_...=`)
+ * se menm bagay ak yon varyab ki absan — sa a se egzakteman ka `.env.example`
+ * la, ki gen liy lan san valè.
+ */
+const RAW_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+export const GOOGLE_CLIENT_ID = RAW_CLIENT_ID?.trim() ? RAW_CLIENT_ID.trim() : undefined;
+
+/** Kategori echèk GIS — chak youn mennen sou yon aksyon diferan. */
+export type GoogleSignInFailureReason =
+  | "not_configured"
+  | "script_blocked"
+  | "script_timeout"
+  | "unregistered_origin"
+  | "dismissed_by_user"
+  | "no_google_session"
+  | "unknown";
+
+/** Kisa pou fè pou chak kategori — mesaj la ale nan konsòl la, pa sou paj piblik la. */
+const REASON_HINT: Record<GoogleSignInFailureReason, string> = {
+  not_configured:
+    "VITE_GOOGLE_CLIENT_ID absan oswa vid nan bundle la. Ajoute l nan Vercel (Production) EPI redeplwaye — varyab VITE_ anbake pandan build la, yon restart pa ase.",
+  script_blocked:
+    "Script GIS la (accounts.google.com/gsi/client) pa t ka chaje — blokè piblisite, CSP, oswa rezo.",
+  script_timeout: "Script GIS la pran twò lontan pou chaje. Rezo lan oswa Google an reta.",
+  unregistered_origin:
+    "Origin sa a pa otorize pou Client ID a. Google Cloud Console → Credentials → OAuth 2.0 Client ID → Authorized JavaScript origins: ajoute https://www.nkdeliveri.com AK https://nkdeliveri.com (epi http://localhost:5173 pou devlopman).",
+  dismissed_by_user: "Itilizatè a fèmen One Tap la li menm — se pa yon pàn.",
+  no_google_session:
+    "Pa gen sesyon Google nan navigatè a, oswa moun nan te dezaktive One Tap. Sekou OAuth la se bon repons lan isit la.",
+  unknown: "Rezon an pa idantifye — gade mesaj erè a ak konsòl Google la.",
+};
+
+/**
+ * Erè GIS ki pote kòz la ak aksyon an, olye yon `Error` jenerik.
+ *
+ * Anvan, chak echèk — kle ki manke, origin ki pa otorize, moun ki fèmen
+ * fenèt la — te bay menm `console.warn` la. Se poutèt sa bouton an te
+ * "toujou pase pa ansyen chemen an" san moun pa konnen poukisa.
+ */
+export class GoogleSignInError extends Error {
+  readonly reason: GoogleSignInFailureReason;
+  readonly hint: string;
+  /** Rezon brit Google bay la (`unregistered_origin`, `opt_out_or_no_session`…). */
+  readonly googleReason: string | null;
+
+  constructor(reason: GoogleSignInFailureReason, googleReason: string | null = null) {
+    super(`GIS echwe: ${reason}${googleReason ? ` (${googleReason})` : ""}`);
+    this.name = "GoogleSignInError";
+    this.reason = reason;
+    this.hint = REASON_HINT[reason];
+    this.googleReason = googleReason;
+  }
+}
+
+/** Tradui rezon brit Google bay la an youn nan kategori nou yo. */
+export function mapGoogleReason(raw: string | undefined): GoogleSignInFailureReason {
+  if (!raw) return "unknown";
+  if (raw === "unregistered_origin" || raw === "invalid_client") return "unregistered_origin";
+  if (raw === "opt_out_or_no_session" || raw === "suppressed_by_user") return "no_google_session";
+  if (raw === "user_cancel" || raw === "tap_outside" || raw === "cancel_called") {
+    return "dismissed_by_user";
+  }
+  return "unknown";
+}
 
 let scriptLoadPromise: Promise<void> | null = null;
 
@@ -99,10 +175,15 @@ function loadGisScript(): Promise<void> {
  */
 export async function getGoogleIdToken(): Promise<string> {
   if (!GOOGLE_CLIENT_ID) {
-    throw new Error("VITE_GOOGLE_CLIENT_ID pa konfigire");
+    throw new GoogleSignInError("not_configured");
   }
 
-  await loadGisScript();
+  try {
+    await loadGisScript();
+  } catch (err) {
+    const timedOut = err instanceof Error && /twò lontan/.test(err.message);
+    throw new GoogleSignInError(timedOut ? "script_timeout" : "script_blocked");
+  }
 
   return new Promise<string>((resolve, reject) => {
     let settled = false;
@@ -120,12 +201,22 @@ export async function getGoogleIdToken(): Promise<string> {
     });
     window.google!.accounts.id.prompt((notification) => {
       if (settled) return;
-      if (
-        notification.isNotDisplayed() ||
-        notification.isSkippedMoment() ||
-        notification.isDismissedMoment()
-      ) {
-        reject(new Error("Google One Tap pa afiche oswa itilizatè a fèmen li"));
+      // Nou mande Google POUKISA, olye nou jete tout ka yo ansanm. Twa
+      // moman diferan, twa rezon diferan — epi `unregistered_origin` la se
+      // sa ki di ou konfigirasyon Google Cloud la ki an kòz, pa kòd la.
+      if (notification.isNotDisplayed()) {
+        const raw = notification.getNotDisplayedReason?.();
+        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
+        return;
+      }
+      if (notification.isSkippedMoment()) {
+        const raw = notification.getSkippedReason?.();
+        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
+        return;
+      }
+      if (notification.isDismissedMoment()) {
+        const raw = notification.getDismissedReason?.();
+        reject(new GoogleSignInError(mapGoogleReason(raw), raw ?? null));
       }
     });
   });

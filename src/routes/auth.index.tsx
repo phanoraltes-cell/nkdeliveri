@@ -10,7 +10,7 @@ import { translateAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors"
 import { inputCls } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/hooks/useTurnstile";
-import { getGoogleIdToken } from "@/lib/google-identity";
+import { getGoogleIdToken, GoogleSignInError } from "@/lib/google-identity";
 import { FieldError } from "@/components/ui/field-error";
 
 const searchSchema = z.object({ next: z.string().optional() });
@@ -28,6 +28,10 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // Endikatè DEV SÈLMAN — li pa janm parèt sou paj piblik la (wè
+  // import.meta.env.DEV kote li mete a). Objektif la se pou yon devlopè
+  // wè rezon an san li pa louvri konsòl la.
+  const [googleDiagnostic, setGoogleDiagnostic] = useState<string | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending] = useState(false);
   // F-04 (docs/archive/audits/FRONTEND_GLOBAL_AUDIT.md §25) — sign-in failures used to
@@ -85,10 +89,23 @@ function LoginPage() {
       nav({ to: search.next || "/dashboard" });
       setGoogleLoading(false);
     } catch (err) {
-      console.warn(
-        "[auth] Google Identity Services echwe, tonbe tounen sou redireksyon OAuth",
-        err,
+      // SEKOU A PA DWE KACHE RAZON AN. Anvan, chak echèk — kle ki manke,
+      // origin ki pa otorize, moun ki fèmen fenèt la — te bay menm
+      // `console.warn` la, epi flit la te glise sou redireksyon OAuth la
+      // an silans. Se sa ki fè bouton an te parèt "toujou pase pa ansyen
+      // chemen an" san pèsonn pa konnen poukisa.
+      const reason = err instanceof GoogleSignInError ? err.reason : "unknown";
+      const hint = err instanceof GoogleSignInError ? err.hint : String(err);
+      const googleReason = err instanceof GoogleSignInError ? err.googleReason : null;
+      // `console.error`, pa `warn`: `warn` disparèt nan bri konsòl la.
+      console.error(
+        `[auth] GIS pa mache — rezon: ${reason}${googleReason ? ` (Google: ${googleReason})` : ""}. ${hint} Sekou: redireksyon OAuth.`,
       );
+      // Yon moun ki fèmen One Tap la li menm pa yon pàn — pa bezwen mete
+      // yon endikatè sou ekran an pou sa.
+      if (import.meta.env.DEV && reason !== "dismissed_by_user") {
+        setGoogleDiagnostic(hint);
+      }
       const redirecting = await signInGoogleOAuthFallback();
       // Redireksyon an ap kite paj la nan yon ti moman — kenbe bouton an
       // "Ap redirije…" olye l retounen enabled pandan yon ti eklè anvan sa
@@ -181,6 +198,14 @@ function LoginPage() {
             Antre nan kont ou pou kòmande oswa aksede dashboard w.
           </p>
 
+          {import.meta.env.DEV && googleDiagnostic && (
+            <p
+              role="alert"
+              className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900"
+            >
+              [DEV] Google: {googleDiagnostic}
+            </p>
+          )}
           <button
             onClick={signInGoogle}
             disabled={googleLoading}
