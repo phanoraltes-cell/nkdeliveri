@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // VAPID public key is safe to expose (paired with a server-only private key).
 const VAPID_PUBLIC_KEY =
-  "BJ06H-steLp_4SCqpiR746JG6cBaOiccHD6vrIY9w6zVqHo0ABCgxfer4j8RuDkRjfbXq2fYjKJ2ymeKHEFtUK8";
+  "BO0cEiGhXBdxRS7z1lEUz4D-0phKBOY5ew8KCGX1jF2iHHZrSWS-b7dTq-239k7iMdjZM4hDA47kZwSNjqY-krs";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
