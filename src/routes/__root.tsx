@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { applyErrorPageMeta, shouldNoindex, type DocumentLike } from "@/lib/error-page-meta";
 import { MotionConfig } from "framer-motion";
 
 import appCss from "../styles.css?url";
@@ -41,21 +42,15 @@ function NotFoundComponent() {
   // that over any meta tag). This just fixes the client-visible title/copy,
   // which was still in English while the rest of the app is in Kreyòl.
   useEffect(() => {
-    // Menm rezònman ak ErrorComponent: estati 404 la se sinyal prensipal
-    // la, men Googlebot egzekite JS, donk nou ranfòse l nan tit la ak nan
-    // balis robots la tou. Non mak la retire — yon paj « pa jwenn » pa dwe
-    // ka parèt nan yon rezilta rechèch ak non mak la ladan l.
-    document.title = "Paj la pa jwenn (404)";
-
-    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    if (!robots) {
-      robots = document.createElement("meta");
-      robots.setAttribute("name", "robots");
-      document.head.appendChild(robots);
-    }
-    robots.setAttribute("content", "noindex, nofollow");
-
-    document.querySelector('link[rel="canonical"]')?.remove();
+    // Trètman an pa chanje: yon 404 se toujou yon repons sèvè an erè, donk
+    // `noindex` la toujou merite. Sèl bagay ki chanje se ke nou pase pa
+    // menm zouti ak ErrorComponent — konsa balis la RETIRE lè konpozan an
+    // demonte. San sa, yon moun ki sot sou yon 404 pa yon navigasyon
+    // kliyan t ap trennen `noindex` la sou chak paj apre sa.
+    return applyErrorPageMeta(document as unknown as DocumentLike, {
+      title: "Paj la pa jwenn (404)",
+      noindex: true,
+    });
   }, []);
 
   return (
@@ -94,31 +89,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   void loadSentry().then((m) => m.captureExceptionClient(error));
   const router = useRouter();
   useEffect(() => {
-    // SE ISIT LA BUG LA TE YE. Ansyen tit la te « Yon erè rive — NK
-    // Deliveri », epi Googlebot EGZEKITE JavaScript pandan faz rann li an:
-    // li te wè tit sa a, li te endekse l kòm tit dakèy la, epi rezilta
-    // rechèch la te di « Yon erè rive — NK Deliveri ».
+    // Tit la: TOUJOU. Se li ki te lakòz bug endekse a (Googlebot egzekite
+    // JavaScript epi li te wè « Yon erè rive — NK Deliveri »), epi li pa
+    // gen okenn efè segondè.
     //
-    // Twa koreksyon, tout twa nan menm mekanis ki te lakòz pwoblèm nan —
-    // paske se mekanis sa a robo a wè:
-    //   1. Tit SAN NON MAK LA. Menm si yon paj erè endekse ankò, non
-    //      « NK Deliveri » pa ka parèt nan yon rezilta rechèch.
-    //   2. `noindex, nofollow` — Google respekte yon balis robots yon
-    //      script ajoute pandan rann lan.
-    //   3. Retire `canonical` la. Yon paj erè ki deklare dakèy la kòm
-    //      kanonik li ap mande Google endekse kontni erè a SOU URL dakèy
-    //      la — egzakteman sa ki te pase.
-    document.title = "Erè — paj la pa disponib";
-
-    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    if (!robots) {
-      robots = document.createElement("meta");
-      robots.setAttribute("name", "robots");
-      document.head.appendChild(robots);
-    }
-    robots.setAttribute("content", "noindex, nofollow");
-
-    document.querySelector('link[rel="canonical"]')?.remove();
+    // "noindex": SÈLMAN pou yon repons sèvè an erè. ErrorBoundary la
+    // deklanche sou erè idratasyon tou — sou paj ki an sante nèt. Yon
+    // "noindex" la ta dezendekse dakèy la. Wè src/lib/error-page-meta.ts.
+    //
+    // Netwayaj la pa opsyonèl: san li, balis la ta rete nan head la epi li
+    // ta swiv moun nan sou chak paj apre yon navigasyon kliyan.
+    return applyErrorPageMeta(document as unknown as DocumentLike, {
+      title: "Erè — paj la pa disponib",
+      noindex: shouldNoindex(error),
+    });
   }, [error]);
 
   return (
