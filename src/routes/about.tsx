@@ -8,7 +8,7 @@ import { Store, Bike, Users } from "lucide-react";
 export const Route = createFileRoute("/about")({
   head: () =>
     pageMeta({
-      title: "Apwopo NK Deliveri — Livrezon manje nan Gonaïves",
+      title: "Apwopo NK Deliveri",
       description:
         "NK Deliveri konekte restoran, kliyan ak livrè nan Gonaïves pou yon sèvis livrezon manje rapid, fyab, ak peman lokal (MonCash, NatCash, kach).",
       path: "/about",

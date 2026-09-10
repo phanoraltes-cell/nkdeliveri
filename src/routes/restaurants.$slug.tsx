@@ -10,7 +10,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import { Plus, ArrowLeft, Star, Heart, Store, Users } from "lucide-react";
 import { useState } from "react";
-import { pageMeta, noIndexMeta, jsonLdScript } from "@/lib/seo";
+import { pageMeta, noIndexMeta, jsonLdScript, fitTitle } from "@/lib/seo";
 import { SITE_URL, PRIMARY_CITY, absoluteUrl } from "@/lib/site-config";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Chip } from "@/components/ui/chip";
@@ -119,7 +119,11 @@ export const Route = createFileRoute("/restaurants/$slug")({
     const path = `/restaurants/${r.slug}`;
     return {
       ...pageMeta({
-        title: `${r.name} — NK Deliveri`,
+        title: fitTitle([
+          `${r.name} — Meni ak livrezon | NK Deliveri`,
+          `${r.name} — Meni ak livrezon`,
+          r.name,
+        ]),
         description,
         path,
         image: r.cover_url ?? undefined,

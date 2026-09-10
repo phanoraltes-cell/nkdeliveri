@@ -41,7 +41,21 @@ function NotFoundComponent() {
   // that over any meta tag). This just fixes the client-visible title/copy,
   // which was still in English while the rest of the app is in Kreyòl.
   useEffect(() => {
-    document.title = "Paj la pa jwenn (404) — NK Deliveri";
+    // Menm rezònman ak ErrorComponent: estati 404 la se sinyal prensipal
+    // la, men Googlebot egzekite JS, donk nou ranfòse l nan tit la ak nan
+    // balis robots la tou. Non mak la retire — yon paj « pa jwenn » pa dwe
+    // ka parèt nan yon rezilta rechèch ak non mak la ladan l.
+    document.title = "Paj la pa jwenn (404)";
+
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      document.head.appendChild(robots);
+    }
+    robots.setAttribute("content", "noindex, nofollow");
+
+    document.querySelector('link[rel="canonical"]')?.remove();
   }, []);
 
   return (
@@ -80,7 +94,31 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   void loadSentry().then((m) => m.captureExceptionClient(error));
   const router = useRouter();
   useEffect(() => {
-    document.title = "Yon erè rive — NK Deliveri";
+    // SE ISIT LA BUG LA TE YE. Ansyen tit la te « Yon erè rive — NK
+    // Deliveri », epi Googlebot EGZEKITE JavaScript pandan faz rann li an:
+    // li te wè tit sa a, li te endekse l kòm tit dakèy la, epi rezilta
+    // rechèch la te di « Yon erè rive — NK Deliveri ».
+    //
+    // Twa koreksyon, tout twa nan menm mekanis ki te lakòz pwoblèm nan —
+    // paske se mekanis sa a robo a wè:
+    //   1. Tit SAN NON MAK LA. Menm si yon paj erè endekse ankò, non
+    //      « NK Deliveri » pa ka parèt nan yon rezilta rechèch.
+    //   2. `noindex, nofollow` — Google respekte yon balis robots yon
+    //      script ajoute pandan rann lan.
+    //   3. Retire `canonical` la. Yon paj erè ki deklare dakèy la kòm
+    //      kanonik li ap mande Google endekse kontni erè a SOU URL dakèy
+    //      la — egzakteman sa ki te pase.
+    document.title = "Erè — paj la pa disponib";
+
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      document.head.appendChild(robots);
+    }
+    robots.setAttribute("content", "noindex, nofollow");
+
+    document.querySelector('link[rel="canonical"]')?.remove();
   }, [error]);
 
   return (

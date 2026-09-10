@@ -34,7 +34,7 @@ const FAQS = [
 export const Route = createFileRoute("/faq")({
   head: () => ({
     ...pageMeta({
-      title: "Kesyon Moun Poze Souvan (FAQ) — NK Deliveri",
+      title: "Kesyon moun poze souvan — NK Deliveri",
       description:
         "Repons pou kesyon ou ka genyen sou kòmand, peman, livrezon ak vin patenè ak NK Deliveri.",
       path: "/faq",

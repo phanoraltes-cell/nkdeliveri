@@ -52,3 +52,26 @@ export function noIndexMeta(title: string) {
 export function jsonLdScript(data: Record<string, unknown>) {
   return { type: "application/ld+json", children: JSON.stringify(data) };
 }
+
+/** Limit Google montre nan yon rezilta rechèch anvan li koupe. */
+export const MAX_TITLE_LENGTH = 60;
+
+/**
+ * Chwazi premye tit ki antre nan 60 karaktè.
+ *
+ * Gabari tit restoran an — `{Non} — Meni ak livrezon | NK Deliveri` — gen
+ * yon sifiks 33 karaktè. Sa kite 27 karaktè pou non an. Yon restoran ki gen
+ * yon non pi long ta bay yon tit Google koupe nan mitan yon mo.
+ *
+ * Olye nou koupe san reflechi, nou eseye kandida yo nan LÒD: tit konplè a,
+ * apre sa yon vèsyon san non mak la, apre sa non an sèl. Nou koupe sèlman
+ * si menm dènye kandida a twò long — epi lè sa a ak yon eleps, pa nan
+ * mitan yon mo.
+ */
+export function fitTitle(candidates: string[]): string {
+  for (const candidate of candidates) {
+    if (candidate.length <= MAX_TITLE_LENGTH) return candidate;
+  }
+  const last = candidates[candidates.length - 1] ?? "";
+  return `${last.slice(0, MAX_TITLE_LENGTH - 1).trimEnd()}…`;
+}

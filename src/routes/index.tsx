@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
-import { SITE_URL } from "@/lib/site-config";
+import { pageMeta } from "@/lib/seo";
 import { homeDataQuery } from "@/components/home/home-data";
 import { HeroSection } from "@/components/home/hero-section";
 import { KategoriPlaSection } from "@/components/home/kategori-pla-section";
@@ -20,12 +20,22 @@ import { NewsletterSection } from "@/components/home/newsletter-section";
 import { PartnersSection } from "@/components/home/partners-section";
 
 export const Route = createFileRoute("/")({
-  // Title/description/OG already come from the root's defaults — this page
-  // only needs to add its own canonical (root deliberately sets none, see
-  // __root.tsx, to avoid two conflicting <link rel="canonical"> tags).
-  head: () => ({
-    links: [{ rel: "canonical", href: SITE_URL }],
-  }),
+  // Dakèy la gen PWÒP meta l kounye a, li pa erite anyen.
+  //
+  // Ansyen tit la (« NK Deliveri — Manje lakay, livre lakay ou ») se yon
+  // slogan: li pa gen ni sèvis la ni vil la. Yon moun ki chèche
+  // « livrezon manje Gonaïves » pa gen okenn mo an komen avè l. Slogan an
+  // pa disparèt — li rete nan h1 la, nan og:title ak nan deskripsyon an.
+  head: () =>
+    pageMeta({
+      title: "NK Deliveri — Livrezon manje nan Gonaïves",
+      description:
+        "NK Deliveri se platfòm livrezon manje nan Gonaïves, Ayiti. Manje lakay, livre lakay ou — chwazi yon restoran, kòmande, epi resevwa manje w.",
+      // "/" ak bar final la: se fòm URL la sèvi a, epi se menm fòm ki nan
+      // sitemap la. Anvan, kanonik la te SITE_URL san bar — de fòm pou
+      // menm paj la.
+      path: "/",
+    }),
   loader: ({ context }) => context.queryClient.ensureQueryData(homeDataQuery),
   component: Index,
 });
