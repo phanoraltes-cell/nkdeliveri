@@ -8,7 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { applyErrorPageMeta, shouldNoindex, type DocumentLike } from "@/lib/error-page-meta";
+import { applyErrorPageMeta, type DocumentLike } from "@/lib/error-page-meta";
 import { MotionConfig } from "framer-motion";
 
 import appCss from "../styles.css?url";
@@ -93,15 +93,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     // JavaScript epi li te wè « Yon erè rive — NK Deliveri »), epi li pa
     // gen okenn efè segondè.
     //
-    // "noindex": SÈLMAN pou yon repons sèvè an erè. ErrorBoundary la
-    // deklanche sou erè idratasyon tou — sou paj ki an sante nèt. Yon
-    // "noindex" la ta dezendekse dakèy la. Wè src/lib/error-page-meta.ts.
+    // "noindex": JANM isit la. Nou te mezire fòm erè a ki rive nan
+    // boundary sa a: serializasyon SSR TanStack la (ShallowErrorPlugin)
+    // kite SÈLMAN `message` — okenn estati HTTP pa travèse. Donk nou pa gen
+    // mwayen distenge yon 500 sèvè ak yon senp erè idratasyon sou yon paj
+    // ki an sante, epi nan dout règ la se non. Se estati HTTP la ki gade
+    // endeksasyon an. Detay ak mezi yo nan src/lib/error-page-meta.ts.
     //
-    // Netwayaj la pa opsyonèl: san li, balis la ta rete nan head la epi li
-    // ta swiv moun nan sou chak paj apre yon navigasyon kliyan.
+    // Netwayaj la pa opsyonèl: san li, tit la ta rete apre yon navigasyon
+    // kliyan sou yon paj ki an sante.
     return applyErrorPageMeta(document as unknown as DocumentLike, {
       title: "Erè — paj la pa disponib",
-      noindex: shouldNoindex(error),
+      noindex: false,
     });
   }, [error]);
 

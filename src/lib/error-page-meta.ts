@@ -24,36 +24,46 @@
  * ---------------------------------------------------------------------------
  * NÒT SOU API A
  *
- * Espesifikasyon an mande `isRouteErrorResponse(error)`. Fonksyon sa a se
- * yon API **React Router**; TanStack Router pa genyen l (li eksporte
- * `isNotFound`, `isRedirect`, `isMatch` — verifye nan
- * node_modules/@tanstack/react-router). Nou tcheke fòm nan dirèkteman.
- */
-
-/** Sa yon `Response` ki travèse SSR ka sanble apre serializasyon. */
-function isResponseShaped(value: object): boolean {
-  // Nou mande PLIS pase yon `status`: yon `ok`, `statusText` oswa `headers`
-  // tou. Sa a se yon chwa konsèvatè EKSPRÈ — nan dout, pa mete `noindex`.
-  // Yon fo pozitif dezendekse yon paj ki an sante; yon fo negatif kite yon
-  // paj erè ak yon tit netral, san mak, ki pa fè mal. Erè Supabase
-  // (PostgrestError: code/message/details/hint) pa gen okenn nan chan sa yo.
-  return "status" in value && ("ok" in value || "statusText" in value || "headers" in value);
-}
-
-/**
- * Vre sèlman lè erè a se yon repons sèvè an erè.
+ * Espesifikasyon orijinal la te mande `isRouteErrorResponse(error)`.
+ * Fonksyon sa a se yon API **React Router**; TanStack Router pa genyen l
+ * (li eksporte `isNotFound`, `isRedirect`, `isMatch` — verifye nan
+ * node_modules/@tanstack/react-router).
  *
- * FO pou: erè idratasyon, eksepsyon nan yon konpozan, erè rezo kliyan —
- * tout bagay ki ka rive sou yon paj ki an sante.
+ * ---------------------------------------------------------------------------
+ * POUKISA PA GEN `shouldNoindex` ANKÒ — SA NOU MEZIRE
+ *
+ * Premye vèsyon fichye sa a te gen yon fonksyon `shouldNoindex(error)` ki
+ * t ap chèche yon fòm `Response` sou erè a. Nou te mezire fòm reyèl la olye
+ * nou devine l (@tanstack/router-core 1.171.15):
+ *
+ *   * `dehydrateMatch` voye `match.error` nan seroval ak
+ *     `ShallowErrorPlugin`. Plugin sa a serialize SÈLMAN `message`, epi li
+ *     deserialize kòm `new Error(message)`.
+ *   * Yon erè ki gen `status`/`statusText` anplis: apre wonn nan, chan sa yo
+ *     DISPARÈT. Kle ki rete yo se `["stack", "message"]` sèlman.
+ *   * Yon vrè `Response`: li pa menm ka serialize — seroval jete
+ *     « Seroval Error (step: 1) ». Yon `Response` pa janm travèse SSR.
+ *   * Okenn kòd nan `src/` pa lanse yon `Response` non plis
+ *     (`grep -rn "throw new Response" src/` = vid), donk menm sou yon
+ *     navigasyon kliyan — kote chajè a kouri nan navigatè a epi pwototip la
+ *     rete entak — branch lan pa t ap deklanche.
+ *
+ * Donk toude branch yo te mouri: `shouldNoindex` pa t ka retounen `true`
+ * sou okenn chemen ki egziste. Yon branch ki pa janm deklanche bay yon fo
+ * enpresyon kouvèti, donk nou retire l.
+ *
+ * Rezilta a se règ prudans la, aplike san kondisyon: `ErrorComponent`
+ * rasin nan chanje TIT la sèlman, li pa janm mete `noindex`. Sa ki gade
+ * endeksasyon an se **estati HTTP la** (500 / 404), epi li deja kòrèk.
+ *
+ * `noindex: true` rete VIVAN sou yon sèl chemen: `NotFoundComponent` rasin
+ * nan, kote 404 la sèten.
+ *
+ * Si yon jou yon chajè lanse yon vrè `Response`, oswa si TanStack konsève
+ * `status` nan serializasyon an, tès
+ * `error-page-meta.test.ts > fòm erè a jan li rive vre` ap tonbe — se la
+ * pou reouvri kesyon an.
  */
-export function shouldNoindex(error: unknown): boolean {
-  if (error instanceof Response) return error.status >= 400;
-  if (typeof error === "object" && error !== null && isResponseShaped(error)) {
-    const status = (error as { status?: unknown }).status;
-    return typeof status === "number" && status >= 400;
-  }
-  return false;
-}
 
 /**
  * Ti sou-ansanm DOM nou bezwen. Yon entèfas estriktirèl (pa `Document`)
