@@ -16,10 +16,11 @@
  *   Yon tit ki lèd se yon pwoblèm kosmetik.
  *   Yon dakèy ki dezendekse pa youn.
  *
- * Donk de aksyon yo separe:
- *   * TIT LA — toujou. Se li ki te lakòz bug endekse a, li pa gen okenn
- *     efè segondè.
- *   * `noindex` — SÈLMAN lè erè a soti nan yon repons sèvè.
+ * Donk fichye sa a fè YON SÈL bagay: li mete tit la, epi li remete l. Se
+ * tit la ki te lakòz bug endekse a, epi li pa gen okenn efè segondè.
+ *
+ * Li pa touche ni `robots` ni `canonical` — wè de seksyon anba yo pou de
+ * rezon endepandan.
  *
  * ---------------------------------------------------------------------------
  * NÒT SOU API A
@@ -56,8 +57,21 @@
  * rasin nan chanje TIT la sèlman, li pa janm mete `noindex`. Sa ki gade
  * endeksasyon an se **estati HTTP la** (500 / 404), epi li deja kòrèk.
  *
- * `noindex: true` rete VIVAN sou yon sèl chemen: `NotFoundComponent` rasin
- * nan, kote 404 la sèten.
+ * ---------------------------------------------------------------------------
+ * POUKISA PA GEN OPSYON `noindex` ANKÒ NON PLIS
+ *
+ * `NotFoundComponent` te dènye apèl la ak `noindex: true`. Depi `head()`
+ * rasin nan sèvi tit la ak `noindex` la pou yon 404 DEPI SSR A, konpozan an
+ * pa manyen DOM la ankò — epi branch lan vin mouri menm jan ak lòt la.
+ *
+ * Se pa sèlman kòd mouri, se te vin danjere: netwayaj la anrejistre valè
+ * `robots` ki te LA a. Ak `noindex` ki soti nan SSR kounye a, valè sa a se
+ * `noindex, nofollow`, epi netwayaj la t ap remete l lè moun nan kite paj
+ * la — ki ka rive APRE `head()` fin mete `index, follow` pou paj
+ * destinasyon an. Yon paj an sante ki pran yon `noindex`: egzakteman defo a
+ * tout fichye sa a egziste pou anpeche.
+ *
+ * De mekanis k ap ekri menm balis la, se youn twòp. `HeadContent` genyen l.
  *
  * Si yon jou yon chajè lanse yon vrè `Response`, oswa si TanStack konsève
  * `status` nan serializasyon an, tès
@@ -70,73 +84,21 @@
  * pou tès yo ka pase yon objè senp — pa gen jsdom nan pwojè a, epi ajoute
  * youn jis pou sa a ta yon depandans an plis pou anyen.
  */
-export type ElementLike = {
-  getAttribute(name: string): string | null;
-  setAttribute(name: string, value: string): void;
-  remove(): void;
-};
-
 export type DocumentLike = {
   title: string;
-  querySelector(selectors: string): ElementLike | null;
-  createElement(tagName: string): ElementLike;
-  head: { appendChild(node: ElementLike): void };
 };
 
 /**
- * Aplike meta paj erè a epi retounen yon fonksyon ki DEFÈ tout bagay.
+ * Mete tit paj erè a epi retounen yon fonksyon ki REMETE ansyen an.
  *
- * Netwayaj la pa yon detay: si boundary la enjekte yon balis epi moun nan
- * navige yon lòt kote SAN rechaje paj la (navigasyon kliyan), balis la ta
- * rete nan `<head>` epi li ta swiv moun nan sou chak paj apre sa. Yon
- * `noindex` ki kole konsa dezendekse paj ki pa gen anyen pou wè ak erè a.
+ * Remèt la pa yon detay: `ErrorBoundary` la ka demonte san paj la rechaje
+ * (navigasyon kliyan), epi san sa tit paj erè a ta swiv moun nan sou chak
+ * paj apre sa — menm fanmi defo ak bug endekse orijinal la.
  */
-export function applyErrorPageMeta(
-  doc: DocumentLike,
-  options: { title: string; noindex: boolean },
-): () => void {
+export function applyErrorPageMeta(doc: DocumentLike, options: { title: string }): () => void {
   const previousTitle = doc.title;
   doc.title = options.title;
-
-  if (!options.noindex) {
-    // Erè kliyan (idratasyon elatriye): tit sèlman. Nou pa touche ni
-    // `robots` ni `canonical`.
-    return () => {
-      doc.title = previousTitle;
-    };
-  }
-
-  // --- robots ---
-  let injectedRobots: ElementLike | null = null;
-  let previousRobots: string | null = null;
-  const existingRobots = doc.querySelector('meta[name="robots"]');
-  if (existingRobots) {
-    previousRobots = existingRobots.getAttribute("content");
-    existingRobots.setAttribute("content", "noindex, nofollow");
-  } else {
-    injectedRobots = doc.createElement("meta");
-    injectedRobots.setAttribute("name", "robots");
-    injectedRobots.setAttribute("content", "noindex, nofollow");
-    doc.head.appendChild(injectedRobots);
-  }
-
-  // --- canonical ---
-  // Yon paj erè ki deklare dakèy la kòm kanonik li ap mande Google endekse
-  // kontni erè a SOU URL dakèy la — se egzakteman sa ki te pase.
-  const canonical = doc.querySelector('link[rel="canonical"]');
-  if (canonical) canonical.remove();
-
   return () => {
     doc.title = previousTitle;
-
-    if (injectedRobots) {
-      injectedRobots.remove();
-    } else if (existingRobots) {
-      // Remete valè a jan li te ye — enkli lè li pa t gen okenn `content`.
-      if (previousRobots === null) existingRobots.remove();
-      else existingRobots.setAttribute("content", previousRobots);
-    }
-
-    if (canonical) doc.head.appendChild(canonical);
   };
 }

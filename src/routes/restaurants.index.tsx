@@ -16,6 +16,8 @@ import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { Chip } from "@/components/ui/chip";
+import { Button } from "@/components/ui/button";
+import { reportDegradation } from "@/lib/report-error";
 
 const PAGE_SIZE = 24;
 
@@ -45,10 +47,22 @@ const listQuery = (q: string, page: number, sort: SortKey) =>
         _limit: PAGE_SIZE,
         _offset: from,
       });
-      if (error) throw error;
+      // DEGRADE, PA KRAZE. Anvan, yon sèl ti pàn Supabase te fè chajè a
+      // echwe, epi paj sa a — ki nan sitemap la ak priyorite 0.9 — te sòti
+      // an 500 nèt. Kounye a li rete lizib epi li di verite a.
+      //
+      // Konpwomi a se pa yon detay: yon 500 di Google « tounen pita, kenbe
+      // sa ou genyen an », pandan yon 200 vid ka fè l ranplase yon bon paj
+      // ak yon paj san anyen. Nou PA mete `noindex` pou otan — sa ta yon
+      // siyal RETIRE, pi mal toujou pou yon pàn ki pase. Se menm kontra ak
+      // dakèy la.
+      if (error) {
+        reportDegradation("[restaurants] list_restaurants_public failed", error);
+        return { rows: [], totalCount: 0, degraded: true };
+      }
       const rows = data ?? [];
       const totalCount = rows[0]?.total_count ?? 0;
-      return { rows, totalCount };
+      return { rows, totalCount, degraded: false };
     },
   });
 
@@ -89,8 +103,8 @@ export const Route = createFileRoute("/restaurants/")({
 
 function RestaurantsPage() {
   const { q, page, sort } = Route.useSearch();
-  const { data } = useSuspenseQuery(listQuery(q ?? "", page ?? 1, sort ?? "rating"));
-  const { rows, totalCount } = data;
+  const { data, refetch } = useSuspenseQuery(listQuery(q ?? "", page ?? 1, sort ?? "rating"));
+  const { rows, totalCount, degraded } = data;
   const { isFavorite, toggleFavorite, isLoggedIn } = useFavorites();
   const nav = useNavigate();
   const navSearch = Route.useNavigate();
@@ -212,10 +226,25 @@ function RestaurantsPage() {
             </Link>
           ))}
         </div>
-        {rows.length === 0 && (
-          <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center text-ink-soft shadow-brand-xs">
-            Pa gen restoran ki koresponn.
+        {/* De ka diferan ki t ap parèt menm jan anvan. « Pa gen restoran ki
+            koresponn » sou yon pàn ta yon manti: li di rechèch la pa bay
+            anyen, pandan se sistèm nan ki desann. */}
+        {degraded ? (
+          <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center shadow-brand-xs">
+            <p className="font-bold text-ink">Nou pa rive chaje lis restoran yo</p>
+            <p className="mt-2 text-sm text-ink-soft">
+              Se yon pwoblèm bò kote nou, se pa ou. Eseye ankò nan kèk moman.
+            </p>
+            <Button className="mt-4" onClick={() => void refetch()}>
+              Eseye ankò
+            </Button>
           </div>
+        ) : (
+          rows.length === 0 && (
+            <div className="rounded-2xl border border-brand-soft/60 bg-white p-8 text-center text-ink-soft shadow-brand-xs">
+              Pa gen restoran ki koresponn.
+            </div>
+          )
         )}
         <PaginationControls
           page={page ?? 1}
