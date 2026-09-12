@@ -1,6 +1,31 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Yon pàn isit la pa kraze paj la — li BAY YON DAKÈY VID. Se egzakteman sa
+ * ki fè li danjere: san yon siyal, yon pàn Supabase ki dire ta sèvi yon
+ * dakèy san restoran, an 200, pou tout tan, epi Google ta reendekse l konsa.
+ *
+ * `console.error` pou kont li pa t ase: sou Vercel li ale nan log fonksyon
+ * yo, kote pèsonn pa li yo.
+ *
+ * De pwi paske fonksyon sa a kouri toude bò: nan chajè a pandan SSR (se la
+ * ka ki pi grav la ye — se Googlebot ki wè rezilta a) epi nan navigatè a
+ * lè react-query refè demann lan. `money.ts` gen menm pwen avèg la epi li
+ * chwazi kliyan an sèlman; isit la nou pa ka, paske se bò sèvè a ki konte.
+ */
+function reportHomeDataFailure(what: "restaurants" | "products", cause: unknown): void {
+  const error = new Error(`[home-data] ${what} failed to load`, { cause });
+  console.error(error);
+
+  // Sentry pa obligatwa pou paj la mache — konsòl la deja gen tras la.
+  const sink =
+    typeof window === "undefined"
+      ? import("@/lib/sentry.server").then((m) => m.captureExceptionServer(error))
+      : import("@/lib/sentry-browser").then((m) => m.captureExceptionClient(error));
+  void sink.catch(() => {});
+}
+
 async function fetchHomeData() {
   const [rests, prods] = await Promise.all([
     supabase
@@ -29,8 +54,8 @@ async function fetchHomeData() {
   // Dakèy la se paj ki pi enpòtan an pou rechèch. Li dwe rann menm ak yon
   // seksyon vid. Nou anrejistre erè a pou yon pàn ki dire pa disparèt an
   // silans, men nou pa kite l tonbe tout paj la.
-  if (rests.error) console.error("[home-data] restaurants failed to load", rests.error);
-  if (prods.error) console.error("[home-data] products failed to load", prods.error);
+  if (rests.error) reportHomeDataFailure("restaurants", rests.error);
+  if (prods.error) reportHomeDataFailure("products", prods.error);
   return { restaurants: rests.data ?? [], products: prods.data ?? [] };
 }
 
