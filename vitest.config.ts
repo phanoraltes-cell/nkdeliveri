@@ -11,6 +11,12 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // `.tsx` ak `.spec` ladan l EKSPRÈ. Anvan, `include` te di `*.test.ts`
+    // sèlman: yon fichye `*.test.tsx` oswa `*.spec.ts` nan `src/` pa t ap
+    // janm kouri, EPI swit la t ap rete vèt. Yon tès ki inyore an silans pi
+    // mal pase pa gen tès ditou — li bay konfyans san li pa bay kouvèti.
+    //
+    // Tès Playwright yo pa konsène: yo nan `e2e/`, deyò `src/`.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
 });

@@ -37,7 +37,38 @@ export function initSentryClient() {
   });
 }
 
+/**
+ * Sentry koupe valè yon tag ki depase 200 karaktè. Yon `User-Agent` long
+ * (kèk navigatè mobil) ta pèdi an silans, epi nou pa ta konnen. Nou koupe
+ * tèt nou pou sa ki rive a se sa nou chwazi.
+ */
+const MAX_TAG_LENGTH = 200;
+
+function tagValue(value: string): string {
+  return value.length > MAX_TAG_LENGTH ? `${value.slice(0, MAX_TAG_LENGTH - 1)}…` : value;
+}
+
 export function captureExceptionClient(error: unknown) {
   if (!initialized || !(import.meta.env.VITE_SENTRY_DSN as string | undefined)) return;
-  Sentry.captureException(error);
+
+  // `withScope` epi pa `setTag` global: tag yo mache ak ERÈ SA A sèlman.
+  // Yon `setTag` global ta rete kole epi li ta bay chak erè ki vini apre a
+  // chemen an kote PREMYE erè a te rive — egzakteman kalite move piste ki
+  // fè yon moun chèche yon bug nan move paj la.
+  Sentry.withScope((scope) => {
+    if (typeof window !== "undefined") {
+      // Chemen an SÈLMAN, san `search` ni `hash`. Yon URL konplè pote
+      // bagay tankou `?next=/orders` oswa yon jeton nan yon lyen
+      // reyinisyalizasyon — nou deja di `sendDefaultPii: false`, nou pa pral
+      // fè l antre pa yon lòt pòt.
+      scope.setTag("pathname", tagValue(window.location.pathname));
+    }
+    if (typeof navigator !== "undefined") {
+      // Kle pou SEO a: sa pèmèt nou wè si se Googlebot ki ap frape yon paj
+      // erè. Yon erè yon robo endeksè wè pa gen menm priyorite ak yon erè
+      // yon kliyan wè.
+      scope.setTag("user_agent", tagValue(navigator.userAgent));
+    }
+    Sentry.captureException(error);
+  });
 }
