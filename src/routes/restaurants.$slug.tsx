@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/image-with-fallback";
 import { useDeliveryFee } from "@/hooks/useDeliveryFee";
 import { useIsRestaurantOpen } from "@/hooks/useIsRestaurantOpen";
+import { reportDegradation } from "@/lib/report-error";
 
 const DAY_SCHEMA_NAME: Record<string, string> = {
   mon: "Monday",
@@ -70,7 +71,14 @@ const restQuery = (slug: string) =>
         .select("*")
         .eq("restaurant_id", r.id)
         .order("sort_order");
-      if (catsErr) throw catsErr;
+      // DEGRADE, PA KRAZE. Restoran an DEJA chaje isit la: non, adrès, foto,
+      // orè, nòt — tout bagay ki fè paj la itil pou yon moun k ap chèche.
+      // Anvan, yon pàn sou kategori meni yo te touye tout paj la. Yon
+      // depandans segondè pa dwe gen pouvwa sa a.
+      //
+      // Demann `restaurants` la pi wo a pa chanje: li toujou lanse, paske
+      // san restoran an pa gen paj ditou.
+      if (catsErr) reportDegradation("[restaurant] menu_categories failed to load", catsErr);
       // Tach 1, Objektif B — pla ki ekspire (expires_at <= kounye a) pa dwe
       // parèt bay kliyan, menm si `available` rete true paske pwopriyetè a
       // pa janm re-klike "Pibliye". Yon plat ki pa janm pibliye
@@ -81,8 +89,16 @@ const restQuery = (slug: string) =>
         .eq("restaurant_id", r.id)
         .eq("available", true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-      if (prodsErr) throw prodsErr;
-      return { r, cats: cats ?? [], prods: prods ?? [] };
+      if (prodsErr) reportDegradation("[restaurant] products failed to load", prodsErr);
+      // `menuUnavailable` distenge « restoran sa a poko mete plat » ak
+      // « nou pa rive chaje plat yo ». San li, yon pàn ta parèt kòm yon
+      // meni vid — yon manti sou restoran an.
+      return {
+        r,
+        cats: cats ?? [],
+        prods: prods ?? [],
+        menuUnavailable: Boolean(catsErr || prodsErr),
+      };
     },
   });
 
@@ -245,7 +261,7 @@ function RestaurantPage() {
   const isOpenQuery = useIsRestaurantOpen(restaurantId);
 
   if (!data) return null;
-  const { r, cats } = data;
+  const { r, cats, menuUnavailable } = data;
   // Defaults to "open" while the check is still loading — a brief false-
   // open display is harmless (create_order_secure re-verifies server-side
   // regardless), whereas flashing "Fèmen" for a fraction of a second on
@@ -383,6 +399,17 @@ function RestaurantPage() {
             );
           })}
         </div>
+
+        {/* Yon meni vid ak yon meni nou pa rive chaje pa menm bagay. Rès
+            paj la — non, adrès, orè, foto, nòt — rete la epi li rete itil. */}
+        {menuUnavailable && (
+          <div className="mt-8 rounded-2xl border border-brand-soft/60 bg-white p-6 text-center shadow-brand-xs">
+            <p className="font-bold text-ink">Nou pa rive chaje meni an</p>
+            <p className="mt-2 text-sm text-ink-soft">
+              Rès enfòmasyon restoran an disponib. Eseye rafrechi paj la nan kèk moman.
+            </p>
+          </div>
+        )}
 
         {visibleCats.map((cat) => {
           const items =
