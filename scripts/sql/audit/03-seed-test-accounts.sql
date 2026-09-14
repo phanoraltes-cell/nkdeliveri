@@ -95,10 +95,14 @@ ON CONFLICT DO NOTHING;
 -- --------------------------------------------------------------------------
 -- 2) Pwofil yo — non klèman make, okenn done reyèl
 -- --------------------------------------------------------------------------
-INSERT INTO public.profiles (id, full_name, phone)
-SELECT q.id, 'QA ' || split_part(split_part(q.email, '+', 2), '@', 1), NULL
+-- `profiles` gen `first_name` / `last_name`, PA yon `full_name` — verifye
+-- kont types.ts rejenere a (premye vèsyon fichye sa a te envante kolòn nan).
+INSERT INTO public.profiles (id, first_name, last_name)
+SELECT q.id, 'QA', split_part(split_part(q.email, '+', 2), '@', 1)
 FROM qa_users q
-ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;
+ON CONFLICT (id) DO UPDATE
+  SET first_name = EXCLUDED.first_name,
+      last_name = EXCLUDED.last_name;
 
 -- --------------------------------------------------------------------------
 -- 3) DE restoran tès — youn pou pwopriyetè QA a, youn ki pou YON LÒT
