@@ -37,7 +37,31 @@ const REQUIRED_ENV: Record<IntegrationId, string[]> = {
   push: ["VAPID_SUBJECT", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_JWK"],
   sms: ["SMS_PROVIDER"],
   storage: ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
+  // Kote sèvè a sèlman. Kote kliyan an PA ka tcheke ak `process.env` —
+  // wè `SENTRY_CLIENT_DSN_AT_BUILD` pi ba a.
+  sentry: ["SENTRY_DSN"],
 };
+
+/**
+ * DSN KLIYAN AN, JAN LI TE YE LÈ BUILD LA TE FÈT.
+ *
+ * Se pwen ki konte a, epi se yon pyèj ki merite eksplikasyon.
+ *
+ * Vite SELE `import.meta.env.VITE_*` nan moman build la. Si ou poze
+ * `VITE_SENTRY_DSN` nan Vercel epi ou REDEPLWAYE SAN REBATI, bundle kliyan
+ * an rete san DSN — men `process.env.VITE_SENTRY_DSN` bò sèvè a AP LA,
+ * paske Vercel ekspoze tout varyab bay fonksyon an. Yon tchèk ki sèvi ak
+ * `process.env` ta di « konfigire » pandan navigatè yo pa voye anyen.
+ *
+ * Mezire sou pwodiksyon an: chunk `sentry-browser-Bi5-zmmD.js` fè 102 octè
+ * epi `captureExceptionClient` se literalman `function n(e){}`. SDK a pa
+ * dòman — li ELIMINE nèt pa tree-shaking, paske `if (!dsn) return` te rann
+ * tout kò a inatenyab nan moman build la.
+ *
+ * `import.meta.env` nan bundle SSR a sibi MENM ranplasman an nan menm build
+ * la, donk valè sa a se yon prèv dirèk sou sa bundle kliyan an genyen.
+ */
+const SENTRY_CLIENT_DSN_AT_BUILD = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 /** Tab jounal ki deja egziste pou chak entegrasyon (si genyen). */
 const LOG_TABLE: Partial<
@@ -84,6 +108,12 @@ export const getIntegrationStatus = createServerFn({ method: "POST" })
     for (const id of INTEGRATIONS) {
       const required = REQUIRED_ENV[id];
       const missingEnv = required.filter((name) => !process.env[name]);
+      // Sentry gen de bò endepandan. Bò kliyan an pa ka tcheke ak
+      // `process.env` (wè SENTRY_CLIENT_DSN_AT_BUILD): nou ajoute l nan lis
+      // sa ki manke a ak yon non ki di sa pou fè — rebati, pa sèlman poze.
+      if (id === "sentry" && !SENTRY_CLIENT_DSN_AT_BUILD) {
+        missingEnv.push("VITE_SENTRY_DSN (nan build la — mande yon REBATI, pa yon redeplwaman)");
+      }
 
       let lastSuccessAt: string | null = null;
       let lastFailureAt: string | null = null;
@@ -209,6 +239,29 @@ export const testIntegration = createServerFn({ method: "POST" })
         logIntegrationFailure(failure);
         return { ok: false, kind: failure.kind, message: failure.message };
       }
+    }
+
+    if (data.integration === "sentry") {
+      // Nou pa voye yon fo erè nan Sentry pou yon tès — sa ta poliye jounal
+      // la ak yon ensidan ki pa reyèl, epi jou yon vrè bug rive pèsonn pa
+      // ta konnen kiyès ki kiyès. Nou reponn sou konfigirasyon an sèlman,
+      // epi nou separe de bò yo paske yo tonbe pou rezon diferan.
+      if (!SENTRY_CLIENT_DSN_AT_BUILD) {
+        return {
+          ok: false,
+          kind: "not_configured",
+          message:
+            "Bò sèvè a konfigire, men bundle kliyan an PA gen DSN an. Vite sele " +
+            "VITE_SENTRY_DSN nan moman build la: poze varyab la nan Vercel EPI " +
+            "rebati (yon senp redeplwaman kenbe ansyen bundle la). Toutotan sa pa " +
+            "fèt, okenn erè navigatè pa rive nan Sentry.",
+        };
+      }
+      return {
+        ok: true,
+        kind: null,
+        message: "De bò yo konfigire: SENTRY_DSN bò sèvè a, VITE_SENTRY_DSN nan bundle kliyan an.",
+      };
     }
 
     if (data.integration === "storage") {

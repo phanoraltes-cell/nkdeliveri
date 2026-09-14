@@ -33,6 +33,7 @@ export const INTEGRATIONS = [
   "push",
   "sms",
   "storage",
+  "sentry",
 ] as const;
 
 export type IntegrationId = (typeof INTEGRATIONS)[number];
@@ -47,6 +48,7 @@ export const INTEGRATION_LABEL: Record<IntegrationId, string> = {
   push: "Notifikasyon push (VAPID)",
   sms: "SMS",
   storage: "Depo fichye (Supabase Storage)",
+  sentry: "Rapò erè (Sentry)",
 };
 
 /**
