@@ -46,6 +46,16 @@
 --
 -- ===========================================================================
 
+-- ⚠ KOURI FICHYE SA A YON SÈL KOU, PA REKÈT PA REKÈT.
+--
+--   Li se yon TRANZAKSYON (`BEGIN` … `COMMIT`). Koupe l an moso ta kite
+--   baz la nan yon eta mwatye fèt.
+--
+--   Men atansyon: editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a,
+--   donk rekèt kontwòl ki apre `COMMIT` yo — ou pral wè dènye a sèlman.
+--   Pou wè yo tout, relanse yo apa apre tranzaksyon an fini.
+
+
 BEGIN;
 
 -- Gad: si youn nan kont yo pa egziste, sispann NÈT olye nou kreye yon eta

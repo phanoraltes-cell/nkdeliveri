@@ -16,6 +16,17 @@
 -- kolòn `depi_kilè` a anvan ou konkli.
 -- ===========================================================================
 
+-- ⚠ FICHYE SA A GEN PLIZYÈ REKÈT.
+--
+--   Editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a. Si ou kole
+--   tout fichye a yon sèl kou, ou pral wè dènye rekèt la epi rès la ap
+--   envizib — san okenn mesaj pou di w sa.
+--
+--   KOURI CHAK REKÈT YON PA YON (chak blòk ki fini ak `;`), epi kole chak
+--   rezilta apa. Sinon voye yo nan yon sèl `jsonb_build_object` jan
+--   02-payouts-disputed.sql fè a.
+
+
 -- A) DOUB EGZAK
 SELECT
   t.relname                AS tab,

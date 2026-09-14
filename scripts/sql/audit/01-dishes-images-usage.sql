@@ -16,6 +16,17 @@
 --   sou_dishes > 0  -> yo VIVAN, nou kite yo epi nou pa touche prekach la
 -- ===========================================================================
 
+-- ⚠ FICHYE SA A GEN PLIZYÈ REKÈT.
+--
+--   Editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a. Si ou kole
+--   tout fichye a yon sèl kou, ou pral wè dènye rekèt la epi rès la ap
+--   envizib — san okenn mesaj pou di w sa.
+--
+--   KOURI CHAK REKÈT YON PA YON (chak blòk ki fini ak `;`), epi kole chak
+--   rezilta apa. Sinon voye yo nan yon sèl `jsonb_build_object` jan
+--   02-payouts-disputed.sql fè a.
+
+
 -- 1) Konte a — se sa ki deside.
 select
   count(*)                                                   as total_pwodwi,

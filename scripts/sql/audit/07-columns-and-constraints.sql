@@ -17,6 +17,17 @@
 -- li bay yon sèl liy pa kolòn ki konsène — pa yon dumping.
 -- ===========================================================================
 
+-- ⚠ FICHYE SA A GEN PLIZYÈ REKÈT.
+--
+--   Editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a. Si ou kole
+--   tout fichye a yon sèl kou, ou pral wè dènye rekèt la epi rès la ap
+--   envizib — san okenn mesaj pou di w sa.
+--
+--   KOURI CHAK REKÈT YON PA YON (chak blòk ki fini ak `;`), epi kole chak
+--   rezilta apa. Sinon voye yo nan yon sèl `jsonb_build_object` jan
+--   02-payouts-disputed.sql fè a.
+
+
 -- A + B) KOLÒN TOUJOU NIL OSWA KONSTANT
 DO $$
 DECLARE

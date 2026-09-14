@@ -20,6 +20,17 @@
 -- PIS pou verifye alamen, pa yon vèdik.
 -- ===========================================================================
 
+-- ⚠ FICHYE SA A GEN PLIZYÈ REKÈT.
+--
+--   Editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a. Si ou kole
+--   tout fichye a yon sèl kou, ou pral wè dènye rekèt la epi rès la ap
+--   envizib — san okenn mesaj pou di w sa.
+--
+--   KOURI CHAK REKÈT YON PA YON (chak blòk ki fini ak `;`), epi kole chak
+--   rezilta apa. Sinon voye yo nan yon sèl `jsonb_build_object` jan
+--   02-payouts-disputed.sql fè a.
+
+
 -- B) KOLÒN *_id SAN FK  (fè sa a ANVAN A: li bay lis la pou A)
 SELECT c.table_name AS tab, c.column_name AS kolòn,
        replace(c.column_name, '_id', '') || 's' AS tab_sipoze

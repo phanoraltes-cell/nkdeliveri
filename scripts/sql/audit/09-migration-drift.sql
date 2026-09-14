@@ -26,14 +26,25 @@
 -- ak sa depo a deklare epi m ap bay lis migrasyon ki pa aplike yo.
 -- ===========================================================================
 
--- 1) TAB YO KI EGZISTE TOUT BON (konpare ak 61 tab types.ts la deklare)
+-- ⚠ FICHYE SA A GEN PLIZYÈ REKÈT.
+--
+--   Editè SQL Supabase la montre SÈLMAN dènye jeu rezilta a. Si ou kole
+--   tout fichye a yon sèl kou, ou pral wè dènye rekèt la epi rès la ap
+--   envizib — san okenn mesaj pou di w sa.
+--
+--   KOURI CHAK REKÈT YON PA YON (chak blòk ki fini ak `;`), epi kole chak
+--   rezilta apa. Sinon voye yo nan yon sèl `jsonb_build_object` jan
+--   02-payouts-disputed.sql fè a.
+
+
+-- 1) TAB YO KI EGZISTE TOUT BON (konpare ak 68 tab types.ts la deklare)
 SELECT string_agg(c.relname, ', ' ORDER BY c.relname) AS tab_ki_egziste,
        count(*) AS total
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind = 'r';
 
--- 2) FONKSYON YO KI EGZISTE (konpare ak 162 types.ts la deklare)
+-- 2) FONKSYON YO KI EGZISTE (konpare ak 168 types.ts la deklare)
 SELECT count(*) AS total_fonksyon
 FROM pg_proc p
 JOIN pg_namespace n ON n.oid = p.pronamespace
