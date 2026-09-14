@@ -198,6 +198,20 @@ export default defineConfig({
           //    on the next legitimate edit to this same file.
           globIgnores: [
             "payment-global/**",
+            // Fichye rasin lan `payment-global-logo.svg` PA matche
+            // "payment-global/**" — pa gen bar apre non an, donk glob la pa
+            // kouvri l. Li t ap glise nan prekach la pandan tout DOSYE a te
+            // byen eskli. Mezire nan sw.js pwodiksyon an: li te la.
+            "payment-global-logo.svg",
+            // hero-livreur-v2.png se REPLI PNG yon <picture> ki gen yon jimo
+            // WebP (hero-livreur-v2.webp, 50 Ko) — hero-section.tsx:34-35.
+            // Li BYEN referanse, donk li rete nan build la epi li disponib
+            // sou rezo pou yon navigatè ki pa sipòte WebP. Men li fè
+            // 1 224 Ko: mwatye tout prekach `public/` la. Prekache toude vle
+            // di chak vizitè telechaje 1,27 Mo pou yon sèl imaj l ap wè.
+            // Sou done mobil ann Ayiti sa koute lajan pou anyen. Se sèlman
+            // prekachman an ki sispann, pa disponiblite a.
+            "hero-livreur-v2.png",
             // Ansyen logo NatCash la: tout senk kote ki afiche yon logo
             // NatCash pwente sou `/natcash-logo-new.png`. Fichye a efase nan
             // menm remedyasyon an; antre a retire isit la tou pou glob la pa
