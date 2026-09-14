@@ -198,6 +198,11 @@ export default defineConfig({
           //    on the next legitimate edit to this same file.
           globIgnores: [
             "payment-global/**",
+            // Ansyen logo NatCash la: tout senk kote ki afiche yon logo
+            // NatCash pwente sou `/natcash-logo-new.png`. Fichye a efase nan
+            // menm remedyasyon an; antre a retire isit la tou pou glob la pa
+            // ret ap chèche l.
+            "natcash-logo.png",
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
