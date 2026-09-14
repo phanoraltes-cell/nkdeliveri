@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { apiMethods } from "@/lib/api-methods";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitize } from "@/lib/ai/sanitize";
@@ -119,7 +120,7 @@ async function logUsage(
 
 export const Route = createFileRoute("/api/admin/ai")({
   server: {
-    handlers: {
+    handlers: apiMethods({
       POST: async ({ request }) => {
         if (!isAiConfigured()) {
           // Kritè aksèptasyon #5: si kle a manke, panèl la montre yon
@@ -388,6 +389,6 @@ export const Route = createFileRoute("/api/admin/ai")({
           headers: { "content-type": "text/event-stream", "cache-control": "no-cache" },
         });
       },
-    },
+    }),
   },
 });

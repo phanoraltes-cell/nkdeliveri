@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { apiMethods } from "@/lib/api-methods";
 
 /**
  * Public HTTP endpoint browsers POST Content-Security-Policy violation
@@ -124,7 +125,7 @@ function clientIpForRateLimit(request: Request): string {
 
 export const Route = createFileRoute("/api/csp-report")({
   server: {
-    handlers: {
+    handlers: apiMethods({
       POST: async ({ request }) => {
         const rawBody = await request.text();
         if (rawBody.length > MAX_BODY_BYTES) {
@@ -182,6 +183,6 @@ export const Route = createFileRoute("/api/csp-report")({
         // beacons beyond "did it 4xx/5xx" — nothing to return.
         return new Response(null, { status: 204 });
       },
-    },
+    }),
   },
 });

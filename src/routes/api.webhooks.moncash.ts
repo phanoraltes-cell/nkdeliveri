@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { apiMethods } from "@/lib/api-methods";
 
 /**
  * Public HTTP endpoint MonCash calls to report payment status changes —
@@ -21,7 +22,7 @@ import { createFileRoute } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/api/webhooks/moncash")({
   server: {
-    handlers: {
+    handlers: apiMethods({
       POST: async ({ request }) => {
         const rawBody = await request.text();
         const headers = Object.fromEntries(request.headers.entries());
@@ -35,6 +36,6 @@ export const Route = createFileRoute("/api/webhooks/moncash")({
           headers: { "Content-Type": "application/json" },
         });
       },
-    },
+    }),
   },
 });

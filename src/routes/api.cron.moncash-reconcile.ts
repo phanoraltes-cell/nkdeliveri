@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { apiMethods } from "@/lib/api-methods";
 
 /**
  * Vercel Cron target — see vercel.json's `crons` entry. Reconciles
@@ -18,7 +19,7 @@ import { createFileRoute } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/api/cron/moncash-reconcile")({
   server: {
-    handlers: {
+    handlers: apiMethods({
       GET: async ({ request }) => {
         const { isValidCronRequest } = await import("@/lib/cron-auth.server");
         const auth = isValidCronRequest(request);
@@ -46,6 +47,6 @@ export const Route = createFileRoute("/api/cron/moncash-reconcile")({
           });
         }
       },
-    },
+    }),
   },
 });

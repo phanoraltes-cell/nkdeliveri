@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { apiMethods } from "@/lib/api-methods";
 
 /**
  * Public HTTP endpoint Stripe calls for the Collect flow — same raw-route
@@ -13,7 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
  */
 export const Route = createFileRoute("/api/webhooks/stripe/collect")({
   server: {
-    handlers: {
+    handlers: apiMethods({
       POST: async ({ request }) => {
         const rawBody = await request.text();
         const headers = Object.fromEntries(request.headers.entries());
@@ -27,6 +28,6 @@ export const Route = createFileRoute("/api/webhooks/stripe/collect")({
           headers: { "Content-Type": "application/json" },
         });
       },
-    },
+    }),
   },
 });
