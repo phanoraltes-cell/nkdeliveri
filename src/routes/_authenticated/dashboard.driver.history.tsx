@@ -190,7 +190,16 @@ function DriverHistory() {
       const { error } = await supabase.rpc("report_delivery_failed_secure", {
         _order_id: orderId,
         _reason: failureReason,
-        _comment: failureComment.trim() || null,
+        // `undefined`, pa `null`. Jeneratè tip Supabase la deklare paramèt
+        // opsyonèl yo kòm `_comment?: string` (san `| null`) depi
+        // rejenerasyon 14 septanm nan — anvan li te di `string | null`.
+        // Yon `undefined` disparèt nan JSON.stringify, donk kle a pa voye
+        // ditou epi SQL la aplike defo l.
+        //
+        // Konpòtman an IDANTIK: `_comment text DEFAULT NULL`, epi anndan
+        // fonksyon an `v_comment := NULLIF(btrim(_comment), '')` — donk
+        // NULL, chèn vid ak kle ki absan bay menm rezilta.
+        _comment: failureComment.trim() || undefined,
       });
       if (error) throw error;
       return { orderId, id };

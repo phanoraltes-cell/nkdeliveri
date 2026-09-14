@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -6,164 +6,23 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
-  private: {
+  graphql_public: {
     Tables: {
-      rate_limit_hits: {
-        Row: {
-          hit_count: number;
-          rl_key: string;
-          window_start: string;
-        };
-        Insert: {
-          hit_count?: number;
-          rl_key: string;
-          window_start: string;
-        };
-        Update: {
-          hit_count?: number;
-          rl_key?: string;
-          window_start?: string;
-        };
-        Relationships: [];
-      };
+      [_ in never]: never;
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      claim_delivery_secure: {
-        Args: { _order_id: string };
-        Returns: Database["public"]["Tables"]["deliveries"]["Row"];
-        SetofOptions: {
-          from: "*";
-          to: "deliveries";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      compute_order_commission_preview: {
-        Args: { _order_id: string };
-        Returns: {
-          driver_commission_amount: number;
-          driver_commission_rate: number;
-          driver_fee: number;
-          driver_id: string;
-          driver_net_amount: number;
-          restaurant_commission_amount: number;
-          restaurant_commission_rate: number;
-          restaurant_id: string;
-          restaurant_net_amount: number;
-        }[];
-      };
-      create_order_secure: {
+      graphql: {
         Args: {
-          /**
-           * Tach 1 — sèl bagay kliyan an ka di sou wallet la. `false` = li
-           * klike "Peye ak yon lòt metòd". Sèvè a deside rès la: si balans
-           * lan ase epi sa a pa `false`, se wallet ki peye, kèlkeswa
-           * `_method`. Trikaj sou li pa bay anyen — li kite w ak yon
-           * kòmand ki PA peye.
-           */
-          _allow_wallet?: boolean;
-          _contact_phone: string;
-          _delivery_address: string;
-          _delivery_notes: string;
-          _idempotency_key?: string;
-          _items: Json;
-          _method: Database["public"]["Enums"]["payment_method"];
-          _promo_code?: string;
-          _restaurant_id: string;
-          _wallet_id?: string;
-          _wants_location_sharing?: boolean;
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
         };
-        Returns: string;
-      };
-      dispute_author_role: {
-        Args: { _dispute: Database["public"]["Tables"]["disputes"]["Row"] };
-        Returns: Database["public"]["Enums"]["dispute_author_role"];
-      };
-      dispute_folder_visible: {
-        Args: { _dispute_id: string };
-        Returns: boolean;
-      };
-      generate_commission_for_order: {
-        Args: { _actor_id: string; _order_id: string; _source: string };
-        Returns: undefined;
-      };
-      get_primary_role: { Args: { _user_id: string }; Returns: string };
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"];
-          _user_id: string;
-        };
-        Returns: boolean;
-      };
-      is_restaurant_manager: {
-        Args: { _restaurant_id: string };
-        Returns: boolean;
-      };
-      is_restaurant_staff_or_manager: {
-        Args: { _restaurant_id: string };
-        Returns: boolean;
-      };
-      log_audit_event: {
-        Args: {
-          _action: string;
-          _metadata: Json;
-          _role: string;
-          _user_id: string;
-        };
-        Returns: undefined;
-      };
-      notification_preferences_for: {
-        Args: { _user_id: string };
         Returns: Json;
       };
-      notify_secure: {
-        Args: {
-          _body: string;
-          _category: string;
-          _data?: Json;
-          _title: string;
-          _type: string;
-          _user_ids: string[];
-        };
-        Returns: undefined;
-      };
-      order_chat_author_role: { Args: { _order_id: string }; Returns: string };
-      order_chat_folder_visible: {
-        Args: { _order_id: string };
-        Returns: boolean;
-      };
-      order_visible_to_driver: {
-        Args: {
-          _order_id: string;
-          _status: Database["public"]["Enums"]["order_status"];
-        };
-        Returns: boolean;
-      };
-      payout_beneficiary_folder_visible: {
-        Args: { _folder_id: string };
-        Returns: boolean;
-      };
-      payout_beneficiary_visible: {
-        Args: { _driver_id: string; _restaurant_id: string };
-        Returns: boolean;
-      };
-      update_order_status_secure: {
-        Args: {
-          _new_status: Database["public"]["Enums"]["order_status"];
-          _order_id: string;
-        };
-        Returns: Database["public"]["Tables"]["orders"]["Row"];
-        SetofOptions: {
-          from: "*";
-          to: "orders";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      wallet_owner_visible: { Args: { _wallet_id: string }; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;
@@ -216,39 +75,51 @@ export type Database = {
         };
         Relationships: [];
       };
-      ai_usage_log: {
+      admin_backup_code_state: {
         Row: {
-          admin_id: string;
-          created_at: string;
-          error: string | null;
-          feature: string;
-          id: number;
-          input_tokens: number;
-          model: string;
-          output_tokens: number;
-          status: string;
+          codes_generated_at: string | null;
+          codes_remaining: number;
+          last_verified_at: string | null;
+          user_id: string;
         };
         Insert: {
-          admin_id: string;
-          created_at?: string;
-          error?: string | null;
-          feature: string;
-          id?: number;
-          input_tokens?: number;
-          model: string;
-          output_tokens?: number;
-          status: string;
+          codes_generated_at?: string | null;
+          codes_remaining?: number;
+          last_verified_at?: string | null;
+          user_id: string;
         };
         Update: {
-          admin_id?: string;
+          codes_generated_at?: string | null;
+          codes_remaining?: number;
+          last_verified_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      admin_backup_codes: {
+        Row: {
+          code_hash: string;
+          created_at: string;
+          id: string;
+          revoked_at: string | null;
+          used_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          code_hash: string;
           created_at?: string;
-          error?: string | null;
-          feature?: string;
-          id?: number;
-          input_tokens?: number;
-          model?: string;
-          output_tokens?: number;
-          status?: string;
+          id?: string;
+          revoked_at?: string | null;
+          used_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          code_hash?: string;
+          created_at?: string;
+          id?: string;
+          revoked_at?: string | null;
+          used_at?: string | null;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -282,6 +153,42 @@ export type Database = {
           period?: string;
           stats?: Json;
           summary?: string;
+        };
+        Relationships: [];
+      };
+      ai_usage_log: {
+        Row: {
+          admin_id: string;
+          created_at: string;
+          error: string | null;
+          feature: string;
+          id: number;
+          input_tokens: number;
+          model: string;
+          output_tokens: number;
+          status: string;
+        };
+        Insert: {
+          admin_id: string;
+          created_at?: string;
+          error?: string | null;
+          feature: string;
+          id?: never;
+          input_tokens?: number;
+          model: string;
+          output_tokens?: number;
+          status: string;
+        };
+        Update: {
+          admin_id?: string;
+          created_at?: string;
+          error?: string | null;
+          feature?: string;
+          id?: never;
+          input_tokens?: number;
+          model?: string;
+          output_tokens?: number;
+          status?: string;
         };
         Relationships: [];
       };
@@ -424,6 +331,124 @@ export type Database = {
           },
         ];
       };
+      contract_signatures: {
+        Row: {
+          contract_version_id: string;
+          driver_id: string | null;
+          id: string;
+          restaurant_id: string | null;
+          revoke_reason: string | null;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          signature_name: string;
+          signed_at: string;
+          signed_by: string;
+        };
+        Insert: {
+          contract_version_id: string;
+          driver_id?: string | null;
+          id?: string;
+          restaurant_id?: string | null;
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_name: string;
+          signed_at?: string;
+          signed_by: string;
+        };
+        Update: {
+          contract_version_id?: string;
+          driver_id?: string | null;
+          id?: string;
+          restaurant_id?: string | null;
+          revoke_reason?: string | null;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_name?: string;
+          signed_at?: string;
+          signed_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_driver_id_fkey";
+            columns: ["driver_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "restaurant_contract_signatures_contract_version_id_fkey";
+            columns: ["contract_version_id"];
+            isOneToOne: false;
+            referencedRelation: "contract_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "restaurant_contract_signatures_restaurant_id_fkey";
+            columns: ["restaurant_id"];
+            isOneToOne: false;
+            referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      contract_versions: {
+        Row: {
+          content: string;
+          contract_type: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          version: number;
+        };
+        Insert: {
+          content: string;
+          contract_type?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          version: number;
+        };
+        Update: {
+          content?: string;
+          contract_type?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
+      cuisines: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          slug: string;
+          sort_order: number;
+          synonyms: string[];
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          synonyms?: string[];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+          synonyms?: string[];
+        };
+        Relationships: [];
+      };
       customer_delivery_locations: {
         Row: {
           accuracy: number | null;
@@ -527,6 +552,44 @@ export type Database = {
             columns: ["order_id"];
             isOneToOne: true;
             referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      delivery_proof: {
+        Row: {
+          created_at: string;
+          delivery_id: string;
+          final_driver_lat: number | null;
+          final_driver_lng: number | null;
+          final_location_at: string | null;
+          final_status: string;
+          id: string;
+        };
+        Insert: {
+          created_at?: string;
+          delivery_id: string;
+          final_driver_lat?: number | null;
+          final_driver_lng?: number | null;
+          final_location_at?: string | null;
+          final_status: string;
+          id?: string;
+        };
+        Update: {
+          created_at?: string;
+          delivery_id?: string;
+          final_driver_lat?: number | null;
+          final_driver_lng?: number | null;
+          final_location_at?: string | null;
+          final_status?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "delivery_proof_delivery_id_fkey";
+            columns: ["delivery_id"];
+            isOneToOne: true;
+            referencedRelation: "deliveries";
             referencedColumns: ["id"];
           },
         ];
@@ -650,7 +713,6 @@ export type Database = {
       };
       drivers: {
         Row: {
-          /** Dimansyon konfòmite ORTOGONAL de `status` (migrasyon 20260821120000, D1) — is_driver_eligible() sèl otorite ki konbine tou de. */
           account_status: string;
           address: string | null;
           commission_rate: number;
@@ -800,6 +862,47 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      komand_assistance: {
+        Row: {
+          assigned_admin_id: string | null;
+          created_at: string;
+          order_id: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: string;
+          status_history: Json;
+          updated_at: string;
+        };
+        Insert: {
+          assigned_admin_id?: string | null;
+          created_at?: string;
+          order_id: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          status_history?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_admin_id?: string | null;
+          created_at?: string;
+          order_id?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          status_history?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "komand_assistance_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: true;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       menu_categories: {
         Row: {
@@ -998,7 +1101,7 @@ export type Database = {
           created_at?: string;
           error?: string | null;
           event_type: string;
-          id?: number;
+          id?: never;
           status: string;
           title?: string | null;
           user_id?: string | null;
@@ -1009,7 +1112,7 @@ export type Database = {
           created_at?: string;
           error?: string | null;
           event_type?: string;
-          id?: number;
+          id?: never;
           status?: string;
           title?: string | null;
           user_id?: string | null;
@@ -1072,6 +1175,38 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      order_admin_notes: {
+        Row: {
+          author_id: string;
+          created_at: string;
+          id: string;
+          note: string;
+          order_id: string;
+        };
+        Insert: {
+          author_id: string;
+          created_at?: string;
+          id?: string;
+          note: string;
+          order_id: string;
+        };
+        Update: {
+          author_id?: string;
+          created_at?: string;
+          id?: string;
+          note?: string;
+          order_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_admin_notes_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       order_chat_messages: {
         Row: {
@@ -1207,14 +1342,11 @@ export type Database = {
           delivery_lat: number | null;
           delivery_lng: number | null;
           delivery_notes: string | null;
-          /** Set once by create_order_secure when a promo code applied — never recomputed client-side. */
           discount_amount: number;
           id: string;
           idempotency_key: string | null;
           order_number: string;
-          /** The code text as applied at order time (kept even if the promo_codes row is later edited/deleted). */
           promo_code: string | null;
-          /** Tach 3 — set once by create_order_secure when an auto-apply restaurant promotion matched. */
           promotion_discount_amount: number;
           promotion_id: string | null;
           restaurant_id: string;
@@ -1612,7 +1744,6 @@ export type Database = {
           stripe_session_id: string | null;
           transaction_ref: string | null;
           updated_at: string;
-          /** Tach 3C — ki wallet (kliyan, restoran, oswa livrè) ki debite lè method='wallet'. NULL pou tout lòt metòd, ak pou ranje ki kreye anvan kolòn sa a te egziste (Tach 1C). */
           wallet_id: string | null;
         };
         Insert: {
@@ -1676,17 +1807,17 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "payments_wallet_id_fkey";
-            columns: ["wallet_id"];
-            isOneToOne: false;
-            referencedRelation: "wallets";
-            referencedColumns: ["id"];
-          },
-          {
             foreignKeyName: "payments_receiver_restaurant_id_fkey";
             columns: ["receiver_restaurant_id"];
             isOneToOne: false;
             referencedRelation: "restaurants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "wallets";
             referencedColumns: ["id"];
           },
         ];
@@ -1769,7 +1900,7 @@ export type Database = {
           fee_amount?: number;
           id?: string;
           method: string;
-          net_amount?: number;
+          net_amount: number;
           paid_by?: string | null;
           proof_url?: string | null;
           provider_code?: string;
@@ -1852,6 +1983,13 @@ export type Database = {
             columns: ["wallet_id"];
             isOneToOne: false;
             referencedRelation: "wallets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payouts_withdrawal_rule_id_fkey";
+            columns: ["withdrawal_rule_id"];
+            isOneToOne: false;
+            referencedRelation: "withdrawal_rules";
             referencedColumns: ["id"];
           },
         ];
@@ -1969,14 +2107,12 @@ export type Database = {
           created_at: string;
           description: string | null;
           dish_type: string | null;
-          /** Set alongside published_at (= published_at + 24h) by publish_product_secure/publish_all_products_secure only. */
           expires_at: string | null;
           id: string;
           image_url: string | null;
           name: string;
           popular: boolean;
           price: number;
-          /** Set by publish_product_secure/publish_all_products_secure; null = never expires. */
           published_at: string | null;
           restaurant_id: string;
           sort_order: number;
@@ -1990,6 +2126,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           dish_type?: string | null;
+          expires_at?: string | null;
           id?: string;
           image_url?: string | null;
           name: string;
@@ -2008,6 +2145,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           dish_type?: string | null;
+          expires_at?: string | null;
           id?: string;
           image_url?: string | null;
           name?: string;
@@ -2168,19 +2306,16 @@ export type Database = {
       promotions: {
         Row: {
           active: boolean;
-          /** Tach 3: apliye otomatikman nan pri a — DEFAULT false, opt-in (wè migrasyon 20260829150000). */
           auto_apply: boolean;
           code: string | null;
           created_at: string;
           description: string | null;
           discount_type: string;
           discount_value: number;
-          /** Only set (and required) when scope = 'dish'. */
           dish_ids: string[] | null;
           ends_at: string | null;
           id: string;
           restaurant_id: string;
-          /** 'menu' (whole order) or 'dish' (only dish_ids). */
           scope: string;
           starts_at: string | null;
           title: string;
@@ -2451,93 +2586,41 @@ export type Database = {
           },
         ];
       };
-      contract_signatures: {
+      restaurant_cuisines: {
         Row: {
-          contract_version_id: string;
-          driver_id: string | null;
-          id: string;
-          restaurant_id: string | null;
-          revoke_reason: string | null;
-          revoked_at: string | null;
-          revoked_by: string | null;
-          signature_name: string;
-          signed_at: string;
-          signed_by: string;
+          created_at: string;
+          cuisine_id: string;
+          is_primary: boolean;
+          restaurant_id: string;
         };
         Insert: {
-          contract_version_id: string;
-          driver_id?: string | null;
-          id?: string;
-          restaurant_id?: string | null;
-          revoke_reason?: string | null;
-          revoked_at?: string | null;
-          revoked_by?: string | null;
-          signature_name: string;
-          signed_at?: string;
-          signed_by: string;
+          created_at?: string;
+          cuisine_id: string;
+          is_primary?: boolean;
+          restaurant_id: string;
         };
         Update: {
-          contract_version_id?: string;
-          driver_id?: string | null;
-          id?: string;
-          restaurant_id?: string | null;
-          revoke_reason?: string | null;
-          revoked_at?: string | null;
-          revoked_by?: string | null;
-          signature_name?: string;
-          signed_at?: string;
-          signed_by?: string;
+          created_at?: string;
+          cuisine_id?: string;
+          is_primary?: boolean;
+          restaurant_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "restaurant_contract_signatures_contract_version_id_fkey";
-            columns: ["contract_version_id"];
+            foreignKeyName: "restaurant_cuisines_cuisine_id_fkey";
+            columns: ["cuisine_id"];
             isOneToOne: false;
-            referencedRelation: "contract_versions";
+            referencedRelation: "cuisines";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "contract_signatures_driver_id_fkey";
-            columns: ["driver_id"];
-            isOneToOne: false;
-            referencedRelation: "drivers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "restaurant_contract_signatures_restaurant_id_fkey";
+            foreignKeyName: "restaurant_cuisines_restaurant_id_fkey";
             columns: ["restaurant_id"];
             isOneToOne: false;
             referencedRelation: "restaurants";
             referencedColumns: ["id"];
           },
         ];
-      };
-      contract_versions: {
-        Row: {
-          contract_type: string;
-          content: string;
-          created_at: string;
-          created_by: string | null;
-          id: string;
-          version: number;
-        };
-        Insert: {
-          contract_type?: string;
-          content: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          version: number;
-        };
-        Update: {
-          contract_type?: string;
-          content?: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          version?: number;
-        };
-        Relationships: [];
       };
       restaurant_employees: {
         Row: {
@@ -2581,7 +2664,6 @@ export type Database = {
           monthly_commission_amount: number | null;
           natcash_account_name: string | null;
           natcash_number: string | null;
-          /** Tach 3B — dat/lè nimewo peman an CHANJE reyèlman pou dènye fwa (pa chak sovgad); NULL = janm chanje depi konfigirasyon inisyal. Itilize pou peryòd atant anti-fròd 24è la anvan yon retrè pwòp-tèt. */
           payout_account_updated_at: string | null;
           restaurant_id: string;
           updated_at: string;
@@ -2631,11 +2713,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
-          /** Tach 8 Objektif B — videyo yon plat siyati, restaurant-videos bucket. */
           dish_video_url: string | null;
           id: string;
-          /** Manual "louvri/fèmen" toggle — AND-gated in is_restaurant_open() alongside opening_hours. Default true via backfill so no pre-existing restaurant goes dark on migration. */
           is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -2650,7 +2732,6 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
-          /** Tach 8 Objektif B — lis URL foto ekip la (jsonb tablo tèks), DEFAULT '[]'. */
           team_photos: Json;
           updated_at: string;
         };
@@ -2665,6 +2746,8 @@ export type Database = {
           dish_video_url?: string | null;
           id?: string;
           is_open?: boolean;
+          last_hours_reminder_sent_at?: string | null;
+          last_hours_reminder_stage?: number | null;
           lat?: number | null;
           latitude?: number | null;
           lng?: number | null;
@@ -2693,6 +2776,8 @@ export type Database = {
           dish_video_url?: string | null;
           id?: string;
           is_open?: boolean;
+          last_hours_reminder_sent_at?: string | null;
+          last_hours_reminder_stage?: number | null;
           lat?: number | null;
           latitude?: number | null;
           lng?: number | null;
@@ -3222,10 +3307,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      accept_terms_secure: {
-        Args: { _version: string };
-        Returns: undefined;
-      };
+      accept_terms_secure: { Args: { _version: string }; Returns: undefined };
       add_dispute_message_secure: {
         Args: {
           _attachment_url?: string;
@@ -3266,6 +3348,23 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      add_report_message_secure: {
+        Args: { _message: string; _report_id: string };
+        Returns: {
+          author_id: string;
+          author_role: Database["public"]["Enums"]["report_message_author"];
+          created_at: string;
+          id: string;
+          message: string;
+          report_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "report_messages";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       add_restaurant_employee_secure: {
         Args: { _email: string; _restaurant_id: string; _role?: string };
         Returns: {
@@ -3288,6 +3387,109 @@ export type Database = {
           _user_id: string;
         };
         Returns: undefined;
+      };
+      admin_force_credit_wallet_topup_secure: {
+        Args: {
+          _external_reference: string;
+          _justification: string;
+          _provider_transaction_id?: string;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      admin_mark_requested_withdrawal_paid_secure: {
+        Args: {
+          _notes?: string;
+          _payout_id: string;
+          _proof_url?: string;
+          _transaction_reference: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          fee_amount: number;
+          id: string;
+          method: string;
+          net_amount: number;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+          withdrawal_rule_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      admin_recover_wallet_topup_secure: {
+        Args: {
+          _external_reference: string;
+          _notes?: string;
+          _provider_transaction_id?: string;
+          _raw_payload?: Json;
+        };
+        Returns: {
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          currency: string;
+          error: string | null;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider: string;
+          provider_transaction_id: string | null;
+          raw_payload: Json | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payment_intents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       anonymize_customer_secure: {
         Args: { _customer_id: string; _reason?: string };
@@ -3328,6 +3530,51 @@ export type Database = {
           vehicle_photo_url: string | null;
           vehicle_type: string | null;
         };
+        SetofOptions: {
+          from: "*";
+          to: "drivers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      cancel_requested_withdrawal_secure: {
+        Args: { _payout_id: string; _reason?: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          fee_amount: number;
+          id: string;
+          method: string;
+          net_amount: number;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+          withdrawal_rule_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       charge_restaurant_monthly_fee_secure: {
         Args: { _period?: string; _restaurant_id: string };
@@ -3353,10 +3600,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      check_admin_step_up_secure: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
+      check_admin_step_up_secure: { Args: never; Returns: boolean };
       check_auth_rate_limit_secure: {
         Args: {
           _action: string;
@@ -3376,12 +3620,12 @@ export type Database = {
         Returns: boolean;
       };
       check_wallet_reconciliation_secure: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           difference: number;
-          driver_id: string | null;
+          driver_id: string;
           ledger_derived_balance: number;
-          restaurant_id: string | null;
+          restaurant_id: string;
           stored_balance: number;
           wallet_id: string;
         }[];
@@ -3397,6 +3641,8 @@ export type Database = {
           driver_lat: number | null;
           driver_lng: number | null;
           driver_notes: string | null;
+          failure_comment: string | null;
+          failure_reason: string | null;
           fee: number;
           id: string;
           location_updated_at: string | null;
@@ -3489,6 +3735,32 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      complete_refund_secure: {
+        Args: { _refund_id: string };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          completed_at: string | null;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          order_id: string;
+          payment_id: string;
+          reason: string;
+          restaurant_id: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database["public"]["Enums"]["refund_status"];
+          status_history: Json;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "refunds";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       complete_wallet_topup_secure: {
         Args: {
           _decision: string;
@@ -3520,35 +3792,13 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      complete_refund_secure: {
-        Args: { _refund_id: string };
-        Returns: {
-          admin_notes: string | null;
-          amount: number;
-          completed_at: string | null;
-          created_at: string;
-          customer_id: string;
-          id: string;
-          order_id: string;
-          payment_id: string;
-          reason: string;
-          restaurant_id: string;
-          reviewed_at: string | null;
-          reviewed_by: string | null;
-          status: Database["public"]["Enums"]["refund_status"];
-          status_history: Json;
-          updated_at: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "refunds";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       compute_restaurant_promotion_discount: {
         Args: { _items: Json; _restaurant_id: string };
-        Returns: { discount_amount: number; promotion_id: string; title: string }[];
+        Returns: {
+          discount_amount: number;
+          promotion_id: string;
+          title: string;
+        }[];
       };
       confirm_cash_payment_secure: {
         Args: { _order_id: string };
@@ -3576,6 +3826,7 @@ export type Database = {
           stripe_session_id: string | null;
           transaction_ref: string | null;
           updated_at: string;
+          wallet_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -3660,12 +3911,18 @@ export type Database = {
       create_contract_version_secure: {
         Args: { _content: string; _contract_type: string };
         Returns: {
-          contract_type: string;
           content: string;
+          contract_type: string;
           created_at: string;
           created_by: string | null;
           id: string;
           version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "contract_versions";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       create_menu_category_secure: {
@@ -3686,13 +3943,6 @@ export type Database = {
       };
       create_order_secure: {
         Args: {
-          /**
-           * Tach 1 — sèl bagay kliyan an ka di sou wallet la. `false` = li
-           * klike "Peye ak yon lòt metòd". Sèvè a deside rès la: si balans
-           * lan ase epi sa a pa `false`, se wallet ki peye, kèlkeswa
-           * `_method`. Trikaj sou li pa bay anyen — li kite w ak yon
-           * kòmand ki PA peye.
-           */
           _allow_wallet?: boolean;
           _contact_phone: string;
           _delivery_address: string;
@@ -3708,7 +3958,12 @@ export type Database = {
         Returns: string;
       };
       create_partner_secure: {
-        Args: { _link_url?: string; _logo_url: string; _name: string; _sort_order?: number };
+        Args: {
+          _link_url?: string;
+          _logo_url: string;
+          _name: string;
+          _sort_order?: number;
+        };
         Returns: {
           created_at: string;
           created_by: string | null;
@@ -3719,6 +3974,12 @@ export type Database = {
           name: string;
           sort_order: number;
           updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "partners";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       create_pending_payout_secure: {
@@ -3830,6 +4091,12 @@ export type Database = {
           updated_at: string;
           uses_count: number;
         };
+        SetofOptions: {
+          from: "*";
+          to: "promo_codes";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_promotion_secure: {
         Args: {
@@ -3865,6 +4132,42 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "promotions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_report_secure: {
+        Args: {
+          _description: string;
+          _evidence_urls?: string[];
+          _order_id: string;
+          _reason_code: string;
+          _target_type: string;
+        };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3961,82 +4264,6 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      admin_force_credit_wallet_topup_secure: {
-        Args: {
-          _external_reference: string;
-          _justification: string;
-          _provider_transaction_id?: string;
-        };
-        Returns: {
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          currency: string;
-          error: string | null;
-          external_reference: string;
-          id: string;
-          payment_method: string;
-          provider: string;
-          provider_transaction_id: string | null;
-          raw_payload: Json | null;
-          status: string;
-          updated_at: string;
-          user_id: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "payment_intents";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      admin_recover_wallet_topup_secure: {
-        Args: {
-          _external_reference: string;
-          _notes?: string;
-          _provider_transaction_id?: string;
-          _raw_payload?: Json;
-        };
-        Returns: {
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          currency: string;
-          error: string | null;
-          external_reference: string;
-          id: string;
-          payment_method: string;
-          provider: string;
-          provider_transaction_id: string | null;
-          raw_payload: Json | null;
-          status: string;
-          updated_at: string;
-          user_id: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "payment_intents";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      get_wallet_topups_admin_secure: {
-        Args: { _limit?: number; _offset?: number; _status?: string };
-        Returns: {
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          customer_name: string;
-          error: string | null;
-          external_reference: string;
-          id: string;
-          payment_method: string;
-          provider_transaction_id: string | null;
-          status: string;
-          total_count: number;
-          user_id: string;
-        }[];
-      };
       create_withdrawal_rule_secure: {
         Args: {
           _availability_delay_hours?: number;
@@ -4074,47 +4301,16 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      get_active_withdrawal_rule_secure: {
-        Args: { _as_of?: string; _role: string };
-        Returns: {
-          availability_delay_hours: number;
-          created_at: string;
-          created_by: string | null;
-          daily_limit: number | null;
-          effective_from: string;
-          fee_percentage: number;
-          flat_fee: number;
-          free_threshold: number | null;
-          id: string;
-          max_amount: number | null;
-          min_amount: number;
-          notes: string | null;
-          role: string;
-          weekly_limit: number | null;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "withdrawal_rules";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       delete_menu_category_secure: {
         Args: { _category_id: string };
         Returns: undefined;
       };
-      delete_partner_secure: {
-        Args: { _id: string };
-        Returns: undefined;
-      };
+      delete_partner_secure: { Args: { _id: string }; Returns: undefined };
       delete_product_secure: {
         Args: { _product_id: string };
         Returns: undefined;
       };
-      delete_promo_code_secure: {
-        Args: { _id: string };
-        Returns: undefined;
-      };
+      delete_promo_code_secure: { Args: { _id: string }; Returns: undefined };
       delete_promotion_secure: {
         Args: { _promotion_id: string };
         Returns: undefined;
@@ -4255,10 +4451,7 @@ export type Database = {
           transaction_id: string;
         }[];
       };
-      generate_admin_backup_codes_secure: {
-        Args: Record<PropertyKey, never>;
-        Returns: string[];
-      };
+      generate_admin_backup_codes_secure: { Args: never; Returns: string[] };
       get_active_placements_secure: {
         Args: { _context?: string; _limit?: number; _placement: string };
         Returns: {
@@ -4289,20 +4482,41 @@ export type Database = {
           title: string;
         }[];
       };
+      get_active_withdrawal_rule_secure: {
+        Args: { _as_of?: string; _role: string };
+        Returns: {
+          availability_delay_hours: number;
+          created_at: string;
+          created_by: string | null;
+          daily_limit: number | null;
+          effective_from: string;
+          fee_percentage: number;
+          flat_fee: number;
+          free_threshold: number | null;
+          id: string;
+          max_amount: number | null;
+          min_amount: number;
+          notes: string | null;
+          role: string;
+          weekly_limit: number | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "withdrawal_rules";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       get_admin_ai_traffic_stats_secure: {
         Args: { _period: string };
         Returns: Json;
       };
-      get_admin_priorities_secure: {
-        Args: Record<PropertyKey, never>;
-        Returns: Json;
-      };
       get_admin_backup_codes_status_secure: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           codes_remaining: number;
-          generated_at: string | null;
-          last_used_at: string | null;
+          generated_at: string;
+          last_used_at: string;
         }[];
       };
       get_admin_finance_history_secure: {
@@ -4376,6 +4590,7 @@ export type Database = {
           total_pending: number;
         }[];
       };
+      get_admin_priorities_secure: { Args: never; Returns: Json };
       get_all_users_admin: {
         Args: {
           _limit?: number;
@@ -4406,12 +4621,18 @@ export type Database = {
       get_current_contract_secure: {
         Args: { _contract_type: string };
         Returns: {
-          contract_type: string;
           content: string;
+          contract_type: string;
           created_at: string;
           created_by: string | null;
           id: string;
           version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "contract_versions";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       get_customer_activity_summary: {
@@ -4471,220 +4692,6 @@ export type Database = {
           total_count: number;
           updated_at: string;
         }[];
-      };
-      get_reports_admin: {
-        Args: {
-          _limit?: number;
-          _offset?: number;
-          _search?: string;
-          _sort?: string;
-          _status?: string;
-          _target_type?: string;
-        };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          order_number: string;
-          order_total: number;
-          reason_code: string;
-          reporter_email: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_founded_reports_90d: number;
-          target_id: string;
-          target_name: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          total_count: number;
-          updated_at: string;
-        }[];
-      };
-      get_shared_reports_for_target_secure: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          created_at: string;
-          description: string;
-          id: string;
-          order_id: string;
-          order_number: string;
-          reason_code: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-        }[];
-      };
-      create_report_secure: {
-        Args: {
-          _description: string;
-          _evidence_urls?: string[];
-          _order_id: string;
-          _reason_code: string;
-          _target_type: string;
-        };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
-      };
-      add_report_message_secure: {
-        Args: { _message: string; _report_id: string };
-        Returns: {
-          author_id: string;
-          author_role: Database["public"]["Enums"]["report_message_author"];
-          created_at: string;
-          id: string;
-          message: string;
-          report_id: string;
-        };
-      };
-      set_report_status_secure: {
-        Args: { _admin_note?: string; _report_id: string; _status: string };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
-      };
-      reject_report_secure: {
-        Args: { _admin_note: string; _report_id: string };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
-      };
-      resolve_report_secure: {
-        Args: { _admin_note: string; _report_id: string; _resolution: string };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
-      };
-      request_target_explanation_secure: {
-        Args: { _question: string; _report_id: string };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
-      };
-      submit_target_explanation_secure: {
-        Args: { _explanation: string; _report_id: string };
-        Returns: {
-          admin_note: string;
-          created_at: string;
-          description: string;
-          evidence_urls: string[];
-          id: string;
-          order_id: string;
-          reason_code: string;
-          reporter_id: string;
-          resolution: Database["public"]["Enums"]["report_resolution"];
-          reviewed_at: string;
-          reviewed_by: string;
-          shared_with_target_at: string;
-          status: Database["public"]["Enums"]["report_status"];
-          target_explanation: string;
-          target_explanation_at: string;
-          target_explanation_question: string;
-          target_id: string;
-          target_type: Database["public"]["Enums"]["report_target_type"];
-          updated_at: string;
-        };
       };
       get_driver_commissions_secure: {
         Args: {
@@ -4840,37 +4847,41 @@ export type Database = {
           user_agent: string;
         }[];
       };
-      get_my_customer_wallet_secure: {
-        Args: never;
-        Returns: { available_balance: number; lifetime_earnings: number }[];
-      };
       get_my_customer_wallet_history_secure: {
-        Args: { _from?: string; _limit?: number; _offset?: number; _to?: string };
+        Args: {
+          _from?: string;
+          _limit?: number;
+          _offset?: number;
+          _to?: string;
+        };
         Returns: {
           available_delta: number;
           created_at: string;
           id: string;
-          note: string | null;
+          note: string;
           type: string;
+        }[];
+      };
+      get_my_customer_wallet_secure: {
+        Args: never;
+        Returns: {
+          available_balance: number;
+          lifetime_earnings: number;
         }[];
       };
       get_my_payable_wallets_secure: {
         Args: { _restaurant_id?: string };
         Returns: {
           available_balance: number;
-          driver_id: string | null;
+          driver_id: string;
           kind: string;
           label: string;
-          restaurant_id: string | null;
+          restaurant_id: string;
           self_order_blocked: boolean;
-          /** NULL for a not-yet-topped-up customer wallet (matching get_my_customer_wallet_secure's own synthetic-zero-row shape) — create_order_secure treats a null _wallet_id as "use my own customer wallet" by default, so this degrades correctly with no special-casing needed. */
-          wallet_id: string | null;
+          wallet_id: string;
         }[];
       };
-      get_order_admin_detail: {
-        Args: { _order_id: string };
-        Returns: Json;
-      };
+      get_order_admin_detail: { Args: { _order_id: string }; Returns: Json };
       get_order_financial_timeline_secure: {
         Args: { _order_id: string };
         Returns: {
@@ -4937,6 +4948,43 @@ export type Database = {
         }[];
       };
       get_primary_role: { Args: { _user_id: string }; Returns: string };
+      get_reports_admin: {
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+          _status?: string;
+          _target_type?: string;
+        };
+        Returns: {
+          admin_note: string;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          order_number: string;
+          order_total: number;
+          reason_code: string;
+          reporter_email: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string;
+          reviewed_by: string;
+          shared_with_target_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_founded_reports_90d: number;
+          target_id: string;
+          target_name: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          total_count: number;
+          updated_at: string;
+        }[];
+      };
       get_restaurant_activity_summary: {
         Args: { _from: string; _restaurant_id: string; _to: string };
         Returns: {
@@ -5048,14 +5096,30 @@ export type Database = {
         }[];
       };
       get_restaurants_missing_hours_admin: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           grace_expired: boolean;
           id: string;
           name: string;
-          opening_hours_grace_until: string | null;
+          opening_hours_grace_until: string;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+        }[];
+      };
+      get_shared_reports_for_target_secure: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          description: string;
+          id: string;
+          order_id: string;
+          order_number: string;
+          reason_code: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string;
+          target_explanation_at: string;
+          target_explanation_question: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
         }[];
       };
       get_top_drivers_by_commission: {
@@ -5072,6 +5136,23 @@ export type Database = {
           name: string;
           restaurant_id: string;
           total_commission: number;
+        }[];
+      };
+      get_wallet_topups_admin_secure: {
+        Args: { _limit?: number; _offset?: number; _status?: string };
+        Returns: {
+          amount: number;
+          confirmed_at: string;
+          created_at: string;
+          customer_name: string;
+          error: string;
+          external_reference: string;
+          id: string;
+          payment_method: string;
+          provider_transaction_id: string;
+          status: string;
+          total_count: number;
+          user_id: string;
         }[];
       };
       has_role: {
@@ -5129,13 +5210,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      is_driver_eligible: { Args: { _driver_id: string }; Returns: boolean };
       is_restaurant_open: {
         Args: { _at?: string; _restaurant_id: string };
         Returns: boolean;
       };
+      is_valid_amount: { Args: { _value: number }; Returns: boolean };
       is_valid_opening_hours_shape: { Args: { _hours: Json }; Returns: boolean };
       list_partners_admin: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           created_at: string;
           created_by: string | null;
@@ -5147,9 +5230,15 @@ export type Database = {
           sort_order: number;
           updated_at: string;
         }[];
+        SetofOptions: {
+          from: "*";
+          to: "partners";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       list_promo_codes_admin: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           active: boolean;
           code: string;
@@ -5165,6 +5254,12 @@ export type Database = {
           updated_at: string;
           uses_count: number;
         }[];
+        SetofOptions: {
+          from: "*";
+          to: "promo_codes";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       list_restaurant_employees_secure: {
         Args: { _restaurant_id: string };
@@ -5179,18 +5274,23 @@ export type Database = {
         }[];
       };
       list_restaurants_public: {
-        Args: { _limit?: number; _offset?: number; _search?: string; _sort?: string };
+        Args: {
+          _limit?: number;
+          _offset?: number;
+          _search?: string;
+          _sort?: string;
+        };
         Returns: {
-          address: string | null;
+          address: string;
           avg_prep_time: number;
-          cover_url: string | null;
-          cuisine: string | null;
+          cover_url: string;
+          cuisine: string;
           delivery_fee: number;
           id: string;
           is_open_now: boolean;
-          logo_url: string | null;
+          logo_url: string;
           name: string;
-          rating: number | null;
+          rating: number;
           slug: string;
           total_count: number;
         }[];
@@ -5208,10 +5308,7 @@ export type Database = {
         Args: { _action: string };
         Returns: undefined;
       };
-      log_dashboard_access_denied_secure: {
-        Args: Record<PropertyKey, never>;
-        Returns: undefined;
-      };
+      log_dashboard_access_denied_secure: { Args: never; Returns: undefined };
       log_komand_contact_secure: {
         Args: { _action: string; _order_id: string };
         Returns: undefined;
@@ -5232,6 +5329,50 @@ export type Database = {
         Args: { _order_id: string };
         Returns: undefined;
       };
+      mark_requested_withdrawal_processing_secure: {
+        Args: {
+          _own_reference: string;
+          _payout_id: string;
+          _provider_code: string;
+        };
+        Returns: {
+          admin_notes: string | null;
+          amount: number;
+          confirmed_at: string | null;
+          created_at: string;
+          dispute_reason: string | null;
+          disputed_at: string | null;
+          driver_id: string | null;
+          fee_amount: number;
+          id: string;
+          method: string;
+          net_amount: number;
+          paid_by: string | null;
+          proof_url: string | null;
+          provider_code: string;
+          provider_transaction_id: string | null;
+          receiver_account_name: string | null;
+          receiver_number: string;
+          requested_by: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          restaurant_id: string | null;
+          status: string;
+          status_history: Json;
+          transaction_reference: string;
+          updated_at: string;
+          wallet_id: string;
+          withdrawal_rule_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "payouts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      normalize_cuisine_text: { Args: { _raw: string }; Returns: string };
       open_dispute_secure: {
         Args: {
           _category: string;
@@ -5288,6 +5429,12 @@ export type Database = {
           stock_quantity: number | null;
           updated_at: string;
         };
+        SetofOptions: {
+          from: "*";
+          to: "products";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       push_customer_location_secure: {
         Args: {
@@ -5310,10 +5457,41 @@ export type Database = {
           pending_balance: number;
           restaurant_id: string | null;
           updated_at: string;
+          user_id: string | null;
         };
         SetofOptions: {
           from: "*";
           to: "wallets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      reject_report_secure: {
+        Args: { _admin_note: string; _report_id: string };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -5330,7 +5508,7 @@ export type Database = {
         Returns: undefined;
       };
       report_delivery_failed_secure: {
-        Args: { _comment?: string | null; _order_id: string; _reason: string };
+        Args: { _comment?: string; _order_id: string; _reason: string };
         Returns: {
           assigned_at: string;
           created_at: string;
@@ -5357,6 +5535,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      report_permit_anomaly_secure: { Args: never; Returns: undefined };
       request_refund_secure: {
         Args: { _order_id: string; _reason: string };
         Returns: {
@@ -5383,6 +5562,36 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_target_explanation_secure: {
+        Args: { _question: string; _report_id: string };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       request_withdrawal_secure: {
         Args: {
           _amount?: number;
@@ -5390,128 +5599,6 @@ export type Database = {
           _method?: string;
           _restaurant_id?: string;
         };
-        Returns: {
-          admin_notes: string | null;
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          dispute_reason: string | null;
-          disputed_at: string | null;
-          driver_id: string | null;
-          fee_amount: number;
-          id: string;
-          method: string;
-          net_amount: number;
-          paid_by: string | null;
-          proof_url: string | null;
-          provider_code: string;
-          provider_transaction_id: string | null;
-          receiver_account_name: string | null;
-          receiver_number: string;
-          requested_by: string | null;
-          resolution: string | null;
-          resolved_at: string | null;
-          resolved_by: string | null;
-          restaurant_id: string | null;
-          status: string;
-          status_history: Json;
-          transaction_reference: string;
-          updated_at: string;
-          wallet_id: string;
-          withdrawal_rule_id: string | null;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "payouts";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      mark_requested_withdrawal_processing_secure: {
-        Args: { _own_reference: string; _payout_id: string; _provider_code: string };
-        Returns: {
-          admin_notes: string | null;
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          dispute_reason: string | null;
-          disputed_at: string | null;
-          driver_id: string | null;
-          fee_amount: number;
-          id: string;
-          method: string;
-          net_amount: number;
-          paid_by: string | null;
-          proof_url: string | null;
-          provider_code: string;
-          provider_transaction_id: string | null;
-          receiver_account_name: string | null;
-          receiver_number: string;
-          requested_by: string | null;
-          resolution: string | null;
-          resolved_at: string | null;
-          resolved_by: string | null;
-          restaurant_id: string | null;
-          status: string;
-          status_history: Json;
-          transaction_reference: string;
-          updated_at: string;
-          wallet_id: string;
-          withdrawal_rule_id: string | null;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "payouts";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      admin_mark_requested_withdrawal_paid_secure: {
-        Args: {
-          _notes?: string;
-          _payout_id: string;
-          _proof_url?: string;
-          _transaction_reference: string;
-        };
-        Returns: {
-          admin_notes: string | null;
-          amount: number;
-          confirmed_at: string | null;
-          created_at: string;
-          dispute_reason: string | null;
-          disputed_at: string | null;
-          driver_id: string | null;
-          fee_amount: number;
-          id: string;
-          method: string;
-          net_amount: number;
-          paid_by: string | null;
-          proof_url: string | null;
-          provider_code: string;
-          provider_transaction_id: string | null;
-          receiver_account_name: string | null;
-          receiver_number: string;
-          requested_by: string | null;
-          resolution: string | null;
-          resolved_at: string | null;
-          resolved_by: string | null;
-          restaurant_id: string | null;
-          status: string;
-          status_history: Json;
-          transaction_reference: string;
-          updated_at: string;
-          wallet_id: string;
-          withdrawal_rule_id: string | null;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "payouts";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
-      cancel_requested_withdrawal_secure: {
-        Args: { _payout_id: string; _reason?: string };
         Returns: {
           admin_notes: string | null;
           amount: number;
@@ -5614,6 +5701,36 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      resolve_report_secure: {
+        Args: { _admin_note: string; _report_id: string; _resolution: string };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       review_manual_payment_secure: {
         Args: {
           _decision: Database["public"]["Enums"]["payment_status"];
@@ -5644,6 +5761,7 @@ export type Database = {
           stripe_session_id: string | null;
           transaction_ref: string | null;
           updated_at: string;
+          wallet_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5717,6 +5835,12 @@ export type Database = {
           vehicle_photo_url: string | null;
           vehicle_type: string | null;
         };
+        SetofOptions: {
+          from: "*";
+          to: "drivers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       revoke_my_session_secure: {
         Args: { _session_id: string };
@@ -5732,8 +5856,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
           is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -5748,18 +5875,25 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       run_data_retention_cleanup_secure: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           category: string;
           rows_deleted: number;
         }[];
       };
       run_wallet_reconciliation_secure: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           checked_count: number;
           discrepancy_count: number;
@@ -5842,6 +5976,36 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      set_report_status_secure: {
+        Args: { _admin_note?: string; _report_id: string; _status: string };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       set_restaurant_open_secure: {
         Args: { _is_open: boolean; _restaurant_id: string };
         Returns: {
@@ -5852,8 +6016,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
           is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -5868,7 +6035,14 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       sign_driver_contract_secure: {
@@ -5906,6 +6080,12 @@ export type Database = {
           vehicle_photo_url: string | null;
           vehicle_type: string | null;
         };
+        SetofOptions: {
+          from: "*";
+          to: "drivers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       sign_restaurant_contract_secure: {
         Args: { _restaurant_id: string; _signature_name: string };
@@ -5917,8 +6097,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
           is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -5933,7 +6116,14 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       stamp_storage_object_owner_secure: {
@@ -5976,6 +6166,7 @@ export type Database = {
           stripe_session_id: string | null;
           transaction_ref: string | null;
           updated_at: string;
+          wallet_id: string | null;
         };
         SetofOptions: {
           from: "*";
@@ -5984,9 +6175,57 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      submit_target_explanation_secure: {
+        Args: { _explanation: string; _report_id: string };
+        Returns: {
+          admin_note: string | null;
+          created_at: string;
+          description: string;
+          evidence_urls: string[];
+          id: string;
+          order_id: string;
+          reason_code: string;
+          reporter_id: string;
+          resolution: Database["public"]["Enums"]["report_resolution"];
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          shared_with_target_at: string | null;
+          status: Database["public"]["Enums"]["report_status"];
+          target_explanation: string | null;
+          target_explanation_at: string | null;
+          target_explanation_question: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "reports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       subscribe_newsletter_secure: {
         Args: { _email: string; _source?: string };
         Returns: undefined;
+      };
+      update_delivery_zone_fee_secure: {
+        Args: { _fee_htg: number; _zone_id: string };
+        Returns: {
+          created_at: string;
+          fee_htg: number;
+          id: string;
+          is_default: boolean;
+          name: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "platform_delivery_zones";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       update_dispute_status_secure: {
         Args: {
@@ -6029,6 +6268,7 @@ export type Database = {
           _payout_frequency: string;
         };
         Returns: {
+          account_status: string;
           address: string | null;
           commission_rate: number;
           created_at: string;
@@ -6038,6 +6278,8 @@ export type Database = {
           id: string;
           id_doc_url: string | null;
           last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
           license_doc_url: string | null;
           license_plate: string | null;
           moncash_account_name: string | null;
@@ -6046,8 +6288,13 @@ export type Database = {
           natcash_number: string | null;
           payout_account_updated_at: string | null;
           payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
           phone: string | null;
           status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
           updated_at: string;
           user_id: string;
           vehicle_photo_url: string | null;
@@ -6067,6 +6314,7 @@ export type Database = {
           _status: Database["public"]["Enums"]["driver_status"];
         };
         Returns: {
+          account_status: string;
           address: string | null;
           commission_rate: number;
           created_at: string;
@@ -6076,6 +6324,8 @@ export type Database = {
           id: string;
           id_doc_url: string | null;
           last_name: string | null;
+          last_permit_reminder_sent_at: string | null;
+          last_permit_reminder_stage: number | null;
           license_doc_url: string | null;
           license_plate: string | null;
           moncash_account_name: string | null;
@@ -6084,8 +6334,13 @@ export type Database = {
           natcash_number: string | null;
           payout_account_updated_at: string | null;
           payout_frequency: string;
+          permit_expires_at: string | null;
+          permit_grace_until: string | null;
+          permit_status: string;
           phone: string | null;
           status: Database["public"]["Enums"]["driver_status"];
+          suspended_at: string | null;
+          suspended_reason: string | null;
           updated_at: string;
           user_id: string;
           vehicle_photo_url: string | null;
@@ -6188,24 +6443,9 @@ export type Database = {
           sort_order: number;
           updated_at: string;
         };
-      };
-      update_delivery_zone_fee_secure: {
-        Args: {
-          _fee_htg: number;
-          _zone_id: string;
-        };
-        Returns: {
-          created_at: string;
-          fee_htg: number;
-          id: string;
-          is_default: boolean;
-          name: string;
-          updated_at: string;
-          updated_by: string | null;
-        };
         SetofOptions: {
           from: "*";
-          to: "platform_delivery_zones";
+          to: "partners";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -6288,11 +6528,11 @@ export type Database = {
           _active: boolean;
           _discount_type: string;
           _discount_value: number;
-          _ends_at?: string;
+          _ends_at: string;
           _id: string;
-          _max_uses?: number;
-          _min_order_amount?: number;
-          _starts_at?: string;
+          _max_uses: number;
+          _min_order_amount: number;
+          _starts_at: string;
         };
         Returns: {
           active: boolean;
@@ -6308,6 +6548,12 @@ export type Database = {
           starts_at: string | null;
           updated_at: string;
           uses_count: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "promo_codes";
+          isOneToOne: true;
+          isSetofReturn: false;
         };
       };
       update_promotion_secure: {
@@ -6402,7 +6648,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
+          is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -6417,6 +6667,7 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
         };
         SetofOptions: {
@@ -6478,6 +6729,8 @@ export type Database = {
           dish_video_url: string | null;
           id: string;
           is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -6515,7 +6768,11 @@ export type Database = {
           cuisine: string | null;
           delivery_fee: number;
           description: string | null;
+          dish_video_url: string | null;
           id: string;
+          is_open: boolean;
+          last_hours_reminder_sent_at: string | null;
+          last_hours_reminder_stage: number | null;
           lat: number | null;
           latitude: number | null;
           lng: number | null;
@@ -6530,6 +6787,7 @@ export type Database = {
           rating: number | null;
           slug: string;
           status: Database["public"]["Enums"]["restaurant_status"];
+          team_photos: Json;
           updated_at: string;
         };
         SetofOptions: {
@@ -6600,7 +6858,11 @@ export type Database = {
       };
       validate_promo_code_secure: {
         Args: { _code: string; _subtotal: number };
-        Returns: { discount_amount: number; message: string; valid: boolean }[];
+        Returns: {
+          discount_amount: number;
+          message: string;
+          valid: boolean;
+        }[];
       };
       verify_admin_backup_code_secure: {
         Args: { _code: string };
@@ -6645,7 +6907,7 @@ export type Database = {
       report_resolution: "none" | "warning" | "refund" | "partial_refund" | "suspension";
       report_status: "open" | "reviewing" | "resolved" | "rejected";
       report_target_type: "courier" | "restaurant";
-      restaurant_status: "pending" | "pending_contract" | "approved" | "suspended" | "rejected";
+      restaurant_status: "pending" | "approved" | "suspended" | "rejected" | "pending_contract";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -6765,7 +7027,7 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  private: {
+  graphql_public: {
     Enums: {},
   },
   public: {
@@ -6819,7 +7081,11 @@ export const Constants = {
       payment_status: ["pending", "awaiting_proof", "under_review", "paid", "failed", "refunded"],
       payout_status: ["paid", "confirmed", "disputed", "resolved"],
       refund_status: ["requested", "approved", "rejected", "completed"],
-      restaurant_status: ["pending", "pending_contract", "approved", "suspended", "rejected"],
+      report_message_author: ["customer", "admin"],
+      report_resolution: ["none", "warning", "refund", "partial_refund", "suspension"],
+      report_status: ["open", "reviewing", "resolved", "rejected"],
+      report_target_type: ["courier", "restaurant"],
+      restaurant_status: ["pending", "approved", "suspended", "rejected", "pending_contract"],
     },
   },
 } as const;
