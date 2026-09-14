@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/server.ts",
+    "src/routes/**/*.{ts,tsx}",
+    "src/sw.ts",
+    "e2e/mocks/*.ts",
+    "scripts/*.mjs",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs", "e2e/**/*.ts"],
+  "ignore": ["src/integrations/supabase/types.ts", "src/routeTree.gen.ts", "scripts/**/*.d.mts"],
+  "ignoreDependencies": [
+    "workbox-precaching",
+    "workbox-routing",
+    "workbox-strategies",
+    "workbox-expiration",
+    "@fontsource/bricolage-grotesque",
+    "@fontsource/instrument-sans",
+    "tailwindcss",
+    "tw-animate-css"
+  ]
+}
