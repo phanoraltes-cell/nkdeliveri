@@ -537,7 +537,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_is_admin boolean;
   v_is_assigned_driver boolean;
@@ -645,7 +645,7 @@ RETURNS public.deliveries
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_user uuid := auth.uid();
   v_delivery public.deliveries;
