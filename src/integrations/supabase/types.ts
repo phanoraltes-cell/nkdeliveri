@@ -1,4 +1,4 @@
-﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -498,6 +498,12 @@ export type Database = {
           location_updated_at: string | null;
           order_id: string;
           picked_up_at: string | null;
+          provisional_amount: number | null;
+          provisional_pay_percentage: number | null;
+          settled_at: string | null;
+          settled_by: string | null;
+          settlement_outcome: string | null;
+          settlement_reason: string | null;
           status: Database["public"]["Enums"]["delivery_status"];
           updated_at: string;
         };
@@ -517,6 +523,12 @@ export type Database = {
           location_updated_at?: string | null;
           order_id: string;
           picked_up_at?: string | null;
+          provisional_amount?: number | null;
+          provisional_pay_percentage?: number | null;
+          settled_at?: string | null;
+          settled_by?: string | null;
+          settlement_outcome?: string | null;
+          settlement_reason?: string | null;
           status?: Database["public"]["Enums"]["delivery_status"];
           updated_at?: string;
         };
@@ -536,6 +548,12 @@ export type Database = {
           location_updated_at?: string | null;
           order_id?: string;
           picked_up_at?: string | null;
+          provisional_amount?: number | null;
+          provisional_pay_percentage?: number | null;
+          settled_at?: string | null;
+          settled_by?: string | null;
+          settlement_outcome?: string | null;
+          settlement_reason?: string | null;
           status?: Database["public"]["Enums"]["delivery_status"];
           updated_at?: string;
         };
@@ -555,6 +573,33 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      delivery_failure_rules: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          id: string;
+          notes: string | null;
+          pay_percentage: number;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          id?: string;
+          notes?: string | null;
+          pay_percentage?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          id?: string;
+          notes?: string | null;
+          pay_percentage?: number;
+        };
+        Relationships: [];
       };
       delivery_proof: {
         Row: {
@@ -3648,6 +3693,12 @@ export type Database = {
           location_updated_at: string | null;
           order_id: string;
           picked_up_at: string | null;
+          provisional_amount: number | null;
+          provisional_pay_percentage: number | null;
+          settled_at: string | null;
+          settled_by: string | null;
+          settlement_outcome: string | null;
+          settlement_reason: string | null;
           status: Database["public"]["Enums"]["delivery_status"];
           updated_at: string;
         };
@@ -4663,6 +4714,23 @@ export type Database = {
           total_spent: number;
         }[];
       };
+      get_delivery_failure_rule: {
+        Args: never;
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          id: string;
+          notes: string | null;
+          pay_percentage: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "delivery_failure_rules";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       get_disputes_admin: {
         Args: {
           _category_group?: string;
@@ -5525,6 +5593,12 @@ export type Database = {
           location_updated_at: string | null;
           order_id: string;
           picked_up_at: string | null;
+          provisional_amount: number | null;
+          provisional_pay_percentage: number | null;
+          settled_at: string | null;
+          settled_by: string | null;
+          settlement_outcome: string | null;
+          settlement_reason: string | null;
           status: Database["public"]["Enums"]["delivery_status"];
           updated_at: string;
         };
@@ -6041,6 +6115,40 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "restaurants";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      settle_failed_delivery_secure: {
+        Args: { _order_id: string; _outcome: string; _reason: string };
+        Returns: {
+          assigned_at: string;
+          created_at: string;
+          delivered_at: string | null;
+          driver_heading: number | null;
+          driver_id: string | null;
+          driver_lat: number | null;
+          driver_lng: number | null;
+          driver_notes: string | null;
+          failure_comment: string | null;
+          failure_reason: string | null;
+          fee: number;
+          id: string;
+          location_updated_at: string | null;
+          order_id: string;
+          picked_up_at: string | null;
+          provisional_amount: number | null;
+          provisional_pay_percentage: number | null;
+          settled_at: string | null;
+          settled_by: string | null;
+          settlement_outcome: string | null;
+          settlement_reason: string | null;
+          status: Database["public"]["Enums"]["delivery_status"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "deliveries";
           isOneToOne: true;
           isSetofReturn: false;
         };

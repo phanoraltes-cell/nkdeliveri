@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HandCoins, XCircle } from "lucide-react";
 import { formatHTG } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ const REASON_LABEL: Record<string, string> = {
   customer_unavailable: "Kliyan pa reponn",
   address_not_found: "Pa jwenn adrès la",
   zone_inaccessible: "Zòn nan pa aksesib",
+  // A3-1: sèl rezon ki posib AVAN livrè a pran kòmand lan. Yon echèk anvan
+  // retrè pa bay okenn kredi — livrè a pa t fè anyen ankò.
+  driver_unavailable: "Livrè a pa disponib ankò",
   other: "Lòt rezon",
 };
 
@@ -34,10 +37,20 @@ function elapsedLabel(failedAt: string, now: number): { text: string; over2h: bo
 
 // NKD-016: admin resolves a 'delivery_failed' order manually — no scheduled
 // job exists in this project to do it automatically (owner's decision,
-// docs/archive/phases/NKD-016_FAILED_DELIVERY_REPORT.md). Reuses update_order_status_secure
-// (already admin-unconditional for any transition) rather than a new RPC —
-// nothing here needs validation beyond "is this caller an admin", which
-// that function already does.
+// docs/archive/phases/NKD-016_FAILED_DELIVERY_REPORT.md).
+//
+// ODIT A3-1: ekran sa a pa pase pa `update_order_status_secure` ankò. Li te
+// yon rekou ki sanble ase — « sèl bagay pou valide se si moun nan se admin »
+// — men li te kite de twou:
+//
+//   * Okenn tras sou POUKISA yon admin te tranche. Si yon livrè konteste
+//     desizyon an apre, pa t gen anyen pou reponn.
+//   * Bouton « make livre » a te peye livrè a yon DEZYÈM fwa: kredi echèk
+//     la te deja tonbe, epi `trg_generate_commission_on_delivery` te ajoute
+//     `order_commission` sou menm kous la.
+//
+// `settle_failed_delivery_secure` egzije yon rezon, jere lajan an, epi
+// kite yon trigger ranvèse kredi pwovizwa a — yon sèl kredi pa kòmand.
 function AdminDeliveryFailed() {
   const qc = useQueryClient();
   const { requestConfirm, ConfirmDialog } = useConfirmDialog();
@@ -64,33 +77,105 @@ function AdminDeliveryFailed() {
     refetchInterval: 60_000,
   });
 
-  const resolve = useMutation({
+  // Pousantaj ki an vigè — sèlman pou montre l sou bouton an ak nan
+  // konfimasyon an. Se SÈVÈ a ki deside montan an tout bon, epi li jele
+  // pousantaj la sou livrezon an nan moman echèk la.
+  const rule = useQuery({
+    queryKey: ["delivery-failure-rule"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("delivery_failure_rules")
+        .select("pay_percentage")
+        .lte("effective_from", new Date().toISOString())
+        .order("effective_from", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  // Rezon pa kòmand — yon sèl chan ouvè alafwa, kle a se id kòmand lan.
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const reasonFor = (orderId: string) => (reasons[orderId] ?? "").trim();
+
+  // `settle_failed_delivery_secure` ranplase `update_order_status_secure`
+  // isit la. Twa rezon:
+  //
+  //   * Li egzije yon REZON. Ansyen bouton yo pa t kite okenn tras sou
+  //     poukisa yon admin te tranche nan yon sans — epi si yon livrè
+  //     konteste desizyon an apre, se sèl bagay ki ta reponn.
+  //   * Li jere lajan an. « Anile » vin de bouton diferan: peye livrè a
+  //     (pousantaj règleman an sou frè a) oswa pa peye l.
+  //   * « Kliyan vin chèche l » pa touche lajan ditou — chanjman estati a
+  //     deklanche ranvèsman kredi pwovizwa a epi chemen nòmal la peye.
+  //     Se konsa yon kòmand ki pase pa `delivery_failed` epi apre pa
+  //     `delivered` bay YON SÈL kredi.
+  const settle = useMutation({
     mutationFn: async ({
       orderId,
-      status,
+      outcome,
+      reason,
     }: {
       orderId: string;
-      status: "delivered" | "cancelled";
+      outcome: "delivered" | "cancelled_paid" | "cancelled_unpaid";
+      reason: string;
     }) => {
-      const { error } = await supabase.rpc("update_order_status_secure", {
+      const { error } = await supabase.rpc("settle_failed_delivery_secure", {
         _order_id: orderId,
-        _new_status: status,
+        _outcome: outcome,
+        _reason: reason,
       });
       if (error) throw error;
     },
     onSuccess: (_data, vars) => {
-      toast.success(vars.status === "delivered" ? "Kòmand make livre" : "Kòmand anile");
+      toast.success(
+        vars.outcome === "delivered"
+          ? "Kòmand make livre"
+          : vars.outcome === "cancelled_paid"
+            ? "Kòmand anile — livrè a peye"
+            : "Kòmand anile — livrè a pa peye",
+      );
+      setReasons((r) => ({ ...r, [vars.orderId]: "" }));
       qc.invalidateQueries({ queryKey: ["admin-delivery-failed-orders"] });
     },
     onError: (e) => toast.error(e.message ?? "Erè"),
   });
 
-  function confirmCancel(orderId: string, orderNumber: string, over2h: boolean) {
+  function settleWithReason(
+    orderId: string,
+    outcome: "delivered" | "cancelled_paid" | "cancelled_unpaid",
+  ) {
+    const reason = reasonFor(orderId);
+    if (!reason) {
+      toast.error("Ekri yon rezon anvan ou tranche.");
+      return;
+    }
+    settle.mutate({ orderId, outcome, reason });
+  }
+
+  function confirmCancel(
+    orderId: string,
+    orderNumber: string,
+    over2h: boolean,
+    outcome: "cancelled_paid" | "cancelled_unpaid",
+  ) {
+    if (!reasonFor(orderId)) {
+      toast.error("Ekri yon rezon anvan ou tranche.");
+      return;
+    }
+    const payLabel =
+      outcome === "cancelled_paid"
+        ? `Livrè a ap resevwa ${rule.data?.pay_percentage ?? 50}% frè livrezon an.`
+        : "Livrè a p ap resevwa anyen.";
     requestConfirm(
-      over2h
-        ? `Anile kòmand ${orderNumber}? Pa gen ranbousman — manje a pa disponib ankò.`
-        : `Sa poko fè 2 èdtan depi livrezon an echwe — anile kòmand ${orderNumber} kanmenm? Pa gen ranbousman.`,
-      () => resolve.mutate({ orderId, status: "cancelled" }),
+      `${
+        over2h
+          ? `Anile kòmand ${orderNumber}? Pa gen ranbousman — manje a pa disponib ankò.`
+          : `Sa poko fè 2 èdtan depi livrezon an echwe — anile kòmand ${orderNumber} kanmenm? Pa gen ranbousman.`
+      } ${payLabel}`,
+      () => settleWithReason(orderId, outcome),
     );
   }
 
@@ -168,20 +253,40 @@ function AdminDeliveryFailed() {
                     {formatHTG(Number(o.total))}
                   </span>
                 </div>
-                <div className="flex shrink-0 flex-col gap-2">
+                <div className="flex w-full shrink-0 flex-col gap-2 sm:w-[19rem]">
+                  {/* Rezon an OBLIGATWA sou chak twa desizyon yo. Li ale nan
+                      `deliveries.settlement_reason` EPI nan jounal odit la — si
+                      yon livrè konteste desizyon an apre, se sèl bagay ki di
+                      poukisa. */}
+                  <textarea
+                    value={reasons[o.id] ?? ""}
+                    onChange={(e) => setReasons((r) => ({ ...r, [o.id]: e.target.value }))}
+                    rows={2}
+                    placeholder="Rezon desizyon an (obligatwa)…"
+                    aria-label={`Rezon desizyon pou kòmand ${o.order_number}`}
+                    className="w-full rounded-xl border-2 border-brand-soft/60 px-3 py-2 text-xs text-ink placeholder:text-ink-soft focus:border-brand focus:outline-none"
+                  />
                   <Button
                     size="sm"
-                    disabled={resolve.isPending}
-                    onClick={() => resolve.mutate({ orderId: o.id, status: "delivered" })}
+                    disabled={settle.isPending}
+                    onClick={() => settleWithReason(o.id, "delivered")}
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" /> Kliyan vin chèche l
                   </Button>
                   <button
-                    disabled={resolve.isPending}
-                    onClick={() => confirmCancel(o.id, o.order_number, over2h)}
+                    disabled={settle.isPending}
+                    onClick={() => confirmCancel(o.id, o.order_number, over2h, "cancelled_paid")}
+                    className="inline-flex items-center justify-center gap-1 rounded-full border-2 border-brand-soft px-3 py-2 text-xs font-bold text-brand-deep hover:bg-brand-soft/30 disabled:opacity-50"
+                  >
+                    <HandCoins className="h-3.5 w-3.5" /> Anile — peye livrè a (
+                    {rule.data?.pay_percentage ?? 50}%)
+                  </button>
+                  <button
+                    disabled={settle.isPending}
+                    onClick={() => confirmCancel(o.id, o.order_number, over2h, "cancelled_unpaid")}
                     className="inline-flex items-center justify-center gap-1 rounded-full border-2 border-red-300 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
-                    <XCircle className="h-3.5 w-3.5" /> Anile — pa gen ranbousman
+                    <XCircle className="h-3.5 w-3.5" /> Anile — pa peye livrè a
                   </button>
                 </div>
               </div>
