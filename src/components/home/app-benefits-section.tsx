@@ -13,7 +13,30 @@ import { Layers, Timer, ShieldCheck, Headphones } from "lucide-react";
 // regardless of SW state, independent of the runtime rule's
 // revision-blindness. (v2 kept in public/ rather than deleted, same as
 // hero-livreur.jpg alongside hero-livreur-v2 — nothing else references it.)
-const phoneMockup = "/app-mockup-v3.png";
+// -v4, epi li vin yon <picture> ak de fichye — menm modèl ak de hero yo nan
+// hero-section.tsx. Imaj sa a gen yon VRÈ kanal alfa (silwèt telefòn nan se
+// sa ki pote `drop-shadow` CSS la anba a), donk li pa ka vin JPEG.
+//
+// Chwa a mezire sou raw pixel yo, pa sipoze (scripts/optimize-static-images.mjs):
+//
+//   png san pèt    336 Ko   0 pixel chanje          alfa entak
+//   png palèt 256  110 Ko   217 386 px (maks 51)    alfa kraze sou 3 885 px
+//   webp q90        51 Ko   185 838 px (maks 34)    ALFA ENTAK (0 px)
+//
+// WebP q90 bat palèt PNG sou tout liy: mwatye pwa a, epi li kenbe alfa a
+// egzak pandan palèt la ap kraze l — sa ta bay yon lizyè sal sou kwen wonn
+// telefòn nan ak sou lonbraj la. Repli PNG a rete san pèt (336 Ko): li pi
+// piti pase 365 Ko jodi a, epi pèsòn pa resevwa yon imaj degrade.
+//
+// (Atansyon si yon moun retouche script la: nan sharp 0.35 `png({ effort })`
+// ALIME kantifikasyon palèt la pou kont li sof si ou ekri `palette: false`.
+// Se konsa yon mezi te bay "105 Ko san pèt" ki pa t janm egziste.)
+//
+// Non -v4 la, menm rezon ak -v3 anwo a: fichye sa yo pa nan manifès prekach
+// revizyone a, donk sèl bagay ki kache yo se CacheFirst 30 jou a, ki pa wè
+// chanjman kontni. Yon non tou nèf se yon MISS garanti.
+const phoneMockupWebp = "/app-mockup-v4.webp";
+const phoneMockupPng = "/app-mockup-v4.png";
 
 const APP_BENEFITS = [
   { icon: Layers, title: "Plis chwa", desc: "Yon gwo seleksyon restoran ak plat pou tout gou." },
@@ -56,19 +79,23 @@ export function AppBenefitsSection() {
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <img
-            src={phoneMockup}
-            alt="Aplikasyon NK Deliveri"
-            loading="lazy"
-            // Actual file is 348×718 (v3 mockup, background removed —
-            // replaces the 873×1802 v2 asset). Declared to match exactly,
-            // same reasoning as v2's own fix: a wrong aspect ratio here
-            // reserves the wrong space before the image loads and causes a
-            // layout shift.
-            width={348}
-            height={718}
-            className="max-h-[520px] w-auto object-contain drop-shadow-[0_30px_40px_rgba(249,115,22,0.25)]"
-          />
+          <picture>
+            <source srcSet={phoneMockupWebp} type="image/webp" />
+            <img
+              src={phoneMockupPng}
+              alt="Aplikasyon NK Deliveri"
+              loading="lazy"
+              // Actual file is 348×718 (v3 mockup, background removed —
+              // replaces the 873×1802 v2 asset). Declared to match exactly,
+              // same reasoning as v2's own fix: a wrong aspect ratio here
+              // reserves the wrong space before the image loads and causes a
+              // layout shift. v4 kenbe menm 348×718 la — se sèlman fòma a ki
+              // chanje, pa dimansyon yo.
+              width={348}
+              height={718}
+              className="max-h-[520px] w-auto object-contain drop-shadow-[0_30px_40px_rgba(249,115,22,0.25)]"
+            />
+          </picture>
         </motion.div>
       </div>
     </section>

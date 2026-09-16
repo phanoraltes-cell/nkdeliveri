@@ -132,7 +132,9 @@ export default defineConfig({
           //    Same CacheFirst runtime rule picks each one up the moment
           //    it's actually requested, still fully cached for offline
           //    after that.
-          //  - app-mockup-v3.png (~365 kB, app-benefits-section.tsx): same
+          //  - app-mockup-v4.webp + .png (51 kB + 336 kB,
+          //    app-benefits-section.tsx; te app-mockup-v3.png, 365 kB, yon
+          //    sèl <img> jiska 2026-09-15): same
           //    `loading="lazy"` deferral, same reasoning — an eager
           //    precache would silently undo that deferral for a
           //    prominent home-page image. Renamed from app-mockup-v2.png
@@ -150,30 +152,40 @@ export default defineConfig({
           //    while, then deleted (odit tout baz la, Faz 3/7, 2026-08-31)
           //    — no longer needs a globIgnores entry of its own (a glob
           //    can't match a file that doesn't exist).
-          //  - scooter.png (1.4 MB, newsletter-section.tsx): same
-          //    `loading="lazy"` deferral, same reasoning — replaced
-          //    scooter.jpg (61 kB) as the newsletter card's image. At
-          //    1.4 MB this is now the single largest asset on the home
-          //    page; an eager precache would defeat the lazy deferral for
-          //    every visitor, whether or not they scroll to the card.
+          //  - scooter-v2.jpg (78 kB, newsletter-section.tsx; te
+          //    scooter.png, 1.4 MB, jiska 2026-09-15): same
+          //    `loading="lazy"` deferral, same reasoning — an eager
+          //    precache would defeat the lazy deferral for every visitor,
+          //    whether or not they scroll to the card. At 1.4 MB it had
+          //    been the single largest asset on the home page, and the
+          //    single worst line in the A6 audit: `loading="lazy"` DEFERS a
+          //    fetch, it never cancels it, so every visitor who scrolled
+          //    paid it in full for a ~460 px box.
           //  - scooter.jpg (61 kB, unreferenced since the scooter.png swap
           //    above) and bg-hero.png (1.9 MB, unreferenced since the
           //    bg-hero-v2.png/.webp swap, BRIEF — HERO MOBIL PWA,
           //    2026-08-28) were both deleted (odit tout baz la, Faz 3/7,
           //    2026-08-31) rather than left unreferenced on disk — neither
-          //    needs a globIgnores entry any more.
-          //  - bg-hero-v2.png (2.44 MB, canvas-re-encoded <picture>
-          //    fallback for the file above): excluded here for the exact
-          //    reason hero-livreur.png once was below — it exceeds
-          //    Workbox's 2 MiB injectManifest limit and fails the build
-          //    outright otherwise ("Configure
-          //    injectManifest.maximumFileSizeToCacheInBytes..."). Unlike
-          //    that incident this isn't temporary: raising the limit
-          //    isn't worth it for a fallback essentially no real visitor
-          //    fetches (WebP support is >97% globally) — it's only ever
-          //    cached via src/sw.ts's runtime CacheFirst rule instead,
-          //    same tradeoff as every other excluded entry in this list.
-          //    bg-hero-v2.webp (144.6 kB, what actually loads for nearly
+          //    needs a globIgnores entry any more. NOTE BYEN: se poutèt sa
+          //    nouvo fichye a rele scooter-V2.jpg epi non scooter.jpg. Yon
+          //    navigatè ki te kache ansyen scooter.jpg la (yon LÒT foto)
+          //    anvan 2026-08-31 rete anndan fenèt 30 jou CacheFirst la, epi
+          //    li t ap kontinye sèvi ansyen foto a sou menm URL la.
+          //  - bg-hero-v2.jpg (127 kB, <picture> fallback for the file
+          //    above; te bg-hero-v2.png, 2.44 MB, canvas-re-encoded, jiska
+          //    2026-09-15): the original reason for excluding it was that
+          //    it exceeded Workbox's 2 MiB injectManifest limit and failed
+          //    the build outright ("Configure
+          //    injectManifest.maximumFileSizeToCacheInBytes..."). At 127 kB
+          //    that reason is gone, but the entry stays for the reason that
+          //    always mattered more: precaching a fallback makes every
+          //    visitor pay for a file >97% of them never request (WebP
+          //    support is >97% globally) — it's only ever cached via
+          //    src/sw.ts's runtime CacheFirst rule instead, same tradeoff
+          //    as every other excluded entry in this list.
+          //    bg-hero-v2.webp (85 kB since 2026-09-15, was 144.6 kB — the
+          //    canvas encoder it came from was simply spending more bytes
+          //    than sharp needs; what actually loads for nearly
           //    every visitor) is DELIBERATELY left OUT of this list, same
           //    as hero-livreur-v2 below: fetchPriority="high", not
           //    lazy-loaded, so an eager precache is exactly what's wanted
@@ -182,9 +194,11 @@ export default defineConfig({
           //  - hero-livreur.png was excluded here for one session (grew
           //    past Workbox's 2 MiB injectManifest limit at an intermediate
           //    canvas-extended size and briefly failed the build outright).
-          //    The final courier-right composition (now hero-livreur-v2.png,
-          //    ~1.25 MB) is back under the limit — removed from this list on
-          //    purpose, not an oversight: excluding it here means it's only
+          //    The final courier-right composition (now hero-livreur-v2.jpg,
+          //    89 kB since 2026-09-15, was a 1.25 MB PNG) is back under the
+          //    limit. Sa ki vin apre a: pandan yon moman li te retire nan
+          //    lis la espre, pou yon rezon ki toujou vo pou konnen —
+          //    excluding it here means it's only
           //    ever cached via src/sw.ts's plain CacheFirst "static-assets"
           //    rule, which has NO content-revision awareness and served
           //    stale image bytes to returning visitors for up to 30 days
@@ -193,9 +207,18 @@ export default defineConfig({
           //    hero-section.tsx's own comment). precacheAndRoute (this glob)
           //    correctly detects a content-hash change and busts the old
           //    entry on every future deploy, which CacheFirst alone never
-          //    does — the fix for THIS incident was renaming the asset, but
-          //    leaving it precached is what prevents the same class of bug
-          //    on the next legitimate edit to this same file.
+          //    does.
+          //
+          //    MEN LI NAN LIS LA KOUNYE A ANKÒ, epi se yon chwa: paragraf sa
+          //    a te kontredi antre `hero-livreur-v2` ki anba a depi yon bon
+          //    bout tan (2026-09-15: youn te di «retire nan lis la», lòt la
+          //    te la nan lis la). Desizyon an: li RETE eskli. Pwoteksyon
+          //    kont vye octè a pa soti nan prekach la, li soti nan
+          //    konvansyon chanje non an — chak swap kontni isit la pran yon
+          //    non tou nèf, ki se yon MISS garanti pou tout kliyan, kit yo
+          //    prekache kit yo pa prekache. Epi prekache yon repli fè 97%
+          //    moun peye pou yon fichye yo p ap janm mande. Se sèl rezon ki
+          //    dwe deside, epi li deside menm jan pou tout repli yo.
           globIgnores: [
             "payment-global/**",
             // Fichye rasin lan `payment-global-logo.svg` PA matche
@@ -203,15 +226,19 @@ export default defineConfig({
             // kouvri l. Li t ap glise nan prekach la pandan tout DOSYE a te
             // byen eskli. Mezire nan sw.js pwodiksyon an: li te la.
             "payment-global-logo.svg",
-            // hero-livreur-v2.png se REPLI PNG yon <picture> ki gen yon jimo
-            // WebP (hero-livreur-v2.webp, 50 Ko) — hero-section.tsx:34-35.
+            // hero-livreur-v2.jpg se REPLI a nan yon <picture> ki gen yon
+            // jimo WebP (hero-livreur-v2.webp, 50 Ko) — hero-section.tsx.
             // Li BYEN referanse, donk li rete nan build la epi li disponib
-            // sou rezo pou yon navigatè ki pa sipòte WebP. Men li fè
-            // 1 224 Ko: mwatye tout prekach `public/` la. Prekache toude vle
-            // di chak vizitè telechaje 1,27 Mo pou yon sèl imaj l ap wè.
-            // Sou done mobil ann Ayiti sa koute lajan pou anyen. Se sèlman
+            // sou rezo pou yon navigatè ki pa sipòte WebP.
+            //
+            // Li te yon PNG 1 224 Ko — mwatye tout prekach `public/` la. Li
+            // se yon JPEG 89 Ko kounye a (2026-09-15,
+            // scripts/optimize-static-images.mjs), donk agiman «li twò gwo»
+            // la pa kenbe ankò. Men li rete eskli pou yon lòt rezon ki pi
+            // solid: prekache yon repli vle di chak vizitè peye pou yon
+            // fichye plis pase 97% nan yo pa janm mande. Se sèlman
             // prekachman an ki sispann, pa disponiblite a.
-            "hero-livreur-v2.png",
+            "hero-livreur-v2.jpg",
             // Ansyen logo NatCash la: tout senk kote ki afiche yon logo
             // NatCash pwente sou `/natcash-logo-new.png`. Fichye a efase nan
             // menm remedyasyon an; antre a retire isit la tou pou glob la pa
@@ -220,9 +247,33 @@ export default defineConfig({
             "assets/vendor-pdf-*.js",
             "assets/vendor-charts-*.js",
             "kategori/*.webp",
-            "app-mockup-v3.png",
-            "scooter.png",
-            "bg-hero-v2.png",
+            // KAT ANTRE ANBA YO CHANJE NON 2026-09-15
+            // (scripts/optimize-static-images.mjs). Rezon ki fè yo eskli a
+            // pa chanje — se pwa a ak sous la ki chanje:
+            //
+            //   scooter.png      1 391 Ko -> scooter-v2.jpg        78 Ko
+            //   bg-hero-v2.png   2 387 Ko -> bg-hero-v2.jpg       127 Ko
+            //   app-mockup-v3.png  365 Ko -> app-mockup-v4.webp    51 Ko
+            //                                app-mockup-v4.png    336 Ko
+            //
+            // Non yo chanje EKSPRE, epi se presizeman paske yo nan lis sa a:
+            // yon fichye ki eskli isit la pa nan manifès revizyone a, donk
+            // sèl bagay ki kache l se reg CacheFirst "static-assets" nan
+            // src/sw.ts:26-27 — 30 jou, zewo konsyans revizyon. Se sa
+            // kòmantè hero-livreur.png anwo a dokimante. Yon non tou nèf se
+            // yon MISS garanti.
+            //
+            // (bg-hero-v2.webp ak hero-livreur-v2.webp rete DEYÒ lis sa a
+            // espre — yo prekache, donk manifès la wè chanjman kontni yo epi
+            // li kase ansyen antre a pou kont li. Se poutèt sa bg-hero-v2.webp
+            // te ka reankode 145 -> 85 Ko san chanje non.)
+            "scooter-v2.jpg",
+            "bg-hero-v2.jpg",
+            // Toude mòso <picture> app-mockup la: li `loading="lazy"`, epi
+            // yon prekach anpresman ta anile defèman sa a pou chak vizitè,
+            // kit yo desann rive sou li kit yo pa desann.
+            "app-mockup-v4.webp",
+            "app-mockup-v4.png",
           ],
         },
       }),

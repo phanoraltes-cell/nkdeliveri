@@ -2,7 +2,19 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const scooterImg = "/scooter.png";
+// -v2.jpg, epi non an chanje EKSPRE. Sa a se `<img>` ki te pi chè nan paj
+// akèy la: yon PNG 1 391 Ko pou yon bwat ki pa janm depase ~460 px. Li te
+// chape nan odit A6 a paske li anba pli a — men `loading="lazy"` sèlman
+// diferan telechajman an, li pa anile l: chak vizitè ki desann peye l.
+// JPEG 1120 px q80 bay 78 Ko, menm imaj (entropi 5,27 -> 5,13).
+//
+// PA `/scooter.jpg`: sa a te yon VRÈ fichye ak yon LÒT foto, efase
+// 2026-08-31. Reg CacheFirst "static-assets" nan src/sw.ts kenbe 30 jou san
+// okenn konsyans revizyon, epi fichye sa a pa nan manifès prekach la (wè
+// globIgnores nan vite.config.ts) — donk yon navigatè ki gen ansyen
+// scooter.jpg la nan kach li ta kontinye montre ANSYEN foto a. Yon non tou
+// nèf se yon MISS garanti. Wè scripts/optimize-static-images.mjs.
+const scooterImg = "/scooter-v2.jpg";
 
 /** Home page's newsletter signup card, with its own subscribe-form state and Supabase insert. */
 export function NewsletterSection() {
@@ -90,8 +102,10 @@ export function NewsletterSection() {
             src={scooterImg}
             alt="Scooter NK Deliveri"
             loading="lazy"
-            width={1448}
-            height={1086}
+            // Tay reyèl fichye a (1448x1086 -> 1120x840). Menm rapò, donk
+            // okenn deplasman mizanpaj; men chif yo dwe di verite a.
+            width={1120}
+            height={840}
             className="h-full w-full object-cover md:absolute md:inset-0"
           />
         </div>

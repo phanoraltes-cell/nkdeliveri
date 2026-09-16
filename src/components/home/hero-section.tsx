@@ -32,7 +32,16 @@ import { HERO_MOBILE_ZONES, zoneCenterPercent } from "./hero-mobile-zones";
 // A new filename is a guaranteed cache MISS for every client regardless
 // of SW/cache state, independent of whether this was actually the cause.
 const heroLivreurWebp = "/hero-livreur-v2.webp";
-const heroLivreurPng = "/hero-livreur-v2.png";
+// Repli a se yon JPEG kounye a, pa yon PNG. Li te 1 224 Ko — 24 fwa jimo
+// WebP li a (50 Ko) — pou yon foto opak ki pa gen okenn transparans pou l
+// pwoteje. PNG se yon move fòma pou sa. JPEG q82 bay 89 Ko ak yon chit
+// entropi 0,1% (7,42 -> 7,41): menm imaj, 93% mwens.
+//
+// Se vre mwens pase 3% moun rive sou repli sa a. Men se moun ki gen aparèy
+// ki pi ansyen yo — sou mache nou an, egzakteman moun ki pi mal kapab peye
+// 1,2 Mo. Yon repli dwe pi lejè pase chemen prensipal la, pa 24 fwa pi lou.
+// Wè scripts/optimize-static-images.mjs pou mezi yo.
+const heroLivreurJpg = "/hero-livreur-v2.jpg";
 
 // Mobile-only replacement (owner-provided, 2026-08-26; re-cropped and
 // overlay-enabled 2026-08-28 per BRIEF — HERO MOBIL PWA). Desktop keeps
@@ -61,7 +70,22 @@ const heroLivreurPng = "/hero-livreur-v2.png";
 // app-mockup-v2.png) but excluded from the SW precache manifest below
 // now that nothing references it.
 const heroMobileWebp = "/bg-hero-v2.webp";
-const heroMobilePng = "/bg-hero-v2.png";
+// Toude fichye yo REFÈ ak sharp (2026-09-15). Kòmantè anwo a esplike yo te
+// soti nan yon canvas Chromium paske pa t gen sharp/cwebp nan anviwònman an
+// lè sa a — sharp la kounye a, epi sa chanje de bagay:
+//
+//   .webp  144,6 Ko -> 85 Ko   (q82; ankòdè canvas la t ap depanse twòp)
+//   repli  2 387 Ko -> 127 Ko  (JPEG q82 olye PNG canvas la)
+//
+// Chit entropi a se 0,1% sou toude. Epi remake ki jan sa te parèt: yon fwa
+// repli a desann a 127 Ko, li te vin PI LEJÈ pase WebP 145 Ko a — donk 97%
+// moun yo t ap resevwa pi move zafè a sou imaj LCP mobil la. Se poutèt sa
+// WebP la reankode tou, pa sèlman repli a.
+//
+// Non WebP la PA chanje, epi sa korèk: kontrèman ak lòt imaj yo, li nan
+// manifès prekach revizyone a (li pa nan globIgnores vite.config.ts) — donk
+// chanjman kontni an wè epi ansyen antre a kase pou kont li.
+const heroMobileJpg = "/bg-hero-v2.jpg";
 
 // Why the <section>'s md/lg/xl min-height SHRINKS at narrower breakpoints
 // (counter-intuitive at a glance): object-fit:cover always scales the
@@ -169,7 +193,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
         <picture>
           <source srcSet={heroMobileWebp} type="image/webp" />
           <img
-            src={heroMobilePng}
+            src={heroMobileJpg}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
@@ -368,7 +392,7 @@ export function HeroSection({ q, onQChange, onSearch }: HeroSectionProps) {
       <picture>
         <source srcSet={heroLivreurWebp} type="image/webp" />
         <img
-          src={heroLivreurPng}
+          src={heroLivreurJpg}
           alt=""
           aria-hidden="true"
           fetchPriority="high"
