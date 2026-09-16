@@ -1,3 +1,4 @@
+import { storageImageUrl } from "@/lib/storage-image";
 import type { LucideIcon } from "lucide-react";
 
 type ImageWithFallbackProps = {
@@ -36,7 +37,17 @@ export function ImageWithFallback({
   }
   return (
     <img
-      src={src}
+      // Yon imaj Storage sèvi nan tay li afiche a, pa nan tay li te
+      // telechaje a. Mezire: yon kouvèti restoran te 1 803 Ko pou yon kare
+      // 280x160; menm imaj la nan bon tay la fè 13 Ko.
+      //
+      // Otomatik isit la EKSPRÈ, pa yon opsyon pa apelan: yon transfòmasyon
+      // yon moun ka bliye pa yon transfòmasyon. Chak apelan deja pase
+      // `width`/`height` paske `<img>` bezwen yo pou rezève plas la.
+      //
+      // `storageImageUrl` retounen `src` jan li ye a lè li pa yon objè
+      // piblik Storage — fichye estatik, lyen ekstèn, bikèt prive.
+      src={storageImageUrl(src, { width, height }) ?? src}
       alt={alt}
       width={width}
       height={height}
