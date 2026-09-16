@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { apiMethods } from "@/lib/api-methods";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitize } from "@/lib/ai/sanitize";
 import {
@@ -52,9 +52,27 @@ function sse(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+/**
+ * Retounen KLIYAN AN tou, pa sèlman `userId` an.
+ *
+ * Rezon an: de RPC AI yo (`get_admin_ai_traffic_stats_secure`,
+ * `get_admin_priorities_secure`) gade otorizasyon ak
+ * `public.has_role(auth.uid(), ...)` anndan kò yo. `auth.uid()` li JWT
+ * apelan an — epi ak kle service role la PA GEN JWT, donk li NULL, donk
+ * `has_role(NULL, 'admin')` bay false epi fonksyon an leve
+ * `42501 Forbidden` CHAK FWA. Se sa ki t ap bay "Pa ka chaje done trafik
+ * yo." depi premye jou a: apèl la pa t janm rive kot Claude.
+ *
+ * Donk apèl sa yo dwe pase pa kliyan admin nan limenm (JWT li a), pa pa
+ * `supabaseAdmin`. Ekriti yo (ai_usage_log, ai_summary_cache) rete sou
+ * service role — se sèl li ki gen INSERT.
+ */
 async function authenticateAdmin(
   request: Request,
-): Promise<{ ok: true; userId: string } | { ok: false; status: number; message: string }> {
+): Promise<
+  | { ok: true; userId: string; scopedClient: SupabaseClient<Database> }
+  | { ok: false; status: number; message: string }
+> {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
@@ -91,7 +109,7 @@ async function authenticateAdmin(
     return { ok: false, status: 403, message: "Sèlman admin ka itilize asistan AI a." };
   }
 
-  return { ok: true, userId };
+  return { ok: true, userId, scopedClient };
 }
 
 async function logUsage(
@@ -143,7 +161,7 @@ export const Route = createFileRoute("/api/admin/ai")({
             headers: { "content-type": "application/json" },
           });
         }
-        const { userId } = auth;
+        const { userId, scopedClient } = auth;
 
         let body: Record<string, unknown>;
         try {
@@ -256,13 +274,27 @@ export const Route = createFileRoute("/api/admin/ai")({
             }
           }
 
-          const { data: stats, error: statsErr } = await supabaseAdmin.rpc(
+          // `scopedClient` epi NON `supabaseAdmin`: fonksyon an gade
+          // `has_role(auth.uid(), ...)`, ki NULL sou service role. Wè
+          // kòmantè `authenticateAdmin` la.
+          const { data: stats, error: statsErr } = await scopedClient.rpc(
             "get_admin_ai_traffic_stats_secure",
             { _period: period },
           );
           if (statsErr) {
+            // JOUNALIZE KÒZ LA. Ansyen vèsyon an te jete `statsErr` epi
+            // voye yon mesaj jeneral — se poutèt sa bug `auth.uid()` la te
+            // rete envizib: admin nan te wè "Pa ka chaje done trafik yo."
+            // san okenn mwayen konnen se yon 42501 ki t ap tonbe.
+            console.error("[admin-ai] get_admin_ai_traffic_stats_secure", {
+              code: statsErr.code,
+              message: statsErr.message,
+              details: statsErr.details,
+              period,
+            });
             return new Response(JSON.stringify({ error: "Pa ka chaje done trafik yo." }), {
               status: 500,
+              headers: { "content-type": "application/json" },
             });
           }
           userMessage = `Done JSON (peryòd: ${period}):\n${JSON.stringify(sanitize(stats))}`;
@@ -330,10 +362,18 @@ export const Route = createFileRoute("/api/admin/ai")({
           model = MODEL_FAST;
           maxTokens = 800;
           systemPrompt = PRIORITIES_SYSTEM_PROMPT;
-          const { data: priorities, error: prioErr } = await supabaseAdmin.rpc(
+          // `scopedClient` — menm rezon ak `summary` anwo a: fonksyon sa a
+          // tou gade `has_role(auth.uid(), ...)`, ki pa ka pase sou service
+          // role. Li te kase menm jan an.
+          const { data: priorities, error: prioErr } = await scopedClient.rpc(
             "get_admin_priorities_secure",
           );
           if (prioErr) {
+            console.error("[admin-ai] get_admin_priorities_secure", {
+              code: prioErr.code,
+              message: prioErr.message,
+              details: prioErr.details,
+            });
             return new Response(JSON.stringify({ error: "Pa ka chaje done priyorite yo." }), {
               status: 500,
             });

@@ -16,7 +16,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check:migrations": "node scripts/check-migration-hazards.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run check:migrations && npm run check:delimiters && npm run check:types && npm run check:credit && npm run test && npm run build",
+    "verify": "npm run typecheck && npm run lint && npm run check:migrations && npm run check:delimiters && npm run check:types && npm run check:credit && npm run check:rpc && npm run test && npm run build",
     "db:backup": "bash scripts/backup-database.sh",
     "db:restore": "bash scripts/restore-database.sh",
     "db:test-restore": "bash scripts/test-restore-backup.sh",
@@ -27,7 +27,8 @@
     "test:e2e:report": "playwright show-report",
     "check:types": "node scripts/check-types-freshness.mjs",
     "check:credit": "node scripts/check-credit-invariant.mjs",
-    "check:delimiters": "node scripts/check-delimiters.mjs"
+    "check:delimiters": "node scripts/check-delimiters.mjs",
+    "check:rpc": "node scripts/check-service-role-rpc.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
