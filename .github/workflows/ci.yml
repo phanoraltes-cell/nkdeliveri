@@ -42,38 +42,66 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # C-02 remediation (docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md) — the
-      # 173-test unit suite existed but was never actually run by CI.
-      # Reuses this job's existing `npm ci` — no new job, no new install.
-      # Deliberately placed FIRST, ahead of lint/format/typecheck: found
-      # during regression verification that `npm run format:check` (a
-      # pre-existing step, unrelated to C-01/C-02) already fails on `main`
-      # today because of 114 pre-existing files never Prettier-formatted
-      # (docs/*.md, CLAUDE.md, README.md, CONTRIBUTING.md — confirmed on a
-      # clean tracked-only tree, nothing this phase touched). Left at
-      # step order it was, this new test step would never actually run —
-      # the job stops at the first failing step. Fixing that 114-file
-      # formatting debt is out of scope for a C-01/C-02-only phase (see
-      # the remediation report's "flagged, not fixed" section); running
-      # tests before the pre-existing-broken step is the smallest in-scope
-      # change that keeps them from being silently skipped.
+      # STEP ORDER IS LOAD-BEARING. A GitHub Actions job stops at the first
+      # failing step, so whatever runs early can hide everything after it.
+      # That is not hypothetical here: `npm run format:check` used to sit
+      # fourth, it failed on a Markdown formatting debt, and typecheck, the
+      # migration guard and the production build below it therefore NEVER
+      # ran — on any PR, on any push, for weeks. Every merge was gated on a
+      # project CI had never once compiled.
+      #
+      # The rule that replaces it: substantive checks first, cosmetic last.
+      # Prettier now runs after the build. A formatting slip can still fail
+      # the job — it just can no longer decide whether the code compiles.
+      #
+      # (The C-02 remediation comment that used to live here explained why
+      # the unit tests were hoisted above format:check. That workaround is
+      # what this ordering makes permanent, so the tests keep their early
+      # slot on merit: they are the highest-signal check per second spent.
+      # See docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md.)
       - name: Unit tests (Vitest)
         run: npm run test
 
       - name: Lint (ESLint)
         run: npm run lint
 
-      - name: Format check (Prettier)
-        run: npm run format:check
-
       - name: Typecheck (tsc)
         run: npm run typecheck
 
+      # THE FIVE GUARDS BELOW MUST MATCH `npm run verify` IN package.json.
+      # Only `check:migrations` was ever wired into CI; the other four were
+      # reachable solely by a developer remembering to type `npm run verify`
+      # by hand. They are the cheapest checks in the pipeline (each is a
+      # single node script over supabase/migrations/*.sql or src/) and they
+      # cover the things this codebase most needs to not get wrong: money
+      # invariants and privilege escalation. Add a guard to `verify` and it
+      # belongs here too, in the same commit.
       - name: Migration overload-hazard check
         run: npm run check:migrations
 
+      - name: SQL dollar-delimiter balance check
+        run: npm run check:delimiters
+
+      # Warns, never fails — by its own deliberate design (regenerating
+      # types needs `supabase gen types`, i.e. database access nobody has in
+      # every environment; see the script's header). It earns its slot here
+      # because "nobody can say they didn't know" only works if the warning
+      # is somewhere people actually look.
+      - name: Supabase types freshness check
+        run: npm run check:types
+
+      - name: Failed-delivery credit invariant
+        run: npm run check:credit
+
+      - name: Service-role RPC privilege check
+        run: npm run check:rpc
+
       - name: Production build
         run: npm run build
+
+      # Last on purpose — see the step-order note above.
+      - name: Format check (Prettier)
+        run: npm run format:check
 
       - name: Summary
         if: always()
