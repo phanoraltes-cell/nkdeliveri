@@ -3,6 +3,9 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "setup": "npm ci",
     "dev": "vite dev",
