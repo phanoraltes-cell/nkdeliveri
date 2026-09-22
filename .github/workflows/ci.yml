@@ -103,52 +103,60 @@ jobs:
       # `INSERT INTO supabase_migrations.schema_migrations(...)` right
       # after the file's SQL finishes — no ON CONFLICT guard.
       #
-      # 8 legacy migrations (20260818140000 through 20260821120000,
-      # "Rule A11" — see audit/findings.jsonl OPS-004) already perform
-      # that exact insert themselves, guarded by
+      # A set of migrations ("Rule A11" — see audit/findings.jsonl OPS-004)
+      # already perform that exact insert themselves, guarded by
       # `ON CONFLICT (version) DO NOTHING`. That convention exists for a
       # migration applied by hand via the SQL Editor, and Q-1
-      # (audit/HANDOFF-SQL.md, 2026-08-28) confirmed all 8 are already
-      # applied to production this way — so their SQL content is out of
-      # scope to edit here, and touching it would risk drift from what
-      # actually ran. When the CLI instead replays these files itself
+      # (audit/HANDOFF-SQL.md, 2026-08-28) confirmed the original 8 are
+      # already applied to production that way — so their SQL content is
+      # out of scope to edit here, and touching it would risk drift from
+      # what actually ran. When the CLI instead replays these files itself
       # during `supabase start`, its own insert loses the race for the
-      # same primary key and the step fails with
-      # "duplicate key value violates unique constraint
-      # schema_migrations_pkey" — a CI-replay artifact, not a real schema
-      # problem (confirmed pre-existing on baseline, before any of this
-      # session's changes).
+      # same primary key and the step fails with "duplicate key value
+      # violates unique constraint schema_migrations_pkey".
       #
-      # Fix: temporarily pull ONLY the files matching that self-insert
-      # pattern out of supabase/migrations/ (auto-detected via grep, so
-      # any future Rule A11 migration is picked up automatically — no
-      # hardcoded version list to keep in sync), let `supabase start`
-      # auto-replay every remaining "normal" file exactly as it always
-      # has (this is what creates the supabase_migrations.schema_migrations
-      # table and its rows in the first place — confirmed: a first
-      # attempt at this fix that pulled ALL migrations out found `start`
-      # never creates that table when it has nothing to replay, so the
-      # legacy files' own insert then failed with
-      # "relation ... does not exist" instead), then put the Rule A11
-      # files back and apply just those via plain `psql -f` — by then the
-      # table already exists (created above) and each file's own guarded
-      # insert succeeds normally, with the CLI's competing insert never
-      # in the picture since these files weren't present during `start`.
+      # THE PREVIOUS FIX MOVED THOSE FILES OUT of supabase/migrations/ for
+      # the duration of the replay, and that is what this step now stops
+      # doing. Moving a migration out does not just skip its bookkeeping
+      # insert — it skips THE WHOLE FILE, including every table, type and
+      # function it creates. The convention has since spread well past the
+      # original 8 legacy files to 18, and the auto-detecting grep the old
+      # comment praised as "no hardcoded version list to keep in sync" is
+      # exactly what silently swept up the newer ones. Among them:
+      #
+      #   20260830110000_footer_partners.sql   <- CREATEs public.partners
+      #
+      # while 20260830180000_fix_has_role_gate_batch2.sql is NOT a Rule A11
+      # file, stays, replays, and does `RETURNS SETOF public.partners`. The
+      # job therefore failed on every run with:
+      #
+      #   ERROR: type "public.partners" does not exist (SQLSTATE 42704)
+      #
+      # Neutralise the statement, not the file. Each of the 18 files holds
+      # exactly one such INSERT, spanning exactly three lines (verified
+      # across all 18); the sed range comments out from the INSERT through
+      # the first line ending in `;`, leaving the surrounding BEGIN/COMMIT
+      # and every other statement untouched. Every migration then replays
+      # in its real timestamp order, so dependencies between them hold, and
+      # the CLI does the bookkeeping itself with no competing insert.
+      #
+      # Originals are restored from /tmp right after `supabase start`, so
+      # any later step in this job sees the checkout exactly as committed.
+      # Dropping the statement in CI loses nothing: it only ever existed to
+      # record a hand-applied migration in production, and on this fresh
+      # throwaway database the CLI writes that row anyway.
       - name: Apply every migration to a fresh local database
         run: |
-          mkdir -p /tmp/rule-a11-holding
+          mkdir -p /tmp/rule-a11-backup
           rule_a11_files=$(grep -lE '^INSERT INTO supabase_migrations\.schema_migrations' supabase/migrations/*.sql || true)
           for f in $rule_a11_files; do
-            mv "$f" /tmp/rule-a11-holding/
+            echo "Neutralising Rule A11 bookkeeping insert in $(basename "$f")"
+            cp "$f" "/tmp/rule-a11-backup/$(basename "$f")"
+            sed -i '/^INSERT INTO supabase_migrations\.schema_migrations/,/;[[:space:]]*$/ s|^|-- [ci-replay] |' "$f"
           done
           supabase start
-          eval "$(supabase status -o env)"
           for f in $rule_a11_files; do
-            mv "/tmp/rule-a11-holding/$(basename "$f")" "$f"
-          done
-          for f in $rule_a11_files; do
-            echo "Applying (Rule A11 bookkeeping) $f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+            cp "/tmp/rule-a11-backup/$(basename "$f")" "$f"
           done
 
       # C-01 remediation (docs/archive/phases/PHASE0_C01_C02_REMEDIATION_REPORT.md) —
