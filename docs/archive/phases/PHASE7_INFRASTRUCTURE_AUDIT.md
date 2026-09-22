@@ -8,6 +8,7 @@
 ## 0. Anti-doublon (Règ A3)
 
 Kouvèti egzistan konsiderab jwenn — site, pa rebati :
+
 - **TLS/Cloudflare/headers/DNS** : `docs/SECURITY_PERIMETER_AUDIT_2026-08-13.md` — rekonesans **reyèl** (`nslookup`, `openssl s_client`, apèl HTTP reyèl kont `www.nkdeliveri.com`) deja fèt, chak konstatasyon make VERIFIED/PARTIALLY VERIFIED/NOT VERIFIED, pa sipoze.
 - **Branch protection / CI/CD** : `docs/DEVOPS.md` deja dokimante an detay, ak yon konklizyon eksplisit deja la.
 - **Backup/restore, konfig anviwònman** : `docs/BACKUP_RESTORE.md`, `docs/ENVIRONMENTS.md` egziste.
@@ -31,6 +32,7 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 ### **Mizajou 2026-08-14 (NKD-013, dapre demand mèt pwojè a) — bloke konplètman, pa yon senp "poko fèt"**
 
 `gh api repos/:owner/:repo/branches/main/protection` egzekite dirèkteman :
+
 ```
 {"message":"Upgrade to GitHub Pro or make this repository public to enable this feature.","status":"403"}
 ```
@@ -38,10 +40,12 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 **Konsekans** : Branch protection **pa disponib ditou** sou plan GitHub aktyèl la pou yon depo prive — se pa yon chwa ki poko fèt, se yon limit plan ki bloke menm kòmand `gh api` `DEVOPS.md` la deja ekri a. Kòmand sa a **ta echwe menm si mèt pwojè a te eseye egzekite l**.
 
 **2 opsyon reyèl** (desizyon biznis, Règ A5 — pa yon chwa teknik mwen ka fè) :
+
 1. Upgrade GitHub Pro/Team (peman) pou aktive branch protection sou yon depo prive.
 2. Fè depo a piblik (gratis, men ekspoze tout kòd sous — yon desizyon ki gen enpak deyò sekirite pi).
 
 **Lis non egzak 4 job yo** (pou konfigirasyon "required status checks" lè youn nan 2 opsyon yo aplike) :
+
 1. `Lint, typecheck, format, build`
 2. `Validate Supabase migrations (local replay)`
 3. `E2E — client/restaurant/driver/admin/auth`
@@ -69,9 +73,9 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 
 **Konklizyon dapre tablo klasifikasyon an** :
 
-| Q1 pwojè aktif ? | Q2 RLS ? | Konklizyon |
-|---|---|---|
-| **Non** | — (san objè, pwojè a pa egziste) | **Fèmen — okenn risk** |
+| Q1 pwojè aktif ? | Q2 RLS ?                         | Konklizyon             |
+| ---------------- | -------------------------------- | ---------------------- |
+| **Non**          | — (san objè, pwojè a pa egziste) | **Fèmen — okenn risk** |
 
 **Estati final NKD-007 : FÈMEN, okenn risk.** Q2 pa mande verifikasyon adisyonèl paske Q1 li menm rezoud kesyon an antyèman — pa gen yon pwojè k ap egziste pou li ta ka gen yon pwoblèm RLS ladan l.
 
@@ -120,6 +124,7 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 ## 10. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - `ci.yml` li konplè, byen konstwi, 4 job, tout kouri sou `pull_request` ak `push`.
 - Branch protection **bloke pa plan GitHub la** (403, mizajou 2026-08-14 — pa yon senp "pa konfigire", yon limit plan).
 - `.env`/`.env.*` byen nan `.gitignore`, men **pa gen pre-commit hook**.
@@ -133,6 +138,7 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 **ESTIMASYON** : okenn nouvo.
 
 **PA VERIFYE** :
+
 - Konfigirasyon alèt Sentry reyèl.
 - Kontni detaye `BACKUP_RESTORE.md` (prezans konfime sèlman).
 
@@ -141,6 +147,7 @@ Kouvèti egzistan konsiderab jwenn — site, pa rebati :
 ## 11. Kwazman ak backlog egzistan
 
 **NKD-013 rete OUVÈ (P2)** — kòz konfime kounye a (limit plan GitHub, pa yon senp negliges). **De bagay site pou atansyon mèt pwojè a** (pa vilnerabilite, desizyon biznis/pwosesis) :
+
 1. NKD-013 : chwazi ant upgrade GitHub Pro/Team oswa fè depo a piblik, pou aktive branch protection `main`.
 2. Ajoute yon pre-commit hook/scanner sekrè (§4).
 

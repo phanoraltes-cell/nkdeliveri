@@ -40,15 +40,15 @@ PAS de reconstruire le système."
 
 ### Fichiers
 
-| Fichier                                                                                                                     | Rôle                                                          |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Fichier                                                                                                                           | Rôle                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | [`20260731140000_admin_finance_dashboard_rpcs.sql`](../../../supabase/migrations/20260731140000_admin_finance_dashboard_rpcs.sql) | 3 RPC, aucun `ALTER`/`DROP`/`CREATE OR REPLACE`               |
 | [`useAdminFinanceData.ts`](../../../src/hooks/useAdminFinanceData.ts)                                                             | react-query + `useRealtimeTableSync` pour les 3 RPC           |
 | [`finance-overview-section.tsx`](../../../src/components/dashboard/admin/finance-overview-section.tsx)                            | 12 tuiles KPI                                                 |
 | [`finance-history-table.tsx`](../../../src/components/dashboard/admin/finance-history-table.tsx)                                  | Historique unifié, filtres, export CSV/PDF                    |
 | [`order-financial-timeline-dialog.tsx`](../../../src/components/dashboard/admin/order-financial-timeline-dialog.tsx)              | Drill-down par commande                                       |
 | [`dashboard.admin.finance.tsx`](../../../src/routes/_authenticated/dashboard.admin.finance.tsx)                                   | Page/onglets, recherche rapide de bénéficiaire                |
-| `nav-items.ts`, `dashboard.admin.index.tsx`                                                                                 | Navigation (nouvelle entrée "Finans", tuile "Rapò" réveillée) |
+| `nav-items.ts`, `dashboard.admin.index.tsx`                                                                                       | Navigation (nouvelle entrée "Finans", tuile "Rapò" réveillée) |
 
 **Décisions de conception** (déjà validées avec l'utilisateur avant
 implémentation, voir le plan) :

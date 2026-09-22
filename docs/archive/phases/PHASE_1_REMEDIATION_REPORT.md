@@ -40,12 +40,12 @@ Aucun écart entre baseline et état final autre que les changements volontaires
 
 **Politique RLS confirmée en direct sur production avant modification** (table `public.payments`) :
 
-| Policy | Commande | `USING` (qual) | `WITH CHECK` |
-|---|---|---|---|
-| `payments read` | SELECT | multi-partie (client/resto/livreur/admin) | — |
-| `payments admin update` | UPDATE | `has_role(admin) OR has_role(super_admin)` | `NULL` (retombe sur `qual`, donc rôle seul) |
+| Policy                  | Commande | `USING` (qual)                             | `WITH CHECK`                                |
+| ----------------------- | -------- | ------------------------------------------ | ------------------------------------------- |
+| `payments read`         | SELECT   | multi-partie (client/resto/livreur/admin)  | —                                           |
+| `payments admin update` | UPDATE   | `has_role(admin) OR has_role(super_admin)` | `NULL` (retombe sur `qual`, donc rôle seul) |
 
-Aucun trigger de validation de transition : `pg_trigger` sur `payments` ne retourne que `trg_notify_payment_status`, `trg_pay_upd`, `trg_payment_paid_confirm_order` — tous réactifs (ils notifient/synchronisent *après* qu'un changement a déjà eu lieu), aucun ne bloque une transition invalide.
+Aucun trigger de validation de transition : `pg_trigger` sur `payments` ne retourne que `trg_notify_payment_status`, `trg_pay_upd`, `trg_payment_paid_confirm_order` — tous réactifs (ils notifient/synchronisent _après_ qu'un changement a déjà eu lieu), aucun ne bloque une transition invalide.
 
 **Preuve d'exploitation réelle (test A, avant fix)** : une session `authenticated` avec `sub = <admin>` a exécuté `UPDATE public.payments SET status = 'pending' WHERE id = <payment déjà "refunded">` — l'update a réussi (`ROW_COUNT = 1`), confirmant qu'un admin pouvait faire régresser un paiement d'un état **terminal** (`refunded`) vers n'importe quel autre état, sans passer par `complete_refund_secure` ni aucune autre RPC validée.
 
@@ -85,15 +85,15 @@ La policy `"payments read"` (SELECT) n'a pas été touchée — la lecture n'ét
 
 Exécutés en `BEGIN … ROLLBACK` contre la production réelle (Supabase Management API), avec simulation d'identité via `SET ROLE authenticated` + `set_config('request.jwt.claims', …)`. Fixtures : admin, client, client2, propriétaire resto, 2 livreurs, 1 resto, commandes/paiements couvrant les 3 cas (manuel `awaiting_proof`, terminal `refunded`, cash `pending` avec double-confirmation à faire).
 
-| Test | Scénario | Attendu | Résultat |
-|---|---|---|---|
-| A | Admin, UPDATE direct, paiement terminal (`refunded`) → `pending` — **avant** le fix | Réussit (preuve que la faille est réelle) | ✅ PASS — `ROW_COUNT = 1`, statut effectivement changé |
-| C.1 | Admin, UPDATE direct, même paiement terminal — **après** le fix | Refusé | ✅ PASS — `ROW_COUNT = 0`, statut resté `refunded` |
-| C.2 | Admin, UPDATE direct, paiement non-terminal (`awaiting_proof` → `paid`) — après le fix | Refusé | ✅ PASS — `ROW_COUNT = 0`, statut resté `awaiting_proof` |
-| C.3 | Non-admin (client), UPDATE direct — après le fix | Refusé (déjà le cas avant, doit le rester) | ✅ PASS — `ROW_COUNT = 0` |
-| C.4 | (régression) `review_manual_payment_secure(payment, 'paid', …)` par un admin | Réussit, transition légitime effective | ✅ PASS |
-| C.5 | (régression) rappeler `review_manual_payment_secure` sur un paiement déjà décidé | Refusé par le garde propre de la RPC | ✅ PASS — exception levée |
-| C.6 | (régression) `confirm_cash_payment_secure` — double confirmation livreur puis client | Paiement `kach` passe à `paid` | ✅ PASS |
+| Test | Scénario                                                                               | Attendu                                    | Résultat                                                 |
+| ---- | -------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------- |
+| A    | Admin, UPDATE direct, paiement terminal (`refunded`) → `pending` — **avant** le fix    | Réussit (preuve que la faille est réelle)  | ✅ PASS — `ROW_COUNT = 1`, statut effectivement changé   |
+| C.1  | Admin, UPDATE direct, même paiement terminal — **après** le fix                        | Refusé                                     | ✅ PASS — `ROW_COUNT = 0`, statut resté `refunded`       |
+| C.2  | Admin, UPDATE direct, paiement non-terminal (`awaiting_proof` → `paid`) — après le fix | Refusé                                     | ✅ PASS — `ROW_COUNT = 0`, statut resté `awaiting_proof` |
+| C.3  | Non-admin (client), UPDATE direct — après le fix                                       | Refusé (déjà le cas avant, doit le rester) | ✅ PASS — `ROW_COUNT = 0`                                |
+| C.4  | (régression) `review_manual_payment_secure(payment, 'paid', …)` par un admin           | Réussit, transition légitime effective     | ✅ PASS                                                  |
+| C.5  | (régression) rappeler `review_manual_payment_secure` sur un paiement déjà décidé       | Refusé par le garde propre de la RPC       | ✅ PASS — exception levée                                |
+| C.6  | (régression) `confirm_cash_payment_secure` — double confirmation livreur puis client   | Paiement `kach` passe à `paid`             | ✅ PASS                                                  |
 
 **Important méthodologique** : la première version de ces tests utilisait la capture d'exception (`EXCEPTION WHEN OTHERS`) pour détecter un refus — invalide pour un `UPDATE` sous RLS, car une ligne filtrée par `USING` ne lève **aucune** exception, elle produit simplement un `UPDATE` de 0 ligne sans erreur. Corrigé en basculant sur `GET DIAGNOSTICS … = ROW_COUNT` + relecture de la valeur réelle en base, la seule méthode fiable pour ce cas. Documenté dans le commentaire du fichier de test pour éviter de reproduire l'erreur.
 
@@ -106,12 +106,14 @@ Aucune donnée réelle n'a été modifiée : toute la séquence s'est terminée 
 ## 7. F-03 — After
 
 État confirmé après le fix (dans la même transaction de test, avant `ROLLBACK`) :
+
 - `pg_policies` sur `payments` : une seule policy reste (`payments read`, SELECT). Aucune policy UPDATE/INSERT/DELETE pour `authenticated`.
 - Écriture directe (PostgREST/`supabase.from("payments").update()`) : **impossible** pour tout rôle `authenticated`, admin inclus.
 - Les 4 chemins RPC légitimes : tous vérifiés fonctionnels sans régression (C.4, C.5, C.6 + `complete_collect_payment_secure` inchangée car `service_role`-only, non affectée par une policy `authenticated`).
 - États terminaux (`paid`, `failed`, `refunded`) : protégés — aucun chemin ne permet plus de les modifier arbitrairement ; les seules transitions hors de ces états passent par `complete_refund_secure` (STANDARD step-up), qui a son propre contrôle d'état source.
 
 **Checklist F-03 (10 points requis avant de pouvoir marquer FIXED)** :
+
 - [x] Audit RLS/triggers/RPC/frontend effectué et documenté avant modification
 - [x] Matrice de transition réelle construite à partir de valeurs DB vérifiées (pas supposées)
 - [x] Chemin légitime existant identifié et réutilisé (pas de nouvelle architecture parallèle)
@@ -131,11 +133,11 @@ Aucune donnée réelle n'a été modifiée : toute la séquence s'est terminée 
 
 Comparaison exacte Liste vs Kanban, sur le même écran (`dashboard.restaurant.orders.tsx` / `order-kanban-board.tsx`) :
 
-| | Vue Liste | Vue Kanban (avant fix) |
-|---|---|---|
-| Requête | `payments(status, method, payment_transactions(status))` | `payments(status, method)` — **`payment_transactions` absent** |
-| Garde sur "Konfime" | `classifyUnconfirmedPayment(payment)` → `disabled` + `title` + libellé dynamique | **aucune** — `disabled={isChangingStatus}` seulement |
-| Drag-and-drop | n/a (pas de drag dans la vue Liste) | glisser une carte "pending" → colonne "Konfime" appelait `onChangeStatus` directement, **même absence de garde** |
+|                     | Vue Liste                                                                        | Vue Kanban (avant fix)                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Requête             | `payments(status, method, payment_transactions(status))`                         | `payments(status, method)` — **`payment_transactions` absent**                                                   |
+| Garde sur "Konfime" | `classifyUnconfirmedPayment(payment)` → `disabled` + `title` + libellé dynamique | **aucune** — `disabled={isChangingStatus}` seulement                                                             |
+| Drag-and-drop       | n/a (pas de drag dans la vue Liste)                                              | glisser une carte "pending" → colonne "Konfime" appelait `onChangeStatus` directement, **même absence de garde** |
 
 Root cause de l'audit initial confirmée : le bouton "Konfime" du Kanban ne recevait ni la donnée (`payment_transactions`) ni la logique (`classifyUnconfirmedPayment`) nécessaires pour bloquer la confirmation d'une commande dont le paiement moncash/natcash n'était pas encore validé (ni manuel-en-attente-d'admin, ni automatique-en-cours-PLOP/Collect).
 
@@ -156,6 +158,7 @@ Deux fichiers modifiés, aucun nouveau composant, aucune nouvelle architecture :
 **`dashboard.restaurant.orders.tsx`** — la requête `kanbanOrders` récupère désormais `payment_transactions(status)`, identique à ce que la requête `orders` (vue Liste) fait déjà.
 
 **`order-kanban-board.tsx`** :
+
 - `KanbanOrder.payments[].payment_transactions` ajouté au type.
 - `classifyUnconfirmedPayment` importé depuis `@/lib/order-status` (la même source de vérité que la vue Liste — aucune logique dupliquée).
 - Bouton "Konfime" : `disabled={isChangingStatus || !!unconfirmedPayment}`, `title` et libellé identiques mot pour mot à ceux de la vue Liste ("Tann verifikasyon peman" / "Peman ap tretman").
@@ -172,14 +175,14 @@ Le projet ne dispose d'aucune convention de test de composant React (recherche e
 1. **`classifyUnconfirmedPayment` (la fonction unique désormais appelée par les deux vues)** est déjà couverte par 8 tests unitaires existants (`src/lib/__tests__/order-status.test.ts`), qui couvrent exactement la matrice requise : pas de paiement / cash / stripe / payé / `awaiting_proof` sans `payment_transactions` (manuel) / `under_review` sans `payment_transactions` (manuel) / avec `payment_transactions` (automatique) / `failed` avec `payment_transactions` (reste automatique) / `under_review` + `payment_transactions` (reste automatique, ne bascule jamais en manuel). Puisque Liste et Kanban appellent désormais littéralement la même fonction avec la même forme de données, ces 8 tests couvrent les deux vues par construction.
 2. **Comparaison ligne à ligne du code** (documentée en section 10) confirmant que les conditions `disabled`/`title`/libellé du bouton Kanban sont désormais structurellement identiques à celles de la Liste — vérifiée manuellement, pas par exécution automatisée, faute de convention de test de composant existante à réutiliser.
 
-| État paiement | Liste | Kanban (après fix) |
-|---|---|---|
-| Non-confirmé (aucun paiement) | Konfime actif | Konfime actif |
-| Confirmé (`paid`) | Konfime actif | Konfime actif |
-| `under_review`, sans `payment_transactions` (manuel) | Bloqué, "Tann verifikasyon peman" | Bloqué, "Tann verifikasyon peman" |
-| Manuel (`awaiting_proof`, sans `payment_transactions`) | Bloqué, "Tann verifikasyon peman" | Bloqué, "Tann verifikasyon peman" |
-| Automatique (`payment_transactions` présent, non payé) | Bloqué, "Peman ap tretman" | Bloqué, "Peman ap tretman" |
-| `failed` avec `payment_transactions` (reste automatique) | Bloqué, "Peman ap tretman" | Bloqué, "Peman ap tretman" |
+| État paiement                                            | Liste                             | Kanban (après fix)                |
+| -------------------------------------------------------- | --------------------------------- | --------------------------------- |
+| Non-confirmé (aucun paiement)                            | Konfime actif                     | Konfime actif                     |
+| Confirmé (`paid`)                                        | Konfime actif                     | Konfime actif                     |
+| `under_review`, sans `payment_transactions` (manuel)     | Bloqué, "Tann verifikasyon peman" | Bloqué, "Tann verifikasyon peman" |
+| Manuel (`awaiting_proof`, sans `payment_transactions`)   | Bloqué, "Tann verifikasyon peman" | Bloqué, "Tann verifikasyon peman" |
+| Automatique (`payment_transactions` présent, non payé)   | Bloqué, "Peman ap tretman"        | Bloqué, "Peman ap tretman"        |
+| `failed` avec `payment_transactions` (reste automatique) | Bloqué, "Peman ap tretman"        | Bloqué, "Peman ap tretman"        |
 
 Protection backend indépendante confirmée : `private.update_order_status_secure` (corrigée lors du fix du bug manual/automatic payment, avant ce phase) refuse déjà côté serveur toute confirmation dont le paiement n'est pas validé, quelle que soit la vue d'origine de l'appel — donc même avant ce fix frontend, le Kanban n'aurait jamais pu faire aboutir une confirmation invalide, seulement l'exposer comme possible dans l'UI puis échouer côté serveur. Pas de "STOP" nécessaire ici : aucune action que le Kanban expose n'est acceptée à tort par le backend.
 
@@ -188,6 +191,7 @@ Protection backend indépendante confirmée : `private.update_order_status_secur
 ## 12. F-01 — After
 
 **Checklist F-01 (6 points requis)** :
+
 - [x] Liste vs Kanban audités exactement (composant/hook/garde/message/condition pour chacun)
 - [x] Source de vérité partagée identifiée et réutilisée (`classifyUnconfirmedPayment`), aucune duplication de logique
 - [x] Comportement identique construit dans les deux vues (bouton)
@@ -203,6 +207,7 @@ Protection backend indépendante confirmée : `private.update_order_status_secur
 
 Chemin tracé de bout en bout :
 `dashboard.driver.available.tsx` (mutation `claim`) → `onError: (e) => toast.error(e.message ?? "Erè")` (passthrough verbatim, pattern déjà utilisé par toutes les autres mutations métier du projet) → `supabase.rpc("claim_delivery_secure", …)` → `public.claim_delivery_secure` (wrapper SQL fin) → `private.claim_delivery_secure` (implémentation réelle) → 5 `RAISE EXCEPTION`, dont 4 en anglais :
+
 - `'Only a driver account can claim a delivery'`
 - `'You must be online to claim a delivery'`
 - `'Order is not ready or has already been claimed'`
@@ -229,13 +234,13 @@ Fichier : `supabase/migrations/20260813140000_translate_claim_delivery_messages.
 
 `CREATE OR REPLACE FUNCTION private.claim_delivery_secure` — chaque ligne en dehors des 5 messages `RAISE EXCEPTION` est identique à la fonction en production (vérifié par diff contre `pg_get_functiondef()` avant écriture, pas retapé de mémoire). Seuls les messages changent :
 
-| Avant (anglais) | Après (Kreyòl) |
-|---|---|
-| `Only a driver account can claim a delivery` | `Sèlman yon kont livrè ka pran yon livrezon` |
-| `You must be online to claim a delivery` | `Ou dwe an liy pou ka pran yon livrezon` |
-| `Order is not ready or has already been claimed` | `Kòmand sa a pa disponib ankò — gen dwa yon lòt livrè deja pran l, oswa estati li chanje.` |
-| `This order has already been claimed by another driver` | `Kòmand sa a deja pran pa yon lòt livrè` |
-| (commande introuvable — nouveau cas explicitement séparé du précédent pour un message plus clair) | `Nou pa jwenn kòmand sa a` |
+| Avant (anglais)                                                                                   | Après (Kreyòl)                                                                             |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `Only a driver account can claim a delivery`                                                      | `Sèlman yon kont livrè ka pran yon livrezon`                                               |
+| `You must be online to claim a delivery`                                                          | `Ou dwe an liy pou ka pran yon livrezon`                                                   |
+| `Order is not ready or has already been claimed`                                                  | `Kòmand sa a pa disponib ankò — gen dwa yon lòt livrè deja pran l, oswa estati li chanje.` |
+| `This order has already been claimed by another driver`                                           | `Kòmand sa a deja pran pa yon lòt livrè`                                                   |
+| (commande introuvable — nouveau cas explicitement séparé du précédent pour un message plus clair) | `Nou pa jwenn kòmand sa a`                                                                 |
 
 Aucun message ne contient de terme SQL, de code d'erreur brut, ou de référence à une contrainte technique. `deliveries.order_id UNIQUE` n'a pas été touchée. Aucun changement frontend requis (le passthrough existant suffit).
 
@@ -245,12 +250,12 @@ Aucun message ne contient de terme SQL, de code d'erreur brut, ou de référence
 
 Exécutés dans la même transaction `BEGIN … ROLLBACK` que F-03 (partagée pour éviter deux runs séparés contre la production), avec un vrai scénario de compétition entre deux livreurs sur une même commande `ready` :
 
-| Test | Scénario | Attendu | Résultat |
-|---|---|---|---|
-| D.1 | Livreur1 réclame la commande | Réussit, ligne `deliveries` créée pour livreur1 | ✅ PASS |
-| D.2 | Livreur2 tente la même commande juste après | Refusé, message Kreyòl, sans SQL brut, sans anglais | ✅ PASS — message contient `pa disponib ankò`, ne contient ni `duplicate key`/`constraint`/`23505`, ni les anciennes chaînes anglaises |
-| D.3 | État final de `deliveries` pour cette commande | Exactement 1 ligne, appartenant à livreur1 | ✅ PASS |
-| D.4 | (régression) réclamer un id de commande inexistant | Message Kreyòl "Nou pa jwenn kòmand sa a", pas d'erreur SQL brute | ✅ PASS |
+| Test | Scénario                                           | Attendu                                                           | Résultat                                                                                                                               |
+| ---- | -------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| D.1  | Livreur1 réclame la commande                       | Réussit, ligne `deliveries` créée pour livreur1                   | ✅ PASS                                                                                                                                |
+| D.2  | Livreur2 tente la même commande juste après        | Refusé, message Kreyòl, sans SQL brut, sans anglais               | ✅ PASS — message contient `pa disponib ankò`, ne contient ni `duplicate key`/`constraint`/`23505`, ni les anciennes chaînes anglaises |
+| D.3  | État final de `deliveries` pour cette commande     | Exactement 1 ligne, appartenant à livreur1                        | ✅ PASS                                                                                                                                |
+| D.4  | (régression) réclamer un id de commande inexistant | Message Kreyòl "Nou pa jwenn kòmand sa a", pas d'erreur SQL brute | ✅ PASS                                                                                                                                |
 
 **Ajustement de conception noté** : une version antérieure de D.4 tentait de déclencher le rate-limit via 21 appels en boucle, chacun capturé dans son propre bloc `EXCEPTION`. Ce design a été abandonné avant exécution — un appel intercepté par un `BEGIN…EXCEPTION…END` annule aussi les écritures antérieures de ce même appel (dont l'incrément du compteur de rate-limit), donc la boucle n'aurait jamais réellement accumulé les tentatives. Remplacé par un test simple et correct (commande inexistante), le mécanisme de rate-limit lui-même étant déjà couvert par les suites de tests d'autres migrations.
 
@@ -274,12 +279,12 @@ Aucune régression détectée. Aucun test désactivé, affaibli, ou contourné.
 
 ## 18. Files Modified
 
-| Fichier | Finding | Raison | Nécessaire ? |
-|---|---|---|---|
-| `supabase/migrations/20260813130000_fix_payments_rls_bypass.sql` | F-03 | Nouvelle migration, supprime la policy RLS non validée | Oui |
-| `supabase/migrations/20260813140000_translate_claim_delivery_messages.sql` | F-02 | Nouvelle migration, traduit les 4 messages anglais | Oui |
-| `src/routes/_authenticated/dashboard.restaurant.orders.tsx` | F-01 | Ajoute `payment_transactions(status)` à la requête `kanbanOrders` | Oui |
-| `src/components/dashboard/restaurant/order-kanban-board.tsx` | F-01 | Type `KanbanOrder` étendu, garde `classifyUnconfirmedPayment` sur bouton + drag-and-drop | Oui |
+| Fichier                                                                    | Finding | Raison                                                                                   | Nécessaire ? |
+| -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------- | ------------ |
+| `supabase/migrations/20260813130000_fix_payments_rls_bypass.sql`           | F-03    | Nouvelle migration, supprime la policy RLS non validée                                   | Oui          |
+| `supabase/migrations/20260813140000_translate_claim_delivery_messages.sql` | F-02    | Nouvelle migration, traduit les 4 messages anglais                                       | Oui          |
+| `src/routes/_authenticated/dashboard.restaurant.orders.tsx`                | F-01    | Ajoute `payment_transactions(status)` à la requête `kanbanOrders`                        | Oui          |
+| `src/components/dashboard/restaurant/order-kanban-board.tsx`               | F-01    | Type `KanbanOrder` étendu, garde `classifyUnconfirmedPayment` sur bouton + drag-and-drop | Oui          |
 
 Aucun fichier hors de cette liste n'a été modifié pour l'implémentation. (`Kategori/`, `docs/*.md` non listés ici, `public/Mockup.png`, `.claude/settings.json`, `supabase/.temp/cli-latest` : tous préexistaient à l'état non-committé du dépôt avant le début de ce phase, non touchés par ce travail — confirmé par `git status` avant/après identique sur ces entrées.)
 
@@ -293,9 +298,9 @@ Architecture générale, design system, branding, navigation, RBAC/MFA (déjà t
 
 ## 20. Migrations Created
 
-| Fichier | But | Statut |
-|---|---|---|
-| `supabase/migrations/20260813130000_fix_payments_rls_bypass.sql` | F-03 : `DROP POLICY "payments admin update"` | Écrite et testée (BEGIN/ROLLBACK), **non appliquée** |
+| Fichier                                                                    | But                                                               | Statut                                               |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| `supabase/migrations/20260813130000_fix_payments_rls_bypass.sql`           | F-03 : `DROP POLICY "payments admin update"`                      | Écrite et testée (BEGIN/ROLLBACK), **non appliquée** |
 | `supabase/migrations/20260813140000_translate_claim_delivery_messages.sql` | F-02 : traduction des messages de `private.claim_delivery_secure` | Écrite et testée (BEGIN/ROLLBACK), **non appliquée** |
 
 Aucune migration historique modifiée ou supprimée. Aucune donnée réelle touchée (tout testé sous `ROLLBACK`). Ordre/dépendances : la migration F-02 ne dépend pas de F-03 (tables différentes) ; les deux peuvent être appliquées dans n'importe quel ordre l'une par rapport à l'autre, mais toutes deux après `20260813120000` (déjà en production). Concept de rollback : F-03 est réversible par `CREATE POLICY "payments admin update" ON public.payments FOR UPDATE USING (…)` avec la définition d'origine si jamais nécessaire ; F-02 est réversible par un nouveau `CREATE OR REPLACE FUNCTION` remettant les messages anglais (aucune des deux ne modifie de données, seulement du code/policy).
@@ -337,22 +342,22 @@ Aucune migration historique modifiée ou supprimée. Aucune donnée réelle touc
 
 ### Scores
 
-| Remédiation | Critère | Score |
-|---|---|---|
-| F-03 | Sécurité | 10/10 |
-| F-01 | Cohérence Business/UX | 10/10 |
-| F-02 | Fiabilité/UX | 10/10 |
-| **PHASE 1** | **Score global** | **10/10** |
+| Remédiation | Critère               | Score     |
+| ----------- | --------------------- | --------- |
+| F-03        | Sécurité              | 10/10     |
+| F-01        | Cohérence Business/UX | 10/10     |
+| F-02        | Fiabilité/UX          | 10/10     |
+| **PHASE 1** | **Score global**      | **10/10** |
 
 Scores fondés sur les preuves des sections 6, 11 et 16 — pas sur l'affirmation seule.
 
 ### Tableau de statut final
 
-| Finding | Statut |
-|---|---|
-| F-03 | **FIXED** |
-| F-01 | **FIXED** |
-| F-02 | **FIXED** |
+| Finding | Statut    |
+| ------- | --------- |
+| F-03    | **FIXED** |
+| F-01    | **FIXED** |
+| F-02    | **FIXED** |
 
 ---
 

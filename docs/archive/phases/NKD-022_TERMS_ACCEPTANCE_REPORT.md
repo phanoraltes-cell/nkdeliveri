@@ -27,11 +27,11 @@ Done kolekte, règ metye verifye — gade mesaj presedan nan konvèsasyon sa a p
 
 ## Kesyon `KANPE EPI MANDE` — repons pwopriyetè a
 
-| Kesyon | Repons |
-|---|---|
+| Kesyon                                          | Repons                                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------- |
 | Retansyon done (NKD-021: pa gen politik jodi a) | Dokimante reyalite a: "pou tout tan pou kounye a" — pa envante yon chif |
-| Kote pou estoke akseptasyon | Nouvo kolòn sou `profiles` (`terms_accepted_at`, `terms_version`) |
-| Kliyan egzistan (2 kont tès) | Mande yo aksepte nan pwochen koneksyon — **pa** backfill/grandfather |
+| Kote pou estoke akseptasyon                     | Nouvo kolòn sou `profiles` (`terms_accepted_at`, `terms_version`)       |
+| Kliyan egzistan (2 kont tès)                    | Mande yo aksepte nan pwochen koneksyon — **pa** backfill/grandfather    |
 
 ## Kontni — `/privacy` ak `/terms`
 
@@ -44,15 +44,15 @@ Seksyon 6 `/terms` (livrezon echwe) make eksplisitteman kòm "seksyon ki pi enp�
 
 ## Chanjman migrasyon + UI (`fichye:liy`)
 
-| Chanjman | Fichye |
-|---|---|
-| `profiles.terms_accepted_at` / `terms_version` + `accept_terms_secure()` + `handle_new_user()` mete ajou | [supabase/migrations/20260818140000_nkd022_terms_acceptance.sql](../../../supabase/migrations/20260818140000_nkd022_terms_acceptance.sql) |
-| Vèsyon dokiman santralize | [src/lib/legal.ts](../../../src/lib/legal.ts) |
-| Lyen reyèl `/terms`/`/privacy` + `terms_version` nan metadata siyati | [src/components/auth/customer-form.tsx](../../../src/components/auth/customer-form.tsx):27-33,113-134; [driver-form.tsx](../../../src/components/auth/driver-form.tsx):36-49,189-210; [restaurant-form.tsx](../../../src/components/auth/restaurant-form.tsx):45-59,191-212 |
-| Gate re-akseptasyon pou kont egzistan | [src/components/terms-acceptance-gate.tsx](../../../src/components/terms-acceptance-gate.tsx) (nouvo) |
-| Gate a mare nan chak paj dashboard | [src/routes/_authenticated/route.tsx](../../../src/routes/_authenticated/route.tsx):3,62-67 |
-| Kontni `/privacy`/`/terms` konplè | [src/routes/privacy.tsx](../../../src/routes/privacy.tsx), [src/routes/terms.tsx](../../../src/routes/terms.tsx) |
-| Tip Supabase (`profiles` + `accept_terms_secure`) | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts) |
+| Chanjman                                                                                                 | Fichye                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles.terms_accepted_at` / `terms_version` + `accept_terms_secure()` + `handle_new_user()` mete ajou | [supabase/migrations/20260818140000_nkd022_terms_acceptance.sql](../../../supabase/migrations/20260818140000_nkd022_terms_acceptance.sql)                                                                                                                                   |
+| Vèsyon dokiman santralize                                                                                | [src/lib/legal.ts](../../../src/lib/legal.ts)                                                                                                                                                                                                                               |
+| Lyen reyèl `/terms`/`/privacy` + `terms_version` nan metadata siyati                                     | [src/components/auth/customer-form.tsx](../../../src/components/auth/customer-form.tsx):27-33,113-134; [driver-form.tsx](../../../src/components/auth/driver-form.tsx):36-49,189-210; [restaurant-form.tsx](../../../src/components/auth/restaurant-form.tsx):45-59,191-212 |
+| Gate re-akseptasyon pou kont egzistan                                                                    | [src/components/terms-acceptance-gate.tsx](../../../src/components/terms-acceptance-gate.tsx) (nouvo)                                                                                                                                                                       |
+| Gate a mare nan chak paj dashboard                                                                       | [src/routes/_authenticated/route.tsx](../../../src/routes/_authenticated/route.tsx):3,62-67                                                                                                                                                                                 |
+| Kontni `/privacy`/`/terms` konplè                                                                        | [src/routes/privacy.tsx](../../../src/routes/privacy.tsx), [src/routes/terms.tsx](../../../src/routes/terms.tsx)                                                                                                                                                            |
+| Tip Supabase (`profiles` + `accept_terms_secure`)                                                        | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts)                                                                                                                                                                                           |
 
 **Poukisa nouvo siyati pa mande TOTP/re-otantifikasyon:** `accept_terms_secure()` sèlman ekri
 `auth.uid()`'s pwòp ranje — pa gen paramèt itilizatè sib, donk pa gen sifas eskalasyon privilèj.
@@ -63,29 +63,29 @@ Fichye: [docs/NKD022_TERMS_ACCEPTANCE_TEST.sql](../sql-tests/NKD022_TERMS_ACCEPT
 tès nan menm `BEGIN…ROLLBACK` (pa gen restriksyon enum tankou NKD-016, kidonk yon sèl fichye
 sifi, menm apwòch ak NKD-011).
 
-| Tès | Verifye |
-|---|---|
-| T0 | Kolòn `terms_accepted_at`/`terms_version` egziste sou `profiles` |
-| T1 | Siyati SAN `terms_version` nan metadata → toude kolòn rete NULL |
-| T2 | Siyati AK `terms_version=1.0` → toude kolòn ranpli nan menm moman siyati a |
-| T3 | `accept_terms_secure()` san sesyon → rejte |
-| T4 | `accept_terms_secure('1.0')` kòm yon kont ki pa t aksepte → siksè, kolòn ranpli |
-| T5 | `accept_terms_secure(NULL)` → rejte |
-| T6 | Akseptasyon yon kont pa afekte yon lòt kont (pòtee `auth.uid()` sèlman) |
-| T7 | Menm konpòtman an aplike pou siyati restoran (pa sèlman kliyan) |
+| Tès | Verifye                                                                         |
+| --- | ------------------------------------------------------------------------------- |
+| T0  | Kolòn `terms_accepted_at`/`terms_version` egziste sou `profiles`                |
+| T1  | Siyati SAN `terms_version` nan metadata → toude kolòn rete NULL                 |
+| T2  | Siyati AK `terms_version=1.0` → toude kolòn ranpli nan menm moman siyati a      |
+| T3  | `accept_terms_secure()` san sesyon → rejte                                      |
+| T4  | `accept_terms_secure('1.0')` kòm yon kont ki pa t aksepte → siksè, kolòn ranpli |
+| T5  | `accept_terms_secure(NULL)` → rejte                                             |
+| T6  | Akseptasyon yon kont pa afekte yon lòt kont (pòtee `auth.uid()` sèlman)         |
+| T7  | Menm konpòtman an aplike pou siyati restoran (pa sèlman kliyan)                 |
 
 **⚠️ Pa gen ankò rezilta reyèl — fichye a ekri, tès la poko kouri nan SQL Editor.** Pwochen etap
 se ou menm kouri l, kole rezilta a isit la, epi apwouve aplikasyon anvan nou kontinye.
 
 ## Kontwòl "règ CGU ki pa matche kòd la" (dwe vid)
 
-| Règ nan `/terms` | Verifye kont kòd | Rezilta |
-|---|---|---|
-| Frè livrezon 150 HTG | `platform_delivery_zones`, NKD-015 | ✅ Matche |
-| Anilasyon sèlman anvan preparasyon | `update_order_status_secure`, NKD-010:361 | ✅ Matche |
-| Livrezon echwe: 2èdtan, san ranbousman | NKD-016 migrasyon | ✅ Matche |
-| 4 metòd peman (MonCash/NatCash/Stripe/Kach) | `payment_method` enum | ✅ Matche |
-| **Repwogramasyon pa mansyone** | NKD-017 pa implemante | ✅ Egzakteman konsa — pa parèt |
+| Règ nan `/terms`                            | Verifye kont kòd                          | Rezilta                        |
+| ------------------------------------------- | ----------------------------------------- | ------------------------------ |
+| Frè livrezon 150 HTG                        | `platform_delivery_zones`, NKD-015        | ✅ Matche                      |
+| Anilasyon sèlman anvan preparasyon          | `update_order_status_secure`, NKD-010:361 | ✅ Matche                      |
+| Livrezon echwe: 2èdtan, san ranbousman      | NKD-016 migrasyon                         | ✅ Matche                      |
+| 4 metòd peman (MonCash/NatCash/Stripe/Kach) | `payment_method` enum                     | ✅ Matche                      |
+| **Repwogramasyon pa mansyone**              | NKD-017 pa implemante                     | ✅ Egzakteman konsa — pa parèt |
 
 **Lis la vid** — pa gen okenn règ nan `/terms` ki pa reflete kòd la reyèlman.
 

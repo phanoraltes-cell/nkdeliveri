@@ -21,11 +21,11 @@ Sa gen tout siy yon tantativ **prompt injection** via kanal rezilta zouti a, ki 
 
 Li `src/lib/push.ts:16-23,34-82` ak `src/sw.ts:55-118` : flux la itilize **API Web Push estanda navigatè a** (`PushManager.subscribe`) — **pa gen SDK FCM/APNs/WNS natif okenn kote**. Sa vle di lis lan se egzakteman ki sèvis push chak navigatè sipòte itilize pa default, pa yon chwa arbitrè.
 
-| Host chwazi | Navigatè | Prèv |
-|---|---|---|
-| `fcm.googleapis.com` | Chrome, Edge, Opera, Samsung Internet, tout Chromium (desktop + Android) | `src/lib/push.ts:34-53` — `pushManager.subscribe()` estanda, `sw.ts` gen `WindowClient.focused` (byen sipòte Chrome/Edge) |
-| `updates.push.services.mozilla.com` | Firefox desktop + Android | Menм API estanda, Firefox itilize sèvis Mozilla a pou tout Web Push |
-| `web.push.apple.com` | Safari macOS 13+/iOS 16.4+ | `sw.ts:106-108` kòmante eksplisitteman konpòtman "older Safari" — konfime Safari se yon sib sipòte, pa yon ka ekzotik |
+| Host chwazi                         | Navigatè                                                                 | Prèv                                                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `fcm.googleapis.com`                | Chrome, Edge, Opera, Samsung Internet, tout Chromium (desktop + Android) | `src/lib/push.ts:34-53` — `pushManager.subscribe()` estanda, `sw.ts` gen `WindowClient.focused` (byen sipòte Chrome/Edge) |
+| `updates.push.services.mozilla.com` | Firefox desktop + Android                                                | Menм API estanda, Firefox itilize sèvis Mozilla a pou tout Web Push                                                       |
+| `web.push.apple.com`                | Safari macOS 13+/iOS 16.4+                                               | `sw.ts:106-108` kòmante eksplisitteman konpòtman "older Safari" — konfime Safari se yon sib sipòte, pa yon ka ekzotik     |
 
 **Rejte delibereman** : Edge Legacy/WNS (`*.notify.windows.com`) — Microsoft retire EdgeHTML Janvye 2020, anvan menm pwojè sa a te egziste. Okenn liy kòd nan `sw.ts`/`push.ts` sipoze/sipòte l. Chak host anplis se sifas atak anplis — pa gen okenn rezon ajoute l.
 
@@ -53,6 +53,7 @@ ALTER TABLE public.push_subscriptions
 **Fichye** : `src/lib/push-dispatch.server.ts` (modifye), `src/lib/push-endpoint-allowlist.ts` (nouvo)
 
 Anvan `fetch` (liy ~109-135 apre chanjman) :
+
 1. `isAllowedPushEndpoint(s.endpoint)` — re-verifye host la kont **menm konstan** `ALLOWED_PUSH_HOSTS` DB la itilize (pa yon dezyèm lis) — rejte IP literal, `localhost`, `127.0.0.0/8`, `169.254.0.0/16`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
 2. `redirect: "manual"` — anpeche `fetch` swiv otomatikman yon redireksyon soti nan yon host valid ale sou yon host entèn
 3. `AbortController` + `setTimeout(15_000)` — menm konvansyon egzat ak `moncash-client.server.ts`/`plop-client.server.ts` (`DEFAULT_TIMEOUT_MS = 15_000`), pa `AbortSignal.timeout()` (API pi nouvo, pa itilize lòt kote nan pwojè a)
@@ -62,24 +63,25 @@ Poukisa 2 kouch : DB la anpeche done sal antre depi kòmansman ; sèvè a pwotej
 
 ### 1d. Tès
 
-| ID | Tès | Rezilta | Prèv |
-|---|---|---|---|
-| T1 | `isAllowedPushEndpoint("http://169.254.169.254/...")` — **egzak senaryo "avan fix"** | ✅ PASS (rejte) | `src/lib/__tests__/push-endpoint-allowlist.test.ts` — "BEFORE-state proof" |
-| T2 | Endpoint sou yon host ki pa nan allowlist la (`https://evil.com/x`) | ✅ PASS (rejte) | menm fichye — "rejects a host not in the allowlist" |
-| T3 | Host-suffix trick (`fcm.googleapis.com.evil.com`) | ✅ PASS (rejte) | menm fichye — "rejects a host-suffix trick" |
-| T4 | IP literal, loopback, `10./172.16-31./192.168./169.254.` | ✅ PASS (tout rejte) | menm fichye — "rejects loopback and private/link-local ranges" (8 ka nan yon sèl tès) |
-| T5 | `https://fcm.googleapis.com`, `.../updates.push.services.mozilla.com/...`, `.../web.push.apple.com/...` — **non-regresyon**, 3 navigatè yo | ✅ PASS (tout aksepte) | menm fichye — "accepts a real endpoint on each of the 3 allowlisted hosts" |
-| T6 | `pushToUsers()` — endpoint disallowed pa janm rive nan `fetch` ditou | ✅ PASS | `push-dispatch.server.test.ts` — "never calls fetch for an endpoint outside the allowlist" |
-| T7 | `pushToUsers()` — **tès redireksyon** : `fetch` rele ak `redirect:"manual"` reyèl, yon repons `opaqueredirect` trete kòm echèk, pa 2yèm apèl `fetch` | ✅ PASS | `push-dispatch.server.test.ts` — "treats a redirect response as a failure... does not follow it" — verifye `fetchMock` rele **yon sèl fwa** |
-| T8 | `pushToUsers()` — endpoint valid FCM reyisi, `redirect`/`signal` byen prezan nan apèl `fetch` la | ✅ PASS | `push-dispatch.server.test.ts` — "sends successfully... with redirect: manual and a signal set" |
-| T9 | Endpoint "gone" (410) toujou retire — konpòtman egzistan pa kraze | ✅ PASS (regresyon) | `push-dispatch.server.test.ts` — "still removes a genuinely dead (410 Gone) endpoint" |
-| T10 | CHECK constraint la limenm (T1-T6 nan `docs/NKD006_CHECK_CONSTRAINT_TEST.sql`) — cloud metadata rejte, host atakè rejte, host-suffix trick rejte, 3 endpoint valid aksepte | ✅ PASS (6/6, `BEGIN...ROLLBACK`) | Egzekite via Management API 2026-08-14 apre otorizasyon eksplisit — okenn done kenbe (ROLLBACK), migrasyon reyèl la aplike separeman apre |
+| ID  | Tès                                                                                                                                                                        | Rezilta                           | Prèv                                                                                                                                        |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | `isAllowedPushEndpoint("http://169.254.169.254/...")` — **egzak senaryo "avan fix"**                                                                                       | ✅ PASS (rejte)                   | `src/lib/__tests__/push-endpoint-allowlist.test.ts` — "BEFORE-state proof"                                                                  |
+| T2  | Endpoint sou yon host ki pa nan allowlist la (`https://evil.com/x`)                                                                                                        | ✅ PASS (rejte)                   | menm fichye — "rejects a host not in the allowlist"                                                                                         |
+| T3  | Host-suffix trick (`fcm.googleapis.com.evil.com`)                                                                                                                          | ✅ PASS (rejte)                   | menm fichye — "rejects a host-suffix trick"                                                                                                 |
+| T4  | IP literal, loopback, `10./172.16-31./192.168./169.254.`                                                                                                                   | ✅ PASS (tout rejte)              | menm fichye — "rejects loopback and private/link-local ranges" (8 ka nan yon sèl tès)                                                       |
+| T5  | `https://fcm.googleapis.com`, `.../updates.push.services.mozilla.com/...`, `.../web.push.apple.com/...` — **non-regresyon**, 3 navigatè yo                                 | ✅ PASS (tout aksepte)            | menm fichye — "accepts a real endpoint on each of the 3 allowlisted hosts"                                                                  |
+| T6  | `pushToUsers()` — endpoint disallowed pa janm rive nan `fetch` ditou                                                                                                       | ✅ PASS                           | `push-dispatch.server.test.ts` — "never calls fetch for an endpoint outside the allowlist"                                                  |
+| T7  | `pushToUsers()` — **tès redireksyon** : `fetch` rele ak `redirect:"manual"` reyèl, yon repons `opaqueredirect` trete kòm echèk, pa 2yèm apèl `fetch`                       | ✅ PASS                           | `push-dispatch.server.test.ts` — "treats a redirect response as a failure... does not follow it" — verifye `fetchMock` rele **yon sèl fwa** |
+| T8  | `pushToUsers()` — endpoint valid FCM reyisi, `redirect`/`signal` byen prezan nan apèl `fetch` la                                                                           | ✅ PASS                           | `push-dispatch.server.test.ts` — "sends successfully... with redirect: manual and a signal set"                                             |
+| T9  | Endpoint "gone" (410) toujou retire — konpòtman egzistan pa kraze                                                                                                          | ✅ PASS (regresyon)               | `push-dispatch.server.test.ts` — "still removes a genuinely dead (410 Gone) endpoint"                                                       |
+| T10 | CHECK constraint la limenm (T1-T6 nan `docs/NKD006_CHECK_CONSTRAINT_TEST.sql`) — cloud metadata rejte, host atakè rejte, host-suffix trick rejte, 3 endpoint valid aksepte | ✅ PASS (6/6, `BEGIN...ROLLBACK`) | Egzekite via Management API 2026-08-14 apre otorizasyon eksplisit — okenn done kenbe (ROLLBACK), migrasyon reyèl la aplike separeman apre   |
 
 **16/16 tès Vitest pase** (`npx vitest run src/lib/__tests__/push-endpoint-allowlist.test.ts src/lib/__tests__/push-dispatch.server.test.ts`). Swit konplè `npm run verify` (196+ tès, tout fichye) **pase san kraze anyen** — 181 tès sesyon anvan an + 16 nouvo yo, typecheck/lint/`check:migrations`/build tout ✓.
 
 ### 1e. Nòt deplwaman
 
 Tab la vid → allowlist la **pa janm teste ak yon vrè abònman**. **Apre deplwaman** (kòd + migrasyon aplike), teste manyèlman :
+
 1. Yon abònman push pa navigatè sipòte (Chrome oswa Edge minimòm ; Firefox ak Safari si posib) — `subscribeToPush()` nan `src/lib/push.ts`.
 2. Verifye ranje a antre nan `public.push_subscriptions` san erè `CHECK` (sa konfime `endpoint` reyèl navigatè a matche yon nan 3 host yo).
 3. Deklanche yon evènman push reyèl (chanjman estati kòmand, elatriye) epi konfime notifikasyon an rive.
@@ -152,12 +154,14 @@ Dapre règ ensidan §0/§3 pi wo a ("ekri l epi mande — pa egzekite l"), mwen 
 ## **FAZ 2 : FÈMEN, avèk 1 pwen ki rete ouvè eksplisitteman**
 
 Tout 4 finding yo (NKD-004 à NKD-007) gen yon repons/aksyon konkrè :
+
 - **NKD-004** : envantè konplè fèt, klase P3, backlog dokimante pou apre Faz 11.
 - **NKD-005** : deklase P3 (mitigated by design), ak kondisyon retou klè.
 - **NKD-006** : fiks konplè ekri (2 kouch), teste (16 tès inite + 6 tès SQL, 100% pase), **APLIKE sou pwodiksyon 2026-08-14** (via Management API, pa CLI), commite (`eff30f8`), pouse. **Fèmen nèt.**
 - **NKD-007** : Q3 reponn ak prèv (NON, pa gen service_role key). **Q1/Q2 rete san repons** — mande swa verifikasyon manyèl ou nan Dashboard la, swa otorizasyon pou yon apèl Management API lekti-sèlman.
 
 **Sa ki rete ouvè** :
+
 1. NKD-007 Q1/Q2 (estati pwojè istorik la ak RLS li) — mande yon dezyèm etap separe, pa yon blokaj sekirite (P3 deja etabli kèlkeswa repons lan).
 2. Backlog NKD-004 (63 mesaj) — pa yon travay Faz 2, delibereman ranvwaye apre Faz 11.
 

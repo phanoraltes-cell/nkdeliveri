@@ -446,7 +446,7 @@ mention contraire. Le détail complet de chaque RPC référencée est dans
 >   (voir `20260704160000_47e8011e...sql`) — conçu **exprès** ainsi pour
 >   empêcher un client PostgREST de sonder le rôle d'un **autre**
 >   utilisateur. Il convient parfaitement dans une clause `USING`/`WITH
->   CHECK` de policy RLS (évaluée directement sous le rôle `authenticated`
+CHECK` de policy RLS (évaluée directement sous le rôle `authenticated`
 >   qui fait la requête).
 > - **Il ne faut JAMAIS l'appeler à l'intérieur du corps d'une fonction
 >   `SECURITY DEFINER`** (un RPC `*_secure`, un trigger `protect_*`, etc.).

@@ -14,22 +14,26 @@
 ## 1. Pote soti nan faz anvan
 
 ### NKD-006 migrasyon — **APLIKE** (pa "poko" ankò)
+
 Estati chanje depi dokiman pwotokòl la ekri : migrasyon `20260814150000_nkd006_push_endpoint_allowlist.sql` **aplike sou pwodiksyon 2026-08-14** apre otorizasyon eksplisit, konfime an dirèk via `pg_constraint` (`docs/PHASE_FAZ2_FINALIZATION_REPORT.md`). `push_subscriptions` gen kounye a **4 kontrent** (`pkey`, `UNIQUE(endpoint)`, `FK user_id`, `CHECK push_subscriptions_endpoint_allowlist`), pa 3.
 
 ### 137/138 migrasyon san blòk rollback — **KANTIFYE**
+
 `grep -lic "rollback" supabase/migrations/*.sql` (138 fichye total, 1 anplis pase Faz 0 — NKD-006) : **6/138 gen yon mak "rollback"** an kòmantè, **132/138 pa genyen**.
 
 **Detay onèt sou 6 yo** (2 nan yo se pwòp travay mwen menm nan sesyon sa a) :
-| Fichye | Gen rollback ? |
-|---|---|
-| `20260731130000_moncash_collect_payments.sql` | ✅ |
-| `20260808210000_payment_security_least_privilege.sql` | ✅ |
-| `20260811120000_admin_step_up_enforcement.sql` | ✅ |
-| `20260813100000_admin_backup_codes.sql` | ✅ |
-| `20260813110000_fix_user_roles_rls_bypass.sql` | ✅ |
-| `20260814150000_nkd006_push_endpoint_allowlist.sql` | ✅ |
+
+| Fichye                                                | Gen rollback ? |
+| ----------------------------------------------------- | -------------- |
+| `20260731130000_moncash_collect_payments.sql`         | ✅             |
+| `20260808210000_payment_security_least_privilege.sql` | ✅             |
+| `20260811120000_admin_step_up_enforcement.sql`        | ✅             |
+| `20260813100000_admin_backup_codes.sql`               | ✅             |
+| `20260813110000_fix_user_roles_rls_bypass.sql`        | ✅             |
+| `20260814150000_nkd006_push_endpoint_allowlist.sql`   | ✅             |
 
 **Gap detekte, deklare san kache l** : **3 migrasyon Faz 1 (mwen menm ki ekri yo) MANKE blòk rollback**, kontrèman ak konvansyon pwojè a (`chak nouvo migrasyon pote blòk rollback an kòmantè` — règ ki repete plizyè fwa nan sesyon sa a) :
+
 - `20260813120000_fix_manual_vs_automatic_payment_classification.sql` — 0 mak "rollback"/"revers"
 - `20260813130000_fix_payments_rls_bypass.sql` — 0 mak
 - `20260813140000_translate_claim_delivery_messages.sql` — 0 mak
@@ -39,18 +43,19 @@ Tou de 2 dènye yo fasil revèsib (`CREATE POLICY "payments admin update" ...` p
 **Rezime chif** : **136/138 (98.6%) san blòk rollback eksplisit** — dèt dokimantasyon konfime, pa yon vilnerabilite.
 
 ### Lajan — 8 tab, tout kolòn — **KONFIME NUMERIC, 0 FLOAT/REAL/double precision**
+
 Rechèch egzoustif (`^\s*[a-z_]+\s+(FLOAT|REAL|double precision)\b`) sou tout 138 migrasyon → **0 rezilta, pwojè antye**, pa sèlman 8 tab yo. Chak kolòn lajan verifye endividyèlman :
 
-| Tab | Kolòn lajan | Tip |
-|---|---|---|
-| `orders` | `subtotal`, `delivery_fee`, `service_fee`, `total` | `numeric(10,2)` |
-| `payments` | `amount` | `numeric(10,2)` |
-| `refunds` | `amount` | `numeric(10,2)` |
-| `payouts` | `amount` | `numeric(12,2)` |
-| `wallets` | `available_balance`, `pending_balance`, `paid_balance` | `numeric(12,2)` |
-| `commission_ledger` | `gross_amount`, `commission_rate`, `commission_amount`, `net_amount` | `numeric(12,2)`/`numeric(6,2)` |
-| `payout_commissions` | (okenn — sèlman FK sou `commission_ledger`) | n/a |
-| `wallet_transactions` | `available_delta`, `pending_delta`, `paid_delta`, `lifetime_delta` | `numeric(12,2)` |
+| Tab                   | Kolòn lajan                                                          | Tip                            |
+| --------------------- | -------------------------------------------------------------------- | ------------------------------ |
+| `orders`              | `subtotal`, `delivery_fee`, `service_fee`, `total`                   | `numeric(10,2)`                |
+| `payments`            | `amount`                                                             | `numeric(10,2)`                |
+| `refunds`             | `amount`                                                             | `numeric(10,2)`                |
+| `payouts`             | `amount`                                                             | `numeric(12,2)`                |
+| `wallets`             | `available_balance`, `pending_balance`, `paid_balance`               | `numeric(12,2)`                |
+| `commission_ledger`   | `gross_amount`, `commission_rate`, `commission_amount`, `net_amount` | `numeric(12,2)`/`numeric(6,2)` |
+| `payout_commissions`  | (okenn — sèlman FK sou `commission_ledger`)                          | n/a                            |
+| `wallet_transactions` | `available_delta`, `pending_delta`, `paid_delta`, `lifetime_delta`   | `numeric(12,2)`                |
 
 **KONFIME, egzoustif pa konstriksyon** (grep sou tout istwa, pa yon echantiyon).
 
@@ -65,13 +70,16 @@ Rechèch egzoustif (`^\s*[a-z_]+\s+(FLOAT|REAL|double precision)\b`) sou tout 13
 **Kwaze ak `ENABLE ROW LEVEL SECURITY`** → **51/51 tab gen omwen 1 `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` nan istwa yo**. `grep "DISABLE ROW LEVEL SECURITY"` → **0 rezilta nan tout pwojè a** (pa gen okenn dezaktivasyon, janm).
 
 **KONFIME live, 2026-08-16** — mèt pwojè a kouri rekèt sa a nan SQL Editor (Règ A1, `docs/NKD-014_TRIPLE_VERIFICATION_REPORT.md` Pwen 2) :
+
 ```sql
 SELECT tablename, rowsecurity FROM pg_tables
 WHERE schemaname = 'public' AND rowsecurity = false ORDER BY tablename;
 ```
+
 **Rezilta : `Success. No rows returned` (0 rows).** Dapre kritè lekti etabli davans — `0 rows` → **51/51 tab gen RLS aktive, KONFIME**. Okenn tab piblik pa gen `rowsecurity = false`.
 
 ### Tab ak RLS aktive men **0 policy** (verifye ak yon regex miltip-liy, apre yon premye vèsyon ki te gen fo pozitif)
+
 **2 tab** : `admin_backup_code_state`, `admin_backup_codes`. **Verifye entansyonèl, pa yon bug** : tou de gen `REVOKE ALL ... FROM PUBLIC, anon, authenticated` (kòmantè pwòp migrasyon an konfime : `-- SECURITY DEFINER RPC sèlman`) — okenn wòl pa menm ka rive nan tab la pou deklanche yon evalyasyon policy an premye lye. RLS san policy la se yon dezyèm kouch, pa sèl la.
 
 ---
@@ -82,13 +90,14 @@ Chak kolòn FK (`uuid ... REFERENCES`) kwaze kont `CREATE INDEX` **ak** kontrent
 
 **16 kolòn FK san endèks eksplisit ni kontrent UNIQUE** :
 
-| Kolòn | Nati | Risk |
-|---|---|---|
+| Kolòn                                                                                                                                                                                                                                                                                                                                                                                                                                        | Nati                                                 | Risk                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `payments.reviewed_by`, `payment_proofs.uploaded_by`, `commission_ledger.created_by`, `payouts.paid_by`, `payouts.resolved_by`, `wallet_transactions.created_by`, `backfill_runs.run_by`, `sponsored_placements.created_by`, `order_chat_messages.author_id`, `promotional_notifications.sent_by`, `newsletter_send_log.triggered_by`, `order_admin_notes.author_id`, `komand_assistance.assigned_admin_id`, `komand_assistance.resolved_by` | Kolòn "ki moun ki fè sa" (admin/staff, `auth.users`) | **Ba** — ba kadinalite (kèk santèn admin/anplwaye), pa gen prèv yo filtre/join souvan nan kòd la |
-| `wallet_transactions.commission_ledger_id` | Lyen ledger→tranzaksyon | **Mwayen** — potansyèl itilize nan istorik ledger, merite verifikasyon |
-| `wallet_transactions.payout_id` | Lyen payout→tranzaksyon | **Mwayen** — menm rezon |
+| `wallet_transactions.commission_ledger_id`                                                                                                                                                                                                                                                                                                                                                                                                   | Lyen ledger→tranzaksyon                              | **Mwayen** — potansyèl itilize nan istorik ledger, merite verifikasyon                           |
+| `wallet_transactions.payout_id`                                                                                                                                                                                                                                                                                                                                                                                                              | Lyen payout→tranzaksyon                              | **Mwayen** — menm rezon                                                                          |
 
 **ESTIMASYON** (analiz statik sèlman, pa `EXPLAIN ANALYZE` live). Rekèt pou konfime enpak reyèl, **ekri, pa egzekite** :
+
 ```sql
 SELECT schemaname, tablename, indexname, indexdef
 FROM pg_indexes
@@ -140,6 +149,7 @@ Rechèch `.map(async...)`/`.forEach(async...)`/`for (const...)` ki gen yon apèl
 ## 8. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - NKD-006 aplike sou pwodiksyon.
 - 132/138 (95.7%) migrasyon san blòk rollback — chif egzat, konte sou tout fichye.
 - 8 tab lajan yo, tout kolòn `NUMERIC` — 0 FLOAT/REAL nan tout pwojè a.
@@ -150,9 +160,11 @@ Rechèch `.map(async...)`/`.forEach(async...)`/`for (const...)` ki gen yon apèl
 - **(Ajoute 2026-08-16)** 51/51 tab gen RLS aktive — konfime live, 0 rows sou rekèt `pg_tables.rowsecurity = false` (§2).
 
 **ESTIMASYON** (baze sou istwa migrasyon, mande konfimasyon live pou vin KONFIME) :
+
 - 16 kolòn FK san endèks/UNIQUE — enpak reyèl mande `EXPLAIN ANALYZE`, rekèt ekri §3.
 
 **PA VERIFYE** :
+
 - Estòk pwodui (`stock_quantity`) pa janm dekremante — **mande desizyon metye**, pa yon konklizyon teknik (§4).
 - Envantè konplè `CHECK`/`FOREIGN KEY` sou tout 51 tab (§5, verifye pasyèl sèlman).
 - N+1 anndan kò fonksyon `plpgsql` yo menm (§6, deyò sa yon sèl pas ka kouvri).

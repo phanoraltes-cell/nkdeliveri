@@ -97,15 +97,15 @@ src/routes/auth.register.tsx
 
 ## 4. Identity Documents Architecture
 
-| Élément           | Valeur confirmée en direct                                                                                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bucket            | `driver-documents`                                                                                                                                                                                            |
-| Public ou privé   | **privé** (`public: false`, confirmé via `storage.buckets`)                                                                                                                                                   |
-| Chemin            | `${userId}/${prefix}-${Date.now()}-${filename}` — prefix ∈ {`id`, `license`, `vehicle`}                                                                                                                       |
-| MIME acceptés     | `image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf` (confirmé live)                                                                                                                  |
-| Taille max        | 8 388 608 octets (8MB), confirmé live                                                                                                                                                                         |
+| Élément           | Valeur confirmée en direct                                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bucket            | `driver-documents`                                                                                                                                                                                                  |
+| Public ou privé   | **privé** (`public: false`, confirmé via `storage.buckets`)                                                                                                                                                         |
+| Chemin            | `${userId}/${prefix}-${Date.now()}-${filename}` — prefix ∈ {`id`, `license`, `vehicle`}                                                                                                                             |
+| MIME acceptés     | `image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf` (confirmé live)                                                                                                                        |
+| Taille max        | 8 388 608 octets (8MB), confirmé live                                                                                                                                                                               |
 | Référence en base | `public.drivers.id_doc_url` / `license_doc_url` / `vehicle_photo_url` — **chemin brut stocké, pas une URL** ([register-documents.functions.ts:222-224](../../../src/lib/register-documents.functions.ts#L222-L224)) |
-| Lecture           | `ProofThumb` génère une **signed URL** à la volée (`createSignedUrl(path, 300)`, 5 min) — jamais d'URL publique pour ce bucket                                                                                |
+| Lecture           | `ProofThumb` génère une **signed URL** à la volée (`createSignedUrl(path, 300)`, 5 min) — jamais d'URL publique pour ce bucket                                                                                      |
 
 Pour le restaurant (comparaison) : bucket `restaurant-assets`, **public: true**, 5MB, images seulement, `logo_url`/`cover_url` stockent une **URL publique complète** (`getPublicUrl()`), pas un chemin.
 

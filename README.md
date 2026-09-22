@@ -53,8 +53,8 @@ Toute la documentation technique, métier et opérationnelle vit dans
 [`docs/`](./docs/), vérifiée directement contre le code — voir la note en
 tête de chaque document. Points d'entrée principaux :
 
-| Je veux comprendre...                                              | Document                                                        |
-| ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Je veux comprendre...                                              | Document                                                                  |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | L'architecture générale et la frontière client/serveur             | [ARCHITECTURE.md](./docs/reference/ARCHITECTURE.md)                       |
 | L'organisation des fichiers et les conventions de nommage          | [PROJECT_STRUCTURE.md](./docs/reference/PROJECT_STRUCTURE.md)             |
 | Le routage (URLs, gardes de rôle)                                  | [ROUTING.md](./docs/reference/ROUTING.md)                                 |
@@ -74,7 +74,7 @@ tête de chaque document. Points d'entrée principaux :
 | La procédure de migration Supabase                                 | [MIGRATIONS.md](./docs/reference/MIGRATIONS.md)                           |
 | Les environnements (dev/preprod/prod)                              | [ENVIRONMENTS.md](./docs/reference/ENVIRONMENTS.md)                       |
 | L'audit et la mise à jour des dépendances                          | [DEPENDENCIES.md](./docs/reference/DEPENDENCIES.md)                       |
-| La sauvegarde et restauration de la base                           | [BACKUP_RESTORE.md](./docs/runbooks/BACKUP_RESTORE.md)                   |
+| La sauvegarde et restauration de la base                           | [BACKUP_RESTORE.md](./docs/runbooks/BACKUP_RESTORE.md)                    |
 | La procédure complète de mise en production                        | [DEPLOYMENT.md](./docs/reference/DEPLOYMENT.md)                           |
 
 ## Contribuer

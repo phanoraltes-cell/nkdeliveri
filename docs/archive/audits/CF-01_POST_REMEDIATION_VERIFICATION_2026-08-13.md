@@ -26,29 +26,29 @@ Action déclarée par l'opérateur : **suppression/désactivation manuelle de `n
 
 ---
 
-## 3. BEFORE State *(repris de `docs/SECURITY_PERIMETER_AUDIT_2026-08-13.md`, 2026-08-13 ~20:51 UTC)*
+## 3. BEFORE State _(repris de `docs/SECURITY_PERIMETER_AUDIT_2026-08-13.md`, 2026-08-13 ~20:51 UTC)_
 
-| Test | Résultat BEFORE |
-|---|---|
-| `GET https://nkdelivery.vercel.app/` | `200 OK`, `Server: Vercel`, aucun `CF-RAY`, aucun CSP, aucun `X-Frame-Options`, `Access-Control-Allow-Origin: *`, corps = page d'accueil réelle (33 767 octets, `<title>NK Delivery — Livraison de repas aux Gonaïves</title>`) |
-| `GET /robots.txt` sur ce hostname | `404 NOT_FOUND` |
-| `GET /restaurants` sur ce hostname | `404 NOT_FOUND` |
-| `GET /auth`, `/api/csp-report` sur ce hostname | `404 NOT_FOUND` |
-| `www.nkdeliveri.com` | `200 OK`, `Server: cloudflare`, `CF-RAY` présent, CSP nonce présent |
+| Test                                           | Résultat BEFORE                                                                                                                                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET https://nkdelivery.vercel.app/`           | `200 OK`, `Server: Vercel`, aucun `CF-RAY`, aucun CSP, aucun `X-Frame-Options`, `Access-Control-Allow-Origin: *`, corps = page d'accueil réelle (33 767 octets, `<title>NK Delivery — Livraison de repas aux Gonaïves</title>`) |
+| `GET /robots.txt` sur ce hostname              | `404 NOT_FOUND`                                                                                                                                                                                                                 |
+| `GET /restaurants` sur ce hostname             | `404 NOT_FOUND`                                                                                                                                                                                                                 |
+| `GET /auth`, `/api/csp-report` sur ce hostname | `404 NOT_FOUND`                                                                                                                                                                                                                 |
+| `www.nkdeliveri.com`                           | `200 OK`, `Server: cloudflare`, `CF-RAY` présent, CSP nonce présent                                                                                                                                                             |
 
 ---
 
-## 4. AFTER State *(cette vérification, 2026-08-14 ~05:00–05:03 UTC)*
+## 4. AFTER State _(cette vérification, 2026-08-14 ~05:00–05:03 UTC)_
 
-| Test | Résultat AFTER |
-|---|---|
-| `GET https://nkdelivery.vercel.app/` | `200 OK`, `Server: Vercel`, aucun `CF-RAY`, aucun CSP, aucun `X-Frame-Options`, `Access-Control-Allow-Origin: *`, corps = page d'accueil réelle (33 767 octets, **Etag `07cd427cc879c647c3888d188a3d6df0` identique à BEFORE**, `Last-Modified: Thu, 13 Aug 2026 20:51:14 GMT` identique) |
-| `HEAD https://nkdelivery.vercel.app/` | `200 OK`, mêmes en-têtes |
-| `GET /?cachebust=<timestamp aléatoire>` (×2, clés de cache différentes) | `200 OK`, **toujours `X-Vercel-Cache: HIT`**, même `Etag`, `Age` continue de croître (29 151 → 29 422 → 29 424 s) — la tentative de contournement de cache n'a produit aucune réponse fraîche |
-| `GET /robots.txt` | `404 NOT_FOUND` — inchangé |
-| `GET /restaurants` | `404 NOT_FOUND` — inchangé |
-| `www.nkdeliveri.com` | `200 OK`, `Server: cloudflare`, `CF-RAY` présent, CSP présent avec nonce, TLS inchangé |
-| `nkdeliveri.com` (apex) | `308` vers `https://www.nkdeliveri.com/`, `Server: cloudflare`, `CF-RAY` présent |
+| Test                                                                    | Résultat AFTER                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET https://nkdelivery.vercel.app/`                                    | `200 OK`, `Server: Vercel`, aucun `CF-RAY`, aucun CSP, aucun `X-Frame-Options`, `Access-Control-Allow-Origin: *`, corps = page d'accueil réelle (33 767 octets, **Etag `07cd427cc879c647c3888d188a3d6df0` identique à BEFORE**, `Last-Modified: Thu, 13 Aug 2026 20:51:14 GMT` identique) |
+| `HEAD https://nkdelivery.vercel.app/`                                   | `200 OK`, mêmes en-têtes                                                                                                                                                                                                                                                                  |
+| `GET /?cachebust=<timestamp aléatoire>` (×2, clés de cache différentes) | `200 OK`, **toujours `X-Vercel-Cache: HIT`**, même `Etag`, `Age` continue de croître (29 151 → 29 422 → 29 424 s) — la tentative de contournement de cache n'a produit aucune réponse fraîche                                                                                             |
+| `GET /robots.txt`                                                       | `404 NOT_FOUND` — inchangé                                                                                                                                                                                                                                                                |
+| `GET /restaurants`                                                      | `404 NOT_FOUND` — inchangé                                                                                                                                                                                                                                                                |
+| `www.nkdeliveri.com`                                                    | `200 OK`, `Server: cloudflare`, `CF-RAY` présent, CSP présent avec nonce, TLS inchangé                                                                                                                                                                                                    |
+| `nkdeliveri.com` (apex)                                                 | `308` vers `https://www.nkdeliveri.com/`, `Server: cloudflare`, `CF-RAY` présent                                                                                                                                                                                                          |
 
 ---
 
@@ -124,13 +124,13 @@ notAfter=Oct 29 17:24:41 2026 GMT
 
 Tests non destructifs, non authentifiés, aucune donnée modifiée, aucun paiement/webhook/cron réel déclenché :
 
-| Endpoint | Requête | Résultat AFTER | Attendu | Verdict |
-|---|---|---|---|---|
-| `/api/cron/moncash-reconcile` | GET, sans `Authorization` | `401` | `401`/`403` | ✅ PASS |
-| `/api/cron/plop-reconcile` | GET, sans `Authorization` | `401` | `401`/`403` | ✅ PASS |
-| `/api/webhooks/moncash` | POST `{}`, sans signature | `401` | `401`/`403` | ✅ PASS |
-| `/api/webhooks/moncash/collect` | POST `{}`, sans signature | `401` | `401`/`403` | ✅ PASS |
-| `/api/webhooks/stripe/collect` | POST `{}`, sans signature | `401` | `401`/`403` | ✅ PASS |
+| Endpoint                        | Requête                   | Résultat AFTER | Attendu     | Verdict |
+| ------------------------------- | ------------------------- | -------------- | ----------- | ------- |
+| `/api/cron/moncash-reconcile`   | GET, sans `Authorization` | `401`          | `401`/`403` | ✅ PASS |
+| `/api/cron/plop-reconcile`      | GET, sans `Authorization` | `401`          | `401`/`403` | ✅ PASS |
+| `/api/webhooks/moncash`         | POST `{}`, sans signature | `401`          | `401`/`403` | ✅ PASS |
+| `/api/webhooks/moncash/collect` | POST `{}`, sans signature | `401`          | `401`/`403` | ✅ PASS |
+| `/api/webhooks/stripe/collect`  | POST `{}`, sans signature | `401`          | `401`/`403` | ✅ PASS |
 
 Aucun endpoint sensible testé n'a régressé. Aucune tentative d'authentification avec un compte réel n'a été effectuée (non nécessaire pour répondre à la question posée — la protection observée est déjà suffisante et sans ambiguïté à ce niveau).
 
@@ -211,7 +211,7 @@ Aucune régression détectée sur le domaine officiel après la remédiation :
 
 ## 14. Recommended Next Actions
 
-*(recommandations uniquement — aucune action corrective automatique effectuée)*
+_(recommandations uniquement — aucune action corrective automatique effectuée)_
 
 1. **Confirmer côté dashboard Vercel** que la suppression/désactivation de `nkdelivery.vercel.app` a bien été sauvegardée et déployée (pas seulement modifiée dans un formulaire non soumis).
 2. **Purger explicitement le cache edge Vercel** pour ce hostname (ou déclencher un nouveau déploiement de production), puisque cette vérification montre qu'un objet mis en cache continue d'être servi indépendamment de toute nouvelle tentative de contournement de cache côté client.
@@ -221,7 +221,7 @@ Aucune régression détectée sur le domaine officiel après la remédiation :
 
 ---
 
-*Fin de la vérification. Aucune modification n'a été apportée au code, à la configuration Cloudflare/Vercel/Supabase, au DNS, ni à aucune donnée pendant sa réalisation. Toutes les requêtes envoyées étaient des GET/HEAD non authentifiés ou des POST non signés à volume unitaire.*
+_Fin de la vérification. Aucune modification n'a été apportée au code, à la configuration Cloudflare/Vercel/Supabase, au DNS, ni à aucune donnée pendant sa réalisation. Toutes les requêtes envoyées étaient des GET/HEAD non authentifiés ou des POST non signés à volume unitaire._
 
 ---
 
@@ -230,24 +230,31 @@ Aucune régression détectée sur le domaine officiel après la remédiation :
 **CF-01: NOT REMEDIATED**
 
 ### CODE CHANGES
+
 `NONE`
 
 ### DATABASE CHANGES
+
 `NONE`
 
 ### DNS CHANGES
+
 `NONE`
 
 ### CLOUDFLARE CHANGES
+
 `NONE`
 
 ### VERCEL CHANGES
+
 Action déjà effectuée manuellement par l'opérateur avant cette session (déclarée, non vérifiée dans le code) : suppression/désactivation de `nkdelivery.vercel.app` du projet Vercel de production. Aucune action Vercel supplémentaire n'a été effectuée pendant cette vérification.
 
 ### COMMITS
+
 `NONE`
 
 ### PRODUCTION DEPLOYMENT
+
 `NONE`
 
 ---
@@ -267,14 +274,17 @@ Action déjà effectuée manuellement par l'opérateur avant cette session (déc
 **Protocole de vérification appliqué** (3 axes distincts, non confondus) :
 
 **A. Contrôle CORS côté API de production** (`Origin: https://nkdelivery.vercel.app` envoyé en en-tête) :
+
 ```text
 GET https://www.nkdeliveri.com/            → aucun Access-Control-Allow-Origin dans la réponse (pas de reflet de l'origine)
 POST https://www.nkdeliveri.com/api/webhooks/moncash → 401 (rejeté par la vérification de signature, sans rapport avec CORS)
 GET https://dcsnmvbtsmdbwrwbutph.supabase.co/rest/v1/ → Access-Control-Allow-Origin: *
 ```
+
 **Interprétation** : le `*` sur l'API Supabase n'est **pas spécifique** à `nkdelivery.vercel.app` — c'est la politique CORS par défaut de la plateforme Supabase elle-même sur son endpoint REST public (l'autorisation réelle est déterminée par RLS/la clé `anon`, pas par l'origine du navigateur). Ce test ne peut donc **ni confirmer ni infirmer** une fermeture de CF-01 : CF-01 n'a jamais été une faille CORS applicative, c'est un contournement du routage/proxy Cloudflare au niveau du hostname lui-même. Résultat de cet axe : **NON CONCLUANT PAR CONCEPTION** (mauvais angle de mesure pour ce finding précis, testé quand même pour complétude).
 
 **B. Statut réel du domaine `nkdelivery.vercel.app` lui-même** — **l'axe décisif** :
+
 ```text
 nslookup nkdelivery.vercel.app
 → Résout toujours : 216.198.79.3, 64.29.17.3 (toujours des IP Vercel)
@@ -288,12 +298,15 @@ GET https://nkdelivery.vercel.app/
 → Age: 32219                                          ← a continué de croître sans jamais revenir à zéro
 → X-Vercel-Cache: HIT, y compris avec un paramètre ?verify=<horodatage> inédit
 ```
+
 **Interprétation** : le domaine **résout toujours** et **sert toujours exactement le même contenu**, sans la moindre variation (statut, headers, corps) par rapport à l'état déjà documenté comme `NOT REMEDIATED` hier. Aucune erreur de plateforme (`DEPLOYMENT_NOT_FOUND`, `401` Vercel Authentication, échec DNS) n'apparaît — signature attendue d'un domaine réellement délié.
 
 **C. Contrôle applicatif (allowlist d'origine dans le code)** :
+
 ```text
 grep -rn "Access-Control-Allow-Origin|cors(|allowedOrigins|ALLOWED_ORIGIN" src/  → 0 résultat
 ```
+
 Aucune allowlist d'origine explicite dans le code applicatif — cohérent avec le fait que le contrôle réel de ce finding n'a jamais reposé sur le code, mais sur la configuration de plateforme Vercel (domaine attaché ou non à un projet).
 
 **⚠️ CONTRADICTION TROUVÉE — application de la règle explicite "ne pas forcer une fermeture" :**
@@ -313,4 +326,4 @@ Residual risk  : identique à celui déjà documenté — le contenu de producti
 
 **Recommandation inchangée, renforcée** : la déclaration opérateur ("ancien projet, hors périmètre") n'est, à ce stade, pas corroborée par le comportement observable du domaine. Avant toute nouvelle tentative de fermeture : confirmer directement dans le dashboard Vercel (a) si `nkdelivery.vercel.app` apparaît encore dans la liste des domaines d'un projet quelconque accessible au compte, (b) si oui, lequel, et (c) purger explicitement le cache edge de ce domaine — la persistance exacte de l'`Etag`/`Age` à travers deux vérifications espacées de plusieurs heures est la preuve la plus solide qu'un objet caché continue d'être servi indépendamment de toute action de désassociation tentée jusqu'ici.
 
-*Aucune modification apportée au code, DNS, Cloudflare, Vercel, Supabase pendant cet addendum. Aucun commit.*
+_Aucune modification apportée au code, DNS, Cloudflare, Vercel, Supabase pendant cet addendum. Aucun commit._

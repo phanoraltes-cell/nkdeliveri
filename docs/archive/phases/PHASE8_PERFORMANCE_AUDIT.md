@@ -8,6 +8,7 @@
 ## 0. Anti-doublon (Règ A3) — kouvèti trè konsiderab, deja aplike
 
 Yon "Phase 8" pi bonè (nimewotasyon diferan, deyò seri Faz 3-11 sa a, men **menm sijè egzat**) deja fè travay la **an pwofondè, ak mezi reyèl sou build pwodiksyon** :
+
 - `docs/PHASE8_PERFORMANCE_PWA_AUDIT.md` — mezi bundle chunk pa chunk (gzip), precache SW (256 antre, 5655 KiB), imaj deja WebP, `staleTime` React Query deja regle, **"aucun polling superflu" deja konfime**.
 - `docs/PHASE8_PERFORMANCE_PWA_REPORT.md` (= rapò klotti, commit `3b4dae5`) — implemantasyon + validasyon apre 434abdd (`perf(pwa): Phase 8 — service worker precache scope, LCP lazy-loading, deferred Sentry`) — **deja merge nan `main`**, pa yon travay ki rete an sispann.
 - `docs/POLLING_REMEDIATION_REPORT.md` — bug polling/reantrans reyèl jwenn **e korije** (`useCollectPaymentPoll.ts`, verrou `inFlight`), 18 nouvo tès, tout rès mekanis la (4 faz degresif, jitter, poz sou vizibilite, 15 min limit, netwayaj unmount) deja konfime kòrèk.
@@ -51,6 +52,7 @@ Faz 3 (§3, `docs/PHASE3_DATABASE_AUDIT.md`) te jwenn **16 kolòn FK san endèks
 ## 5. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - Tout mezi/koreksyon "Phase 8" (lòt seri) toujou aktyèl, verifye pa spot-check `staleTime`.
 - Polling (`useCollectPaymentPoll`) deja korije, deja teste.
 - Kreyasyon kòmand atomik, sekans, pa gen kondisyon kous nan yon sèl apèl.
@@ -59,6 +61,7 @@ Faz 3 (§3, `docs/PHASE3_DATABASE_AUDIT.md`) te jwenn **16 kolòn FK san endèks
 **ESTIMASYON** : okenn nouvo.
 
 **PA VERIFYE** :
+
 - Chaj wo konkirans reyèl (100+ kòmand simultane) — mande zouti tès chaj ki pa disponib.
 
 ---

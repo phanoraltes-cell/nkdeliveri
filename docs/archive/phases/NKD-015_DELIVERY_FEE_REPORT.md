@@ -9,11 +9,11 @@
 
 Verifye dirèkteman nan kòd sous **anvan** ekri migrasyon an, tout 3 kesyon rezoud san mande, ak prèv :
 
-| Kesyon | Rezilta |
-|---|---|
-| Komisyon restoran sou total oswa manje sèlman ? | **Sou `subtotal` sèlman** (`commission_engine.sql:76`, `ROUND(NEW.subtotal * v_rate / 100, 2)`) — deja **eskli** frè livrezon, **pa gen chanjman** nesesè. |
-| Komisyon livrè baze sou ki chif ? | `deliveries.fee` (`commission_engine.sql:110`), ki li menm mete a `COALESCE(orders.delivery_fee, 0)` **nan moman `claim_delivery_secure`** — deja byen konekte, ap eskale kòrèkteman yon fwa frè a vin reyèl. |
-| Ranbousman/rekonsilyasyon jere frè a kòmsadwa ? | Wi — `refunds.amount = payments.amount = subtotal + delivery_fee + service_fee` (`refunds.sql:102`) — ranbousman deja enkli frè a antye, rekonsilyasyon (`payments.amount`) menm jan an. |
+| Kesyon                                          | Rezilta                                                                                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Komisyon restoran sou total oswa manje sèlman ? | **Sou `subtotal` sèlman** (`commission_engine.sql:76`, `ROUND(NEW.subtotal * v_rate / 100, 2)`) — deja **eskli** frè livrezon, **pa gen chanjman** nesesè.                                                    |
+| Komisyon livrè baze sou ki chif ?               | `deliveries.fee` (`commission_engine.sql:110`), ki li menm mete a `COALESCE(orders.delivery_fee, 0)` **nan moman `claim_delivery_secure`** — deja byen konekte, ap eskale kòrèkteman yon fwa frè a vin reyèl. |
+| Ranbousman/rekonsilyasyon jere frè a kòmsadwa ? | Wi — `refunds.amount = payments.amount = subtotal + delivery_fee + service_fee` (`refunds.sql:102`) — ranbousman deja enkli frè a antye, rekonsilyasyon (`payments.amount`) menm jan an.                      |
 
 **Okenn nan 3 pwen sa yo pa te bezwen KANPE EPI MANDE** — tout deja byen konekte nan achitekti egzistan an.
 
@@ -32,6 +32,7 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 **Fichye** : `supabase/migrations/20260816120000_nkd015_delivery_fee_config.sql` — blòk rollback an kòmantè an tèt.
 
 **Kontni** :
+
 - Tab `platform_delivery_zones` (id, name, fee_htg, is_default, created_at, updated_at, updated_by) — endèks inik pasyèl ki garanti **maksimòm 1 zòn pa defo**.
 - Semans 1 ranje : "Gonaïves", 150 HTG, pa defo. **150 se yon valè inisyal pou kontinyite ak ansyen chif "mò" a — pa yon chif re-derive nan yon egzijans metye, admin ka korije l imedyatman via nouvo ekran an.**
 - RLS : lekti piblik (`anon, authenticated` — checkout ka rive san koneksyon), **okenn politik ekri dirèk** — RPC sèlman.
@@ -44,13 +45,13 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 
 **Egzekite pa mèt pwojè a, 2026-08-16, nan SQL Editor** (migrasyon an + tès la ansanm, `BEGIN…ROLLBACK`, anyen pa kenbe). **Rezilta : `Success. No rows returned`** — menm siyati egzat ak chak tès anvan ki te pase pwòp nan sesyon sa a (0 `RAISE EXCEPTION` deklanche, ki ta parèt kòm yon erè, pa yon siksè). Dapre Règ A9, sa se prèv egzekisyon reyèl, pa yon prediksyon :
 
-| ID | Tès | Rezilta | Prèv |
-|---|---|---|---|
-| T-read | `anon`/`authenticated` ka li pri a (bezwen pou checkout) | ✅ PASS | Okenn `T-read-FAIL` leve |
-| T1 | `orders.delivery_fee` = pri zòn nan, `total = subtotal + delivery_fee + service_fee` | ✅ PASS | Okenn `T1-FAIL` leve |
-| T2 | Non-admin rejte lè l eseye chanje pri a | ✅ PASS | Okenn `T2-FAIL` leve |
-| T3 | Admin san step-up fre rejte | ✅ PASS | Okenn `T3-FAIL` leve |
-| T4 | Chanje pri a → ansyen kòmand kenbe ansyen pri, nouvo kòmand pran nouvo pri | ✅ PASS | Okenn `T4-FAIL` leve |
+| ID     | Tès                                                                                  | Rezilta | Prèv                     |
+| ------ | ------------------------------------------------------------------------------------ | ------- | ------------------------ |
+| T-read | `anon`/`authenticated` ka li pri a (bezwen pou checkout)                             | ✅ PASS | Okenn `T-read-FAIL` leve |
+| T1     | `orders.delivery_fee` = pri zòn nan, `total = subtotal + delivery_fee + service_fee` | ✅ PASS | Okenn `T1-FAIL` leve     |
+| T2     | Non-admin rejte lè l eseye chanje pri a                                              | ✅ PASS | Okenn `T2-FAIL` leve     |
+| T3     | Admin san step-up fre rejte                                                          | ✅ PASS | Okenn `T3-FAIL` leve     |
+| T4     | Chanje pri a → ansyen kòmand kenbe ansyen pri, nouvo kòmand pran nouvo pri           | ✅ PASS | Okenn `T4-FAIL` leve     |
 
 **5/5 tès pase.**
 
@@ -59,11 +60,13 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 ## 4. Chanjman UI (`fichye:liy`)
 
 **Nouvo** :
+
 - `src/hooks/useDeliveryFee.ts` — hook pataje (React Query), li `platform_delivery_zones` default zone.
 - `src/routes/_authenticated/dashboard.admin.delivery-fee.tsx` — nouvo ekran admin, STANDARD step-up (`withReauth(..., "standard")`).
 - `src/routes/_authenticated/dashboard.admin.index.tsx:16,362-367` — nouvo kat navigasyon "Frè livrezon".
 
 **Modifye** :
+
 - `src/routes/checkout.tsx:163-176` (retire ansyen rekèt `restaurants.delivery_fee`), nouvo `useDeliveryFee()`, bouton "Konfime kòmand" kounye a gen `disabled={submitting || platformFee.isLoading}` an plis. **Liy separe "Sou-total"/"Frè livrezon"/"Total" te deja egziste** (`checkout.tsx:404-417`) — sèl sous done a chanje, pa estrikti afichaj la.
 - `src/components/home/popular-restaurants-section.tsx` — `r.delivery_fee` (ki ta rete tanporèlman toujou 0 apre chanjman sa a) ranplase pa `useDeliveryFee()`.
 - `src/routes/restaurants.$slug.tsx` — menm bagay, header restoran an.
@@ -91,6 +94,7 @@ Prezante 2 opsyon (chif fiks vs tab zòn) ak konsekans yo. **Desizyon** : **tab 
 ## 7. Estati aplikasyon
 
 **Migrasyon aplike sou pwodiksyon ? WI**, 2026-08-16, apre tès `BEGIN…ROLLBACK` konfime pase (§3). Sekans reyèl la : (1) mèt pwojè a kouri tès konbine a (migrasyon + tès) nan SQL Editor, `Success. No rows returned` ; (2) migrasyon an aplike pou vre via Management API (`database/query` — ekivalan SQL Editor, pa CLI) nan pwòp tranzaksyon li, ansanm ak ranje tracking `supabase_migrations.schema_migrations` ; (3) konfime an dirèk sou pwodiksyon :
+
 - `platform_delivery_zones` gen egzakteman 1 ranje : "Gonaïves", 150.00, `is_default = true`.
 - `update_delivery_zone_fee_secure` egziste nan `pg_proc`.
 - `private.create_order_secure` k ap viv la kounye a li `platform_delivery_zones` (`LIKE '%platform_delivery_zones%'` → `true`) e **pa gen ankò** ansyen `COALESCE(...,150)` la (`LIKE '%COALESCE%150%'` → `false`).
