@@ -67,7 +67,32 @@ par commit. Ne jamais les redéfinir manuellement dans `.env.local`.
 
 ## Checklist pour un nouveau développeur
 
-1. `nvm use` (ou installer Node 22 — voir `.nvmrc`).
+1. `nvm use` (ou installer Node 24 — voir `.nvmrc`).
+
+   **Ne descendez jamais sous Node 24.** C'est la ligne LTS, c'est le runtime que
+   Vercel exécute en production (`nodejs24.x`, choisi par le preset Nitro), et
+   c'est celle que la CI installe via `node-version-file: ".nvmrc"` — dans les
+   quatre jobs des deux workflows.
+
+   La raison est le lockfile. Chaque majeure de Node embarque son propre npm
+   (22 → npm 10.9.x, 24 → npm 11.19.x), et un `package-lock.json` écrit par
+   npm 11 est **rejeté** par npm 10 :
+
+   ```text
+   npm error code EUSAGE
+   npm error Missing: lru-cache@11.5.3 from lock file
+   ```
+
+   Développer sur Node 24+ pendant que `.nvmrc` pointait sur 22 a donc suffi à
+   faire échouer `npm ci` — et avec lui les quatre jobs CI, pendant des semaines,
+   avant même le premier contrôle. `engines` dans `package.json` exige `>=24` :
+   npm émet un avertissement `EBADENGINE` (il ne bloque pas — il n'y a pas
+   d'`engine-strict` dans ce dépôt), ce qui suffit à rendre l'écart visible.
+
+   La borne haute est délibérément absente : Node 25 embarque lui aussi npm 11 et
+   lit le même lockfile. C'est le retour en arrière vers npm 10 qui casse, pas la
+   marche en avant. Le chemin recommandé reste `nvm use`, qui aligne sur `.nvmrc`.
+
 2. `cp .env.example .env.local`, remplir avec les identifiants d'un projet
    Supabase de développement (jamais ceux de production).
 3. `npm run setup` (= `npm ci`).
