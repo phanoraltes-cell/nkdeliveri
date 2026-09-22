@@ -28,18 +28,23 @@ Sèl itilizasyon `crypt()` nan pwojè a se `admin_backup_codes` (`extensions.cry
 ## 3. Sesyon / JWT
 
 ### Kliyan (`src/integrations/supabase/client.ts:49-55`)
+
 ```
 storage: localStorage, persistSession: true, autoRefreshToken: true
 ```
+
 **KONFIME**. Refresh otomatik jere pa `@supabase/supabase-js` li menm (mekanis estanda, pa yon rekonstriksyon koutim).
 
 **Nòt achitekti (pa yon finding, yon tradeoff konnen)** : `localStorage` aksesib a nenpòt script JS ki kouri sou paj la — si yon XSS te janm egziste, token yo ta vòlab. Faz 2 (§3, Injection) te konfime **0 `dangerouslySetInnerHTML`/`.innerHTML =`** nan tout `src/` — risk la mitige pa absans XSS, pa pa yon chwa stokaj altènatif (cookie `httpOnly` ta mande yon rekonstriksyon SSR-aware pi lou, pa fèt kounye a). Konsistan ak konvansyon Supabase default la, pa yon erè spesifik pwojè sa a.
 
 ### Sèvè (`src/integrations/supabase/auth-middleware.ts:34-105`)
+
 **KONFIME** : chak apèl `createServerFn` ki mande otantifikasyon pase pa `requireSupabaseAuth`, ki egzije yon `Authorization: Bearer <JWT>` byen fòme (3 pati, separe pa `.`), epi valide l ak `supabase.auth.getClaims(token)` — metòd ki verifye siyati kriptografik **ak** ekspirasyon (`exp`) anba tè. Yon JWT ekspire oswa fo rejte anvan menm `context.userId` etabli.
 
 ### Revokasyon (session management)
+
 **KONFIME, byen konstwi** — `src/hooks/useActiveSessions.ts` + `supabase/migrations/20260728110000_active_sessions_management.sql` :
+
 - `get_my_active_sessions_secure()` : li `auth.sessions` **dirèkteman** (pa yon tab paralèl), `WHERE user_id = auth.uid()` — chak itilizatè wè sèlman **pwòp** sesyon li.
 - `revoke_my_session_secure(_session_id)` : `DELETE FROM auth.sessions WHERE id = _session_id AND user_id = auth.uid()` — gad `AND user_id = auth.uid()` anpeche yon itilizatè revoke sesyon yon lòt moun (pa gen IDOR isit la). `DELETE` sou `auth.sessions` fè GoTrue rejte refresh token an nan pwochen itilizasyon li — vrè revokasyon, pa yon flag kosmetik.
 - "Dekonekte tout lòt aparèy" : `supabase.auth.signOut({ scope: "others" })` — metòd ofisyèl SDK a, pa yon rekonstriksyon koutim.
@@ -56,11 +61,11 @@ refresh_token_rotation_enabled: true
 security_refresh_token_reuse_interval: 10
 ```
 
-| Chèk | Rezilta | Klasifikasyon |
-|---|---|---|
-| Rotasyon refresh token | **aktive** (`true`) | ✅ |
-| Reuse detection | **aktive** — dekoule dirèkteman de rotasyon aktive a, ak yon fenèt gras 10s pou ka konkirans/rekèt paralèl lejitim yo (konpòtman estanda GoTrue, pa yon dezaktivasyon) | ✅ |
-| Dire `exp` JWT | `3600`s (1è) — **defo estanda Supabase, pa etann** | ✅ Nòt : pa `> 3600s`, donk pa gen jistifikasyon/redwiksyon nesesè |
+| Chèk                   | Rezilta                                                                                                                                                                | Klasifikasyon                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Rotasyon refresh token | **aktive** (`true`)                                                                                                                                                    | ✅                                                                 |
+| Reuse detection        | **aktive** — dekoule dirèkteman de rotasyon aktive a, ak yon fenèt gras 10s pou ka konkirans/rekèt paralèl lejitim yo (konpòtman estanda GoTrue, pa yon dezaktivasyon) | ✅                                                                 |
+| Dire `exp` JWT         | `3600`s (1è) — **defo estanda Supabase, pa etann**                                                                                                                     | ✅ Nòt : pa `> 3600s`, donk pa gen jistifikasyon/redwiksyon nesesè |
 
 **Konklizyon (dapre gid klasifikasyon Travay 2)** : **Rotasyon aktive + reuse detection aktive → KONFIME pwòp — fèmen.** Yon refresh token vòlè pa ka rete valid endefiniman — premye reyitilizasyon li apre rotasyon deklanche revokasyon tout fanmi tokens lan (konpòtman GoTrue estanda). **Okenn nouvo ID NKD.**
 
@@ -83,16 +88,20 @@ security_refresh_token_reuse_interval: 10
 Metodoloji : verifye RLS sou tab prensipal yo (`orders`, `deliveries`) olye eseye kouvri 117 RPC endividyèlman — RLS se dènye liy defans la kèlkeswa chemen kòd la (RPC oswa `.from()` dirèk), donk se la pwoteksyon reyèl la ye.
 
 ### `orders read` (dènye vèsyon, `20260709093000_fix_orders_deliveries_rls_recursion.sql:40+`)
+
 **KONFIME** — 5 branch : kliyan (`customer_id = auth.uid()`), admin, pwopriyetè restoran (`r.owner_id = auth.uid()`), anplwaye restoran (`e.user_id = auth.uid() AND e.restaurant_id = orders.restaurant_id` — **byen ankre sou restoran espesifik la**, pa nenpòt restoran), ak `private.order_visible_to_driver()` pou livrè.
 
 ### `private.order_visible_to_driver` (menm fichye, liy 21-38)
+
 **KONFIME, byen konsepsyon** — 2 ka :
+
 1. Livrezon an deja **asiyen a menm livrè sa a espesifik** (`dr.user_id = auth.uid()`) — yon lòt livrè pa ka wè l.
 2. Kòmand `ready`, **san livrezon asiyen ankò**, e itilizatè a se yon livrè `online` — sa se pisin kòmand ki disponib pou tout livrè an liy yo, **pa yon bug, se konsepsyon** (menm jan ak Uber Eats — yon moun dwe ka wè yon kòmand pou l ka reklame l).
 
 Yon fwa yon lòt livrè reklame kòmand sa a (`claim_delivery_secure`, deja odite Faz 1/F-02), ka #2 la sispann aplike (gen deja yon `deliveries` ranje), donk sèlman livrè ki asiyen an ka toujou wè l apre sa.
 
 ### `deliveries read` (`20260721120000_order_items_deliveries_staff_driver_read.sql:37-43`)
+
 **KONFIME** — menm modèl : admin, livrè asiyen an sèlman (`d.driver_id AND d.user_id = auth.uid()`), kliyan pwopriyetè, restoran/anplwaye pwopriyetè.
 
 ### `revoke_my_session_secure` (§3) — **KONFIME** gad `AND user_id = auth.uid()` anpeche revoke sesyon lòt moun.
@@ -103,18 +112,19 @@ Yon fwa yon lòt livrè reklame kòmand sa a (`claim_delivery_secure`, deja odit
 
 ## 7. Isolasyon atravè 6 wòl yo (senaryo espesifik mande)
 
-| Senaryo | Rezilta | Prèv |
-|---|---|---|
-| Yon `driver` wè kòmand yon lòt `driver` deja asiyen | **BLOKE** | `order_visible_to_driver` ka #1, ankre sou `dr.user_id = auth.uid()` |
-| Yon `driver` wè pozisyon global yon lòt `driver` | **BLOKE** | Deja verifye Faz 2 §9 : `drivers.current_lat/lng` — "livrè a limenm + admin sèlman" |
+| Senaryo                                                | Rezilta   | Prèv                                                                                                                                            |
+| ------------------------------------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Yon `driver` wè kòmand yon lòt `driver` deja asiyen    | **BLOKE** | `order_visible_to_driver` ka #1, ankre sou `dr.user_id = auth.uid()`                                                                            |
+| Yon `driver` wè pozisyon global yon lòt `driver`       | **BLOKE** | Deja verifye Faz 2 §9 : `drivers.current_lat/lng` — "livrè a limenm + admin sèlman"                                                             |
 | Yon `restaurant_staff` wè kòmand/done yon lòt restoran | **BLOKE** | `orders read`/`deliveries read` ankre `e.restaurant_id = orders.restaurant_id` — espesifik a restoran anplwaye a travay pou a, pa tout restoran |
-| Yon itilizatè revoke sesyon yon lòt itilizatè | **BLOKE** | `revoke_my_session_secure` gad `user_id = auth.uid()` |
+| Yon itilizatè revoke sesyon yon lòt itilizatè          | **BLOKE** | `revoke_my_session_secure` gad `user_id = auth.uid()`                                                                                           |
 
 ---
 
 ## 8. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - Okenn hachaj modpas koutim — 100% GoTrue.
 - Sesyon kliyan `localStorage`, `persistSession`/`autoRefreshToken` estanda.
 - Validasyon JWT sèvè a (`getClaims`) verifye siyati + ekspirasyon.
@@ -126,6 +136,7 @@ Yon fwa yon lòt livrè reklame kòmand sa a (`claim_delivery_secure`, deja odit
 **ESTIMASYON** : okenn — chak KONFIME anwo a soti nan lekti dirèk kòd/migrasyon, pa yon sèl grep san kontèks.
 
 **PA VERIFYE** :
+
 - Envantè konplè 117 RPC pou IDOR (sa a se yon echantiyon sou tab ki pi sansib, pa 100%).
 
 ---

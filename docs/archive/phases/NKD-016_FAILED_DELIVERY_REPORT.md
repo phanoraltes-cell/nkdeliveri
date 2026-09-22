@@ -10,28 +10,31 @@
 ## 1. Kote `generate_commission_for_order` deklanche
 
 `supabase/migrations/20260722100100_commission_engine.sql:143-146` :
+
 ```sql
 CREATE TRIGGER trg_generate_commission_on_delivery
 AFTER UPDATE ON public.orders
 FOR EACH ROW WHEN (NEW.status = 'delivered' AND OLD.status IS DISTINCT FROM 'delivered')
 EXECUTE FUNCTION private.generate_commission_on_delivery();
 ```
+
 Etriktman `orders.status = 'delivered'` sèlman. Delegasyon an rele `private.generate_commission_for_order(NEW.id, NULL, 'trigger')`, ki fè restoran + livrè ansanm.
 
 ## 2. Dekouvèt achitekti (envestigasyon, pa sipozisyon)
 
 Gen **2 chemen paralèl** pou estati:
 
-| | Kolòn | Enum | Kiyès ki itilize l |
-|---|---|---|---|
-| A | `orders.status` | `order_status` | `update_order_status_secure` — restoran + kliyan. Gen yon branch "livrè" ki egziste men **fwontèn pa rele l pou livrè**. |
-| B | `deliveries.status` | `delivery_status` (**yon dezyèm enum, separe**) | `private.protect_delivery_status_transition()` — **sa a livrè a itilize reyèlman** (`dashboard.driver.history.tsx:148`, `.from("deliveries").update({status})` dirèk). Senkronize `orders.status` apre, sèlman pou `picked_up`/`delivered`. |
+|     | Kolòn               | Enum                                            | Kiyès ki itilize l                                                                                                                                                                                                                          |
+| --- | ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | `orders.status`     | `order_status`                                  | `update_order_status_secure` — restoran + kliyan. Gen yon branch "livrè" ki egziste men **fwontèn pa rele l pou livrè**.                                                                                                                    |
+| B   | `deliveries.status` | `delivery_status` (**yon dezyèm enum, separe**) | `private.protect_delivery_status_transition()` — **sa a livrè a itilize reyèlman** (`dashboard.driver.history.tsx:148`, `.from("deliveries").update({status})` dirèk). Senkronize `orders.status` apre, sèlman pou `picked_up`/`delivered`. |
 
 Konsekans : bouton "Pa ka livre" a pase pa Chemen B. `delivery_failed` ajoute nan **toude enum yo** (`order_status` AK `delivery_status`), ak `commission_entry_type` (twazyèm enum, pou `commission_ledger.entry_type`).
 
 ## 3. Fonksyon/trigè `order_status` afekte
 
 Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
+
 - `private.update_order_status_secure` — `20260814160000_nkd010_stock_decrement.sql:203`. **Modifye** (§5).
 - `private.protect_delivery_status_transition` — `20260723090000_notifications_engine_and_gps_sharing.sql:259`. **Modifye** (§5).
 - `private.create_order_secure` — `20260816120000_nkd015_delivery_fee_config.sql:151`. **Modifye** (mesaj Kreyòl sèlman, §5).
@@ -43,12 +46,12 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 
 ## 4. Kesyon "KANPE EPI MANDE" — repons resevwa
 
-| Kesyon | Repons |
-|---|---|
-| Achitekti (ki chemen pou `delivery_failed`) | **RPC dedye + 2 enum** — `public.report_delivery_failed_secure`, pa yon `.update()` dirèk. |
-| Komisyon sou echèk | **Trigger + fonksyon separe** — `private.generate_driver_commission_on_delivery_failure`, pa yon paramèt sou `generate_commission_for_order`. |
-| Fenèt 2èdtan | **Klik manyèl admin** — pa gen enfrastrikti travay planifye nan pwojè a jodi a. |
-| Repwogramasyon | **Ranvwaye pou NKD-017** — pa fè pati migrasyon sa a. |
+| Kesyon                                      | Repons                                                                                                                                        |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Achitekti (ki chemen pou `delivery_failed`) | **RPC dedye + 2 enum** — `public.report_delivery_failed_secure`, pa yon `.update()` dirèk.                                                    |
+| Komisyon sou echèk                          | **Trigger + fonksyon separe** — `private.generate_driver_commission_on_delivery_failure`, pa yon paramèt sou `generate_commission_for_order`. |
+| Fenèt 2èdtan                                | **Klik manyèl admin** — pa gen enfrastrikti travay planifye nan pwojè a jodi a.                                                               |
+| Repwogramasyon                              | **Ranvwaye pou NKD-017** — pa fè pati migrasyon sa a.                                                                                         |
 
 `entry_type` nouvo pwopoze e itilize : `driver_commission_delivery_failed`.
 
@@ -74,28 +77,30 @@ Vèsyon vivan yo sèlman (dènye `CREATE OR REPLACE` pou chak) :
 
 **Analiz `T5-FAIL` (pas 1)** : bug nan **tès la**, pa nan migrasyon an. Chif yo (`before=8, after=8`) te deja pwouve estòk la **pa t chanje ditou** — konpòtman ki egzakteman atandi (delivery_failed → cancelled pa dwe touche estòk). `v_stock_before` te kaptire **apre** `create_order_secure` deja dekremante l (10→8), donk konparezon an kont `v_stock_before - 2` te doub-soustrè. **Korije** : konparezon vin `v_stock_after <> v_stock_before` (san `- 2`).
 
-| ID | Tès | Rezilta | Prèv |
-|---|---|---|---|
-| T0 | Kòmand san `contact_phone` rejte | ✅ PASS | Pas 1, 2026-08-18 |
-| T1 | `picked_up → delivery_failed` mache | ✅ PASS | Pas 1, 2026-08-18 |
-| T1b | Rezon "lòt" san kòmantè rejte | ✅ PASS | Pas 1, 2026-08-18 |
-| T2 | Livrè kredite 150 HTG, restoran pa kredite | ✅ PASS | Pas 1, 2026-08-18 |
-| T3 | Idanpotans — 2èm deklanchman (`orders`) pa double-kredite | ✅ PASS | Pas 1, 2026-08-18 |
-| T4 | `delivery_failed → delivered` mache (admin) **+ verifye pa gen doub komisyon** (Defo 1) | ✅ PASS | Pas 1, 2026-08-18 — **konfime Defo 1 korije, pa gen 300 HTG** |
-| T5 | `delivery_failed → cancelled` : pa gen ranbousman, estòk pa retounen | ✅ PASS | Pas 2, 2026-08-18 (apre koreksyon off-by-one nan tès la) |
-| T6 | Tranzisyon envalid rejte (`delivery_failed → picked_up`) | ✅ PASS | Pas 2, 2026-08-18 |
-| T8 | `en_route_dropoff → delivery_failed` mache (Defo 2) | ✅ PASS | Pas 2, 2026-08-18 |
-| T9 | `assigned → delivery_failed` rejte (livrè poko pran manje a) | ✅ PASS | Pas 2, 2026-08-18 |
+| ID  | Tès                                                                                     | Rezilta | Prèv                                                          |
+| --- | --------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------- |
+| T0  | Kòmand san `contact_phone` rejte                                                        | ✅ PASS | Pas 1, 2026-08-18                                             |
+| T1  | `picked_up → delivery_failed` mache                                                     | ✅ PASS | Pas 1, 2026-08-18                                             |
+| T1b | Rezon "lòt" san kòmantè rejte                                                           | ✅ PASS | Pas 1, 2026-08-18                                             |
+| T2  | Livrè kredite 150 HTG, restoran pa kredite                                              | ✅ PASS | Pas 1, 2026-08-18                                             |
+| T3  | Idanpotans — 2èm deklanchman (`orders`) pa double-kredite                               | ✅ PASS | Pas 1, 2026-08-18                                             |
+| T4  | `delivery_failed → delivered` mache (admin) **+ verifye pa gen doub komisyon** (Defo 1) | ✅ PASS | Pas 1, 2026-08-18 — **konfime Defo 1 korije, pa gen 300 HTG** |
+| T5  | `delivery_failed → cancelled` : pa gen ranbousman, estòk pa retounen                    | ✅ PASS | Pas 2, 2026-08-18 (apre koreksyon off-by-one nan tès la)      |
+| T6  | Tranzisyon envalid rejte (`delivery_failed → picked_up`)                                | ✅ PASS | Pas 2, 2026-08-18                                             |
+| T8  | `en_route_dropoff → delivery_failed` mache (Defo 2)                                     | ✅ PASS | Pas 2, 2026-08-18                                             |
+| T9  | `assigned → delivery_failed` rejte (livrè poko pran manje a)                            | ✅ PASS | Pas 2, 2026-08-18                                             |
 
 **10/10 tès pase.**
 
 ## 6. Chanjman UI (`fichye:liy`)
 
 **Nouvo** :
+
 - `src/routes/_authenticated/dashboard.admin.delivery-failed.tsx` — ekran admin, lis kòmand `delivery_failed`, tan ki pase, bouton "Kliyan vin chèche l" (→ `delivered`) / "Anile — pa gen ranbousman" (→ `cancelled`, konfimasyon si poko 2h).
 - `src/routes/_authenticated/dashboard.admin.index.tsx:369-374` — nouvo kat navigasyon "Livrezon echwe".
 
 **Modifye** :
+
 - `src/routes/_authenticated/dashboard.driver.history.tsx:141-172` (nouvo mutation `reportFailed`), `:186-266` (bouton "Pa ka livre" + fòm rezon/kòmantè enline, menm modèl ak fòm litij kach ki deja egziste pi ba).
 - `src/lib/send-order-status-push.functions.ts:20-28` — antre `delivery_failed` nan `STATUS_COPY`, voye apre `report_delivery_failed_secure` reyisi.
 - `src/lib/delivery-status.ts`, `src/lib/order-status.ts` — etikèt Kreyòl "Livrezon echwe" pou nouvo valè a.

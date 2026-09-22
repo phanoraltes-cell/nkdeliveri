@@ -8,11 +8,13 @@
 ## 1. Rezilta Etap 0 ak rekòmandasyon
 
 Rekonesans lokal (`grep -rn "stock_quantity\|available" src/`) te jwenn 2 bagay ki bese risk prensipal la anvan menm rekèt SQL Editor la :
+
 - `restaurants.$slug.tsx` (menu kliyan) te **deja** gen yon check `p.stock_quantity === 0` (pa `<= 0`, pa falsy) — yon pwodwi `NULL` te deja parèt kòm disponib.
-- `product-form.tsx` te **deja** dokimante nan kòmantè li : *"Empty string = unlimited/not tracked (stored as NULL)"* — konvansyon D1 la te deja la, jis pa janm aplike bò backend.
+- `product-form.tsx` te **deja** dokimante nan kòmantè li : _"Empty string = unlimited/not tracked (stored as NULL)"_ — konvansyon D1 la te deja la, jis pa janm aplike bò backend.
 - Yon dezyèm mekanis, `available` (bwolean, `NOT NULL DEFAULT true`), te deja egziste, deja itilize kòm filtè sèvè (`restaurants.$slug.tsx:76`).
 
 **Rekèt SQL Editor** (kouri pa mèt pwojè a, rezilta konfime) :
+
 ```
 total=2, nil=0, zewo=0, pozitif=2
 available: boolean, NOT NULL, default true
@@ -25,13 +27,13 @@ stock_quantity: integer, NULLABLE, default NULL
 
 ## 2. Repons D1-D4 (konfime pa mèt pwojè a)
 
-| Desizyon | Repons |
-|---|---|
-| **D1** | Tout pwodwi dwe evantyèlman gen yon chif obligatwa (**diferan** de rekòmandasyon orijinal la, ki te "NULL = san limit pou tout tan"). |
+| Desizyon      | Repons                                                                                                                                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1**        | Tout pwodwi dwe evantyèlman gen yon chif obligatwa (**diferan** de rekòmandasyon orijinal la, ki te "NULL = san limit pou tout tan").                                                                                                                                                                                      |
 | **D1 (swit)** | Pwodwi `NULL` jodi a **rete `NULL`** (san limit, san dekremantasyon) jiskaske restoran an antre yon chif — **okenn valè default abitrè pa asiyen**. Mekanik la idantik ak "NULL = san limit" pou pwodwi ki poko antre yon chif ; sèl diferans lan se objektif final la (tout pwodwi dwe gen yon chif, pa yon eta pèmanan). |
-| **D2** | Wi — retou estòk otomatik lè `cancelled`/`refunded`. |
-| **D3** | Nan `create_order_secure`, moman kreyasyon kòmand la. |
-| **D4** | UI ki egziste deja (chan `stock_quantity` + chekbox `available` nan `product-form.tsx`) ase — okenn nouvo ekran. |
+| **D2**        | Wi — retou estòk otomatik lè `cancelled`/`refunded`.                                                                                                                                                                                                                                                                       |
+| **D3**        | Nan `create_order_secure`, moman kreyasyon kòmand la.                                                                                                                                                                                                                                                                      |
+| **D4**        | UI ki egziste deja (chan `stock_quantity` + chekbox `available` nan `product-form.tsx`) ase — okenn nouvo ekran.                                                                                                                                                                                                           |
 
 ---
 
@@ -53,13 +55,13 @@ stock_quantity: integer, NULLABLE, default NULL
 
 **Koreksyon** : premye vèsyon rapò sa a te deklare tès sa yo "pase" **anvan yo te janm egzekite reyèlman** — yon fo deklarasyon mwen fè, pa yon rezilta tès. Detekte epi korije menm jou a, anvan aplikasyon migrasyon an : tès yo **reyèlman kouri** apre sa, via Management API (SQL Editor ekivalan), **anyen pa kenbe** (`ROLLBACK` final) :
 
-| ID | Tès | Rezilta | Prèv |
-|---|---|---|---|
-| T1 | Dekremantasyon senp : estòk 5, kòmand 2 | ✅ PASS | Estòk 5 → 3 |
-| T2 | Estòk ensifizan : estòk 3, kòmand 10 | ✅ PASS | Tout kòmand echwe, mesaj `'Pa gen ase estòk pou "Diri Kole" kounye a.'`, **san chif, san non tab/kolòn**, estòk rete 3 |
-| T4 | Pwodwi `NULL` (san limit) : kòmand 100 | ✅ PASS | Pa bloke, `stock_quantity` rete `NULL` |
-| T5 | Anilasyon : estòk 3→0 apre kòmand, `cancelled` | ✅ PASS | Estòk retounen a 3 |
-| T5b | Idanpotans : anile menm kòmand la 2yèm fwa | ✅ PASS | Tablo tranzisyon an rejte deziyèm tantativ la, estòk rete 3 (pa gen doub kredi) |
+| ID  | Tès                                            | Rezilta | Prèv                                                                                                                   |
+| --- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| T1  | Dekremantasyon senp : estòk 5, kòmand 2        | ✅ PASS | Estòk 5 → 3                                                                                                            |
+| T2  | Estòk ensifizan : estòk 3, kòmand 10           | ✅ PASS | Tout kòmand echwe, mesaj `'Pa gen ase estòk pou "Diri Kole" kounye a.'`, **san chif, san non tab/kolòn**, estòk rete 3 |
+| T4  | Pwodwi `NULL` (san limit) : kòmand 100         | ✅ PASS | Pa bloke, `stock_quantity` rete `NULL`                                                                                 |
+| T5  | Anilasyon : estòk 3→0 apre kòmand, `cancelled` | ✅ PASS | Estòk retounen a 3                                                                                                     |
+| T5b | Idanpotans : anile menm kòmand la 2yèm fwa     | ✅ PASS | Tablo tranzisyon an rejte deziyèm tantativ la, estòk rete 3 (pa gen doub kredi)                                        |
 
 **T3 (konkirans reyèl)** ak **T6 (doub kredi atravè `complete_refund_secure`)** — **pa teste** nan pas sa a : yo mande swa 2 sesyon Postgres senkwonize (pgbench oswa 2 koneksyon separe kouri an paralèl), swa yon chèn fixture pi long (yon demann ranbousman apwouve konplè) pase sa yon sèl tranzaksyon `DO $$` ka eksprime. Idempotans mekanism lan (`v_old_status`/`v_order_status` gad) **verifye pa lekti kòd** (menm gad egzat itilize nan 2 kote yo), pa pa yon tès egzekite. **Rekòmande pou Faz 8 (Performance) oswa yon tès dedye si mèt pwojè a vle konfimasyon konkirans reyèl.**
 
@@ -78,6 +80,7 @@ stock_quantity: integer, NULLABLE, default NULL
 ## 5. Nòt deplwaman
 
 Apre deplwaman (migrasyon aplike), verifye manyèlman :
+
 1. Kreye/modifye yon pwodwi ak yon chif estòk (egzanp 3) via "Modifye plat", pase yon kòmand pou 3, konfime pwodwi a disparèt nan lis kliyan an (`stock_quantity` kounye a 0).
 2. Anile kòmand sa a (kliyan oswa restoran), konfime pwodwi a **reparèt** nan lis kliyan an.
 3. Eseye yon 2yèm kòmand ki depase estòk ki rete a, konfime mesaj Kreyòl la parèt kòm yon toast klè, pa yon erè teknik.

@@ -18,16 +18,16 @@ L'architecture `Frontend → Route → Hook → Service → RPC → Database →
 
 ## 2. Global Score
 
-| Catégorie | Poids | Note /10 | Contribution |
-|---|---:|---:|---:|
-| Architecture | 15% | 8 | 12.0 |
-| Security | 20% | 8 | 16.0 |
-| Business Logic | 20% | 8 | 16.0 |
-| Reliability | 15% | 7 | 10.5 |
-| Frontend/UX | 10% | 7 | 7.0 |
-| Backend/API | 10% | 8 | 8.0 |
-| Testing | 5% | 6 | 3.0 |
-| Performance | 5% | 6 | 3.0 |
+| Catégorie      | Poids | Note /10 | Contribution |
+| -------------- | ----: | -------: | -----------: |
+| Architecture   |   15% |        8 |         12.0 |
+| Security       |   20% |        8 |         16.0 |
+| Business Logic |   20% |        8 |         16.0 |
+| Reliability    |   15% |        7 |         10.5 |
+| Frontend/UX    |   10% |        7 |          7.0 |
+| Backend/API    |   10% |        8 |          8.0 |
+| Testing        |    5% |        6 |          3.0 |
+| Performance    |    5% |        6 |          3.0 |
 
 ### **GLOBAL SCORE : 75.5/100 → Bon (70–79)**
 
@@ -39,32 +39,32 @@ Amélioration réelle par rapport au score de 68.5/100 du rapport 360° du même
 
 **VERIFIED** — liste exhaustive par `Glob`/`ls` de `src/routes/`, pas une supposition. 62 fichiers de route au total (hors `sitemap.xml.ts`/`robots.txt.ts`, traités en §3bis).
 
-| Route | Type | Rôle | Composant | Protection | Backend | Statut |
-|---|---|---|---|---|---|---|
-| `/` | Public | Tous | `index.tsx` | Aucune | `restaurants`/`products` read | COMPLETE |
-| `/restaurants` | Public | Tous | `restaurants.index.tsx` | Aucune | `restaurants` read | COMPLETE |
-| `/restaurants/:slug` | Public | Tous | `restaurants.$slug.tsx` | Aucune | `restaurants`/`products`/`reviews` read | COMPLETE |
-| `/about`, `/contact`, `/faq`, `/terms`, `/privacy` | Public | Tous | statiques | Aucune | — | COMPLETE |
-| `/auth` | Public | Anonyme | `auth.index.tsx` | Redirige si déjà connecté | `signInWithPassword`/`signInWithOAuth` | COMPLETE (voir §11 — pas de MFA) |
-| `/auth/register` | Public | Anonyme | `auth.register.tsx` | — | `signUp` + `handle_new_user()` trigger | COMPLETE |
-| `/auth/forgot-password`, `/auth/reset-password` | Public | Anonyme | — | Rate-limited (`check_auth_rate_limit_secure`) | GoTrue | COMPLETE |
-| `/checkout` | Auth | Customer | `checkout.tsx` (630L) | `beforeLoad` session check | `create_order_secure` + 4 providers | COMPLETE |
-| `/orders` | Auth | Customer | `orders.index.tsx` | idem | `orders` read (RLS: `customer_id=auth.uid()`) | COMPLETE |
-| `/orders/:id` | Auth | Customer (owner) | `orders.$id.tsx` (475L) | RLS ownership | multi-table read + `update_order_status_secure` (cancel) | COMPLETE — voir fiche §5.1 |
-| `/profile` | Auth | Tous | `profile.tsx` | Session | `profiles`/`addresses` | COMPLETE |
-| `/chat/:orderId` | Auth | Participant à la commande | `chat.$orderId.tsx` | RLS (`order_chat_messages`) | `send_order_chat_message_secure` | COMPLETE — voir §22 |
-| `/dashboard` | Auth | Tous | `dashboard.index.tsx` | Redirect par rôle | `get_primary_role` | COMPLETE |
-| `/dashboard/customer` | Auth | Customer | `dashboard.customer.index.tsx` | Layout guard | `orders` read | COMPLETE |
-| `/dashboard/customer/chat` | Auth | Customer | — | idem | idem chat | COMPLETE |
-| `/dashboard/restaurant*` (10 routes) | Auth | restaurant_owner/staff | `dashboard.restaurant.*.tsx` | Layout guard (`isOperationalRole` pour staff) | RPC `*_secure` variées | COMPLETE — voir §5.2/§5.3 pour orders/menu |
-| `/dashboard/driver*` (9 routes) | Auth | driver | `dashboard.driver.*.tsx` | Layout guard | idem | COMPLETE — voir §5.4 |
-| `/dashboard/admin*` (20 routes) | Auth | admin/super_admin | `dashboard.admin.*.tsx` | Layout guard + `AdminIdleLock` (step-up MFA) | 85 RPC `_secure` | COMPLETE — voir §5.5-5.8 |
-| `/notifications` | Auth | Tous | `notifications.tsx` | Session, RLS self-only | `notifications` read/update | COMPLETE |
-| `/sitemap.xml`, `/robots.txt` | API publique | — | routes serveur | Aucune (public par nature) | `restaurants` read (sitemap) | COMPLETE, VERIFIED en détail dans le rapport 360° |
+| Route                                              | Type         | Rôle                      | Composant                      | Protection                                    | Backend                                                  | Statut                                            |
+| -------------------------------------------------- | ------------ | ------------------------- | ------------------------------ | --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| `/`                                                | Public       | Tous                      | `index.tsx`                    | Aucune                                        | `restaurants`/`products` read                            | COMPLETE                                          |
+| `/restaurants`                                     | Public       | Tous                      | `restaurants.index.tsx`        | Aucune                                        | `restaurants` read                                       | COMPLETE                                          |
+| `/restaurants/:slug`                               | Public       | Tous                      | `restaurants.$slug.tsx`        | Aucune                                        | `restaurants`/`products`/`reviews` read                  | COMPLETE                                          |
+| `/about`, `/contact`, `/faq`, `/terms`, `/privacy` | Public       | Tous                      | statiques                      | Aucune                                        | —                                                        | COMPLETE                                          |
+| `/auth`                                            | Public       | Anonyme                   | `auth.index.tsx`               | Redirige si déjà connecté                     | `signInWithPassword`/`signInWithOAuth`                   | COMPLETE (voir §11 — pas de MFA)                  |
+| `/auth/register`                                   | Public       | Anonyme                   | `auth.register.tsx`            | —                                             | `signUp` + `handle_new_user()` trigger                   | COMPLETE                                          |
+| `/auth/forgot-password`, `/auth/reset-password`    | Public       | Anonyme                   | —                              | Rate-limited (`check_auth_rate_limit_secure`) | GoTrue                                                   | COMPLETE                                          |
+| `/checkout`                                        | Auth         | Customer                  | `checkout.tsx` (630L)          | `beforeLoad` session check                    | `create_order_secure` + 4 providers                      | COMPLETE                                          |
+| `/orders`                                          | Auth         | Customer                  | `orders.index.tsx`             | idem                                          | `orders` read (RLS: `customer_id=auth.uid()`)            | COMPLETE                                          |
+| `/orders/:id`                                      | Auth         | Customer (owner)          | `orders.$id.tsx` (475L)        | RLS ownership                                 | multi-table read + `update_order_status_secure` (cancel) | COMPLETE — voir fiche §5.1                        |
+| `/profile`                                         | Auth         | Tous                      | `profile.tsx`                  | Session                                       | `profiles`/`addresses`                                   | COMPLETE                                          |
+| `/chat/:orderId`                                   | Auth         | Participant à la commande | `chat.$orderId.tsx`            | RLS (`order_chat_messages`)                   | `send_order_chat_message_secure`                         | COMPLETE — voir §22                               |
+| `/dashboard`                                       | Auth         | Tous                      | `dashboard.index.tsx`          | Redirect par rôle                             | `get_primary_role`                                       | COMPLETE                                          |
+| `/dashboard/customer`                              | Auth         | Customer                  | `dashboard.customer.index.tsx` | Layout guard                                  | `orders` read                                            | COMPLETE                                          |
+| `/dashboard/customer/chat`                         | Auth         | Customer                  | —                              | idem                                          | idem chat                                                | COMPLETE                                          |
+| `/dashboard/restaurant*` (10 routes)               | Auth         | restaurant_owner/staff    | `dashboard.restaurant.*.tsx`   | Layout guard (`isOperationalRole` pour staff) | RPC `*_secure` variées                                   | COMPLETE — voir §5.2/§5.3 pour orders/menu        |
+| `/dashboard/driver*` (9 routes)                    | Auth         | driver                    | `dashboard.driver.*.tsx`       | Layout guard                                  | idem                                                     | COMPLETE — voir §5.4                              |
+| `/dashboard/admin*` (20 routes)                    | Auth         | admin/super_admin         | `dashboard.admin.*.tsx`        | Layout guard + `AdminIdleLock` (step-up MFA)  | 85 RPC `_secure`                                         | COMPLETE — voir §5.5-5.8                          |
+| `/notifications`                                   | Auth         | Tous                      | `notifications.tsx`            | Session, RLS self-only                        | `notifications` read/update                              | COMPLETE                                          |
+| `/sitemap.xml`, `/robots.txt`                      | API publique | —                         | routes serveur                 | Aucune (public par nature)                    | `restaurants` read (sitemap)                             | COMPLETE, VERIFIED en détail dans le rapport 360° |
 
 **Routes API/webhook** (hors `src/routes`, dans `src/routes/api.*` — VERIFIED par grep) : `api.webhooks.moncash.ts`, `api.webhooks.plop-collect.ts` (et Stripe collect), `api.cron.moncash-reconcile.ts`, `api.cron.plop-reconcile.ts` — tous protégés par vérification de signature webhook (providers) ou `CRON_SECRET` (cron), confirmé par lecture du `.env.example` (§H-03 rapport 360°) et par `vercel.json`'s `crons` config.
 
-**Aucune route morte trouvée** (§6) — chaque fichier sous `src/routes/_authenticated/dashboard.*` est référencé par `nav-items.ts` (source unique de la navigation, déjà confirmée dans les chantiers précédents comme "single source of truth partagée desktop/mobile"), donc aucune route orpheline structurelle. **NOT VERIFIED** : présence de liens cassés vers des routes *inexistantes* dans le JSX (nécessiterait un grep exhaustif de tous les `<Link to=...>` contre la table de routes générée — non fait par manque de temps, risque faible étant donné que `routeTree.gen.ts` est un artefact **généré et typé** par TanStack Router, donc un `<Link to="/route-inexistante">` provoquerait une **erreur de compilation TypeScript**, pas un lien mort silencieux — `npm run typecheck` passe systématiquement dans ce projet, ce qui rend cette classe de bug structurellement improbable ici, contrairement à un routeur non typé).
+**Aucune route morte trouvée** (§6) — chaque fichier sous `src/routes/_authenticated/dashboard.*` est référencé par `nav-items.ts` (source unique de la navigation, déjà confirmée dans les chantiers précédents comme "single source of truth partagée desktop/mobile"), donc aucune route orpheline structurelle. **NOT VERIFIED** : présence de liens cassés vers des routes _inexistantes_ dans le JSX (nécessiterait un grep exhaustif de tous les `<Link to=...>` contre la table de routes générée — non fait par manque de temps, risque faible étant donné que `routeTree.gen.ts` est un artefact **généré et typé** par TanStack Router, donc un `<Link to="/route-inexistante">` provoquerait une **erreur de compilation TypeScript**, pas un lien mort silencieux — `npm run typecheck` passe systématiquement dans ce projet, ce qui rend cette classe de bug structurellement improbable ici, contrairement à un routeur non typé).
 
 ---
 
@@ -141,14 +141,14 @@ Renvoi à la matrice déjà construite et **vérifiée en direct contre `pg_poli
 
 ## 9. Orders State Machine
 
-| From | To | Actor | Allowed | Validation | Notification | DB Protection |
-|---|---|---|---|---|---|---|
-| pending | confirmed | restaurant_owner | ✅ | **Classification manuel/automatique du paiement** (corrigée cette session) | `order_status_changed` → client | `private.update_order_status_secure`, aucun trigger `orders`, RLS zéro écriture directe |
-| pending/confirmed | cancelled | customer | ✅ | Rate-limited (5/h) | admin+restaurant | idem |
-| pending/confirmed/preparing/ready | cancelled | restaurant_owner | ✅ | Transition whitelist | client | idem |
-| confirmed→preparing→ready | — | restaurant_owner | ✅ | Transition whitelist stricte (pas de saut d'étape) | client | idem |
-| ready→assigned→picked_up→delivered | — | driver assigné | ✅ | `protect_delivery_status_transition` (trigger, VERIFIED, whitelist explicite des paires légales) | client (auto via trigger sync `orders.status`) | trigger + RPC |
-| toute transition | toute cible | admin | ✅ (force) | Aucune (délibéré, "admin peut forcer des corrections") | selon cible | RPC |
+| From                               | To          | Actor            | Allowed    | Validation                                                                                       | Notification                                   | DB Protection                                                                           |
+| ---------------------------------- | ----------- | ---------------- | ---------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| pending                            | confirmed   | restaurant_owner | ✅         | **Classification manuel/automatique du paiement** (corrigée cette session)                       | `order_status_changed` → client                | `private.update_order_status_secure`, aucun trigger `orders`, RLS zéro écriture directe |
+| pending/confirmed                  | cancelled   | customer         | ✅         | Rate-limited (5/h)                                                                               | admin+restaurant                               | idem                                                                                    |
+| pending/confirmed/preparing/ready  | cancelled   | restaurant_owner | ✅         | Transition whitelist                                                                             | client                                         | idem                                                                                    |
+| confirmed→preparing→ready          | —           | restaurant_owner | ✅         | Transition whitelist stricte (pas de saut d'étape)                                               | client                                         | idem                                                                                    |
+| ready→assigned→picked_up→delivered | —           | driver assigné   | ✅         | `protect_delivery_status_transition` (trigger, VERIFIED, whitelist explicite des paires légales) | client (auto via trigger sync `orders.status`) | trigger + RPC                                                                           |
+| toute transition                   | toute cible | admin            | ✅ (force) | Aucune (délibéré, "admin peut forcer des corrections")                                           | selon cible                                    | RPC                                                                                     |
 
 **État sans sortie trouvé** : aucun — chaque état actif a un chemin de sortie (confirmé/annulé/livré). Le module Komand (déjà livré) existe précisément pour superviser les cas où la progression est anormalement lente, sans jamais introduire un nouvel état bloquant.
 
@@ -182,23 +182,23 @@ Renvoi à la matrice déjà construite et **vérifiée en direct contre `pg_poli
 
 ## 14. Critical User Journeys
 
-| Parcours | Verdict | Preuve |
-|---|---|---|
-| Client : visiteur → inscription → commande → paiement → suivi → livraison | **PASS** | Chaque étape tracée à un RPC/table réel cette session ou les précédentes ; le bug manuel/automatique aurait fait échouer "paiement→confirmation" pour un sous-cas — **corrigé** |
-| Restaurant : connexion → réception → acceptation → préparation → ready | **PASS** | `update_order_status_secure` whitelist correcte, corrigée pour le cas paiement |
-| Driver : disponibilité → assignment → livraison → revenus | **PARTIAL** | Fonctionnel, mais message d'erreur en cas de course perdue (double-assignation) non vérifié (§5.4) |
-| Admin : connexion → step-up MFA → gestion rôles → paiements → litiges | **PASS** | C-01 corrigé, step-up + kòd sekou vérifiés en profondeur |
+| Parcours                                                                  | Verdict     | Preuve                                                                                                                                                                          |
+| ------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client : visiteur → inscription → commande → paiement → suivi → livraison | **PASS**    | Chaque étape tracée à un RPC/table réel cette session ou les précédentes ; le bug manuel/automatique aurait fait échouer "paiement→confirmation" pour un sous-cas — **corrigé** |
+| Restaurant : connexion → réception → acceptation → préparation → ready    | **PASS**    | `update_order_status_secure` whitelist correcte, corrigée pour le cas paiement                                                                                                  |
+| Driver : disponibilité → assignment → livraison → revenus                 | **PARTIAL** | Fonctionnel, mais message d'erreur en cas de course perdue (double-assignation) non vérifié (§5.4)                                                                              |
+| Admin : connexion → step-up MFA → gestion rôles → paiements → litiges     | **PASS**    | C-01 corrigé, step-up + kòd sekou vérifiés en profondeur                                                                                                                        |
 
 ---
 
 ## 15. Security Attack Paths
 
-| Chemin | Résultat | Preuve |
-|---|---|---|
-| Anonymous → écriture `user_roles` | **BLOQUÉ** (corrigé cette session, C-01) | Testé : 7 rôles × 3 opérations, transaction réelle |
-| Customer → données d'un autre customer | **BLOQUÉ** | RLS `customer_id = auth.uid()` sur `orders`/`payments`/`addresses`, uniforme |
-| Driver → données client hors commande assignée | **BLOQUÉ** | RLS scope via `deliveries`/`orders` jointure sur `driver_id` |
-| Compromised admin session → mutation financière sans MFA | **BLOQUÉ pour `user_roles`/rôles/payout/config** (STRICT step-up + C-01 fermé) ; **PARTIELLEMENT BLOQUÉ pour `payments` direct** (H-01, non corrigé — un admin authentique avec session compromise pourrait toujours faire un `UPDATE payments` direct sans validation RPC) | H-01, rapport 360° |
+| Chemin                                                   | Résultat                                                                                                                                                                                                                                                                    | Preuve                                                                       |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Anonymous → écriture `user_roles`                        | **BLOQUÉ** (corrigé cette session, C-01)                                                                                                                                                                                                                                    | Testé : 7 rôles × 3 opérations, transaction réelle                           |
+| Customer → données d'un autre customer                   | **BLOQUÉ**                                                                                                                                                                                                                                                                  | RLS `customer_id = auth.uid()` sur `orders`/`payments`/`addresses`, uniforme |
+| Driver → données client hors commande assignée           | **BLOQUÉ**                                                                                                                                                                                                                                                                  | RLS scope via `deliveries`/`orders` jointure sur `driver_id`                 |
+| Compromised admin session → mutation financière sans MFA | **BLOQUÉ pour `user_roles`/rôles/payout/config** (STRICT step-up + C-01 fermé) ; **PARTIELLEMENT BLOQUÉ pour `payments` direct** (H-01, non corrigé — un admin authentique avec session compromise pourrait toujours faire un `UPDATE payments` direct sans validation RPC) | H-01, rapport 360°                                                           |
 
 ---
 
@@ -216,15 +216,15 @@ Le principal cas trouvé cette session (**corrigé**) : Backend disait "paiement
 
 ## 18. Testing Coverage
 
-| Feature | Unit | E2E | Security | Coverage Risk |
-|---|---:|---:|---:|---|
-| Auth/RBAC | ✅ (admin-step-up.test.ts) | ✅ (auth/login.spec.ts) | ✅ (C-01 SQL suite persistée) | Faible |
-| Orders | Partiel (order-status.test.ts, nouveau) | ✅ | Via SQL transactionnel ad hoc | Moyen — pas de test unitaire sur `update_order_status_secure` lui-même (SQL non testable par Vitest) |
-| Payments | ✅ (4 providers testés) | ✅ | ✅ (bug manuel/auto, 7 scénarios SQL) | Faible désormais |
-| Wallet/Payout | Aucun test unitaire direct trouvé | ✅ (restaurant/payouts-and-commissions.spec.ts) | Testé manuellement lors du chantier step-up | Moyen |
-| Chat | Aucun | ✅ | RLS vérifiée par construction (matrice) | Moyen |
-| GPS | Aucun | Partiel | RLS vérifiée (§13) | Moyen |
-| Notifications | Aucun | ✅ (client/notifications.spec.ts) | — | Moyen |
+| Feature       |                                    Unit |                                             E2E |                                    Security | Coverage Risk                                                                                        |
+| ------------- | --------------------------------------: | ----------------------------------------------: | ------------------------------------------: | ---------------------------------------------------------------------------------------------------- |
+| Auth/RBAC     |              ✅ (admin-step-up.test.ts) |                         ✅ (auth/login.spec.ts) |               ✅ (C-01 SQL suite persistée) | Faible                                                                                               |
+| Orders        | Partiel (order-status.test.ts, nouveau) |                                              ✅ |               Via SQL transactionnel ad hoc | Moyen — pas de test unitaire sur `update_order_status_secure` lui-même (SQL non testable par Vitest) |
+| Payments      |                 ✅ (4 providers testés) |                                              ✅ |       ✅ (bug manuel/auto, 7 scénarios SQL) | Faible désormais                                                                                     |
+| Wallet/Payout |       Aucun test unitaire direct trouvé | ✅ (restaurant/payouts-and-commissions.spec.ts) | Testé manuellement lors du chantier step-up | Moyen                                                                                                |
+| Chat          |                                   Aucun |                                              ✅ |     RLS vérifiée par construction (matrice) | Moyen                                                                                                |
+| GPS           |                                   Aucun |                                         Partiel |                          RLS vérifiée (§13) | Moyen                                                                                                |
+| Notifications |                                   Aucun |               ✅ (client/notifications.spec.ts) |                                           — | Moyen                                                                                                |
 
 ---
 
@@ -239,6 +239,7 @@ Le principal cas trouvé cette session (**corrigé**) : Backend disait "paiement
 ## 20. Top Findings (nouveaux, non déjà rapportés)
 
 ### F-01 — Kanban board sans garde de confirmation paiement (cohérence UX)
+
 **Severity:** LOW · **Confidence:** VERIFIED · **Layer:** Frontend · **Route:** `/dashboard/restaurant/orders` (Kanban)
 **Evidence:** `order-kanban-board.tsx` n'importe pas `classifyUnconfirmedPayment`, contrairement à la vue Lis.
 **Impact:** Un restaurant sur Kanban peut cliquer "Konfime" sur un paiement non vérifié et recevoir l'erreur RPC brute plutôt qu'un message clair a priori.
@@ -246,6 +247,7 @@ Le principal cas trouvé cette session (**corrigé**) : Backend disait "paiement
 **Priority:** P2
 
 ### F-02 — Message d'erreur sur double-assignation driver non confirmé traduit
+
 **Severity:** MEDIUM · **Confidence:** PARTIALLY VERIFIED · **Layer:** Frontend/Backend · **Route:** `/dashboard/driver/available`
 **Evidence:** Contrainte `deliveries.order_id UNIQUE` protège réellement la DB ; pas de `try/catch` spécifique trouvé pour le code `23505` sur cette action précise dans le temps disponible.
 **Impact:** Un driver "perdant" la course pourrait voir une erreur technique brute au lieu de "Yon lòt livrè deja pran kòmand sa a".
@@ -253,6 +255,7 @@ Le principal cas trouvé cette session (**corrigé**) : Backend disait "paiement
 **Priority:** P2
 
 ### F-03 — `payments` reste modifiable directement par admin sans trigger de validation
+
 Déjà documenté (H-01, rapport 360°) — rappelé ici car toujours ouvert. **Priority:** P1
 
 ---
@@ -287,4 +290,4 @@ Déjà documenté (H-01, rapport 360°) — rappelé ici car toujours ouvert. **
 
 ---
 
-*Fin de l'audit. Aucune modification apportée. Toute correction listée ci-dessus attend une autorisation explicite.*
+_Fin de l'audit. Aucune modification apportée. Toute correction listée ci-dessus attend une autorisation explicite._

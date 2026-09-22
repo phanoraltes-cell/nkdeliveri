@@ -8,11 +8,11 @@
 
 Twa sit sa yo gen yon apèl `.from("<tab>").insert/update/delete()` **dirèk** (pa RPC gadyen) toupre `toast.error(e...)` — pi wo risk pou yon vyolasyon kontrent Postgres brit (ex: `23505`/`23503`) rive san mapping. **PA VERIFYE** si youn deja montre yon mesaj brit an pwodiksyon jodi a (sa ta mande reprodwi erè a an dirèk, ki deyò periyèt sa a) — se yon priyorizasyon ki baze sou estrikti kòd, pa yon fuit obsève.
 
-| Fichye:Liy | Tab konsène | Operasyon |
-|---|---|---|
-| `src/components/address-manager.tsx:54,78,233` | `addresses` | `.delete()` (liy 47), `.insert()` (liy 219) |
-| `src/components/order/order-review-section.tsx:63` | `reviews` | `.insert()` (liy 48) |
-| `src/routes/_authenticated/dashboard.driver.history.tsx:116,136,161` | `deliveries` | `.update()` (liy 148) |
+| Fichye:Liy                                                           | Tab konsène  | Operasyon                                   |
+| -------------------------------------------------------------------- | ------------ | ------------------------------------------- |
+| `src/components/address-manager.tsx:54,78,233`                       | `addresses`  | `.delete()` (liy 47), `.insert()` (liy 219) |
+| `src/components/order/order-review-section.tsx:63`                   | `reviews`    | `.insert()` (liy 48)                        |
+| `src/routes/_authenticated/dashboard.driver.history.tsx:116,136,161` | `deliveries` | `.update()` (liy 148)                       |
 
 Kontèks sekirite anplis (pa yon fuit estrikti, men zòn sansib) : `src/components/dashboard/admin/admin-idle-lock.tsx:181` ak `src/routes/_authenticated/dashboard.admin.security.tsx:89` — tou de nan flux MFA/step-up admin.
 
@@ -70,22 +70,26 @@ src/routes/profile.tsx:91
 ## Migrasyon rekòmande (pou Pati B, apre Faz 11)
 
 Ranplasman senp, mekanik, san chanjman lojik :
+
 ```diff
 - onError: (e) => toast.error(e.message),
 + onError: (e) => toast.error(translateSupabaseError(e)),
 ```
+
 ```diff
 - toast.error(e instanceof Error ? e.message : "Erè");
 + toast.error(translateSupabaseError(e));
 ```
+
 ```diff
 - if (error) toast.error(error);
 + if (error) toast.error(translateSupabaseError(error));
 ```
-+ `import { translateSupabaseError } from "@/lib/rpc-errors";` nan chak fichye.
+
+- `import { translateSupabaseError } from "@/lib/rpc-errors";` nan chak fichye.
 
 **Atansyon** : kèk sit gen yon mesaj fallback koutim an Kreyòl deja ekri (ex: `"Erè pandan kreyasyon kòmand la"`, `"Pa t kapab jenere kòd sekou yo"`) — sa yo se mesaj kontekstyèl itil, PA jis yon fallback jenerik. Migrasyon dwe **prezève** mesaj kontekstyèl sa yo lè `translateSupabaseError(e)` retounen mesaj jenerik la (`GENERIC_FALLBACK_MESSAGE`), men kite pase mesaj RAISE EXCEPTION koutim yo (`P0001`) san touche. Sa vle di chak sit ka bezwen yon ti revizyon manyèl pou konsève ton/kontèks li, pa yon `sed` global — rezon anplis pou trete l kòm yon vre travay Faz 11, pa yon otomatizasyon mekanik san sipèvizyon.
 
 ---
 
-*Kreye pandan koreksyon NKD-003 Pati A (Faz 1 remédiation). Okenn nan 73 sit sa yo pa modifye. Pa gen migrasyon SQL. Pa gen commit sou fichye sa yo.*
+_Kreye pandan koreksyon NKD-003 Pati A (Faz 1 remédiation). Okenn nan 73 sit sa yo pa modifye. Pa gen migrasyon SQL. Pa gen commit sou fichye sa yo._

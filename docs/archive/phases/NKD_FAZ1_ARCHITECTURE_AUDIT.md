@@ -9,6 +9,7 @@
 ## Konstatasyon
 
 **NKD-001 — Pa gen vrè "service layer" ; ~~29/66~~ fichye wout rele Supabase dirèkteman nan "kontwolè"**
+
 - Nivo : P3
 - Fichye:Liy : `src/services/` (1 sèl fichye — `src/services/routing.ts`) ; `src/routes/checkout.tsx:155,250`
 - Chif : ~~29 sou 66 fichye wout~~ → **⚠️ ESTIMASYON, pa KONFIME** (nòt 2026-08-14, wè korije anba a)
@@ -16,12 +17,14 @@
 - Efò : Mwayen-Gwo
 
 **NKD-002 — Plizyè "god file" (>500 liy, plizyè responsablite melanje)**
+
 - Nivo : P3
 - Fichye:Liy : `src/routes/checkout.tsx` (630L, 7 `useState`), `dashboard.admin.collect.tsx` (590L), `dashboard.admin.payouts.tsx` (535L), `komand-detail-dialog.tsx` (518L), `dashboard.admin.finance.tsx` (509L), `dashboard.restaurant.orders.tsx` (487L)
 - Prèv : `wc -l` sou chak fichye
 - Efò : Mwayen
 
 **NKD-003 — Mesaj erè RPC monte dirèkteman bay itilizatè, san kouch sanitizasyon santral**
+
 - Nivo : P2
 - Fichye:Liy : `src/routes/checkout.tsx:337`, `src/routes/_authenticated/dashboard.restaurant.orders.tsx:178`
 - Chif : ~~67 sit~~ → **73 sit (44 fichye)** — wè koreksyon anba a
@@ -35,14 +38,14 @@
 
 Patwon grep orijinal Faz 1 la (`toast.error(e instanceof Error\|toast.error(e\.message\|toast.error(e ??`) te rate 6 sit ki itilize yon lòt varyant :
 
-| Sit rate | Patwon reyèl |
-|---|---|
-| `src/components/dashboard/admin/admin-idle-lock.tsx:181` | `toast.error(err.message)` |
-| `src/components/driver-location-reporter.tsx:15` | `toast.error(error)` (brit, san `.message`) |
-| `src/components/home/newsletter-section.tsx:23` | `toast.error(error.message)` |
-| `src/components/order/customer-location-toggle.tsx:17` | `toast.error(error)` (brit, san `.message`) |
-| `src/routes/_authenticated/dashboard.admin.security.tsx:89` | `toast.error(error.message)` |
-| *(+1 lòt, wè `docs/NKD-003_MIGRATION_BACKLOG.md` pou lis konplè)* | |
+| Sit rate                                                          | Patwon reyèl                                |
+| ----------------------------------------------------------------- | ------------------------------------------- |
+| `src/components/dashboard/admin/admin-idle-lock.tsx:181`          | `toast.error(err.message)`                  |
+| `src/components/driver-location-reporter.tsx:15`                  | `toast.error(error)` (brit, san `.message`) |
+| `src/components/home/newsletter-section.tsx:23`                   | `toast.error(error.message)`                |
+| `src/components/order/customer-location-toggle.tsx:17`            | `toast.error(error)` (brit, san `.message`) |
+| `src/routes/_authenticated/dashboard.admin.security.tsx:89`       | `toast.error(error.message)`                |
+| _(+1 lòt, wè `docs/NKD-003_MIGRATION_BACKLOG.md` pou lis konplè)_ |                                             |
 
 **Patwon korije, verifye 2026-08-14** : `grep -rn "toast.error(e" src/routes src/components` → **73 rezilta, 44 fichye distenk** (`wc -l` + `cut -d: -f1 \| sort -u \| wc -l`). Lis konplè ak `fichye:liy` : `docs/NKD-003_MIGRATION_BACKLOG.md`.
 
@@ -56,4 +59,4 @@ Chif "29 sou 66 fichye wout rele Supabase dirèkteman" te soti nan **yon sèl pa
 
 ---
 
-*Fichye sa a kreye 2026-08-14 pou fòmalize rapò Faz 1 (delivre orijinèlman nan chat) ak koreksyon yo, konsistan ak konvansyon "bare, pa efase" deja itilize pou H-01/CF-01. Okenn nouvo travay Faz 1 pa fèt — sèlman koreksyon/klarifikasyon chif ki deja bay.*
+_Fichye sa a kreye 2026-08-14 pou fòmalize rapò Faz 1 (delivre orijinèlman nan chat) ak koreksyon yo, konsistan ak konvansyon "bare, pa efase" deja itilize pou H-01/CF-01. Okenn nouvo travay Faz 1 pa fèt — sèlman koreksyon/klarifikasyon chif ki deja bay._

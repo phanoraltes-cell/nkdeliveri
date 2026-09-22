@@ -9,11 +9,11 @@ Konfime (Faz 11) : 0 otomatizasyon retansyon egziste, `pg_cron` pa menm parèt. 
 Vercel Cron k ap fonksyone (`vercel.json`, `CRON_SECRET`, 1 fwa/jou) — menm patran an swiv, pa yon
 dezyèm mekanis.
 
-| Kesyon | Repons |
-|---|---|
-| `private.rate_limit_hits` | 7 jou |
-| `notifications` | 90 jou |
-| Frekans | Chak jou, 4h AM — **men gade avètisman anba a** |
+| Kesyon                    | Repons                                          |
+| ------------------------- | ----------------------------------------------- |
+| `private.rate_limit_hits` | 7 jou                                           |
+| `notifications`           | 90 jou                                          |
+| Frekans                   | Chak jou, 4h AM — **men gade avètisman anba a** |
 
 **Avètisman jwenn pandan ekriti a, korije anvan aplikasyon** : Vercel plan Hobby limite yon
 pwojè a **2 Cron Jobs total**, pa sèlman yon frekans — pwojè a deja gen 2
@@ -24,13 +24,13 @@ plop-reconcile), pa 4h AM jan premye plan an te di.
 
 ## Sa ki chanje (`fichye:liy`)
 
-| Chanjman | Fichye |
-|---|---|
-| RPC `run_data_retention_cleanup_secure()` (service_role sèlman) | [supabase/migrations/20260819120000_nkd021_data_retention.sql](../../../supabase/migrations/20260819120000_nkd021_data_retention.sql) |
-| Wrapper sèvè | [src/lib/data-retention-cleanup.server.ts](../../../src/lib/data-retention-cleanup.server.ts) (nouvo) |
-| Entegre nan cron `plop-reconcile` ki egziste deja a, `try/catch` separe | [src/routes/api.cron.plop-reconcile.ts](../../../src/routes/api.cron.plop-reconcile.ts) |
-| `/privacy` Sek 4 mete ajou (2yèm eksepsyon: notifikasyon 90 jou) | [src/routes/privacy.tsx](../../../src/routes/privacy.tsx) |
-| Tip Supabase (`run_data_retention_cleanup_secure`) | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts) |
+| Chanjman                                                                | Fichye                                                                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| RPC `run_data_retention_cleanup_secure()` (service_role sèlman)         | [supabase/migrations/20260819120000_nkd021_data_retention.sql](../../../supabase/migrations/20260819120000_nkd021_data_retention.sql) |
+| Wrapper sèvè                                                            | [src/lib/data-retention-cleanup.server.ts](../../../src/lib/data-retention-cleanup.server.ts) (nouvo)                                 |
+| Entegre nan cron `plop-reconcile` ki egziste deja a, `try/catch` separe | [src/routes/api.cron.plop-reconcile.ts](../../../src/routes/api.cron.plop-reconcile.ts)                                               |
+| `/privacy` Sek 4 mete ajou (2yèm eksepsyon: notifikasyon 90 jou)        | [src/routes/privacy.tsx](../../../src/routes/privacy.tsx)                                                                             |
+| Tip Supabase (`run_data_retention_cleanup_secure`)                      | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts)                                                     |
 
 **Poukisa `/privacy` pa mande yon nouvo vèsyon/re-akseptasyon (NKD-022)** : chanjman an sèlman
 **ajoute** yon garanti anplis (kounye a gen otomatizasyon reyèl pou notifikasyon, kote anvan sa te
@@ -45,13 +45,13 @@ jiskaske yon efasman manyèl (NKD-020, kont kliyan sèlman) fèt.
 
 Fichye : [docs/NKD021_DATA_RETENTION_TEST.sql](../sql-tests/NKD021_DATA_RETENTION_TEST.sql).
 
-| Tès | Verifye |
-|---|---|
-| T1 | Wòl `authenticated` rejte (`permission denied`, pa yon `RAISE` — GRANT/REVOKE pi») |
-| T2 | `service_role` reyisi, `rows_deleted=1` pou `rate_limit_hits` (sèlman liy 8-jou a) |
-| T3 | Eta tab la konfime: liy vye a disparèt, liy fre a rete |
-| T4 | Menm bagay pou `notifications` (91 jou disparèt, 1 jou rete) |
-| T5 | Dezyèm kouri: `rows_deleted=0` (idompotan, anyen ankò pou efase) |
+| Tès | Verifye                                                                            |
+| --- | ---------------------------------------------------------------------------------- |
+| T1  | Wòl `authenticated` rejte (`permission denied`, pa yon `RAISE` — GRANT/REVOKE pi») |
+| T2  | `service_role` reyisi, `rows_deleted=1` pou `rate_limit_hits` (sèlman liy 8-jou a) |
+| T3  | Eta tab la konfime: liy vye a disparèt, liy fre a rete                             |
+| T4  | Menm bagay pou `notifications` (91 jou disparèt, 1 jou rete)                       |
+| T5  | Dezyèm kouri: `rows_deleted=0` (idompotan, anyen ankò pou efase)                   |
 
 **⚠️ Pa gen ankò rezilta reyèl — fichye a ekri, tès la poko kouri.**
 

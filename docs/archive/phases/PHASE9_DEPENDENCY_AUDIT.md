@@ -8,10 +8,10 @@
 
 ## 1. Findings
 
-| ID | Nivo | Konstatasyon | Prèv |
-|---|---|---|---|
-| NKD-018 | **P2** | 2 depandans pwodiksyon reyèl gen lisans ki poze kesyon pou yon pwodwi komèsyal : `react-leaflet`/`@react-leaflet/core` (Hippocratic-2.1, restriksyon "itilizasyon etik"), `@block65/custom-error` (transitif nan `@block65/webcrypto-web-push`, `UNLICENSED` — `LICENSE.md` di eksplisitman "not permitted to reproduce/copy/distribute"). Toude sèvi nan chemen pwodiksyon reyèl (kat/GPS livrè, push notification sèvè). Desizyon biznis/legal, pa yon fiks teknik — **A5 aplike** | `npx license-checker --summary` (Hippocratic-2.1 ×2, UNKNOWN ×1) + `node_modules/@block65/custom-error/LICENSE.md` li dirèkteman |
-| NKD-019 | P3 | `src/sw.ts` (`:3-6`) enpòte `workbox-precaching`/`workbox-routing`/`workbox-strategies`/`workbox-expiration` dirèkteman, men okenn nan yo pa deklare kòm depandans dirèk nan `package.json` — yo mache jodi a sèlman paske `vite-plugin-pwa` → `workbox-build` bay yo transitivman. Si `vite-plugin-pwa` chanje pwòp depandans entèn li yon jou, `src/sw.ts` ka kase san `npm` pa janm siyale l kòm yon bagay ki afekte depandans dirèk pwojè a | `npx depcheck` ("Missing dependencies") + `npm ls workbox-precaching workbox-routing workbox-strategies workbox-expiration` (montre `vite-plugin-pwa@1.3.0 → workbox-build@7.4.1 → ...`) |
+| ID      | Nivo   | Konstatasyon                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Prèv                                                                                                                                                                                     |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NKD-018 | **P2** | 2 depandans pwodiksyon reyèl gen lisans ki poze kesyon pou yon pwodwi komèsyal : `react-leaflet`/`@react-leaflet/core` (Hippocratic-2.1, restriksyon "itilizasyon etik"), `@block65/custom-error` (transitif nan `@block65/webcrypto-web-push`, `UNLICENSED` — `LICENSE.md` di eksplisitman "not permitted to reproduce/copy/distribute"). Toude sèvi nan chemen pwodiksyon reyèl (kat/GPS livrè, push notification sèvè). Desizyon biznis/legal, pa yon fiks teknik — **A5 aplike** | `npx license-checker --summary` (Hippocratic-2.1 ×2, UNKNOWN ×1) + `node_modules/@block65/custom-error/LICENSE.md` li dirèkteman                                                         |
+| NKD-019 | P3     | `src/sw.ts` (`:3-6`) enpòte `workbox-precaching`/`workbox-routing`/`workbox-strategies`/`workbox-expiration` dirèkteman, men okenn nan yo pa deklare kòm depandans dirèk nan `package.json` — yo mache jodi a sèlman paske `vite-plugin-pwa` → `workbox-build` bay yo transitivman. Si `vite-plugin-pwa` chanje pwòp depandans entèn li yon jou, `src/sw.ts` ka kase san `npm` pa janm siyale l kòm yon bagay ki afekte depandans dirèk pwojè a                                      | `npx depcheck` ("Missing dependencies") + `npm ls workbox-precaching workbox-routing workbox-strategies workbox-expiration` (montre `vite-plugin-pwa@1.3.0 → workbox-build@7.4.1 → ...`) |
 
 **Okenn P1.** `npm audit` : 0 vilnerabilite (tout nivo — info/low/moderate/high/critical), 1049 pake total (294 prod, 629 dev, 181 optional, 75 peer).
 
@@ -60,6 +60,7 @@
 **Okenn P1 — pa gen plan remèd ijan nesesè.**
 
 Pou NKD-018 (lisans) ak NKD-019 (workbox undeclared) — **pa aplike anyen nan sesyon sa a** (A4, se yon odit). Rekòmandasyon pou yon pwochen faz/tikè apa :
+
 - NKD-018 : mande yon revizyon legal/biznis (Règ A5) sou si Hippocratic-2.1 (`react-leaflet`) ak yon depandans `UNLICENSED` (`@block65/custom-error`, transitif) akseptab pou NK Deliveri kòm pwodwi komèsyal — pa yon desizyon teknik.
 - NKD-019 : ajoute `workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration` kòm depandans dirèk (`dependencies`, paske `src/sw.ts` egzekite an pwodiksyon) nan `package.json`, ak vèsyon ki matche sa `vite-plugin-pwa@1.3.0` bay jodi a (`7.4.1`) — chanjman `package.json`/`package-lock.json`, rezève pou Faz 11 oswa yon tikè dedye apre.
 
@@ -67,13 +68,13 @@ Pou NKD-018 (lisans) ak NKD-019 (workbox undeclared) — **pa aplike anyen nan s
 
 ## Rezime chif (A2 — chak youn ak kòmand ki pwodui l)
 
-| Chif | Valè | Kòmand |
-|---|---|---|
-| Vilnerabilite konni | 0 | `npm audit --json` |
-| Depandans total | 1049 (294 prod, 629 dev, 181 optional, 75 peer) | `npm audit --json` (`.metadata.dependencies`) |
-| Depandans dirèk | 59 (33 prod + 26 dev) | `node -e` sou `package.json` |
-| Pake ki gen yon major dèyè (deja konnen) | 9 | `npm outdated` + `docs/DEPENDENCIES.md` |
-| Pake initil (reyèl) | 0 | `npx depcheck` + verifikasyon manyèl chak rezilta |
-| Lisans GPL/AGPL/SSPL | 0 | `npx license-checker --summary` |
-| Lisans ki poze kesyon (Hippocratic/UNLICENSED) | 3 pake (2 pwojè + 1 transitif) | `npx license-checker --json`, filtre |
-| Script `install`/`postinstall`/`preinstall` nan depandans dirèk | 0 | script Node dedye |
+| Chif                                                            | Valè                                            | Kòmand                                            |
+| --------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
+| Vilnerabilite konni                                             | 0                                               | `npm audit --json`                                |
+| Depandans total                                                 | 1049 (294 prod, 629 dev, 181 optional, 75 peer) | `npm audit --json` (`.metadata.dependencies`)     |
+| Depandans dirèk                                                 | 59 (33 prod + 26 dev)                           | `node -e` sou `package.json`                      |
+| Pake ki gen yon major dèyè (deja konnen)                        | 9                                               | `npm outdated` + `docs/DEPENDENCIES.md`           |
+| Pake initil (reyèl)                                             | 0                                               | `npx depcheck` + verifikasyon manyèl chak rezilta |
+| Lisans GPL/AGPL/SSPL                                            | 0                                               | `npx license-checker --summary`                   |
+| Lisans ki poze kesyon (Hippocratic/UNLICENSED)                  | 3 pake (2 pwojè + 1 transitif)                  | `npx license-checker --json`, filtre              |
+| Script `install`/`postinstall`/`preinstall` nan depandans dirèk | 0                                               | script Node dedye                                 |

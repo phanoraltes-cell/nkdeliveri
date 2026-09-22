@@ -18,6 +18,7 @@
 Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRONTEND_SECRET_EXPOSURE_AUDIT.md §3`. Fòmalize kòm **NKD-009** dapre demand ou.
 
 **Konstatasyon** : kle piblik VAPID egziste an **de kopi endepandan**, ki dwe toujou rete idantik pou push notifikasyon yo mache :
+
 1. `src/lib/push.ts:4-5` — literal kòde an dur : `const VAPID_PUBLIC_KEY = "BJ06H-steLp_..."` (itilize pa `pushManager.subscribe()` bò navigatè a).
 2. Env var `VAPID_PUBLIC_KEY` (san prefiks `VITE_`) — itilize sèvè-side pa `push-dispatch.server.ts`/`send-push.functions.ts` (via `@block65/webcrypto-web-push`'s `buildPushPayload`) pou siyen peyload push la.
 
@@ -34,11 +35,14 @@ Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRO
 ## 2. Offline / koneksyon fèb (kritik pou Ayiti)
 
 ### Sa ki deja byen fèt (KONFIME)
+
 - `src/sw.ts` : `NavigationRoute` ak `NetworkFirst` (5s timeout) pou navigasyon, `CacheFirst` pou asset estatik (js/css/imaj), ak yon `setCatchHandler` ki retounen `offline.html` (**konfime egziste**, `public/offline.html`) lè yon navigasyon echwe san rezo **ak** san antre precache.
 - `vite-plugin-pwa` mode `injectManifest` (Service Worker ekri alamen, pa jenere otomatikman) — 226 antre precache, 3142 KiB.
 
 ### Gap jwenn (nouvo, pa deja dokimante)
+
 **Okenn deteksyon `navigator.onLine`/evènman `online`/`offline` okenn kote nan `src/`** (`grep -rln "navigator\.onLine\|window\.addEventListener(.online"` → 0 rezilta). Konsekans konkrè :
+
 - Aplikasyon an pa gen okenn mwayen di kliyan an "ou dekonekte kounye a" — chak echèk rezo parèt kòm yon erè jeneral (toast), idantik ak yon erè serveur reyèl, san distenksyon.
 - Konbine ak §5 (React Query default), yon `query` ki echwe **retry otomatikman 3 fwa** ak backoff eksponansyèl anvan l montre yon erè — sou yon koneksyon Ayiti tipik ki "fèb men prezan" (pa "konplètman koupe"), sa ka pran plizyè segond anvan itilizatè a wè AYEN, pa gen endikatè "ap eseye ankò" vizib.
 
@@ -56,7 +60,7 @@ Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRO
 
 **KONFIME** : `catch (e) { toast.error(e instanceof Error ? e.message : "...") }` se patwon dominan (73 sit, NKD-003 Pati B) — mesaj toujou parèt, pa gen "silans" sou echèk. **Men** : okenn diferansyasyon "erè rezo" (fetch failed, timeout) kont "erè metye" (RPC rejte) — tou de parèt idantik nan yon toast wouj. Pou yon itilizatè sou yon koneksyon fèb, sa vle di yo pa ka fasilman di si yo ta dwe "eseye ankò kounye a" (erè rezo, transitwa) oswa "chanje sa m ap eseye fè a" (erè metye, pèsistan).
 
-**Konekte ak Faz 5** : manke idanpotans `create_order_secure` (Faz 5 §3) vin **pi konkrè** isit la — yon itilizatè ki wè yon "erè" san konnen si se rezo oswa metye, epi ki eseye ankò, ka kreye yon doub kòmand si echèk orijinal la te an reyalite yon *timeout* apre kòmand la te deja kreye sèvè-side.
+**Konekte ak Faz 5** : manke idanpotans `create_order_secure` (Faz 5 §3) vin **pi konkrè** isit la — yon itilizatè ki wè yon "erè" san konnen si se rezo oswa metye, epi ki eseye ankò, ka kreye yon doub kòmand si echèk orijinal la te an reyalite yon _timeout_ apre kòmand la te deja kreye sèvè-side.
 
 ---
 
@@ -75,6 +79,7 @@ Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRO
 ## 7. Service worker (`src/sw.ts`)
 
 **KONFIME**, lekti konplè fichye a (141 liy) :
+
 - Precache + `cleanupOutdatedCaches()` — pa gen vye cache ki rete abandone.
 - `NetworkFirst` (nav, 5s) / `CacheFirst` (asset) — chwa apwopriye pou chak tip resous.
 - `offline.html` fallback — konfime egziste, plain HTML san depandans bundle JS (rezistan si bundle a li menm pa chaje).
@@ -89,6 +94,7 @@ Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRO
 ## 8. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - `sw.ts` byen konstwi, `offline.html` egziste, precache/cleanup kòrèk.
 - 0 fuite done nan bundle (NKD-008, site).
 - Responsive deja korije plizyè fwa, verifye pa render reyèl (istwa git, site).
@@ -97,6 +103,7 @@ Idantifye premye fwa kòm "nòt achitekti, pa yon finding" nan `docs/NKD-008_FRO
 **ESTIMASYON** : okenn nouvo.
 
 **PA VERIFYE** :
+
 - Konpòtman responsive **reyèl** sou yon vre navigatè (mande zouti ki pa disponib isit la — chèk istorik sifi pou kounye a).
 - Konsomasyon done pa mezire ankò (site Faz 8/"Phase 8" olye re-mezire).
 

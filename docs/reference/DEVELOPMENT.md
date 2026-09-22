@@ -52,8 +52,8 @@ vers un projet Supabase cloud, voir
 | `npm run typecheck`        | `tsc --noEmit -p tsconfig.json`                  | Vérification TypeScript stricte                                                            |
 | `npm run check:migrations` | `node scripts/check-migration-hazards.mjs`       | Détecte le piège de surcharge de fonction Postgres — voir [MIGRATIONS.md](./MIGRATIONS.md) |
 | `npm run verify`           | `typecheck && lint && check:migrations && build` | Chaîne de vérification complète, identique à ce que la CI exécute                          |
-| `npm run db:backup`        | `bash scripts/backup-database.sh`                | Sauvegarde de la base — voir [BACKUP_RESTORE.md](../runbooks/BACKUP_RESTORE.md)                      |
-| `npm run db:restore`       | `bash scripts/restore-database.sh`               | Restauration — voir [BACKUP_RESTORE.md](../runbooks/BACKUP_RESTORE.md)                               |
+| `npm run db:backup`        | `bash scripts/backup-database.sh`                | Sauvegarde de la base — voir [BACKUP_RESTORE.md](../runbooks/BACKUP_RESTORE.md)            |
+| `npm run db:restore`       | `bash scripts/restore-database.sh`               | Restauration — voir [BACKUP_RESTORE.md](../runbooks/BACKUP_RESTORE.md)                     |
 
 **Avant toute Pull Request**, lancer `npm run verify` localement — c'est
 exactement la chaîne que la CI exécute (voir [DEVOPS.md](./DEVOPS.md)), la

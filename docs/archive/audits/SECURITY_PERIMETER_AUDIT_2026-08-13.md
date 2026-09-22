@@ -72,17 +72,17 @@ SERVICES EXTERNES (visibles dans le CSP connect-src/img-src — VERIFIED) :
 
 **Cloudflare est utilisé, activement, en mode proxy (pas seulement DNS).** Preuves :
 
-| Preuve | Résultat | Verdict |
-|---|---|---|
-| Nameservers du domaine | `chelsea.ns.cloudflare.com`, `titan.ns.cloudflare.com` | Zone gérée par Cloudflare |
-| Résolution A/AAAA de `nkdeliveri.com` et `www` | `104.21.10.156`, `172.67.131.138`, `2606:4700:3030::…`, `2606:4700:3032::…` (plages anycast Cloudflare) | Proxy actif (pas de résolution vers une IP d'hébergeur classique) |
-| Header `Server` sur toute réponse HTTPS du domaine custom | `cloudflare` | Confirmé sur chaque requête |
-| Header `CF-RAY` | présent sur chaque requête (ex. `a2aaa3b4af477386-MIA`) | Confirmé — trafic passé par un edge Cloudflare (Miami) |
-| `cf-cache-status` | `DYNAMIC` sur les pages SSR | Confirmé — Cloudflare voit et catégorise chaque requête, pas un simple DNS passthrough |
-| Certificat TLS | émis par Google Trust Services (`WE1`), SAN `nkdeliveri.com` + `*.nkdeliveri.com` | Signature typique d'un certificat "Universal SSL" Cloudflare (émission edge), pas un certificat Vercel classique |
-| `robots.txt` | contient un bloc explicite `# BEGIN Cloudflare Managed content` / `# END Cloudflare Managed Content` (règles anti-crawl IA) | Confirmé — une fonctionnalité Cloudflare (Content Signals / AI Crawl Control) modifie activement le contenu servi |
-| `www.nkdeliveri.com` (redirigé) | même comportement, mêmes headers Cloudflare | Cohérent sur les deux hôtes |
-| `*.nkdeliveri.com` (sous-domaines arbitraires testés : `api`, `staging`, `dev`, `admin`, `test`, `mail`, `webmail`, `cpanel`, `autodiscover`) | tous résolvent vers les mêmes IPs Cloudflare, tous retournent `404` avec `Server: cloudflare` + `CF-RAY` propre | Wildcard DNS proxifié par Cloudflare — aucun sous-domaine ne "fuit" une IP d'origine ; Cloudflare répond lui-même 404 (pas de backend configuré derrière), donc pas de fuite d'origine par ce vecteur |
+| Preuve                                                                                                                                        | Résultat                                                                                                                    | Verdict                                                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nameservers du domaine                                                                                                                        | `chelsea.ns.cloudflare.com`, `titan.ns.cloudflare.com`                                                                      | Zone gérée par Cloudflare                                                                                                                                                                             |
+| Résolution A/AAAA de `nkdeliveri.com` et `www`                                                                                                | `104.21.10.156`, `172.67.131.138`, `2606:4700:3030::…`, `2606:4700:3032::…` (plages anycast Cloudflare)                     | Proxy actif (pas de résolution vers une IP d'hébergeur classique)                                                                                                                                     |
+| Header `Server` sur toute réponse HTTPS du domaine custom                                                                                     | `cloudflare`                                                                                                                | Confirmé sur chaque requête                                                                                                                                                                           |
+| Header `CF-RAY`                                                                                                                               | présent sur chaque requête (ex. `a2aaa3b4af477386-MIA`)                                                                     | Confirmé — trafic passé par un edge Cloudflare (Miami)                                                                                                                                                |
+| `cf-cache-status`                                                                                                                             | `DYNAMIC` sur les pages SSR                                                                                                 | Confirmé — Cloudflare voit et catégorise chaque requête, pas un simple DNS passthrough                                                                                                                |
+| Certificat TLS                                                                                                                                | émis par Google Trust Services (`WE1`), SAN `nkdeliveri.com` + `*.nkdeliveri.com`                                           | Signature typique d'un certificat "Universal SSL" Cloudflare (émission edge), pas un certificat Vercel classique                                                                                      |
+| `robots.txt`                                                                                                                                  | contient un bloc explicite `# BEGIN Cloudflare Managed content` / `# END Cloudflare Managed Content` (règles anti-crawl IA) | Confirmé — une fonctionnalité Cloudflare (Content Signals / AI Crawl Control) modifie activement le contenu servi                                                                                     |
+| `www.nkdeliveri.com` (redirigé)                                                                                                               | même comportement, mêmes headers Cloudflare                                                                                 | Cohérent sur les deux hôtes                                                                                                                                                                           |
+| `*.nkdeliveri.com` (sous-domaines arbitraires testés : `api`, `staging`, `dev`, `admin`, `test`, `mail`, `webmail`, `cpanel`, `autodiscover`) | tous résolvent vers les mêmes IPs Cloudflare, tous retournent `404` avec `Server: cloudflare` + `CF-RAY` propre             | Wildcard DNS proxifié par Cloudflare — aucun sous-domaine ne "fuit" une IP d'origine ; Cloudflare répond lui-même 404 (pas de backend configuré derrière), donc pas de fuite d'origine par ce vecteur |
 
 **Cloudflare protège-t-il réellement le domaine, ou seulement le DNS ?** Réponse : **le proxy HTTP est actif** (mode "orange cloud"), donc au minimum les protections de base incluses par défaut sur toute zone proxifiée s'appliquent (chiffrement edge, masquage de l'IP d'origine réelle côté DNS public, DDoS réseau L3/L4 basique — ce niveau est automatique chez Cloudflare et ne dépend d'aucune configuration). **Ce qui N'EST PAS vérifiable depuis cette session** : si des règles WAF managées, du Bot Fight Mode, ou des règles de rate limiting personnalisées sont **explicitement activées** au niveau de la zone — voir §9-10 et Finding **CF-02**.
 
@@ -90,22 +90,22 @@ SERVICES EXTERNES (visibles dans le CSP connect-src/img-src — VERIFIED) :
 
 ## 4. DNS Analysis
 
-| Type | Valeur | Commentaire |
-|---|---|---|
-| NS | `chelsea.ns.cloudflare.com`, `titan.ns.cloudflare.com` | Zone déléguée à Cloudflare |
+| Type                             | Valeur                                                                                     | Commentaire                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| NS                               | `chelsea.ns.cloudflare.com`, `titan.ns.cloudflare.com`                                     | Zone déléguée à Cloudflare                                                 |
 | A/AAAA (`nkdeliveri.com`, `www`) | `104.21.10.156`, `172.67.131.138`, `2606:4700:3030::ac43:838a`, `2606:4700:3032::6815:a9c` | Anycast Cloudflare, aucune IP d'origine Vercel exposée par le DNS lui-même |
-| MX | `mx1.hostinger.com` (10), `mx2.hostinger.com` (5) | Email tiers, hors périmètre Cloudflare/Vercel |
-| TXT | `v=spf1 include:_spf.mail.hostinger.com ~all` | SPF présent et cohérent avec le MX ; DMARC non vérifié dans cette session |
-| SOA | `chelsea.ns.cloudflare.com`, contact `dns.cloudflare.com` | Cohérent avec la délégation Cloudflare |
-| Wildcard `*.nkdeliveri.com` | proxifié, répond 404 propre côté Cloudflare | Pas de fuite d'origine par sous-domaine non attendu |
-| DNSSEC | **NOT VERIFIED** dans cette session | Requête `DNSKEY`/`DS` non exécutée — à vérifier séparément |
+| MX                               | `mx1.hostinger.com` (10), `mx2.hostinger.com` (5)                                          | Email tiers, hors périmètre Cloudflare/Vercel                              |
+| TXT                              | `v=spf1 include:_spf.mail.hostinger.com ~all`                                              | SPF présent et cohérent avec le MX ; DMARC non vérifié dans cette session  |
+| SOA                              | `chelsea.ns.cloudflare.com`, contact `dns.cloudflare.com`                                  | Cohérent avec la délégation Cloudflare                                     |
+| Wildcard `*.nkdeliveri.com`      | proxifié, répond 404 propre côté Cloudflare                                                | Pas de fuite d'origine par sous-domaine non attendu                        |
+| DNSSEC                           | **NOT VERIFIED** dans cette session                                                        | Requête `DNSKEY`/`DS` non exécutée — à vérifier séparément                 |
 
 ---
 
 ## 5. Vercel Analysis
 
 - Projet Vercel : `nkdelivery` (`.vercel/project.json`, `projectId: prj_p14gRktfIMXQ3UdL8zYgsdN8LU2x`).
-- `vercel.json` définit **6 headers statiques** appliqués à `/(.*)`  : `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`, `Cross-Origin-Opener-Policy`. **Aucun CSP dans ce fichier** — le CSP réellement observé en production vient d'ailleurs (voir §11).
+- `vercel.json` définit **6 headers statiques** appliqués à `/(.*)` : `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`, `Cross-Origin-Opener-Policy`. **Aucun CSP dans ce fichier** — le CSP réellement observé en production vient d'ailleurs (voir §11).
 - 2 crons Vercel (`moncash-reconcile` 3h00, `plop-reconcile` 3h15) — **protection par `CRON_SECRET` VERIFIED en direct** : requête GET non authentifiée → `401` sur les deux endpoints.
 - **`nkdelivery.vercel.app` (domaine par défaut du projet) répond publiquement, sans authentification, et sert le contenu réel de production sur `/`** — voir Finding **CF-01** ci-dessous. C'est un comportement par défaut de Vercel (le domaine `<projet>.vercel.app` est actif et public par défaut sauf activation explicite de la "Vercel Deployment Protection"), pas une fuite de configuration exotique — mais son existence n'est visiblement pas neutralisée pour ce projet.
 
@@ -117,16 +117,16 @@ SERVICES EXTERNES (visibles dans le CSP connect-src/img-src — VERIFIED) :
 - **Fait architectural important** : le projet Supabase est lui-même derrière Cloudflare (`Server: cloudflare`, `CF-RAY` présents sur `dcsnmvbtsmdbwrwbutph.supabase.co`, cookie `__cf_bm` — Cloudflare Bot Management — observé sur cette requête). **Mais c'est le périmètre Cloudflare de Supabase Inc., pas celui de NK Deliveri** — l'équipe du projet ne peut pas configurer de règles WAF/rate limiting Cloudflare sur ce domaine ; seuls les réglages exposés dans le dashboard Supabase lui-même (rate limiting Auth, CAPTCHA hooks, RLS, policies Storage) sont sous son contrôle. C'est un deuxième périmètre de confiance, séparé, qui n'apparaît dans aucun des deux audits précédents sous cet angle.
 - **Storage — public vs privé, VERIFIED par lecture directe des migrations de création de bucket** :
 
-| Bucket | Public ? | Contenu | Verdict |
-|---|---|---|---|
-| `menu-photos` | ✅ public | Photos de plats | Correct — contenu destiné à être public |
-| `restaurant-assets` | ✅ public | Logos/bannières restaurant | Correct |
-| `avatars` | ✅ public | Photos de profil | Correct |
-| `driver-documents` | ❌ privé | **Pièces d'identité / KYC livreur** | Correct — sensible, bien isolé |
-| `payment-proofs` | ❌ privé | Preuves de paiement manuel | Correct |
-| `payout-proofs` | ❌ privé | Preuves de payout | Correct |
-| `dispute-attachments` | ❌ privé | Pièces jointes de litige | Correct |
-| `order-chat-attachments` | ❌ privé | Pièces jointes de chat commande | Correct |
+| Bucket                   | Public ?  | Contenu                             | Verdict                                 |
+| ------------------------ | --------- | ----------------------------------- | --------------------------------------- |
+| `menu-photos`            | ✅ public | Photos de plats                     | Correct — contenu destiné à être public |
+| `restaurant-assets`      | ✅ public | Logos/bannières restaurant          | Correct                                 |
+| `avatars`                | ✅ public | Photos de profil                    | Correct                                 |
+| `driver-documents`       | ❌ privé  | **Pièces d'identité / KYC livreur** | Correct — sensible, bien isolé          |
+| `payment-proofs`         | ❌ privé  | Preuves de paiement manuel          | Correct                                 |
+| `payout-proofs`          | ❌ privé  | Preuves de payout                   | Correct                                 |
+| `dispute-attachments`    | ❌ privé  | Pièces jointes de litige            | Correct                                 |
+| `order-chat-attachments` | ❌ privé  | Pièces jointes de chat commande     | Correct                                 |
 
 Tous les buckets sensibles ont `file_size_limit` + `allowed_mime_types` posés au niveau du moteur de stockage lui-même (migration `20260713120000_secure_storage_buckets.sql`), pas seulement en validation applicative — **bon réflexe défense-en-profondeur, VERIFIED**.
 
@@ -134,17 +134,17 @@ Tous les buckets sensibles ont `file_size_limit` + `allowed_mime_types` posés a
 
 ## 7. Attack Surface
 
-| Surface | URL/Route | Public ? | Auth ? | Rate Limit ? | Devant Cloudflare ? | Risque |
-|---|---|---:|---:|---:|---:|---:|
-| Site public | `/`, `/restaurants`, `/restaurants/:slug`, `/about`… | Oui | Non | Non (pas nécessaire, lecture seule) | Oui (custom domain) ; **aussi via `nkdelivery.vercel.app`** | 🟠 Voir CF-01 |
-| Auth | `/auth`, `/auth/register`, `/auth/forgot-password`, `/auth/reset-password` | Oui | N/A (endpoint de connexion) | Oui, `check_auth_rate_limit_secure` — VERIFIED code | Oui | 🟡 Non testé en charge réelle (voir §1) |
-| Checkout/paiement | `/checkout` → `create_order_secure` + 4 providers | Non (session requise) | Oui | Rate limiting applicatif sur actions coûteuses (VERIFIED précédemment) | Oui | 🟢 H-01 corrigé (§14) |
-| Webhooks paiement | `/api/webhooks/moncash`, `/api/webhooks/moncash/collect`, `/api/webhooks/stripe/collect` | Oui (tiers non authentifiés par session) | Signature provider — VERIFIED live : POST non signé → `401` | Pas de rate limit IP dédié observé (repose sur la vérification de signature) | Oui | 🟢 Signature vérifiée ; 🔵 GET renvoie 200 au lieu de 404/405 (CF-05) |
-| Cron | `/api/cron/moncash-reconcile`, `/api/cron/plop-reconcile` | Oui (URL) | `CRON_SECRET` — VERIFIED live : `401` sans secret | N/A | Oui | 🟢 Correct |
-| CSP report | `/api/csp-report` | Oui, volontairement non authentifié | Non (design) | **Aucun**, seulement une limite de taille (20 Ko) | Oui | 🟡 Voir CF-04 |
-| Chat commande | `/chat/:orderId` | Non | Oui, RLS scope participant | Écriture via RPC uniquement (déjà VERIFIED) | Oui | 🟢 |
-| Storage | buckets `*.supabase.co/storage/v1/...` | Mixte (voir §6) | RLS + policies bucket | N/A | Passe par le périmètre Cloudflare de Supabase, pas celui de NK Deliveri | 🟢 |
-| Domaine Vercel par défaut | `nkdelivery.vercel.app/` | Oui | Non | Non | **NON** | 🔴 CF-01 |
+| Surface                   | URL/Route                                                                                |                                 Public ? |                                                      Auth ? |                                                                 Rate Limit ? |                                                     Devant Cloudflare ? |                                                                Risque |
+| ------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------: | ----------------------------------------------------------: | ---------------------------------------------------------------------------: | ----------------------------------------------------------------------: | --------------------------------------------------------------------: |
+| Site public               | `/`, `/restaurants`, `/restaurants/:slug`, `/about`…                                     |                                      Oui |                                                         Non |                                          Non (pas nécessaire, lecture seule) |             Oui (custom domain) ; **aussi via `nkdelivery.vercel.app`** |                                                         🟠 Voir CF-01 |
+| Auth                      | `/auth`, `/auth/register`, `/auth/forgot-password`, `/auth/reset-password`               |                                      Oui |                                 N/A (endpoint de connexion) |                          Oui, `check_auth_rate_limit_secure` — VERIFIED code |                                                                     Oui |                               🟡 Non testé en charge réelle (voir §1) |
+| Checkout/paiement         | `/checkout` → `create_order_secure` + 4 providers                                        |                    Non (session requise) |                                                         Oui |       Rate limiting applicatif sur actions coûteuses (VERIFIED précédemment) |                                                                     Oui |                                                 🟢 H-01 corrigé (§14) |
+| Webhooks paiement         | `/api/webhooks/moncash`, `/api/webhooks/moncash/collect`, `/api/webhooks/stripe/collect` | Oui (tiers non authentifiés par session) | Signature provider — VERIFIED live : POST non signé → `401` | Pas de rate limit IP dédié observé (repose sur la vérification de signature) |                                                                     Oui | 🟢 Signature vérifiée ; 🔵 GET renvoie 200 au lieu de 404/405 (CF-05) |
+| Cron                      | `/api/cron/moncash-reconcile`, `/api/cron/plop-reconcile`                                |                                Oui (URL) |           `CRON_SECRET` — VERIFIED live : `401` sans secret |                                                                          N/A |                                                                     Oui |                                                            🟢 Correct |
+| CSP report                | `/api/csp-report`                                                                        |      Oui, volontairement non authentifié |                                                Non (design) |                            **Aucun**, seulement une limite de taille (20 Ko) |                                                                     Oui |                                                         🟡 Voir CF-04 |
+| Chat commande             | `/chat/:orderId`                                                                         |                                      Non |                                  Oui, RLS scope participant |                                  Écriture via RPC uniquement (déjà VERIFIED) |                                                                     Oui |                                                                    🟢 |
+| Storage                   | buckets `*.supabase.co/storage/v1/...`                                                   |                          Mixte (voir §6) |                                       RLS + policies bucket |                                                                          N/A | Passe par le périmètre Cloudflare de Supabase, pas celui de NK Deliveri |                                                                    🟢 |
+| Domaine Vercel par défaut | `nkdelivery.vercel.app/`                                                                 |                                      Oui |                                                         Non |                                                                          Non |                                                                 **NON** |                                                              🔴 CF-01 |
 
 ---
 
@@ -166,12 +166,12 @@ Tous les buckets sensibles ont `file_size_limit` + `allowed_mime_types` posés a
 
 ## 10. Rate Limiting
 
-| Niveau | Preuve | Statut |
-|---|---|---|
-| Applicatif/DB (`check_rate_limit_secure`, `check_auth_rate_limit_secure`) | Appelé dans `auth.index.tsx`, `auth.forgot-password.tsx`, `poll-collect-payment.logic.ts`, `push-dispatch.server.ts`, `register-documents.functions.ts`, `send-newsletter.functions.ts`, `send-push.functions.ts` — **VERIFIED grep + lecture** | ✅ Présent sur login, reset password, upload documents, envoi de push/newsletter, polling paiement |
-| Edge/Cloudflare | **NOT VERIFIED** (§9) | ❓ |
-| `/api/csp-report` | Aucune limite de fréquence trouvée, seulement un plafond de taille de 20 Ko par requête ; chaque violation parsée déclenche un appel `captureExceptionServer` (Sentry) — **VERIFIED lecture du code** | 🟡 CF-04 |
-| Webhooks paiement | Pas de rate limit IP dédié trouvé ; protection repose entièrement sur la vérification de signature provider (déjà `401` si absente/invalide — VERIFIED live) | 🟡 Acceptable si la vérification de signature est bien à coût constant et systématique (déjà documentée dans `docs/MONCASH_WEBHOOK_SECURITY.md`, non re-vérifiée ligne à ligne ici) |
+| Niveau                                                                    | Preuve                                                                                                                                                                                                                                          | Statut                                                                                                                                                                              |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Applicatif/DB (`check_rate_limit_secure`, `check_auth_rate_limit_secure`) | Appelé dans `auth.index.tsx`, `auth.forgot-password.tsx`, `poll-collect-payment.logic.ts`, `push-dispatch.server.ts`, `register-documents.functions.ts`, `send-newsletter.functions.ts`, `send-push.functions.ts` — **VERIFIED grep + lecture** | ✅ Présent sur login, reset password, upload documents, envoi de push/newsletter, polling paiement                                                                                  |
+| Edge/Cloudflare                                                           | **NOT VERIFIED** (§9)                                                                                                                                                                                                                           | ❓                                                                                                                                                                                  |
+| `/api/csp-report`                                                         | Aucune limite de fréquence trouvée, seulement un plafond de taille de 20 Ko par requête ; chaque violation parsée déclenche un appel `captureExceptionServer` (Sentry) — **VERIFIED lecture du code**                                           | 🟡 CF-04                                                                                                                                                                            |
+| Webhooks paiement                                                         | Pas de rate limit IP dédié trouvé ; protection repose entièrement sur la vérification de signature provider (déjà `401` si absente/invalide — VERIFIED live)                                                                                    | 🟡 Acceptable si la vérification de signature est bien à coût constant et systématique (déjà documentée dans `docs/MONCASH_WEBHOOK_SECURITY.md`, non re-vérifiée ligne à ligne ici) |
 
 ---
 
@@ -209,6 +209,7 @@ Repris des audits précédents (webhooks signés, réconciliation cron protégé
 - `GET /api/cron/moncash-reconcile` et `/api/cron/plop-reconcile` sans `CRON_SECRET` → `401` (**VERIFIED live**)
 
 **Question critique : un attaquant peut-il faire croire au système qu'un paiement a été effectué alors qu'il ne l'a pas été ?**
+
 - Par forgerie de webhook : **non**, signature vérifiée, `401` sur payload non signé (VERIFIED).
 - Par manipulation du montant/méthode côté client : **non pour le flux normal** — `orders`/`payments` sont RPC-only pour l'écriture, aucune policy RLS d'écriture directe côté client (VERIFIED dans `GLOBAL_AUDIT_360`).
 - Par un admin authentique dont la session est compromise : **non, H-01 est corrigé — correction apportée à cet audit le 2026-08-14.** La policy RLS `"payments admin update"` permettait un `UPDATE payments SET status='paid'` direct par un compte admin, sans passer par `review_manual_payment_secure` ni déclencher de validation de transition. **Ce rapport affirmait initialement le contraire** (« toujours ouvert »), sur la base d'une vérification `git log` incomplète qui n'avait inspecté que le commit `498f36c` (correction de la classification manuel/automatique du paiement, sans rapport avec H-01) — sans remarquer que le commit `ecc9a65`, déjà présent à la pointe de `main` à ce moment-là, avait fermé H-01 séparément.
@@ -238,6 +239,7 @@ curl https://nkdelivery.vercel.app/
 **Nuance importante, vérifiée pour ne pas exagérer l'impact** : seule la page d'accueil (`/`) répond `200` sur ce domaine. `/restaurants`, `/about`, `/auth`, `/api/webhooks/moncash`, et un chemin aléatoire renvoient tous `404` sur `nkdelivery.vercel.app` (**VERIFIED, 4 routes testées**) — le routage SSR dynamique et les endpoints API/paiement **ne sont pas** atteignables par ce chemin actuellement. Ce n'est donc pas un contournement total de l'application, mais un contournement confirmé d'au moins un actif réel de production, avec un comportement (quel sous-ensemble de routes est exposé) qui n'est piloté par aucune décision explicite de l'équipe et pourrait changer silencieusement à un futur déploiement.
 
 **Pourquoi c'est un problème même limité à la page d'accueil :**
+
 1. Toute règle WAF/rate limiting/bot management configurée côté Cloudflare pour protéger le site ne s'applique pas à ce chemin — un attaquant qui viserait spécifiquement cet actif contourne entièrement cette couche.
 2. La page servie par ce chemin n'a **aucun** des headers de durcissement (CSP, `X-Frame-Options`) présents sur le domaine officiel — elle est en théorie embarquable dans un `<iframe>` tiers (clickjacking) alors que le domaine principal l'interdit explicitement (`frame-ancestors 'none'`, `X-Frame-Options: DENY`).
 3. `Access-Control-Allow-Origin: *` sur ce chemin n'a pas d'impact direct ici (page HTML publique sans données sensibles), mais révèle que les réponses de ce chemin ne passent pas par le même pipeline de headers applicatifs que le domaine principal — un signal que d'autres différences de comportement pourraient exister sans supervision.
@@ -249,19 +251,19 @@ curl https://nkdelivery.vercel.app/
 
 ## 16. Security Headers
 
-| Header | Présent sur `www.nkdeliveri.com` ? | Valeur observée | Qualité |
-|---|---|---|---|
-| `Content-Security-Policy` | ✅ **Oui — contredit `GLOBAL_AUDIT_360` H-02, voir note ci-dessous** | `script-src 'self' 'nonce-<random>'; default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint` | 🟢 Solide : nonce par requête (pas de `'unsafe-inline'` sur `script-src`), `object-src 'none'`, `frame-ancestors 'none'`, allowlist `connect-src`/`img-src` précise et alignée sur les services réellement utilisés. `style-src 'unsafe-inline'` reste un compromis (probablement lié à une lib de styling runtime) — non investigué plus loin, hors périmètre de cet audit réseau |
-| `Strict-Transport-Security` | ✅ `www` | `max-age=63072000; includeSubDomains; preload` | 🟢 |
-| `Strict-Transport-Security` | ⚠️ apex (redirect) | `max-age=63072000` seul, sans `includeSubDomains`/`preload` | 🔵 CF-03, mineur — voir §18 |
-| `X-Frame-Options` | ✅ | `DENY` | 🟢 |
-| `X-Content-Type-Options` | ✅ | `nosniff` | 🟢 |
-| `Referrer-Policy` | ✅ | `strict-origin-when-cross-origin` | 🟢 |
-| `Permissions-Policy` | ✅ | `camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()` | 🟢 |
-| `Cross-Origin-Opener-Policy` | ✅ | `same-origin-allow-popups` | 🟢 (le `allow-popups` est nécessaire pour les redirections OAuth/paiement en popup — cohérent avec le produit) |
-| `Cross-Origin-Embedder-Policy` (COEP) | ❌ Absent, **délibérément** | — | 🟢 Correct de ne pas le recommander automatiquement : COEP casserait le chargement des tuiles Leaflet/OpenStreetmap (`cross-origin` sans CORP compatible) — conforme à l'instruction explicite de cet audit |
-| `Cross-Origin-Resource-Policy` (CORP) | Non observé sur les réponses HTML | — | 🔵 Non bloquant pour ce type de contenu ; à envisager sur les futures API JSON si besoin d'isolement |
-| Cache sur pages privées | `Cache-Control: public, max-age=0, must-revalidate` sur `/` (page publique — correct) | — | 🟢 Aucune donnée privée observée en cache dans les réponses testées (dashboard/checkout non testés en profondeur ici, déjà couverts par les audits précédents comme routes protégées par session) |
+| Header                                | Présent sur `www.nkdeliveri.com` ?                                                    | Valeur observée                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Qualité                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Content-Security-Policy`             | ✅ **Oui — contredit `GLOBAL_AUDIT_360` H-02, voir note ci-dessous**                  | `script-src 'self' 'nonce-<random>'; default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.ingest.sentry.io; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint` | 🟢 Solide : nonce par requête (pas de `'unsafe-inline'` sur `script-src`), `object-src 'none'`, `frame-ancestors 'none'`, allowlist `connect-src`/`img-src` précise et alignée sur les services réellement utilisés. `style-src 'unsafe-inline'` reste un compromis (probablement lié à une lib de styling runtime) — non investigué plus loin, hors périmètre de cet audit réseau |
+| `Strict-Transport-Security`           | ✅ `www`                                                                              | `max-age=63072000; includeSubDomains; preload`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 🟢                                                                                                                                                                                                                                                                                                                                                                                 |
+| `Strict-Transport-Security`           | ⚠️ apex (redirect)                                                                    | `max-age=63072000` seul, sans `includeSubDomains`/`preload`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | 🔵 CF-03, mineur — voir §18                                                                                                                                                                                                                                                                                                                                                        |
+| `X-Frame-Options`                     | ✅                                                                                    | `DENY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 🟢                                                                                                                                                                                                                                                                                                                                                                                 |
+| `X-Content-Type-Options`              | ✅                                                                                    | `nosniff`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 🟢                                                                                                                                                                                                                                                                                                                                                                                 |
+| `Referrer-Policy`                     | ✅                                                                                    | `strict-origin-when-cross-origin`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🟢                                                                                                                                                                                                                                                                                                                                                                                 |
+| `Permissions-Policy`                  | ✅                                                                                    | `camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 🟢                                                                                                                                                                                                                                                                                                                                                                                 |
+| `Cross-Origin-Opener-Policy`          | ✅                                                                                    | `same-origin-allow-popups`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | 🟢 (le `allow-popups` est nécessaire pour les redirections OAuth/paiement en popup — cohérent avec le produit)                                                                                                                                                                                                                                                                     |
+| `Cross-Origin-Embedder-Policy` (COEP) | ❌ Absent, **délibérément**                                                           | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🟢 Correct de ne pas le recommander automatiquement : COEP casserait le chargement des tuiles Leaflet/OpenStreetmap (`cross-origin` sans CORP compatible) — conforme à l'instruction explicite de cet audit                                                                                                                                                                        |
+| `Cross-Origin-Resource-Policy` (CORP) | Non observé sur les réponses HTML                                                     | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🔵 Non bloquant pour ce type de contenu ; à envisager sur les futures API JSON si besoin d'isolement                                                                                                                                                                                                                                                                               |
+| Cache sur pages privées               | `Cache-Control: public, max-age=0, must-revalidate` sur `/` (page publique — correct) | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🟢 Aucune donnée privée observée en cache dans les réponses testées (dashboard/checkout non testés en profondeur ici, déjà couverts par les audits précédents comme routes protégées par session)                                                                                                                                                                                  |
 
 **Note sur H-02 (`GLOBAL_AUDIT_360`)** : ce finding affirmait "aucun Content-Security-Policy n'est configuré nulle part". C'était **correct pour une lecture statique de `vercel.json`**, mais **incorrect pour le comportement réel en production**, où `src/server.ts` génère un CSP strict par requête. **Recommandation : marquer H-02 comme résolu/obsolète dans le suivi de remédiation**, avec cette preuve live comme référence.
 
@@ -276,6 +278,7 @@ Aucun secret trouvé exposé côté client dans cette session (cohérent avec `G
 ## 18. Attack Scenarios
 
 ### Scénario 1 — Attaquant anonyme → plateforme publique
+
 Attaque → requête HTTP arbitraire sur `www.nkdeliveri.com`.
 Protection actuelle → Cloudflare (edge, DDoS L3/L4, TLS), CSP/headers stricts, RLS côté données.
 Protection manquante → confirmation WAF/rate limiting edge (NOT VERIFIED).
@@ -284,6 +287,7 @@ Impact → faible sur ce chemin seul (page publique).
 Risque → 🟡 MEDIUM (à cause de CF-01).
 
 ### Scénario 2 — Attaquant → brute force login
+
 Attaque → tentatives répétées sur `/auth`.
 Protection actuelle → `check_auth_rate_limit_secure` (RPC, VERIFIED code, non déclenché en conditions réelles dans cet audit).
 Protection manquante → CAPTCHA/Turnstile (aucun trouvé) ; confirmation d'un rate limiting edge Cloudflare en complément (NOT VERIFIED).
@@ -292,32 +296,39 @@ Impact → compromission de compte si succès.
 Risque → 🟡 MEDIUM (protection présente mais mono-couche, non re-vérifiée en live).
 
 ### Scénario 3 — Utilisateur authentifié → modification d'un autre utilisateur
+
 Protection actuelle → RLS scoping strict par `auth.uid()`, déjà VERIFIED (`GLOBAL_AUDIT_360` §9).
 Risque → 🟢 LOW, hors nouvelle preuve dans cette session.
 
 ### Scénario 4 — Utilisateur → modification d'une commande qui ne lui appartient pas
+
 Protection actuelle → `orders` 100% RPC-only, aucune policy d'écriture directe (déjà VERIFIED).
 Risque → 🟢 LOW.
 
 ### Scénario 5 — Utilisateur → manipulation d'un paiement
+
 Protection actuelle → webhooks signés (VERIFIED live cette session), RPC-only côté client, **et H-01 corrigé** (`DROP POLICY "payments admin update"`, commit `ecc9a65` — plus aucune écriture RLS directe sur `payments`, admin inclus).
 Protection manquante → aucune identifiée dans le périmètre de ce scénario.
-Risque → 🟢 LOW *(révisé le 2026-08-14 — était 🟠 HIGH par erreur, voir correctif en tête de document)*.
+Risque → 🟢 LOW _(révisé le 2026-08-14 — était 🟠 HIGH par erreur, voir correctif en tête de document)_.
 
 ### Scénario 6 — Attaquant → API abuse
+
 Protection actuelle → convention `_secure` + `check_rate_limit_secure` sur les actions coûteuses connues.
 Protection manquante → `/api/csp-report` sans limite (CF-04) ; confirmation edge (NOT VERIFIED).
 Risque → 🟡 MEDIUM (coût/bruit, pas de fuite de données).
 
 ### Scénario 7 — Attaquant → upload malveillant
+
 Protection actuelle → `file_size_limit`/`allowed_mime_types` posés au niveau du moteur Storage lui-même (VERIFIED migrations), pas seulement en validation applicative.
 Risque → 🟢 LOW.
 
 ### Scénario 8 — Attaquant → récupération de données privées
+
 Protection actuelle → RLS 100%, buckets sensibles privés (VERIFIED §6), `nkdelivery.vercel.app` ne sert que du contenu déjà public (page d'accueil).
 Risque → 🟢 LOW, sous réserve que CF-01 ne s'étende pas un jour à des routes dynamiques (voir §15).
 
 ### Scénario 9 — Attaquant → bypass Cloudflare
+
 Attaque → cibler `nkdelivery.vercel.app` au lieu du domaine officiel.
 Protection actuelle → aucune (ce chemin n'est simplement pas couvert par la zone Cloudflare de NK Deliveri).
 Protection manquante → désactivation du domaine par défaut Vercel ou redirection forcée.
@@ -326,6 +337,7 @@ Impact → limité aujourd'hui (page d'accueil seule), structurel (aucune garant
 Risque → 🟠 **HIGH — Finding CF-01**.
 
 ### Scénario 10 — Attaquant → exploitation d'un endpoint sans rate limit
+
 Attaque → flood de `/api/csp-report`.
 Protection actuelle → plafond de taille (20 Ko), pas de limite de fréquence.
 Impact → bruit Sentry/logs, coût d'observabilité, pas de fuite de données ni d'écriture DB (le endpoint n'écrit rien en base — VERIFIED lecture du code).
@@ -335,35 +347,35 @@ Risque → 🟡 MEDIUM — Finding CF-04.
 
 ## 19. Vulnerability Matrix
 
-| ID | Titre | Sévérité | Composant | Priorité |
-|---|---|---|---|---|
-| CF-01 | Origin bypass — `nkdelivery.vercel.app` sert la page d'accueil réelle sans passer par Cloudflare | 🟠 HIGH | Vercel / Cloudflare | P1 |
-| CF-02 | Impossible de confirmer si WAF/Bot Fight Mode/rate limiting Cloudflare sont réellement activés (limite d'audit, pas juste un manque) | 🟡 MEDIUM | Cloudflare (config non observable) | P2 |
-| CF-03 | HSTS sur l'apex (redirect) sans `includeSubDomains`/`preload`, contrairement à `www` | 🔵 LOW | Vercel headers | P3 |
-| CF-04 | `/api/csp-report` sans rate limiting — abusable pour générer du bruit Sentry/logs à coût attaquant nul | 🟡 MEDIUM | Application (`src/routes/api.csp-report.ts`) | P2 |
-| CF-05 | Routes webhook `POST`-only répondent `200` (shell SPA) au lieu de `404`/`405` sur `GET` | 🔵 LOW | Application (routing) | P3 |
-| CF-06 | Aucun `/.well-known/security.txt` | 🟢 INFO | — | P3 |
-| H-01 *(repris — CLOS)* | `payments` modifiable directement par un admin sans trigger de validation | — | Supabase RLS | **RÉSOLU** — `DROP POLICY`, commit `ecc9a65`, `docs/PHASE_1_REMEDIATION_REPORT.md`. Cet audit affirmait initialement "toujours ouvert" par erreur de vérification `git log` — corrigé le 2026-08-14, voir note en tête de document |
-| H-02 *(repris — à clore)* | "Aucun CSP configuré" — **infirmé par cet audit**, CSP réel et strict en production | — | — | **À retirer du backlog** |
+| ID                        | Titre                                                                                                                                | Sévérité  | Composant                                    | Priorité                                                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CF-01                     | Origin bypass — `nkdelivery.vercel.app` sert la page d'accueil réelle sans passer par Cloudflare                                     | 🟠 HIGH   | Vercel / Cloudflare                          | P1                                                                                                                                                                                                                                 |
+| CF-02                     | Impossible de confirmer si WAF/Bot Fight Mode/rate limiting Cloudflare sont réellement activés (limite d'audit, pas juste un manque) | 🟡 MEDIUM | Cloudflare (config non observable)           | P2                                                                                                                                                                                                                                 |
+| CF-03                     | HSTS sur l'apex (redirect) sans `includeSubDomains`/`preload`, contrairement à `www`                                                 | 🔵 LOW    | Vercel headers                               | P3                                                                                                                                                                                                                                 |
+| CF-04                     | `/api/csp-report` sans rate limiting — abusable pour générer du bruit Sentry/logs à coût attaquant nul                               | 🟡 MEDIUM | Application (`src/routes/api.csp-report.ts`) | P2                                                                                                                                                                                                                                 |
+| CF-05                     | Routes webhook `POST`-only répondent `200` (shell SPA) au lieu de `404`/`405` sur `GET`                                              | 🔵 LOW    | Application (routing)                        | P3                                                                                                                                                                                                                                 |
+| CF-06                     | Aucun `/.well-known/security.txt`                                                                                                    | 🟢 INFO   | —                                            | P3                                                                                                                                                                                                                                 |
+| H-01 _(repris — CLOS)_    | `payments` modifiable directement par un admin sans trigger de validation                                                            | —         | Supabase RLS                                 | **RÉSOLU** — `DROP POLICY`, commit `ecc9a65`, `docs/PHASE_1_REMEDIATION_REPORT.md`. Cet audit affirmait initialement "toujours ouvert" par erreur de vérification `git log` — corrigé le 2026-08-14, voir note en tête de document |
+| H-02 _(repris — à clore)_ | "Aucun CSP configuré" — **infirmé par cet audit**, CSP réel et strict en production                                                  | —         | —                                            | **À retirer du backlog**                                                                                                                                                                                                           |
 
 ---
 
 ## 20. Security Score /100
 
-| Domaine | Score /10 | Justification courte |
-|---|---:|---|
-| DDoS | 6 | Cloudflare proxy actif = protection réseau de base ; contournement confirmé pour au moins un actif (CF-01) réduit la couverture réelle |
-| WAF | 4 | Non vérifiable positivement (CF-02) — score prudent, pas optimiste |
-| Rate limiting | 6 | Solide au niveau applicatif sur les actions sensibles connues ; un gap confirmé (CF-04) ; couverture edge non vérifiable |
-| Authentication | 8 | JWT + step-up MFA STRICT déjà VERIFIED (audits précédents) + rate limiting login VERIFIED code |
-| Authorization | 8 *(révisé, était 7)* | RLS 100% + pattern 100% RPC-only désormais confirmé sur toutes les tables financières sensibles — H-01 corrigé (commit `ecc9a65`) |
-| API security | 7 | Convention `_secure` cohérente ; deux gaps mineurs (CF-04, CF-05) |
-| Payment security | 8 *(révisé, était 7)* | Webhooks signés VERIFIED live, cron protégé VERIFIED live, H-01 corrigé (plus aucune écriture RLS directe sur `payments`) |
-| Supabase/RLS | 8 | RLS 100%, storage buckets sensibles tous privés (VERIFIED cette session) |
-| Headers/TLS | 8 | CSP strict + nonce, HSTS/X-Frame-Options/Permissions-Policy tous corrects sur le domaine principal ; incohérence mineure sur l'apex (CF-03) |
-| Origin protection | 3 | Contournement confirmé et reproductible (CF-01) |
+| Domaine           |             Score /10 | Justification courte                                                                                                                        |
+| ----------------- | --------------------: | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| DDoS              |                     6 | Cloudflare proxy actif = protection réseau de base ; contournement confirmé pour au moins un actif (CF-01) réduit la couverture réelle      |
+| WAF               |                     4 | Non vérifiable positivement (CF-02) — score prudent, pas optimiste                                                                          |
+| Rate limiting     |                     6 | Solide au niveau applicatif sur les actions sensibles connues ; un gap confirmé (CF-04) ; couverture edge non vérifiable                    |
+| Authentication    |                     8 | JWT + step-up MFA STRICT déjà VERIFIED (audits précédents) + rate limiting login VERIFIED code                                              |
+| Authorization     | 8 _(révisé, était 7)_ | RLS 100% + pattern 100% RPC-only désormais confirmé sur toutes les tables financières sensibles — H-01 corrigé (commit `ecc9a65`)           |
+| API security      |                     7 | Convention `_secure` cohérente ; deux gaps mineurs (CF-04, CF-05)                                                                           |
+| Payment security  | 8 _(révisé, était 7)_ | Webhooks signés VERIFIED live, cron protégé VERIFIED live, H-01 corrigé (plus aucune écriture RLS directe sur `payments`)                   |
+| Supabase/RLS      |                     8 | RLS 100%, storage buckets sensibles tous privés (VERIFIED cette session)                                                                    |
+| Headers/TLS       |                     8 | CSP strict + nonce, HSTS/X-Frame-Options/Permissions-Policy tous corrects sur le domaine principal ; incohérence mineure sur l'apex (CF-03) |
+| Origin protection |                     3 | Contournement confirmé et reproductible (CF-01)                                                                                             |
 
-### **GLOBAL SECURITY SCORE : 66/100 → Moyen (60–69)** *(révisé de 64/100 le 2026-08-14, suite à la correction H-01 — voir note en tête de document)*
+### **GLOBAL SECURITY SCORE : 66/100 → Moyen (60–69)** _(révisé de 64/100 le 2026-08-14, suite à la correction H-01 — voir note en tête de document)_
 
 Ce score porte spécifiquement sur le **périmètre réseau/edge** — il ne remplace ni n'améliore le score de 75.5/100 de `FULL_PLATFORM_AUDIT_2026-08-13.md` (qui porte sur RLS/business logic/routes), il l'un complète l'autre. Le facteur qui tire ce score-ci vers le bas est désormais presque entièrement **CF-01** (origin bypass confirmé, toujours `NOT REMEDIATED` au 2026-08-14 — voir `docs/CF-01_POST_REMEDIATION_VERIFICATION_2026-08-13.md`) et l'incapacité méthodologique à confirmer la configuration Cloudflare réelle (CF-02) — deux problèmes rapides à corriger/vérifier (réglages de plateforme, pas de refonte).
 
@@ -378,9 +390,11 @@ Ce score porte spécifiquement sur le **périmètre réseau/edge** — il ne rem
 ## 22. High Findings
 
 ### CF-01 — Origin bypass confirmé via `nkdelivery.vercel.app`
+
 Voir détail complet §15. **Priorité P1 — toujours ouvert au 2026-08-14** (voir `docs/CF-01_POST_REMEDIATION_VERIFICATION_2026-08-13.md` : `NOT REMEDIATED`, et `docs/CF-01_VERCEL_OWNER_INVESTIGATION_2026-08-13.md` pour l'identification du projet Vercel réel à corriger).
 
 ### ~~H-01 — `payments.status` modifiable directement par un admin sans trigger de validation~~ — RÉSOLU
+
 Voir détail §14. **Corrigé** (commit `ecc9a65`, `supabase/migrations/20260813130000_fix_payments_rls_bypass.sql`). Ce rapport listait initialement ce finding comme "toujours ouvert" par erreur — corrigé le 2026-08-14, voir note en tête de document. Conservé ici, barré, pour la traçabilité de la correction plutôt que supprimé silencieusement.
 
 ---
@@ -388,9 +402,11 @@ Voir détail §14. **Corrigé** (commit `ecc9a65`, `supabase/migrations/20260813
 ## 23. Medium Findings
 
 ### CF-02 — Configuration WAF/Bot/rate limiting Cloudflare non vérifiable depuis cette session
+
 **Recommandation** : export ou capture d'écran du dashboard Cloudflare (Security → WAF, Security → Bots, Security → Rate limiting rules) à joindre à une prochaine revue pour fermer ce point par une preuve directe plutôt qu'une déduction comportementale. **Priorité P2.**
 
 ### CF-04 — `/api/csp-report` sans rate limiting
+
 **Recommandation** : appliquer `check_rate_limit_secure` (ou un simple compteur en mémoire/edge) par IP sur ce endpoint, cohérent avec le reste du projet. **Priorité P2.**
 
 ---
@@ -406,21 +422,15 @@ Voir détail §14. **Corrigé** (commit `ecc9a65`, `supabase/migrations/20260813
 ## 25. Prioritized Remediation Roadmap
 
 **Phase 0 (P1 — rapide, fort impact, pas de refonte)**
+
 1. **CF-01** : toujours ouvert au 2026-08-14 (`NOT REMEDIATED` confirmé). Projet Vercel confirmé (`prj_p14gRktfIMXQ3UdL8zYgsdN8LU2x`), recommandation (Deployment Protection) identifiée — **mais explicitement mise en pause par l'opérateur le 2026-08-14** : la fonctionnalité n'est pas disponible sur le plan Vercel actuel de l'équipe. Risque connu et accepté temporairement, pas oublié — voir `docs/CF-01_VERCEL_OWNER_INVESTIGATION_2026-08-13.md` §10 pour les voies alternatives non explorées (ticket support, upgrade de plan, renommage de projet).
-2. ~~**H-01**~~ *(repris)* : **RÉSOLU** — `DROP POLICY "payments admin update"`, commit `ecc9a65`, plus besoin d'action.
+2. ~~**H-01**~~ _(repris)_ : **RÉSOLU** — `DROP POLICY "payments admin update"`, commit `ecc9a65`, plus besoin d'action.
 
-**Phase 1 (P2 — confirmation/config, pas de code)**
-3. **CF-02** : auditer directement le dashboard Cloudflare (WAF managed rules, Bot Fight Mode, règles de rate limiting) et documenter l'état réel — transforme un NOT VERIFIED en VERIFIED dans un sens ou l'autre.
-4. **CF-04** : ajouter un rate limit (IP ou fenêtre glissante) sur `/api/csp-report`.
-5. Vérifier/poser un enregistrement DMARC (`_dmarc.nkdeliveri.com`), non couvert par cet audit.
+**Phase 1 (P2 — confirmation/config, pas de code)** 3. **CF-02** : auditer directement le dashboard Cloudflare (WAF managed rules, Bot Fight Mode, règles de rate limiting) et documenter l'état réel — transforme un NOT VERIFIED en VERIFIED dans un sens ou l'autre. 4. **CF-04** : ajouter un rate limit (IP ou fenêtre glissante) sur `/api/csp-report`. 5. Vérifier/poser un enregistrement DMARC (`_dmarc.nkdeliveri.com`), non couvert par cet audit.
 
-**Phase 2 (P3 — cosmétique/best practice)**
-6. **CF-03** : aligner le HSTS de la réponse de redirection apex sur celui de `www` (`includeSubDomains; preload`).
-7. **CF-05** : ajouter des handlers `GET` explicites (405) sur les routes webhook `POST`-only.
-8. **CF-06** : publier `/.well-known/security.txt`.
+**Phase 2 (P3 — cosmétique/best practice)** 6. **CF-03** : aligner le HSTS de la réponse de redirection apex sur celui de `www` (`includeSubDomains; preload`). 7. **CF-05** : ajouter des handlers `GET` explicites (405) sur les routes webhook `POST`-only. 8. **CF-06** : publier `/.well-known/security.txt`.
 
-**Nettoyage de backlog**
-9. **H-02** (`GLOBAL_AUDIT_360`) : marquer comme résolu/obsolète — le CSP existe réellement et est solide en production, cet audit en apporte la preuve live.
+**Nettoyage de backlog** 9. **H-02** (`GLOBAL_AUDIT_360`) : marquer comme résolu/obsolète — le CSP existe réellement et est solide en production, cet audit en apporte la preuve live.
 
 ---
 
@@ -439,7 +449,7 @@ Voir détail §14. **Corrigé** (commit `ecc9a65`, `supabase/migrations/20260813
 11. **Les données privées sont-elles correctement isolées ?** Oui — RLS 100%, buckets sensibles tous privés (VERIFIED cette session).
 12. **Quelle est la probabilité qu'une attaque réussisse ?** Faible pour une compromission de données ; **modérée à confirmée** pour un contournement partiel de la couche Cloudflare (CF-01, déjà démontré, pas hypothétique).
 13. **Quel serait son impact ?** Aujourd'hui limité (contenu déjà public) ; le vrai risque est l'absence de garantie que cette exposition reste bornée à la page d'accueil dans le temps.
-14. **Quelles sont les corrections encore urgentes ?** *(H-01 retiré de cette liste le 2026-08-14 — déjà résolu)*
+14. **Quelles sont les corrections encore urgentes ?** _(H-01 retiré de cette liste le 2026-08-14 — déjà résolu)_
     1. CF-01 — toujours ouvert, voir `docs/CF-01_VERCEL_OWNER_INVESTIGATION_2026-08-13.md` pour l'action précise (P1).
     2. CF-02 — confirmer la configuration WAF/Bot/rate limiting réelle dans le dashboard Cloudflare (P2).
     3. CF-04 — rate limit sur `/api/csp-report` (P2).
@@ -448,4 +458,4 @@ Voir détail §14. **Corrigé** (commit `ecc9a65`, `supabase/migrations/20260813
 
 ---
 
-*Fin de l'audit. Aucune modification n'a été apportée au code, à la configuration Cloudflare/Vercel/Supabase, au DNS, ni à aucune donnée pendant sa réalisation. Toutes les requêtes envoyées étaient des GET/HEAD non authentifiés ou des POST non signés à volume unitaire — aucun flood, aucun brute-force réel, aucune exploitation destructive. Toute correction listée ci-dessus attend une autorisation explicite avant implémentation, conformément à la consigne "aucune remédiation pendant cet audit".*
+_Fin de l'audit. Aucune modification n'a été apportée au code, à la configuration Cloudflare/Vercel/Supabase, au DNS, ni à aucune donnée pendant sa réalisation. Toutes les requêtes envoyées étaient des GET/HEAD non authentifiés ou des POST non signés à volume unitaire — aucun flood, aucun brute-force réel, aucune exploitation destructive. Toute correction listée ci-dessus attend une autorisation explicite avant implémentation, conformément à la consigne "aucune remédiation pendant cet audit"._

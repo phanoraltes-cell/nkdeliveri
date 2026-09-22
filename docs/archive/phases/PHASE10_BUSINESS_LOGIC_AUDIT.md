@@ -15,12 +15,12 @@
 
 **Pa gen yon SÈL fonksyon "konfimasyon final" inifye** — gen **4 fonksyon separe**, chak espesifik a yon chemen, tout konvèje sou `payments.status = 'paid'` :
 
-| Chemen | Fonksyon "final" | Deklanche pa |
-|---|---|---|
-| MonCash/NatCash manyèl | `review_manual_payment_secure` | Admin, apre revizyon prèv |
-| MonCash/NatCash otomatik (PLOP/Collect) | `complete_collect_payment_secure` | Webhook founisè a |
-| Stripe | webhook Stripe (`api.webhooks.stripe.collect.ts`) | Webhook Stripe |
-| Kach | `confirm_cash_payment_secure` | Doub konfimasyon kliyan+livrè |
+| Chemen                                  | Fonksyon "final"                                  | Deklanche pa                  |
+| --------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| MonCash/NatCash manyèl                  | `review_manual_payment_secure`                    | Admin, apre revizyon prèv     |
+| MonCash/NatCash otomatik (PLOP/Collect) | `complete_collect_payment_secure`                 | Webhook founisè a             |
+| Stripe                                  | webhook Stripe (`api.webhooks.stripe.collect.ts`) | Webhook Stripe                |
+| Kach                                    | `confirm_cash_payment_secure`                     | Doub konfimasyon kliyan+livrè |
 
 **Konklizyon** : fragmantasyon sa a se yon chwa achitekti kòrèk (chak chemen gen pwòp reyalite operasyonèl li), pa yon gap — tout 4 yo deja verifye endividyèlman pandan sesyon sa a (Faz 1, Faz 5). **Pa gen okenn ka kote yon peman ta ka rete "pandan tout tan" san yon chemen pou l vin `paid` oswa `failed`.**
 
@@ -40,12 +40,12 @@
 
 **Tab tranzisyon konplè** (lekti dirèk `update_order_status_secure`, deja li plizyè fwa sesyon sa a) :
 
-| Wòl | Tranzisyon valid |
-|---|---|
-| Kliyan | `(pending\|confirmed) → cancelled` sèlman |
+| Wòl      | Tranzisyon valid                                                                            |
+| -------- | ------------------------------------------------------------------------------------------- |
+| Kliyan   | `(pending\|confirmed) → cancelled` sèlman                                                   |
 | Restoran | `pending→confirmed→preparing→ready`, + `(pending\|confirmed\|preparing\|ready) → cancelled` |
-| Livrè | `ready→assigned→picked_up→delivered` — **sekans strik, PA gen so-kout** |
-| Admin | **nenpòt** tranzisyon (`v_allowed := true` san kondisyon) |
+| Livrè    | `ready→assigned→picked_up→delivered` — **sekans strik, PA gen so-kout**                     |
+| Admin    | **nenpòt** tranzisyon (`v_allowed := true` san kondisyon)                                   |
 
 **Repons kesyon eksplisit** : **NON**, `delivered` PA ka rive san `picked_up` — pou yon livrè, sèl chemen ki mennen nan `delivered` se `picked_up→delivered`, pa gen so-kout `assigned→delivered` ni `ready→delivered`. **Sèl eksepsyon** : yon admin (`v_allowed := true` san restriksyon) ka fòse nenpòt tranzisyon, ki gen ladan yon so-kout — sa se yon zouti admin deliberateman san limit, pa yon twou nan wòl livrè/restoran/kliyan.
 
@@ -68,6 +68,7 @@
 **KONFIME** : `restaurants.delivery_fee NUMERIC(10,2) NOT NULL DEFAULT 0` (`20260703060847...sql:34`). `create_order_secure` itilize `COALESCE(v_restaurant.delivery_fee, 150)` — men **rechèch egzoustif konfime AUKENN kòd (INSERT restoran, UI, RPC) pa janm mete `delivery_fee` a yon lòt valè pase default `0` a**. Konsekans : `v_restaurant.delivery_fee` pa janm `NULL` an pratik (kolòn `NOT NULL`), donk **fallback `150` a pa janm deklanche — kòd mò**.
 
 **Egzanp chif konkrè** (kòmand 500 HTG, 2 atik) :
+
 - Jodi a : `subtotal=500 + delivery_fee=0 + service_fee=0 = total=500` — **livrezon gratis pou tout restoran**, pa yon chwa afiche/dokimante okenn kote.
 - Sa `COALESCE(...,150)` te sipoze bay si `delivery_fee` te janm `NULL` : `500 + 150 + 0 = 650`.
 
@@ -87,11 +88,11 @@
 
 Rechèch egzoustif (`grep -rln` sou `src/` + tout migrasyon) pou mekanis dedye :
 
-| Ka | Jwenn ? |
-|---|---|
-| Kliyan absan (livrè rive, pèsonn pa reponn) | **0 rezilta** — okenn mekanis/estati/RPC dedye |
-| Adrès pa jwenn/pa egziste | **0 rezilta** |
-| Koneksyon koupe pandan livrezon (livrè offline) | **0 rezilta** |
+| Ka                                              | Jwenn ?                                        |
+| ----------------------------------------------- | ---------------------------------------------- |
+| Kliyan absan (livrè rive, pèsonn pa reponn)     | **0 rezilta** — okenn mekanis/estati/RPC dedye |
+| Adrès pa jwenn/pa egziste                       | **0 rezilta**                                  |
+| Koneksyon koupe pandan livrezon (livrè offline) | **0 rezilta**                                  |
 
 **Konsekans konkrè, deja demontre nan §3** : yon livrè ki gen yon kòmand `picked_up` men **pa ka livre l** (kliyan absan, adrès pa jwenn) **pa gen okenn tranzisyon estati valid pou li menm** — tablo tranzisyon livrè a se sèlman `picked_up→delivered`, **pa gen `picked_up→cancelled` ni yon estati "echèk livrezon"** pami 9 estati yo. Sèl opsyon livrè a genyen : (a) kontakte kliyan/admin manyèlman (telefòn deja disponib nan UI), (b) tann yon admin entèvni pou fòse yon tranzisyon (admin ka fè nenpòt), oswa (c) — risk — make `delivered` pou yon livrezon ki pa t reyisi.
 
@@ -102,6 +103,7 @@ Rechèch egzoustif (`grep -rln` sou `src/` + tout migrasyon) pou mekanis dedye :
 ## 9. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - 4 chemen "konfimasyon final" peman idantifye, tout konvèje sou `paid`.
 - 9 estati kòmand, tab tranzisyon konplè pou 4 wòl, `delivered` mande `picked_up` toujou (sof admin).
 - 2 livrè menm kòmand — deja bloke (site).
@@ -112,6 +114,7 @@ Rechèch egzoustif (`grep -rln` sou `src/` + tout migrasyon) pou mekanis dedye :
 **ESTIMASYON** : okenn.
 
 **PA VERIFYE** :
+
 - Backup rekonsilyasyon Stripe si webhook echwe silansye.
 - Kilès nan 3 ka limit yo (kliyan absan, adrès, koneksyon) mèt pwojè a konsidere reyèlman posib/frekan an pratik.
 
@@ -120,6 +123,7 @@ Rechèch egzoustif (`grep -rln` sou `src/` + tout migrasyon) pou mekanis dedye :
 ## 10. Kwazman ak backlog egzistan
 
 Pa gen nouvo ID NKD kreye — tout 2 gap konfime (§6 frè livrezon, §8 ka limit) se desizyon metye (Règ A5), pa vilnerabilite. **3 bagay site pou atansyon mèt pwojè a** :
+
 1. `delivery_fee` — konfime livrezon gratis pou tout moun jodi a, entansyonèl oswa non ?
 2. Estati/pwosesis pou livrezon ki echwe (kliyan absan, adrès).
 3. Backup rekonsilyasyon Stripe (opsyonèl, konpare ak MonCash/PLOP ki gen youn).

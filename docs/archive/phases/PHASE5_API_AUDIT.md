@@ -18,6 +18,7 @@
 **7 tab pwoteje** (envantè konplè, grep egzoustif) : `admin_backup_codes`, `moncash_api_logs`, `moncash_webhook_events`, `newsletter_send_log`, `order_admin_notes`, `plop_api_logs`, `stripe_api_logs`.
 
 **KONFIME, egzoustif** : rechèch `(UPDATE|DELETE FROM|TRUNCATE)` sou chak nan 7 tab yo, deyò definisyon pwòp trigger yo, sou tout 139 migrasyon :
+
 - 6 nan 7 tab yo (`moncash_api_logs`, `moncash_webhook_events`, `newsletter_send_log`, `order_admin_notes`, `plop_api_logs`, `stripe_api_logs`) : **0 okirans** — okenn RPC pa janm eseye modifye/efase ranje ladan yo, kèlkeswa wòl.
 - `admin_backup_codes` : 2 `UPDATE` jwenn (`generate_admin_backup_codes_secure`, `verify_admin_backup_code_secure`) — **atandi ak san danje** : trigger `prevent_log_mutation` la sèlman sou `BEFORE DELETE`/`BEFORE TRUNCATE` pou tab sa a espesyalman (konsepsyon orijinal fonksyonalite a, deja dokimante : "UPDATE rete pèmèt — `used_at`/`revoked_at` bezwen ka chanje"), donk `UPDATE` yo **pa menm rive nan chemen trigger la**.
 
@@ -50,6 +51,7 @@
 **Règ A5 aplike** : sa se yon desizyon metye (èske yon kle idanpotans dwe ajoute, ki gwosè fenèt tan, ki konpòtman lè yon doub-detekte) — **pa yon fiks teknik mwen ka fè inilateralman**. Dokimante isit la, pa korije.
 
 ### Konfimasyon peman
+
 `review_manual_payment_secure` (gad kont re-desizyon deja verifye Faz 1), `confirm_cash_payment_secure` (double-konfimasyon kliyan+livrè), `complete_collect_payment_secure` (webhook, idanpotan par konsepsyon). **KONFIME idanpotan** pou tou 3.
 
 ---
@@ -65,6 +67,7 @@
 ## 5. Kòd HTTP
 
 **KONFIME** — 3 wout API verifye endividyèlman :
+
 - `api.webhooks.moncash.ts` : pwopaje `result.httpStatus` (401 siyati envalid, 200 siksè/doublon, 500 erè entèn) — pa janm 200 pou yon echèk.
 - `api.cron.moncash-reconcile.ts` : 500 (config manke), 401 (`CRON_SECRET` envalid), 200 (siksè), 500 (erè egzekisyon).
 - `api.csp-report.ts` : 413 (peyload twò gwo), 204 (aksepte, pa gen kontni pou retounen).
@@ -76,6 +79,7 @@ Chak wout retounen yon kòd ki byen reflete rezilta reyèl la — pa gen `200` j
 ## 6. Rezime KONFIME / ESTIMASYON / PA VERIFYE
 
 **KONFIME** :
+
 - NKD-005 rete P3 — okenn RPC pa ekspoze mutasyon sou 6/7 tab pwoteje yo ; `admin_backup_codes` UPDATE atandi/san danje.
 - Okenn ka Kategori D eksplwatab (UUID kle prensipal + `order_number` jamè yon paramèt rekèt).
 - Webhook/konfimasyon peman idanpotan.
@@ -85,6 +89,7 @@ Chak wout retounen yon kòd ki byen reflete rezilta reyèl la — pa gen `200` j
 **ESTIMASYON** : okenn nouvo — chak KONFIME anwo a soti nan grep egzoustif oswa lekti dirèk, pa yon sèl patwon san kontèks.
 
 **PA VERIFYE** :
+
 - Paginasyon 100% egzoustif sou tout lis ki ka grandi (echantiyon verifye, pa chak wout/RPC endividyèlman).
 - Kòd HTTP sou lòt wout API ki pa nan 3 yo verifye a.
 

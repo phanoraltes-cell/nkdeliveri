@@ -45,11 +45,13 @@ grep -rl "cli_login_postgres\|PGPASSWORD" . --exclude-dir=node_modules --exclude
 **Rezilta : JWENN** — 1 fichye : `docs/BACKUP_EMPTY_DUMP_ROOT_CAUSE_REPORT.md:61`.
 
 Kontni egzat liy lan :
+
 > `--dry-run` confirme que la commande sous-jacente est un `pg_dump --schema-only --quote-all-identifier --role postgres --schema=public|private`, exécuté avec `PGHOST`/`PGPORT`/`PGUSER=cli_login_postgres`/`PGPASSWORD`/`PGDATABASE` en variables d'environnement (**`PGPASSWORD` redacté avant tout affichage, jamais imprimé ni copié**). Rien d'anormal dans la commande elle-même.
 
 **Analiz** : dokiman sa a se yon rapò envestigasyon **anvan** ki sanble kouvri menm ensidan/menm zòn nan (menm kòmand `--dry-run`, menm mekanis `PGPASSWORD`). Li mansyone **non varyab yo sèlman** (`PGUSER=cli_login_postgres`, `PGPASSWORD` kòm non varyab) — pwòp tèks li deklare eksplisitteman valè a te redakte anvan afichaj, **okenn valè reyèl pa parèt nan fichye sa a**. Sa satisfè kritè "makè, pa valè" — pa mande okenn chanjman.
 
 Rechèch istwa PowerShell (`ConsoleHost_history.txt`) — `grep -n "supabase db dump\|cli_login_postgres\|PGPASSWORD"` :
+
 - Yon antre `supabase db dump` (san flag `--dry-run` vizib nan antre istwa a — istwa PSReadLine kenbe sèlman **kòmand ki tape**, jamè **sòti/rezilta** yo, donk modpas la pa ka parèt la menm si li te ekspoze nan tèminal la lè kòmand lan te kouri).
 - Plizyè antre grep ki idantik/sanble ak sa k ap fèt kounye a — sa endike yon envestigasyon/netwayaj similè te deja fèt nan yon sesyon anvan (konsistan ak fèt ke ensidan an te rive "pandan Faz 2", separe de sesyon finalizasyon sa a).
 - **Okenn valè `PGPASSWORD` pa parèt nan istwa a** — istwa a kenbe sèlman non kòmand yo, pa sòti yo.

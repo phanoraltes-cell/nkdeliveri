@@ -17,21 +17,21 @@ operasyon an nan premye pa a.
 
 ## Desizyon pwopriyetè (KANPE EPI MANDE)
 
-| Kesyon | Repons |
-|---|---|
-| Apwòch | **Anonimizasyon**, pa DELETE fizik |
-| Pòte | Kont **kliyan sèlman** (wòl 'customer', san okenn lòt wòl) |
-| Deklanchman | **Zouti admin sèlman** — match /privacy Sek 6 (NKD-022) ki deja pwomèt yon pwosesis manyèl |
-| Done istorik (`orders.delivery_address`/`contact_phone`, `payments.sender_*`) | **Rete jan yo ye** — rezon kontabilite/legal/rezoud litij |
+| Kesyon                                                                        | Repons                                                                                     |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Apwòch                                                                        | **Anonimizasyon**, pa DELETE fizik                                                         |
+| Pòte                                                                          | Kont **kliyan sèlman** (wòl 'customer', san okenn lòt wòl)                                 |
+| Deklanchman                                                                   | **Zouti admin sèlman** — match /privacy Sek 6 (NKD-022) ki deja pwomèt yon pwosesis manyèl |
+| Done istorik (`orders.delivery_address`/`contact_phone`, `payments.sender_*`) | **Rete jan yo ye** — rezon kontabilite/legal/rezoud litij                                  |
 
 ## Sa ki chanje (`fichye:liy`)
 
-| Chanjman | Fichye |
-|---|---|
-| `profiles.anonymized_at`/`anonymized_by`, RPC `anonymize_customer_secure()`, `get_all_users_admin()` mete ajou (kolòn `anonymized_at`) | [supabase/migrations/20260819100000_nkd020_customer_anonymization.sql](../../../supabase/migrations/20260819100000_nkd020_customer_anonymization.sql) |
-| Sèvè fonksyon `anonymizeCustomerAccount` — RPC (scrub `profiles`/`addresses`/`favorites`/`push_subscriptions`) + Admin API (ban 100 lane, imèl ranplase, `raw_user_meta_data` efase) | [src/lib/manage-user.functions.ts](../../../src/lib/manage-user.functions.ts) |
-| Bouton "Anonimize" (sèlman pou kont ki gen SÈLMAN wòl kliyan, pa gen deja anonimize), badj "Anonimize" apre | [src/routes/_authenticated/dashboard.admin.users.tsx](../../../src/routes/_authenticated/dashboard.admin.users.tsx) |
-| Tip Supabase (`profiles`, `anonymize_customer_secure`, `get_all_users_admin`) | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts) |
+| Chanjman                                                                                                                                                                             | Fichye                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles.anonymized_at`/`anonymized_by`, RPC `anonymize_customer_secure()`, `get_all_users_admin()` mete ajou (kolòn `anonymized_at`)                                               | [supabase/migrations/20260819100000_nkd020_customer_anonymization.sql](../../../supabase/migrations/20260819100000_nkd020_customer_anonymization.sql) |
+| Sèvè fonksyon `anonymizeCustomerAccount` — RPC (scrub `profiles`/`addresses`/`favorites`/`push_subscriptions`) + Admin API (ban 100 lane, imèl ranplase, `raw_user_meta_data` efase) | [src/lib/manage-user.functions.ts](../../../src/lib/manage-user.functions.ts)                                                                         |
+| Bouton "Anonimize" (sèlman pou kont ki gen SÈLMAN wòl kliyan, pa gen deja anonimize), badj "Anonimize" apre                                                                          | [src/routes/_authenticated/dashboard.admin.users.tsx](../../../src/routes/_authenticated/dashboard.admin.users.tsx)                                   |
+| Tip Supabase (`profiles`, `anonymize_customer_secure`, `get_all_users_admin`)                                                                                                        | [src/integrations/supabase/types.ts](../../../src/integrations/supabase/types.ts)                                                                     |
 
 ### Detay operasyon an (2 etap, tou de obligatwa)
 
@@ -41,7 +41,7 @@ operasyon an nan premye pa a.
    livrezon fini — NKD-022). **`orders`/`payments`/`disputes`/`refunds`/`reviews` pa touche ditou.**
 2. **Admin API** (`supabaseAdmin.auth.admin.updateUserById`) : bloke koneksyon pou tout tan (100
    lane, menm konvansyon ak `suspendUserAccount`), ranplase imèl la (`deleted-<id>@nkdeliveri.
-   invalid`) pou l sispann idantifye moun nan e libere adrès orijinal la, **efase
+invalid`) pou l sispann idantifye moun nan e libere adrès orijinal la, **efase
    `raw_user_meta_data`** — done siyati orijinal la (non/telefòn/adrès ki te antre nan fòm
    enskripsyon an) rete kache la si etap sa a pa fèt.
 
@@ -56,17 +56,17 @@ Kontrèman ak NKD-022 (kote STANDARD tier te fasil simile), STRICT tier mande yo
 yon faktè TOTP verifye — tès la simile toude (yon ranje `auth.mfa_factors` + reklamasyon JWT
 `aal:aal2`) pou egzèse **chemen siksè a tou**, pa sèlman rejè yo.
 
-| Tès | Verifye |
-|---|---|
-| T1 | Kliyan (pa admin) rejte — `Forbidden` |
-| T2 | Admin san step-up STRICT fre rejte — `STEP_UP_REQUIRED_MFA` |
-| T3 | Kont mikst (kliyan+livrè) rejte, menm ak step-up fre |
-| T4 | Admin pa ka anonimize pwòp tèt li |
-| T5 | **Siksè** : `profiles` netwaye (non/telefòn/adrès/foto), `anonymized_at`/`anonymized_by` ranpli |
-| T6 | `addresses` netwaye tou |
-| T7 | Done istorik nan `orders` (adrès/telefòn) rete **entak** |
-| T8 | Doub anonimizasyon rejte |
-| T9 | `get_all_users_admin()` retounen `anonymized_at` kòrèkteman |
+| Tès | Verifye                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------- |
+| T1  | Kliyan (pa admin) rejte — `Forbidden`                                                           |
+| T2  | Admin san step-up STRICT fre rejte — `STEP_UP_REQUIRED_MFA`                                     |
+| T3  | Kont mikst (kliyan+livrè) rejte, menm ak step-up fre                                            |
+| T4  | Admin pa ka anonimize pwòp tèt li                                                               |
+| T5  | **Siksè** : `profiles` netwaye (non/telefòn/adrès/foto), `anonymized_at`/`anonymized_by` ranpli |
+| T6  | `addresses` netwaye tou                                                                         |
+| T7  | Done istorik nan `orders` (adrès/telefòn) rete **entak**                                        |
+| T8  | Doub anonimizasyon rejte                                                                        |
+| T9  | `get_all_users_admin()` retounen `anonymized_at` kòrèkteman                                     |
 
 **⚠️ Pa gen ankò rezilta reyèl — fichye a ekri, tès la poko kouri.**
 
