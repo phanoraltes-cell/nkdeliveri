@@ -96,6 +96,13 @@ function Index() {
 
         <RestaurantCtaBanner />
 
+        <PopularDishesSection
+          products={data.products}
+          dishType={dishType}
+          onDishTypeChange={setDishType}
+          add={add}
+        />
+
         <PopularRestaurantsSection
           restaurants={restaurants}
           cuisine={cuisine}
@@ -105,13 +112,6 @@ function Index() {
         />
 
         <AppBenefitsSection />
-
-        <PopularDishesSection
-          products={data.products}
-          dishType={dishType}
-          onDishTypeChange={setDishType}
-          add={add}
-        />
 
         <NewsletterSection />
 
