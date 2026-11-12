@@ -37,7 +37,7 @@ export function PartnersSection() {
   return (
     <section aria-label="Patnè Ofisyèl" className="mx-auto max-w-[1200px] px-5 pb-16">
       <div className="mb-6 text-center">
-        <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-brand">
+        <span className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-brand">
           Patnè Ofisyèl
         </span>
         <h2 className="font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold tracking-tight text-ink">
@@ -48,20 +48,24 @@ export function PartnersSection() {
         </p>
       </div>
 
-      <div className="rounded-3xl border border-brand-soft/40 bg-white p-5 shadow-brand-sm sm:p-6 md:p-8">
+      <div className="rounded-[28px] border border-brand-soft/40 bg-white p-4 shadow-[0_18px_40px_rgba(249,115,22,0.08)] sm:p-6 md:p-8">
         <div className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
           {partners.data.map((p) => {
             const card = (
-              <div className="group flex h-full w-[136px] shrink-0 snap-start flex-col items-center gap-2 rounded-2xl border border-brand-soft/30 bg-cream/60 p-4 text-center transition duration-200 hover:-translate-y-1 hover:border-brand-soft/60 hover:shadow-brand-sm md:w-full md:shrink">
-                <img
-                  src={p.logo_url}
-                  alt={p.name}
-                  width={56}
-                  height={56}
-                  loading="lazy"
-                  className="h-14 w-14 rounded-xl border border-brand-soft/40 bg-white object-contain p-2"
-                />
-                <span className="line-clamp-2 text-xs font-bold text-ink sm:text-sm">{p.name}</span>
+              <div className="group flex h-full w-[150px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-[22px] border border-brand-soft/30 bg-gradient-to-b from-white to-cream/70 p-4 text-center transition-all duration-200 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_12px_30px_rgba(249,115,22,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 md:w-full md:shrink">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-brand-soft/40 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.06)] ring-1 ring-white">
+                  <img
+                    src={p.logo_url}
+                    alt={p.name}
+                    width={72}
+                    height={72}
+                    loading="lazy"
+                    className="h-full w-full object-contain p-2 transition-transform duration-200 group-hover:scale-105 motion-reduce:transition-none"
+                  />
+                </div>
+                <span className="line-clamp-2 text-[0.7rem] font-black uppercase tracking-wide text-ink-soft sm:text-xs">
+                  {p.name}
+                </span>
               </div>
             );
             return p.link_url ? (
@@ -71,7 +75,7 @@ export function PartnersSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={p.name}
-                className="rounded-2xl"
+                className="rounded-[22px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 {card}
               </a>

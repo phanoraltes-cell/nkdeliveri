@@ -42,9 +42,17 @@ export function PopularDishesSection({
   return (
     <section id="plat-popile" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 pb-14">
       <div className="mb-6 flex items-end justify-between">
-        <h2 className="font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold tracking-tight">
-          Plat <span className="text-brand">popilè</span>
-        </h2>
+        <div>
+          <span className="mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-brand">
+            Sa kliyan yo renmen
+          </span>
+          <h2 className="font-display text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold tracking-tight">
+            Plat <span className="text-brand">popilè</span>
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Chwazi yon plat epi ajoute l dirèkteman nan panye w.
+          </p>
+        </div>
       </div>
       <div className="mb-5 flex flex-wrap gap-2.5">
         {DISH_TYPES.map((d) => {
@@ -77,9 +85,9 @@ export function PopularDishesSection({
         {filteredProducts.slice(0, 8).map((p, i) => (
           <div
             key={p.id}
-            className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"
+            className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(249,115,22,0.10)] ring-1 ring-brand-soft/40 transition duration-200 hover:-translate-y-1.5 hover:shadow-[0_20px_44px_rgba(249,115,22,0.22)]"
           >
-            <div className="overflow-hidden">
+            <div className="aspect-[7/4] overflow-hidden">
               <ImageWithFallback
                 src={p.image_url}
                 alt={p.name}
@@ -87,7 +95,7 @@ export function PopularDishesSection({
                 loading={i < 4 ? "eager" : "lazy"}
                 width={280}
                 height={160}
-                className="h-40 w-full object-cover transition duration-500 group-hover:scale-110"
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none"
               />
             </div>
             <div className="flex flex-1 flex-col p-4">
